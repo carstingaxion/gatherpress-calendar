@@ -1,0 +1,51 @@
+/*!****************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[4].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[4].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[4].use[3]!./src/editor.scss ***!
+  \****************************************************************************************************************************************************************************************************************************************/
+/**
+ * GatherPress Calendar Block Editor Styles
+ *
+ * Styles defined in this file are applied exclusively within the
+ * WordPress block editor. These styles help distinguish the editor
+ * view from the frontend display.
+ *
+ * @package GatherPressCalendar
+ * @since 0.1.0
+ */
+/**
+ * Editor-specific block styles
+ */
+.wp-block-telex-block-gatherpress-calendar {
+  background-color: #fff;
+}
+.wp-block-telex-block-gatherpress-calendar .gatherpress-calendar__template {
+  display: block !important;
+}
+/**
+ * Placeholder styling
+ */
+.gatherpress-calendar-placeholder {
+  padding: 2rem;
+  text-align: center;
+  background-color: #fff;
+  border: 2px dashed #ddd;
+  border-radius: 4px;
+}
+.gatherpress-calendar-placeholder__text {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+  font-style: italic;
+}
+/**
+ * Editor calendar enhancements
+ */
+.editor-styles-wrapper .gatherpress-calendar__table th {
+  background: #f0f0f1;
+}
+.editor-styles-wrapper .gatherpress-calendar__table td.has-posts {
+  background: #e7f5fe;
+}
+.editor-styles-wrapper .gatherpress-calendar__event {
+  cursor: default;
+  pointer-events: none;
+}

@@ -1,0 +1,278 @@
+/*!***************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[4].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[4].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[4].use[3]!./src/style.scss ***!
+  \***************************************************************************************************************************************************************************************************************************************/
+/**
+ * GatherPress Calendar Block Styles
+ *
+ * Styles defined in this file are applied to both the frontend and the
+ * block editor. These are the foundational styles for the calendar block.
+ * Leverages WordPress core intrinsic design patterns and modern CSS.
+ *
+ * @package GatherPressCalendar
+ * @since 0.1.0
+ */
+/**
+ * Block container styles
+ * Uses WordPress block spacing controls
+ */
+.wp-block-telex-block-gatherpress-calendar {
+  padding: var(--wp--preset--spacing--50, 1rem);
+  margin-block: var(--wp--preset--spacing--50, 1rem);
+}
+/**
+ * Calendar wrapper
+ * Uses WordPress container query patterns
+ */
+.gatherpress-calendar {
+  width: 100%;
+  max-width: var(--wp--style--global--wide-size, 1200px);
+  margin-inline: auto;
+}
+/**
+ * Calendar month header
+ * Uses WordPress typography presets
+ */
+.gatherpress-calendar__month {
+  text-align: center;
+  font-size: var(--wp--preset--font-size--large, 1.5rem);
+  margin-block: 0 var(--wp--preset--spacing--40, 1rem);
+  font-weight: 600;
+  color: var(--wp--preset--color--contrast, #1e1e1e);
+  line-height: var(--wp--custom--typography--line-height--heading, 1.2);
+}
+/**
+ * Calendar table
+ * Uses CSS Grid for equal-width columns and flexible layout
+ */
+.gatherpress-calendar__table {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--wp--preset--color--contrast, #ddd);
+  border: 1px solid var(--wp--preset--color--contrast, #ddd);
+  container-type: inline-size;
+  container-name: calendar;
+  /* Remove default table styles */
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+/**
+ * Table header row
+ * Grid layout for equal distribution
+ */
+.gatherpress-calendar__table thead {
+  display: contents;
+}
+.gatherpress-calendar__table thead tr {
+  display: contents;
+}
+/**
+ * Table header cells (day names)
+ */
+.gatherpress-calendar__table th {
+  background: var(--wp--preset--color--base-2, #f8f9fa);
+  color: var(--wp--preset--color--contrast, #495057);
+  font-weight: 600;
+  text-align: center;
+  padding-block: var(--wp--preset--spacing--30, 0.75rem);
+  padding-inline: var(--wp--preset--spacing--20, 0.5rem);
+  font-size: var(--wp--preset--font-size--small, 0.875rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  border: none;
+}
+/**
+ * Table body
+ */
+.gatherpress-calendar__table tbody {
+  display: contents;
+}
+.gatherpress-calendar__table tbody tr {
+  display: contents;
+}
+/**
+ * Table cells (calendar days)
+ * Flexible height with minimum constraints
+ */
+.gatherpress-calendar__table td {
+  background: var(--wp--preset--color--base, #fff);
+  padding: var(--wp--preset--spacing--20, 0.5rem);
+  min-height: 120px;
+  vertical-align: top;
+  display: flex;
+  flex-direction: column;
+  gap: var(--wp--preset--spacing--20, 0.5rem);
+  border: none;
+  position: relative;
+  /* Empty day styling */
+}
+.gatherpress-calendar__table td.is-empty {
+  background: var(--wp--preset--color--base-2, #f8f9fa);
+  opacity: 0.5;
+}
+.gatherpress-calendar__table td {
+  /* Day with posts styling */
+}
+.gatherpress-calendar__table td.has-posts {
+  background: var(--wp--preset--color--base, #fff);
+}
+/**
+ * Day number
+ * Uses WordPress typography system
+ */
+.gatherpress-calendar__day-number {
+  font-weight: 600;
+  font-size: var(--wp--preset--font-size--small, 0.875rem);
+  color: var(--wp--preset--color--contrast, #495057);
+  line-height: 1;
+  flex-shrink: 0;
+}
+/**
+ * Events container
+ * Uses intrinsic CSS for flexible layouts
+ */
+.gatherpress-calendar__events {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wp--preset--spacing--20, 0.25rem);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--wp--preset--color--contrast, #007cba) transparent;
+}
+.gatherpress-calendar__events::-webkit-scrollbar {
+  width: 4px;
+}
+.gatherpress-calendar__events::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gatherpress-calendar__events::-webkit-scrollbar-thumb {
+  background: var(--wp--preset--color--contrast, #007cba);
+  border-radius: 2px;
+}
+/**
+ * Individual event
+ * Automatically adapts to column width using WordPress design tokens
+ */
+.gatherpress-calendar__event {
+  background: var(--wp--preset--color--primary, #007cba);
+  color: var(--wp--preset--color--base, #fff);
+  padding-block: var(--wp--preset--spacing--20, 0.25rem);
+  padding-inline: var(--wp--preset--spacing--30, 0.5rem);
+  border-radius: var(--wp--custom--border-radius--small, 3px);
+  font-size: var(--wp--preset--font-size--small, 0.75rem);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  /* Remove default block margins for inner blocks */
+}
+.gatherpress-calendar__event > * {
+  margin-block: 0 !important;
+  color: inherit;
+}
+.gatherpress-calendar__event {
+  /* Style links inside events */
+}
+.gatherpress-calendar__event a {
+  color: inherit;
+  text-decoration: none;
+}
+.gatherpress-calendar__event a:hover {
+  text-decoration: underline;
+}
+.gatherpress-calendar__event {
+  /* Hover state */
+}
+.gatherpress-calendar__event:hover {
+  background: var(--wp--preset--color--primary-hover, #005a87);
+}
+.gatherpress-calendar__event {
+  /* Focus state for accessibility */
+}
+.gatherpress-calendar__event:focus-visible {
+  outline: 2px solid var(--wp--preset--color--contrast, #007cba);
+  outline-offset: 2px;
+}
+/**
+ * Template configuration area (hidden on frontend)
+ */
+.gatherpress-calendar__template {
+  margin-block-start: var(--wp--preset--spacing--50, 2rem);
+  padding: var(--wp--preset--spacing--40, 1rem);
+  border: 2px dashed var(--wp--preset--color--contrast, #ddd);
+  background: var(--wp--preset--color--base-2, #fafafa);
+  border-radius: var(--wp--custom--border-radius--medium, 4px);
+}
+.gatherpress-calendar__template-label {
+  margin-block: 0 var(--wp--preset--spacing--40, 1rem);
+  font-weight: 600;
+  color: var(--wp--preset--color--contrast, #1e1e1e);
+}
+/**
+ * Container query responsive design
+ * Adapts based on available space rather than viewport
+ */
+@container calendar (max-width: 600px) {
+  .gatherpress-calendar__table {
+    grid-template-columns: repeat(7, minmax(60px, 1fr));
+  }
+  .gatherpress-calendar__table td {
+    min-height: 80px;
+    padding: var(--wp--preset--spacing--10, 0.25rem);
+  }
+  .gatherpress-calendar__day-number {
+    font-size: 0.75rem;
+  }
+  .gatherpress-calendar__event {
+    font-size: 0.625rem;
+    padding-block: 0.125rem;
+    padding-inline: var(--wp--preset--spacing--10, 0.25rem);
+  }
+}
+/**
+ * Traditional responsive fallback
+ * For browsers that don't support container queries
+ */
+@media (max-width: 768px) {
+  @supports not (container-type: inline-size) {
+    .gatherpress-calendar__table td {
+      min-height: 80px;
+      padding: var(--wp--preset--spacing--10, 0.25rem);
+    }
+    .gatherpress-calendar__day-number {
+      font-size: 0.75rem;
+    }
+    .gatherpress-calendar__event {
+      font-size: 0.625rem;
+      padding-block: 0.125rem;
+      padding-inline: var(--wp--preset--spacing--10, 0.25rem);
+    }
+  }
+}
+/**
+ * Print styles
+ * Ensures calendar prints well
+ */
+@media print {
+  .gatherpress-calendar__table {
+    -moz-column-break-inside: avoid;
+         break-inside: avoid;
+  }
+  .gatherpress-calendar__table td {
+    -moz-column-break-inside: avoid;
+         break-inside: avoid;
+  }
+  .gatherpress-calendar__event {
+    -moz-column-break-inside: avoid;
+         break-inside: avoid;
+  }
+}
