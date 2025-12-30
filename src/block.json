@@ -9,6 +9,12 @@
 	"description": "Display query loop posts in a monthly calendar format.",
 	"ancestor": ["core/query"],
 	"usesContext": [ "queryId", "query", "queryContext", "displayLayout", "templateSlug", "previewPostType" ],
+	"attributes": {
+		"selectedMonth": {
+			"type": "string",
+			"default": ""
+		}
+	},
 	"example": {},
 	"supports": {
 		"reusable": false,
@@ -42,6 +48,29 @@
 			"padding": true
 		}
 	},
+	"styles": [
+		{
+			"name": "default",
+			"label": "Classic",
+			"isDefault": true
+		},
+		{
+			"name": "minimal",
+			"label": "Minimal"
+		},
+		{
+			"name": "bold",
+			"label": "Bold"
+		},
+		{
+			"name": "circular",
+			"label": "Circular"
+		},
+		{
+			"name": "gradient",
+			"label": "Gradient"
+		}
+	],
 	"textdomain": "gatherpress-calendar",
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",

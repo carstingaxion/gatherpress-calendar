@@ -21,6 +21,12 @@ return array(
 			'templateSlug',
 			'previewPostType'
 		),
+		'attributes' => array(
+			'selectedMonth' => array(
+				'type' => 'string',
+				'default' => ''
+			)
+		),
 		'example' => array(
 			
 		),
@@ -54,6 +60,29 @@ return array(
 			'spacing' => array(
 				'margin' => true,
 				'padding' => true
+			)
+		),
+		'styles' => array(
+			array(
+				'name' => 'default',
+				'label' => 'Classic',
+				'isDefault' => true
+			),
+			array(
+				'name' => 'minimal',
+				'label' => 'Minimal'
+			),
+			array(
+				'name' => 'bold',
+				'label' => 'Bold'
+			),
+			array(
+				'name' => 'circular',
+				'label' => 'Circular'
+			),
+			array(
+				'name' => 'gradient',
+				'label' => 'Gradient'
 			)
 		),
 		'textdomain' => 'gatherpress-calendar',

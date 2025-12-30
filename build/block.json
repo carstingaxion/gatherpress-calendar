@@ -18,6 +18,12 @@
     "templateSlug",
     "previewPostType"
   ],
+  "attributes": {
+    "selectedMonth": {
+      "type": "string",
+      "default": ""
+    }
+  },
   "example": {},
   "supports": {
     "reusable": false,
@@ -51,6 +57,29 @@
       "padding": true
     }
   },
+  "styles": [
+    {
+      "name": "default",
+      "label": "Classic",
+      "isDefault": true
+    },
+    {
+      "name": "minimal",
+      "label": "Minimal"
+    },
+    {
+      "name": "bold",
+      "label": "Bold"
+    },
+    {
+      "name": "circular",
+      "label": "Circular"
+    },
+    {
+      "name": "gradient",
+      "label": "Gradient"
+    }
+  ],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",

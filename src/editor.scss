@@ -14,28 +14,24 @@
  */
 .wp-block-telex-block-gatherpress-calendar {
 	background-color: #fff;
-
-	.gatherpress-calendar__template {
-		display: block !important;
-	}
 }
 
 /**
- * Placeholder styling
+ * Template configuration area - visible in editor only
  */
-.gatherpress-calendar-placeholder {
-	padding: 2rem;
-	text-align: center;
-	background-color: #fff;
-	border: 2px dashed #ddd;
-	border-radius: 4px;
+.gatherpress-calendar__template-config {
+	display: block;
+	margin-block-start: var(--wp--preset--spacing--50, 2rem);
+	padding: var(--wp--preset--spacing--40, 1rem);
+	border: 2px dashed var(--wp--preset--color--contrast, #ddd);
+	background: var(--wp--preset--color--base-2, #fafafa);
+	border-radius: var(--wp--custom--border-radius--medium, 4px);
 }
 
-.gatherpress-calendar-placeholder__text {
-	margin: 0;
-	color: #666;
-	font-size: 1rem;
-	font-style: italic;
+.gatherpress-calendar__template-label {
+	margin-block: 0 var(--wp--preset--spacing--40, 1rem);
+	font-weight: 600;
+	color: var(--wp--preset--color--contrast, #1e1e1e);
 }
 
 /**
