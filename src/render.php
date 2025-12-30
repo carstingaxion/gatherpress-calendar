@@ -243,60 +243,62 @@ $real_current_post = $GLOBALS['post'];
 							?>
 							<td class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
 								<?php if ( empty( $day['isEmpty'] ) ) : ?>
-									<div class="gatherpress-calendar__day-number">
-										<?php echo esc_html( $day['day'] ); ?>
-									</div>
-									<?php if ( ! empty( $day['posts'] ) ) : ?>
-										<div class="gatherpress-calendar__events">
-											<?php
-											foreach ( $day['posts'] as $post_id ) :
-
-
-												// !!! Override global $post for inner block rendering !!!
-												// especially needed for the core/post_title block, which does not use render_block_context.
-												$GLOBALS['post'] = get_post( $post_id );
-												setup_postdata( $GLOBALS['post'] );
-												$post_type = get_post_type( $GLOBALS['post'] );
-												$post_url  = get_permalink( $post_id );
-												$post_title = get_the_title( $post_id );
-
-												/**
-												 * Filter to add post context for inner blocks
-												 *
-												 * @param array $context Block context.
-												 * @return array Modified context.
-												 */
-												$filter_block_context = static function ( $context ) use ( $post_id, $post_type ) {
-													$context['postType'] = $post_type;
-													$context['postId']   = $post_id;
-													return $context;
-												};
-
-												// Use an early priority so that other 'render_block_*' filters have access to the values
-												add_filter( 'render_block_context', $filter_block_context, 1 );
-												?>
-												<a 
-													href="<?php echo esc_url( $post_url ); ?>" 
-													class="gatherpress-calendar__event"
-													data-post-id="<?php echo esc_attr( $post_id ); ?>"
-													aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
-												>
-													<?php
-													// Render the inner blocks with dynamic set to false to prevent calling
-													// render_callback and ensure that no wrapper markup is included
-													echo ( new WP_Block( $block_instance ) )->render( array( 'dynamic' => false ) );
-													?>
-												</a>
-												<?php
-												remove_filter( 'render_block_context', $filter_block_context, 1 );
-
-
-												wp_reset_postdata();
-												$GLOBALS['post'] = $real_current_post;
-											endforeach;
-											?>
+									<label class="gatherpress-calendar__day-content" for="zoom-<?php echo esc_attr( $day['date'] ); ?>">
+										<div class="gatherpress-calendar__day-number">
+											<?php echo esc_html( $day['day'] ); ?>
 										</div>
-									<?php endif; ?>
+										<?php if ( ! empty( $day['posts'] ) ) : ?>
+											<div class="gatherpress-calendar__events">
+												<?php
+												foreach ( $day['posts'] as $post_id ) :
+
+
+													// !!! Override global $post for inner block rendering !!!
+													// especially needed for the core/post_title block, which does not use render_block_context.
+													$GLOBALS['post'] = get_post( $post_id );
+													setup_postdata( $GLOBALS['post'] );
+													$post_type = get_post_type( $GLOBALS['post'] );
+													$post_url  = get_permalink( $post_id );
+													$post_title = get_the_title( $post_id );
+
+													/**
+													 * Filter to add post context for inner blocks
+													 *
+													 * @param array $context Block context.
+													 * @return array Modified context.
+													 */
+													$filter_block_context = static function ( $context ) use ( $post_id, $post_type ) {
+														$context['postType'] = $post_type;
+														$context['postId']   = $post_id;
+														return $context;
+													};
+
+													// Use an early priority so that other 'render_block_*' filters have access to the values
+													add_filter( 'render_block_context', $filter_block_context, 1 );
+													?>
+													<a 
+														href="<?php echo esc_url( $post_url ); ?>" 
+														class="gatherpress-calendar__event"
+														data-post-id="<?php echo esc_attr( $post_id ); ?>"
+														aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
+													>
+														<?php
+														// Render the inner blocks with dynamic set to false to prevent calling
+														// render_callback and ensure that no wrapper markup is included
+														echo ( new WP_Block( $block_instance ) )->render( array( 'dynamic' => false ) );
+														?>
+													</a>
+													<?php
+													remove_filter( 'render_block_context', $filter_block_context, 1 );
+
+
+													wp_reset_postdata();
+													$GLOBALS['post'] = $real_current_post;
+												endforeach;
+												?>
+											</div>
+										<?php endif; ?>
+									</label>
 								<?php endif; ?>
 							</td>
 						<?php endforeach; ?>

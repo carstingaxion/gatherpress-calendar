@@ -7,11 +7,15 @@
  *
  * This file contains JavaScript code that runs on the frontend of the site
  * for posts/pages containing the GatherPress Calendar block. It progressively
- * enhances the calendar by intercepting link clicks and showing popovers instead.
+ * enhances the calendar by:
+ * 1. Intercepting link clicks to show popovers instead of navigating
+ * 2. Adding minimal class toggle for day card zoom on narrow screens
  *
  * Progressive Enhancement:
  * 1. Without JS: Dots are links that navigate to posts
- * 2. With JS: Dots show popovers with event details
+ * 2. With JS: 
+ *    - Dots show popovers with event details on larger screens
+ *    - Days use CSS-only zoom triggered by .is-zoomed class on smaller screens
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#view-script
  *
@@ -70,6 +74,7 @@
     }
     calendars.forEach(function (calendar) {
       setupEventDotHandlers(calendar);
+      setupDayCardHandlers(calendar);
     });
 
     // Close popover on escape key
@@ -84,6 +89,51 @@
       // eslint-disable-next-line no-console
       console.log('GatherPress Calendar: Initialized ' + calendars.length + ' calendar(s) with progressive enhancement');
     }
+  }
+
+  /**
+   * Setup click handlers for day cards on narrow screens
+   *
+   * Adds click handlers that toggle the 'is-zoomed' class.
+   * CSS handles the actual zoom transform based on this class.
+   *
+   * @since 0.1.0
+   *
+   * @param {HTMLElement} calendar - The calendar element.
+   *
+   * @return {void}
+   */
+  function setupDayCardHandlers(calendar) {
+    const dayCells = calendar.querySelectorAll('.gatherpress-calendar__table td.has-posts');
+    dayCells.forEach(function (dayCell) {
+      const dayContent = dayCell.querySelector('.gatherpress-calendar__day-content');
+      if (!dayContent) {
+        return;
+      }
+
+      // Click handler to toggle the zoom class
+      dayContent.addEventListener('click', function (e) {
+        // If click is on an event dot, let that handler take over
+        if (e.target.closest('.gatherpress-calendar__event')) {
+          return;
+        }
+        e.stopPropagation();
+
+        // Toggle zoomed state on the table cell
+        dayCell.classList.toggle('is-zoomed');
+      });
+    });
+
+    // Close expanded day when clicking outside
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.gatherpress-calendar__table td')) {
+        // Remove zoom class from all cells
+        const zoomedCells = calendar.querySelectorAll('.gatherpress-calendar__table td.is-zoomed');
+        zoomedCells.forEach(function (cell) {
+          cell.classList.remove('is-zoomed');
+        });
+      }
+    });
   }
 
   /**
