@@ -8,7 +8,7 @@
   \************************/
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"telex/block-gatherpress-calendar","version":"0.1.0","title":"GatherPress Calendar","category":"widgets","icon":"calendar-alt","description":"Display query loop posts in a monthly calendar format.","ancestor":["core/query"],"usesContext":["queryId","query","queryContext","displayLayout","templateSlug","previewPostType"],"attributes":{"selectedMonth":{"type":"string","default":""},"templateConfigStyle":{"type":"object","default":{}}},"example":{},"supports":{"reusable":false,"html":false,"align":true,"alignWide":true,"customClassName":true,"typography":{"fontSize":true,"lineHeight":true,"__experimentalFontFamily":true,"__experimentalFontWeight":true,"__experimentalFontStyle":true,"__experimentalTextTransform":true,"__experimentalTextDecoration":true,"__experimentalLetterSpacing":true,"__experimentalDefaultControls":{"fontSize":true}},"color":{"gradients":true,"link":true,"__experimentalDefaultControls":{"background":true,"text":true}},"spacing":{"margin":true,"padding":true}},"styles":[{"name":"default","label":"Classic","isDefault":true},{"name":"minimal","label":"Minimal"},{"name":"bold","label":"Bold"},{"name":"circular","label":"Circular"},{"name":"gradient","label":"Gradient"}],"textdomain":"gatherpress-calendar","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","viewScript":"file:./view.js","render":"file:./render.php"}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"telex/block-gatherpress-calendar","version":"0.1.0","title":"GatherPress Calendar","category":"widgets","icon":"calendar-alt","description":"Display query loop posts in a monthly calendar format.","ancestor":["core/query"],"usesContext":["queryId","query","queryContext","displayLayout","templateSlug","previewPostType"],"attributes":{"selectedMonth":{"type":"string","default":""},"monthModifier":{"type":"number","default":0},"templateConfigStyle":{"type":"object","default":{}}},"example":{},"supports":{"reusable":false,"html":false,"align":true,"alignWide":true,"customClassName":true,"typography":{"fontSize":true,"lineHeight":true,"__experimentalFontFamily":true,"__experimentalFontWeight":true,"__experimentalFontStyle":true,"__experimentalTextTransform":true,"__experimentalTextDecoration":true,"__experimentalLetterSpacing":true,"__experimentalDefaultControls":{"fontSize":true}},"color":{"gradients":true,"link":true,"__experimentalDefaultControls":{"background":true,"text":true}},"spacing":{"margin":true,"padding":true}},"styles":[{"name":"default","label":"Classic","isDefault":true},{"name":"minimal","label":"Minimal"},{"name":"bold","label":"Bold"},{"name":"circular","label":"Circular"},{"name":"gradient","label":"Gradient"}],"textdomain":"gatherpress-calendar","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","viewScript":"file:./view.js","render":"file:./render.php"}');
 
 /***/ },
 
@@ -129,19 +129,23 @@ function getDayNames(startOfWeek = 0) {
  * @param {Array} posts - Array of post objects.
  * @param {number} startOfWeek - The start of week (0=Sunday, 1=Monday, etc.).
  * @param {string} selectedMonth - The selected month in format YYYY-MM (e.g., "2025-07").
+ * @param {number} monthModifier - The month offset from current month (e.g., -1 for last month, +1 for next month).
  *
  * @return {Object} Calendar data structure with weeks and days.
  */
-function generateCalendar(posts, startOfWeek = 0, selectedMonth = '') {
+function generateCalendar(posts, startOfWeek = 0, selectedMonth = '', monthModifier = 0) {
   // Determine which month to display
   let targetDate;
   if (selectedMonth && /^\d{4}-\d{2}$/.test(selectedMonth)) {
-    // Use selected month
+    // Use selected month (ignore monthModifier when explicit month is set)
     const [year, month] = selectedMonth.split('-').map(Number);
     targetDate = new Date(year, month - 1, 1);
   } else {
-    // Use current month
+    // Use current month with modifier
     targetDate = new Date();
+    if (monthModifier !== 0) {
+      targetDate.setMonth(targetDate.getMonth() + monthModifier);
+    }
   }
   const year = targetDate.getFullYear();
   const month = targetDate.getMonth();
@@ -245,10 +249,10 @@ function generateMonthOptions() {
 /**
  * Calculate date query parameters for the selected month
  *
- * This function converts the selectedMonth attribute to year and month values
- * that can be used in a WP_Query date_query. It handles the JavaScript-specific
- * behavior where Date.getMonth() returns a zero-based index (0-11) that must
- * be incremented by 1 to get the human-readable month number (1-12).
+ * This function converts the selectedMonth attribute (or current month with modifier)
+ * to year and month values that can be used in a WP_Query date_query. It handles the
+ * JavaScript-specific behavior where Date.getMonth() returns a zero-based index (0-11)
+ * that must be incremented by 1 to get the human-readable month number (1-12).
  *
  * JavaScript Date Months:
  * - January = 0, February = 1, ..., December = 11 (zero-based)
@@ -259,15 +263,21 @@ function generateMonthOptions() {
  * @since 0.1.0
  *
  * @param {string} selectedMonth - The selected month in format YYYY-MM.
+ * @param {number} monthModifier - The month offset from current month.
  *
  * @return {Object} Date query object for WP_Query with year and month properties.
  */
-function calculateDateQuery(selectedMonth) {
+function calculateDateQuery(selectedMonth, monthModifier = 0) {
   let year, month;
   if (selectedMonth && /^\d{4}-\d{2}$/.test(selectedMonth)) {
     [year, month] = selectedMonth.split('-').map(Number);
   } else {
     const now = new Date();
+
+    // Apply month modifier if no explicit month is selected
+    if (monthModifier !== 0) {
+      now.setMonth(now.getMonth() + monthModifier);
+    }
     year = now.getFullYear();
     /**
      * IMPORTANT: JavaScript's getMonth() returns 0-11 (January=0, December=11)
@@ -280,6 +290,73 @@ function calculateDateQuery(selectedMonth) {
     year: year,
     month: month
   };
+}
+
+/**
+ * Convert BoxControl value to CSS string
+ *
+ * @since 0.1.0
+ *
+ * @param {Object|string} value - The BoxControl value.
+ *
+ * @return {string} CSS value string.
+ */
+function boxControlToCSS(value) {
+  if (!value) {
+    return '';
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  if (typeof value === 'object') {
+    const {
+      top = '0',
+      right = '0',
+      bottom = '0',
+      left = '0'
+    } = value;
+    return `${top} ${right} ${bottom} ${left}`;
+  }
+  return '';
+}
+
+/**
+ * Convert BorderControl value to CSS strings
+ *
+ * @since 0.1.0
+ *
+ * @param {Object} value - The BorderControl value.
+ *
+ * @return {Object} CSS value strings.
+ */
+function borderControlToCSS(value) {
+  if (!value) {
+    return {};
+  }
+  const result = {};
+  if (value.width) {
+    result.borderWidth = value.width;
+  }
+  if (value.style) {
+    result.borderStyle = value.style;
+  }
+  if (value.color) {
+    result.borderColor = value.color;
+  }
+  if (value.radius) {
+    if (typeof value.radius === 'string') {
+      result.borderRadius = value.radius;
+    } else if (typeof value.radius === 'object') {
+      const {
+        topLeft = '0',
+        topRight = '0',
+        bottomRight = '0',
+        bottomLeft = '0'
+      } = value.radius;
+      result.borderRadius = `${topLeft} ${topRight} ${bottomRight} ${bottomLeft}`;
+    }
+  }
+  return result;
 }
 
 /**
@@ -305,6 +382,7 @@ function Edit({
 }) {
   const {
     selectedMonth,
+    monthModifier = 0,
     templateConfigStyle = {}
   } = attributes;
   const {
@@ -314,12 +392,13 @@ function Edit({
   const [showMonthPicker, setShowMonthPicker] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_6__.useState)(false);
 
   /**
-   * Calculate date query based on selectedMonth
+   * Calculate date query based on selectedMonth and monthModifier
    */
-  const dateQuery = calculateDateQuery(selectedMonth);
+  const dateQuery = calculateDateQuery(selectedMonth, monthModifier);
 
   /**
    * Fetch posts based on query context with date filtering
+   * The useSelect hook will automatically re-run when selectedMonth or monthModifier changes
    */
   const {
     posts,
@@ -344,7 +423,7 @@ function Edit({
       _embed: 'wp:term'
     };
 
-    // Add simple year/month date query filter
+    // Add date query filter based on the calculated month/year
     if (dateQuery && dateQuery.year && dateQuery.month) {
       queryArgs.year = dateQuery.year;
       queryArgs.month = dateQuery.month;
@@ -374,14 +453,16 @@ function Edit({
       posts: getEntityRecords('postType', query.postType || 'post', queryArgs) || [],
       startOfWeek: weekStartsOn
     };
-  }, [query, selectedMonth]);
+  },
+  // CRITICAL: Add selectedMonth and monthModifier as dependencies so the query updates when they change
+  [query, selectedMonth, monthModifier, dateQuery.year, dateQuery.month]);
   const blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps)({
     className: 'gatherpress-calendar-block'
   });
   const innerBlocksProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useInnerBlocksProps)({
     className: 'gatherpress-calendar-template'
   }, {
-    allowedBlocks: ALLOWED_BLOCKS,
+    // allowedBlocks: ALLOWED_BLOCKS,
     template: TEMPLATE,
     templateLock: false
   });
@@ -395,17 +476,19 @@ function Edit({
       })
     });
   }
-  const calendar = generateCalendar(posts, startOfWeek, selectedMonth);
+  const calendar = generateCalendar(posts, startOfWeek, selectedMonth, monthModifier);
   const monthOptions = generateMonthOptions();
 
   // Build inline styles for template config
   const templateConfigStyles = {
     backgroundColor: templateConfigStyle.backgroundColor || undefined,
-    padding: templateConfigStyle.padding || undefined,
-    borderWidth: templateConfigStyle.borderWidth || undefined,
-    borderStyle: templateConfigStyle.borderStyle || undefined,
-    borderColor: templateConfigStyle.borderColor || undefined,
-    borderRadius: templateConfigStyle.borderRadius || undefined,
+    padding: boxControlToCSS(templateConfigStyle.padding) || undefined,
+    ...borderControlToCSS({
+      width: templateConfigStyle.borderWidth,
+      style: templateConfigStyle.borderStyle,
+      color: templateConfigStyle.borderColor,
+      radius: templateConfigStyle.borderRadius
+    }),
     boxShadow: templateConfigStyle.boxShadow || undefined
   };
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
@@ -456,7 +539,9 @@ function Edit({
             },
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("strong", {
               children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Current Selection:', 'gatherpress-calendar')
-            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("br", {}), selectedMonth ? monthOptions.find(o => o.value === selectedMonth)?.label : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Current Month', 'gatherpress-calendar')]
+            }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("br", {}), selectedMonth ? monthOptions.find(o => o.value === selectedMonth)?.label : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Current Month', 'gatherpress-calendar'), !selectedMonth && monthModifier !== 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
+              children: [' ', monthModifier > 0 ? `+${monthModifier}` : monthModifier, ' ', monthModifier === 1 ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('month', 'gatherpress-calendar') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('months', 'gatherpress-calendar')]
+            })]
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.Button, {
             isPrimary: true,
             onClick: () => setShowMonthPicker(true),
@@ -474,6 +559,50 @@ function Edit({
               width: '100%'
             },
             children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Reset to Current Month', 'gatherpress-calendar')
+          })]
+        }), !selectedMonth && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("hr", {
+            style: {
+              margin: '16px 0',
+              borderTop: '1px solid #ddd'
+            }
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("p", {
+            style: {
+              marginTop: '16px',
+              marginBottom: '8px',
+              fontWeight: '500'
+            },
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Month Offset', 'gatherpress-calendar')
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("p", {
+            style: {
+              fontSize: '12px',
+              color: '#757575',
+              marginBottom: '12px'
+            },
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Display a month relative to the current month. For example, -1 shows last month, +1 shows next month. The calendar will automatically update as time passes.', 'gatherpress-calendar')
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.__experimentalNumberControl, {
+            label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Months from current', 'gatherpress-calendar'),
+            value: monthModifier,
+            onChange: value => {
+              const numValue = value === '' ? 0 : parseInt(value, 10);
+              setAttributes({
+                monthModifier: isNaN(numValue) ? 0 : numValue
+              });
+            },
+            min: -12,
+            max: 12,
+            step: 1,
+            help: monthModifier === 0 ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Showing current month', 'gatherpress-calendar') : monthModifier < 0 ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)(`Showing ${Math.abs(monthModifier)} month(s) ago`, 'gatherpress-calendar') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)(`Showing ${monthModifier} month(s) ahead`, 'gatherpress-calendar')
+          }), monthModifier !== 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.Button, {
+            isSecondary: true,
+            onClick: () => setAttributes({
+              monthModifier: 0
+            }),
+            style: {
+              width: '100%',
+              marginTop: '8px'
+            },
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Reset Month Offset', 'gatherpress-calendar')
           })]
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {

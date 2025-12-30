@@ -98,7 +98,7 @@
 	/**
 	 * Setup click handlers for day cards on narrow screens
 	 *
-	 * Adds click handlers that toggle the 'is-zoomed' class.
+	 * Adds click handlers to the entire table cell that toggle the 'is-zoomed' class.
 	 * CSS handles the actual zoom transform based on this class.
 	 *
 	 * @since 0.1.0
@@ -113,16 +113,8 @@
 		);
 
 		dayCells.forEach( function ( dayCell ) {
-			const dayContent = dayCell.querySelector(
-				'.gatherpress-calendar__day-content'
-			);
-
-			if ( ! dayContent ) {
-				return;
-			}
-
-			// Click handler to toggle the zoom class
-			dayContent.addEventListener( 'click', function ( e ) {
+			// Click handler to toggle the zoom class - applies to entire td
+			dayCell.addEventListener( 'click', function ( e ) {
 				// If click is on an event dot, let that handler take over
 				if ( e.target.closest( '.gatherpress-calendar__event' ) ) {
 					return;

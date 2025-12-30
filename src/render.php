@@ -45,24 +45,35 @@ $query['paged'] = $page;
 $query_args     = build_query_vars_from_query_block( $block, $page );
 
 /**
- * Determine which month to display based on selectedMonth attribute
+ * Determine which month to display based on selectedMonth attribute and monthModifier
  *
  * @var string Selected month in format YYYY-MM
+ * @var int Month modifier (offset from current month)
  * @var int Year
  * @var int Month (1-12)
  */
 $selected_month = $attributes['selectedMonth'] ?? '';
+$month_modifier = $attributes['monthModifier'] ?? 0;
 
 if ( ! empty( $selected_month ) && preg_match( '/^\d{4}-\d{2}$/', $selected_month ) ) {
-	// Use selected month
+	// Use selected month (ignore monthModifier when explicit month is set)
 	list( $year, $month ) = explode( '-', $selected_month );
 	$year  = (int) $year;
 	$month = (int) $month;
 } else {
-	// Use current month
+	// Use current month with modifier
 	$now   = current_time( 'timestamp' );
-	$year  = (int) gmdate( 'Y', $now );
-	$month = (int) gmdate( 'n', $now );
+	
+	// Apply month modifier if no explicit month is selected
+	if ( $month_modifier !== 0 ) {
+		// Calculate the target month by adding the modifier
+		$target_timestamp = strtotime( sprintf( '%+d months', $month_modifier ), $now );
+		$year  = (int) gmdate( 'Y', $target_timestamp );
+		$month = (int) gmdate( 'n', $target_timestamp );
+	} else {
+		$year  = (int) gmdate( 'Y', $now );
+		$month = (int) gmdate( 'n', $now );
+	}
 }
 
 /**

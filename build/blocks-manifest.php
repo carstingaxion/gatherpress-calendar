@@ -26,6 +26,10 @@ return array(
 				'type' => 'string',
 				'default' => ''
 			),
+			'monthModifier' => array(
+				'type' => 'number',
+				'default' => 0
+			),
 			'templateConfigStyle' => array(
 				'type' => 'object',
 				'default' => array(
