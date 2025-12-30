@@ -10,12 +10,14 @@
  * enhances the calendar by:
  * 1. Intercepting link clicks to show popovers instead of navigating
  * 2. Adding minimal class toggle for day card zoom on narrow screens
+ * 3. Applying custom styles from attributes to popovers
  *
  * Progressive Enhancement:
  * 1. Without JS: Dots are links that navigate to posts
  * 2. With JS: 
  *    - Dots show popovers with event details on larger screens
  *    - Days use CSS-only zoom triggered by .is-zoomed class on smaller screens
+ *    - Popovers use custom styling from block attributes
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#view-script
  *
@@ -175,7 +177,7 @@
    * Show popover with event details
    *
    * Creates and positions a popover element containing the event's
-   * inner block content.
+   * inner block content. Applies custom styles from block attributes.
    *
    * @since 0.1.0
    *
@@ -192,6 +194,9 @@
     // Get the event content
     const eventContent = eventLink.innerHTML;
 
+    // Get custom styles from data attribute
+    const customStyles = eventLink.getAttribute('data-popover-style') || '';
+
     // Create backdrop
     const backdrop = document.createElement('div');
     backdrop.className = 'gatherpress-calendar__event-backdrop';
@@ -203,6 +208,11 @@
     popover.className = 'gatherpress-calendar__event-popover';
     popover.setAttribute('role', 'dialog');
     popover.setAttribute('aria-modal', 'true');
+
+    // Apply custom styles if provided
+    if (customStyles) {
+      popover.setAttribute('style', customStyles);
+    }
 
     // Create close button
     const closeButton = document.createElement('button');

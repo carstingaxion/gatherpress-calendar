@@ -12,12 +12,12 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { useBlockProps, useInnerBlocksProps, BlockContextProvider, InspectorControls } from '@wordpress/block-editor';
-import { Placeholder, PanelBody, Button } from '@wordpress/components';
+import { useBlockProps, useInnerBlocksProps, BlockContextProvider, InspectorControls, PanelColorSettings } from '@wordpress/block-editor';
+import { Placeholder, PanelBody, Button, RangeControl, __experimentalBoxControl as BoxControl, __experimentalBorderControl as BorderControl } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 import { dateI18n } from '@wordpress/date';
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 
 /**
  * Editor-specific styles
@@ -60,6 +60,8 @@ const TEMPLATE = [
 /**
  * Get day names based on start of week setting
  *
+ * Uses WordPress dateI18n to get properly localized day names.
+ *
  * @since 0.1.0
  *
  * @param {number} startOfWeek - The start of week (0=Sunday, 1=Monday, etc.).
@@ -67,19 +69,22 @@ const TEMPLATE = [
  * @return {Array<string>} Array of day name labels.
  */
 function getDayNames( startOfWeek = 0 ) {
-	const allDays = [
-		__( 'Sun', 'gatherpress-calendar' ),
-		__( 'Mon', 'gatherpress-calendar' ),
-		__( 'Tue', 'gatherpress-calendar' ),
-		__( 'Wed', 'gatherpress-calendar' ),
-		__( 'Thu', 'gatherpress-calendar' ),
-		__( 'Fri', 'gatherpress-calendar' ),
-		__( 'Sat', 'gatherpress-calendar' ),
-	];
-
 	const days = [];
+	
+	// Base date: 2024-01-07 is a Sunday (day 0)
+	const baseSunday = new Date( '2024-01-07' );
+	
 	for ( let i = 0; i < 7; i++ ) {
-		days.push( allDays[ ( startOfWeek + i ) % 7 ] );
+		// Calculate the day of week (0=Sunday, 6=Saturday)
+		const dayOfWeek = ( startOfWeek + i ) % 7;
+		
+		// Create a date for this day of week
+		const dayDate = new Date( baseSunday );
+		dayDate.setDate( baseSunday.getDate() + dayOfWeek );
+		
+		// Get the abbreviated day name using dateI18n for proper localization
+		// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.)
+		days.push( dateI18n( 'D', dayDate ) );
 	}
 
 	return days;
@@ -209,6 +214,48 @@ function generateMonthOptions() {
 }
 
 /**
+ * Calculate date query parameters for the selected month
+ *
+ * This function converts the selectedMonth attribute to year and month values
+ * that can be used in a WP_Query date_query. It handles the JavaScript-specific
+ * behavior where Date.getMonth() returns a zero-based index (0-11) that must
+ * be incremented by 1 to get the human-readable month number (1-12).
+ *
+ * JavaScript Date Months:
+ * - January = 0, February = 1, ..., December = 11 (zero-based)
+ * 
+ * Human-Readable/WP_Query Months:
+ * - January = 1, February = 2, ..., December = 12 (one-based)
+ *
+ * @since 0.1.0
+ *
+ * @param {string} selectedMonth - The selected month in format YYYY-MM.
+ *
+ * @return {Object} Date query object for WP_Query with year and month properties.
+ */
+function calculateDateQuery( selectedMonth ) {
+	let year, month;
+
+	if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
+		[year, month] = selectedMonth.split('-').map(Number);
+	} else {
+		const now = new Date();
+		year = now.getFullYear();
+		/**
+		 * IMPORTANT: JavaScript's getMonth() returns 0-11 (January=0, December=11)
+		 * We add 1 to convert to human-readable format (January=1, December=12)
+		 * which matches WordPress WP_Query's expected month parameter format.
+		 */
+		month = now.getMonth() + 1;
+	}
+
+	return {
+		year: year,
+		month: month,
+	};
+}
+
+/**
  * Edit Component
  *
  * Renders the block's edit interface in the WordPress editor.
@@ -224,12 +271,17 @@ function generateMonthOptions() {
  * @return {Element} The React element to be rendered in the editor.
  */
 export default function Edit( { attributes, setAttributes, context, clientId } ) {
-	const { selectedMonth } = attributes;
+	const { selectedMonth, templateConfigStyle = {} } = attributes;
 	const { query, queryId } = context;
 	const [showMonthPicker, setShowMonthPicker] = useState(false);
 
 	/**
-	 * Fetch posts based on query context and start_of_week setting
+	 * Calculate date query based on selectedMonth
+	 */
+	const dateQuery = calculateDateQuery( selectedMonth );
+
+	/**
+	 * Fetch posts based on query context with date filtering
 	 */
 	const { posts, startOfWeek } = useSelect(
 		( select ) => {
@@ -246,6 +298,12 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 				orderby: query.orderBy || 'date',
 				_embed: 'wp:term',
 			};
+
+			// Add simple year/month date query filter
+			if ( dateQuery && dateQuery.year && dateQuery.month ) {
+				queryArgs.year = dateQuery.year;
+				queryArgs.month = dateQuery.month;
+			}
 
 			// Add taxonomy query if present
 			if ( query.taxQuery ) {
@@ -273,7 +331,7 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 				startOfWeek: weekStartsOn,
 			};
 		},
-		[ query ]
+		[ query, selectedMonth ]
 	);
 
 	const blockProps = useBlockProps( {
@@ -308,6 +366,17 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 
 	const calendar = generateCalendar( posts, startOfWeek, selectedMonth );
 	const monthOptions = generateMonthOptions();
+
+	// Build inline styles for template config
+	const templateConfigStyles = {
+		backgroundColor: templateConfigStyle.backgroundColor || undefined,
+		padding: templateConfigStyle.padding || undefined,
+		borderWidth: templateConfigStyle.borderWidth || undefined,
+		borderStyle: templateConfigStyle.borderStyle || undefined,
+		borderColor: templateConfigStyle.borderColor || undefined,
+		borderRadius: templateConfigStyle.borderRadius || undefined,
+		boxShadow: templateConfigStyle.boxShadow || undefined,
+	};
 
 	return (
 		<>
@@ -367,6 +436,75 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 						</>
 					) }
 				</PanelBody>
+
+				<PanelBody title={ __( 'Template Style', 'gatherpress-calendar' ) } initialOpen={ false }>
+					<PanelColorSettings
+						title={ __( 'Background', 'gatherpress-calendar' ) }
+						colorSettings={ [
+							{
+								value: templateConfigStyle.backgroundColor,
+								onChange: ( backgroundColor ) => {
+									setAttributes( {
+										templateConfigStyle: {
+											...templateConfigStyle,
+											backgroundColor,
+										},
+									} );
+								},
+								label: __( 'Background Color', 'gatherpress-calendar' ),
+							},
+						] }
+					/>
+
+					<BoxControl
+						label={ __( 'Padding', 'gatherpress-calendar' ) }
+						values={ templateConfigStyle.padding }
+						onChange={ ( padding ) => {
+							setAttributes( {
+								templateConfigStyle: {
+									...templateConfigStyle,
+									padding,
+								},
+							} );
+						} }
+					/>
+
+					<BorderControl
+						label={ __( 'Border', 'gatherpress-calendar' ) }
+						value={ {
+							width: templateConfigStyle.borderWidth,
+							style: templateConfigStyle.borderStyle,
+							color: templateConfigStyle.borderColor,
+							radius: templateConfigStyle.borderRadius,
+						} }
+						onChange={ ( border ) => {
+							setAttributes( {
+								templateConfigStyle: {
+									...templateConfigStyle,
+									borderWidth: border.width,
+									borderStyle: border.style,
+									borderColor: border.color,
+									borderRadius: border.radius,
+								},
+							} );
+						} }
+					/>
+
+					<RangeControl
+						label={ __( 'Box Shadow Blur', 'gatherpress-calendar' ) }
+						value={ parseInt( templateConfigStyle.boxShadow?.match(/\d+/)?.[0] || 0 ) }
+						onChange={ ( blur ) => {
+							setAttributes( {
+								templateConfigStyle: {
+									...templateConfigStyle,
+									boxShadow: blur > 0 ? `0 8px ${blur}px rgba(0, 0, 0, 0.15)` : undefined,
+								},
+							} );
+						} }
+						min={ 0 }
+						max={ 50 }
+					/>
+				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
 				<div className="gatherpress-calendar">
@@ -414,7 +552,7 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 						</tbody>
 					</table>
 
-					<div className="gatherpress-calendar__template-config">
+					<div className="gatherpress-calendar__template-config" style={ templateConfigStyles }>
 						<p className="gatherpress-calendar__template-label">
 							{ __(
 								'Configure how events appear in the calendar by adding blocks below:',

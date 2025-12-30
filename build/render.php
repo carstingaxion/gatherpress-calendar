@@ -45,6 +45,38 @@ $query['paged'] = $page;
 $query_args     = build_query_vars_from_query_block( $block, $page );
 
 /**
+ * Determine which month to display based on selectedMonth attribute
+ *
+ * @var string Selected month in format YYYY-MM
+ * @var int Year
+ * @var int Month (1-12)
+ */
+$selected_month = $attributes['selectedMonth'] ?? '';
+
+if ( ! empty( $selected_month ) && preg_match( '/^\d{4}-\d{2}$/', $selected_month ) ) {
+	// Use selected month
+	list( $year, $month ) = explode( '-', $selected_month );
+	$year  = (int) $year;
+	$month = (int) $month;
+} else {
+	// Use current month
+	$now   = current_time( 'timestamp' );
+	$year  = (int) gmdate( 'Y', $now );
+	$month = (int) gmdate( 'n', $now );
+}
+
+/**
+ * Add date query parameters to filter posts by year and month
+ * This optimizes the query by only fetching posts within the displayed month
+ */
+$query_args['date_query'] = array(
+	array(
+		'year'  => $year,
+		'month' => $month,
+	),
+);
+
+/**
  * Execute the query to get posts
  *
  * @var WP_Query
@@ -79,6 +111,76 @@ array_shift( $block_instance['innerContent'] );
 $block_instance['innerContent'] = array_values( $block_instance['innerContent'] );
 
 /**
+ * Get template config styles from attributes
+ * These styles will be applied to the event popovers
+ *
+ * @var array
+ */
+$template_config_style = $attributes['templateConfigStyle'] ?? array();
+
+/**
+ * Build inline styles for popovers based on template config
+ *
+ * @var array
+ */
+$popover_styles = array();
+
+if ( ! empty( $template_config_style['backgroundColor'] ) ) {
+	$popover_styles[] = 'background-color: ' . esc_attr( $template_config_style['backgroundColor'] );
+}
+
+if ( ! empty( $template_config_style['padding'] ) ) {
+	$padding = $template_config_style['padding'];
+	if ( is_array( $padding ) ) {
+		$padding_str = '';
+		$padding_str .= isset( $padding['top'] ) ? esc_attr( $padding['top'] ) . ' ' : '0 ';
+		$padding_str .= isset( $padding['right'] ) ? esc_attr( $padding['right'] ) . ' ' : '0 ';
+		$padding_str .= isset( $padding['bottom'] ) ? esc_attr( $padding['bottom'] ) . ' ' : '0 ';
+		$padding_str .= isset( $padding['left'] ) ? esc_attr( $padding['left'] ) : '0';
+		$popover_styles[] = 'padding: ' . trim( $padding_str );
+	} elseif ( is_string( $padding ) ) {
+		$popover_styles[] = 'padding: ' . esc_attr( $padding );
+	}
+}
+
+if ( ! empty( $template_config_style['borderWidth'] ) ) {
+	$popover_styles[] = 'border-width: ' . esc_attr( $template_config_style['borderWidth'] );
+}
+
+if ( ! empty( $template_config_style['borderStyle'] ) ) {
+	$popover_styles[] = 'border-style: ' . esc_attr( $template_config_style['borderStyle'] );
+}
+
+if ( ! empty( $template_config_style['borderColor'] ) ) {
+	$popover_styles[] = 'border-color: ' . esc_attr( $template_config_style['borderColor'] );
+}
+
+if ( ! empty( $template_config_style['borderRadius'] ) ) {
+	$border_radius = $template_config_style['borderRadius'];
+	if ( is_array( $border_radius ) ) {
+		$radius_str = '';
+		$radius_str .= isset( $border_radius['topLeft'] ) ? esc_attr( $border_radius['topLeft'] ) . ' ' : '0 ';
+		$radius_str .= isset( $border_radius['topRight'] ) ? esc_attr( $border_radius['topRight'] ) . ' ' : '0 ';
+		$radius_str .= isset( $border_radius['bottomRight'] ) ? esc_attr( $border_radius['bottomRight'] ) . ' ' : '0 ';
+		$radius_str .= isset( $border_radius['bottomLeft'] ) ? esc_attr( $border_radius['bottomLeft'] ) : '0';
+		$popover_styles[] = 'border-radius: ' . trim( $radius_str );
+	} elseif ( is_string( $border_radius ) ) {
+		$popover_styles[] = 'border-radius: ' . esc_attr( $border_radius );
+	}
+}
+
+if ( ! empty( $template_config_style['boxShadow'] ) ) {
+	$popover_styles[] = 'box-shadow: ' . esc_attr( $template_config_style['boxShadow'] );
+}
+
+/**
+ * Convert styles array to inline style string
+ *
+ * @var string
+ */
+$popover_style_attr = ! empty( $popover_styles ) ? implode( '; ', $popover_styles ) : '';
+
+/**
  * Organize posts by date
  *
  * @var array
@@ -99,28 +201,6 @@ while ( $query_loop->have_posts() ) {
 wp_reset_postdata();
 
 /**
- * Determine which month to display
- *
- * Use the selectedMonth attribute if set, otherwise use current month.
- *
- * @var int Year
- * @var int Month (1-12)
- */
-$selected_month = $attributes['selectedMonth'] ?? '';
-
-if ( ! empty( $selected_month ) && preg_match( '/^\d{4}-\d{2}$/', $selected_month ) ) {
-	// Use selected month
-	list( $year, $month ) = explode( '-', $selected_month );
-	$year  = (int) $year;
-	$month = (int) $month;
-} else {
-	// Use current month
-	$now   = current_time( 'timestamp' );
-	$year  = (int) gmdate( 'Y', $now );
-	$month = (int) gmdate( 'n', $now );
-}
-
-/**
  * Get start of week setting from WordPress options
  *
  * @var int Day of week to start (0=Sunday, 1=Monday, etc.)
@@ -138,7 +218,7 @@ $start_of_week = (int) get_option( 'start_of_week', 0 );
 $first_day      = mktime( 0, 0, 0, $month, 1, $year );
 $days_in_month  = (int) gmdate( 't', $first_day );
 $start_day_week = (int) gmdate( 'w', $first_day );
-$month_name     = gmdate( 'F Y', $first_day );
+$month_name     = wp_date( 'F Y', $first_day );
 
 /**
  * Adjust start day based on start_of_week setting
@@ -146,23 +226,24 @@ $month_name     = gmdate( 'F Y', $first_day );
 $start_day_week = ( $start_day_week - $start_of_week + 7 ) % 7;
 
 /**
- * Get day names based on start_of_week setting
+ * Get translated day names based on start_of_week setting
+ * Uses WordPress core's wp_date() function to get properly localized day names
  *
  * @var array Array of day name translations
  */
-$all_day_names = array(
-	__( 'Sun', 'gatherpress-calendar' ),
-	__( 'Mon', 'gatherpress-calendar' ),
-	__( 'Tue', 'gatherpress-calendar' ),
-	__( 'Wed', 'gatherpress-calendar' ),
-	__( 'Thu', 'gatherpress-calendar' ),
-	__( 'Fri', 'gatherpress-calendar' ),
-	__( 'Sat', 'gatherpress-calendar' ),
-);
-
 $day_names = array();
 for ( $i = 0; $i < 7; $i++ ) {
-	$day_names[] = $all_day_names[ ( $start_of_week + $i ) % 7 ];
+	// Calculate the day of week (0=Sunday, 6=Saturday)
+	$day_of_week = ( $start_of_week + $i ) % 7;
+	
+	// Create a timestamp for a date with this day of week
+	// Using a known week: 2024-01-07 is a Sunday (day 0)
+	$base_sunday = strtotime( '2024-01-07' );
+	$day_timestamp = $base_sunday + ( $day_of_week * DAY_IN_SECONDS );
+	
+	// Get the abbreviated day name using wp_date for proper localization
+	// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.)
+	$day_names[] = wp_date( 'D', $day_timestamp );
 }
 
 /**
@@ -280,6 +361,7 @@ $real_current_post = $GLOBALS['post'];
 														href="<?php echo esc_url( $post_url ); ?>" 
 														class="gatherpress-calendar__event"
 														data-post-id="<?php echo esc_attr( $post_id ); ?>"
+														data-popover-style="<?php echo esc_attr( $popover_style_attr ); ?>"
 														aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
 													>
 														<?php

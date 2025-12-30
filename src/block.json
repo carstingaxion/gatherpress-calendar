@@ -13,6 +13,10 @@
 		"selectedMonth": {
 			"type": "string",
 			"default": ""
+		},
+		"templateConfigStyle": {
+			"type": "object",
+			"default": {}
 		}
 	},
 	"example": {},

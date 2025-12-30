@@ -25,6 +25,12 @@ return array(
 			'selectedMonth' => array(
 				'type' => 'string',
 				'default' => ''
+			),
+			'templateConfigStyle' => array(
+				'type' => 'object',
+				'default' => array(
+					
+				)
 			)
 		),
 		'example' => array(
