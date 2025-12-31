@@ -1,347 +1,180 @@
 /**
  * GatherPress Calendar Block Frontend Script
  *
- * This file contains JavaScript code that runs on the frontend of the site
- * for posts/pages containing the GatherPress Calendar block. It progressively
- * enhances the calendar by:
- * 1. Intercepting link clicks to show popovers instead of navigating
- * 2. Adding minimal class toggle for day card zoom on narrow screens
- * 3. Applying custom styles from attributes to popovers
+ * Progressive enhancement for the GatherPress Calendar block.
+ * Minimal JavaScript - only for popover interaction.
+ * Everything else is handled by CSS.
  *
- * Progressive Enhancement:
- * 1. Without JS: Dots are links that navigate to posts
- * 2. With JS: 
- *    - Dots show popovers with event details on larger screens
- *    - Days use CSS-only zoom triggered by .is-zoomed class on smaller screens
- *    - Popovers use custom styling from block attributes
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#view-script
+ * Without JS: Event dots are clickable links that navigate to posts
+ * With JS: Event dots show popovers with content overlay
  *
  * @package GatherPressCalendar
  * @since 0.1.0
  */
 
-/**
- * Initialize the GatherPress Calendar block frontend functionality
- *
- * Sets up event listeners and interactive features for the calendar,
- * including popover creation and click/touch handling for event dots.
- * This is progressive enhancement - without JS, the dots work as regular links.
- *
- * @since 0.1.0
- *
- * @return {void}
- */
-( function initGatherPressCalendar() {
+(function() {
 	'use strict';
 
-	/**
-	 * Currently active popover element
-	 *
-	 * @type {HTMLElement|null}
-	 */
 	let activePopover = null;
-
-	/**
-	 * Currently active backdrop element
-	 *
-	 * @type {HTMLElement|null}
-	 */
 	let activeBackdrop = null;
 
-	/**
-	 * Wait for DOM to be ready
-	 */
-	if ( document.readyState === 'loading' ) {
-		document.addEventListener( 'DOMContentLoaded', init );
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', init);
 	} else {
 		init();
 	}
 
 	/**
-	 * Initialize calendar functionality
-	 *
-	 * @since 0.1.0
-	 *
-	 * @return {void}
+	 * Initialize popover functionality
 	 */
 	function init() {
-		const calendars = document.querySelectorAll( '.gatherpress-calendar' );
+		const calendars = document.querySelectorAll('.gatherpress-calendar');
+		if (!calendars.length) return;
 
-		if ( ! calendars.length ) {
-			return;
-		}
+		calendars.forEach(setupCalendar);
 
-		calendars.forEach( function ( calendar ) {
-			setupEventDotHandlers( calendar );
-			setupDayCardHandlers( calendar );
-		} );
-
-		// Close popover on escape key
-		document.addEventListener( 'keydown', function ( e ) {
-			if ( e.key === 'Escape' && activePopover ) {
+		// Close on escape
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape' && activePopover) {
 				closePopover();
 			}
-		} );
-
-		// Log initialization
-		if ( window.console && window.console.log ) {
-			// eslint-disable-next-line no-console
-			console.log(
-				'GatherPress Calendar: Initialized ' +
-					calendars.length +
-					' calendar(s) with progressive enhancement'
-			);
-		}
+		});
 	}
 
 	/**
-	 * Setup click handlers for day cards on narrow screens
-	 *
-	 * Adds click handlers to the entire table cell that toggle the 'is-zoomed' class.
-	 * CSS handles the actual zoom transform based on this class.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @param {HTMLElement} calendar - The calendar element.
-	 *
-	 * @return {void}
+	 * Setup calendar event handlers
 	 */
-	function setupDayCardHandlers( calendar ) {
-		const dayCells = calendar.querySelectorAll(
-			'.gatherpress-calendar__table td.has-posts'
-		);
+	function setupCalendar(calendar) {
+		const events = calendar.querySelectorAll('.gatherpress-calendar__event');
 
-		dayCells.forEach( function ( dayCell ) {
-			// Click handler to toggle the zoom class - applies to entire td
-			dayCell.addEventListener( 'click', function ( e ) {
-				// If click is on an event dot, let that handler take over
-				if ( e.target.closest( '.gatherpress-calendar__event' ) ) {
-					return;
-				}
+		events.forEach(function(eventLink) {
+			eventLink.setAttribute('role', 'button');
+			eventLink.setAttribute('tabindex', '0');
 
-				e.stopPropagation();
-
-				// Toggle zoomed state on the table cell
-				dayCell.classList.toggle( 'is-zoomed' );
-			} );
-		} );
-
-		// Close expanded day when clicking outside
-		document.addEventListener( 'click', function ( e ) {
-			if ( ! e.target.closest( '.gatherpress-calendar__table td' ) ) {
-				// Remove zoom class from all cells
-				const zoomedCells = calendar.querySelectorAll(
-					'.gatherpress-calendar__table td.is-zoomed'
-				);
-				zoomedCells.forEach( function ( cell ) {
-					cell.classList.remove( 'is-zoomed' );
-				} );
-			}
-		} );
-	}
-
-	/**
-	 * Setup click/touch handlers for event dots in the calendar
-	 *
-	 * Progressively enhances the event dots (which are links) to show
-	 * popovers instead of navigating. If JS fails, links work normally.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @param {HTMLElement} calendar - The calendar element.
-	 *
-	 * @return {void}
-	 */
-	function setupEventDotHandlers( calendar ) {
-		const events = calendar.querySelectorAll(
-			'.gatherpress-calendar__event'
-		);
-
-		events.forEach( function ( eventLink ) {
-			// Add accessibility attributes
-			eventLink.setAttribute( 'role', 'button' );
-
-			// Handle click/touch - prevent default navigation and show popover
-			eventLink.addEventListener( 'click', function ( e ) {
+			// Click handler - prevent navigation, show popover
+			eventLink.addEventListener('click', function(e) {
 				e.preventDefault();
 				e.stopPropagation();
+				showPopover(eventLink);
+			});
 
-				showPopover( eventLink );
-			} );
-
-			// Handle keyboard accessibility
-			eventLink.addEventListener( 'keydown', function ( e ) {
-				if ( e.key === 'Enter' || e.key === ' ' ) {
+			// Keyboard support
+			eventLink.addEventListener('keydown', function(e) {
+				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					showPopover( eventLink );
+					showPopover(eventLink);
 				}
-			} );
-		} );
+			});
+		});
 	}
 
 	/**
-	 * Show popover with event details
-	 *
-	 * Creates and positions a popover element containing the event's
-	 * inner block content. Applies custom styles from block attributes.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @param {HTMLElement} eventLink - The event link element that was clicked.
-	 *
-	 * @return {void}
+	 * Show popover with event content
 	 */
-	function showPopover( eventLink ) {
-		// Close any existing popover
-		if ( activePopover ) {
-			closePopover();
-		}
+	function showPopover(eventLink) {
+		if (activePopover) closePopover();
 
-		// Get the event content
-		const eventContent = eventLink.innerHTML;
-
-		// Get custom styles from data attribute
-		const customStyles = eventLink.getAttribute( 'data-popover-style' ) || '';
+		const content = eventLink.innerHTML;
+		const customStyle = eventLink.getAttribute('data-popover-style') || '';
 
 		// Create backdrop
-		const backdrop = document.createElement( 'div' );
-		backdrop.className = 'gatherpress-calendar__event-backdrop';
-		backdrop.addEventListener( 'click', closePopover );
-		document.body.appendChild( backdrop );
+		const backdrop = document.createElement('div');
+		backdrop.className = 'gatherpress-calendar__backdrop';
+		backdrop.addEventListener('click', closePopover);
+		document.body.appendChild(backdrop);
 
 		// Create popover
-		const popover = document.createElement( 'div' );
-		popover.className = 'gatherpress-calendar__event-popover';
-		popover.setAttribute( 'role', 'dialog' );
-		popover.setAttribute( 'aria-modal', 'true' );
-
-		// Apply custom styles if provided
-		if ( customStyles ) {
-			popover.setAttribute( 'style', customStyles );
+		const popover = document.createElement('div');
+		popover.className = 'gatherpress-calendar__popover';
+		popover.setAttribute('role', 'dialog');
+		popover.setAttribute('aria-modal', 'true');
+		if (customStyle) {
+			popover.setAttribute('style', customStyle);
 		}
 
-		// Create close button
-		const closeButton = document.createElement( 'button' );
-		closeButton.className =
-			'gatherpress-calendar__event-popover-close';
-		closeButton.innerHTML = '&times;';
-		closeButton.setAttribute( 'aria-label', 'Close' );
-		closeButton.addEventListener( 'click', closePopover );
+		// Close button
+		const closeBtn = document.createElement('button');
+		closeBtn.className = 'gatherpress-calendar__popover-close';
+		closeBtn.innerHTML = '&times;';
+		closeBtn.setAttribute('aria-label', 'Close');
+		closeBtn.addEventListener('click', closePopover);
 
-		// Add content and close button to popover
-		popover.innerHTML = eventContent;
-		popover.appendChild( closeButton );
+		popover.innerHTML = content;
+		popover.appendChild(closeBtn);
+		document.body.appendChild(popover);
 
-		// Add popover to body
-		document.body.appendChild( popover );
+		// Position
+		positionPopover(popover, eventLink);
 
-		// Position popover
-		positionPopover( popover, eventLink );
+		// Animate in
+		setTimeout(function() {
+			backdrop.classList.add('is-active');
+			popover.classList.add('is-active');
+		}, 10);
 
-		// Show with animation
-		setTimeout( function () {
-			backdrop.classList.add( 'is-active' );
-			popover.classList.add( 'is-active' );
-		}, 10 );
-
-		// Store references
 		activePopover = popover;
 		activeBackdrop = backdrop;
-
-		// Focus the popover for accessibility
 		popover.focus();
 
 		// Update position on scroll/resize
-		const updatePosition = function () {
-			if ( activePopover ) {
-				positionPopover( popover, eventLink );
-			}
+		const updatePos = function() {
+			if (activePopover) positionPopover(popover, eventLink);
 		};
-		window.addEventListener( 'scroll', updatePosition );
-		window.addEventListener( 'resize', updatePosition );
-
-		// Store cleanup function
-		popover._cleanup = function () {
-			window.removeEventListener( 'scroll', updatePosition );
-			window.removeEventListener( 'resize', updatePosition );
+		window.addEventListener('scroll', updatePos);
+		window.addEventListener('resize', updatePos);
+		popover._cleanup = function() {
+			window.removeEventListener('scroll', updatePos);
+			window.removeEventListener('resize', updatePos);
 		};
 	}
 
 	/**
-	 * Position popover relative to the event dot
-	 *
-	 * @since 0.1.0
-	 *
-	 * @param {HTMLElement} popover - The popover element.
-	 * @param {HTMLElement} eventLink - The event link element.
-	 *
-	 * @return {void}
+	 * Position popover near the event dot
 	 */
-	function positionPopover( popover, eventLink ) {
+	function positionPopover(popover, eventLink) {
 		const linkRect = eventLink.getBoundingClientRect();
-		const popoverRect = popover.getBoundingClientRect();
-		const viewportWidth = window.innerWidth;
-		const viewportHeight = window.innerHeight;
-		const spacing = 10;
+		const popRect = popover.getBoundingClientRect();
+		const vw = window.innerWidth;
+		const vh = window.innerHeight;
+		const gap = 10;
 
-		let top = linkRect.bottom + spacing;
-		let left = linkRect.left + linkRect.width / 2 - popoverRect.width / 2;
+		let top = linkRect.bottom + gap;
+		let left = linkRect.left + linkRect.width / 2 - popRect.width / 2;
 
-		// Adjust horizontal position if popover goes off screen
-		if ( left < spacing ) {
-			left = spacing;
-		} else if ( left + popoverRect.width > viewportWidth - spacing ) {
-			left = viewportWidth - popoverRect.width - spacing;
+		// Keep in viewport horizontally
+		if (left < gap) left = gap;
+		if (left + popRect.width > vw - gap) left = vw - popRect.width - gap;
+
+		// Keep in viewport vertically
+		if (top + popRect.height > vh - gap) {
+			top = linkRect.top - popRect.height - gap;
 		}
-
-		// Adjust vertical position if popover goes below viewport
-		if ( top + popoverRect.height > viewportHeight - spacing ) {
-			top = linkRect.top - popoverRect.height - spacing;
-		}
-
-		// Ensure popover doesn't go above viewport
-		if ( top < spacing ) {
-			top = spacing;
-		}
+		if (top < gap) top = gap;
 
 		popover.style.top = top + 'px';
 		popover.style.left = left + 'px';
 	}
 
 	/**
-	 * Close the active popover
-	 *
-	 * @since 0.1.0
-	 *
-	 * @return {void}
+	 * Close popover
 	 */
 	function closePopover() {
-		if ( ! activePopover ) {
-			return;
-		}
+		if (!activePopover) return;
 
-		// Run cleanup
-		if ( activePopover._cleanup ) {
-			activePopover._cleanup();
-		}
+		if (activePopover._cleanup) activePopover._cleanup();
 
-		// Hide with animation
-		activePopover.classList.remove( 'is-active' );
-		if ( activeBackdrop ) {
-			activeBackdrop.classList.remove( 'is-active' );
-		}
+		activePopover.classList.remove('is-active');
+		if (activeBackdrop) activeBackdrop.classList.remove('is-active');
 
-		// Remove elements after animation
-		setTimeout( function () {
-			if ( activePopover && activePopover.parentNode ) {
-				activePopover.parentNode.removeChild( activePopover );
+		setTimeout(function() {
+			if (activePopover && activePopover.parentNode) {
+				activePopover.parentNode.removeChild(activePopover);
 			}
-			if ( activeBackdrop && activeBackdrop.parentNode ) {
-				activeBackdrop.parentNode.removeChild( activeBackdrop );
+			if (activeBackdrop && activeBackdrop.parentNode) {
+				activeBackdrop.parentNode.removeChild(activeBackdrop);
 			}
 			activePopover = null;
 			activeBackdrop = null;
-		}, 200 );
+		}, 200);
 	}
-} )();
+})();
