@@ -33,3 +33,28 @@ function gatherpress_calendar_block_init(): void {
 	register_block_type( __DIR__ . '/build/' );
 }
 add_action( 'init', 'gatherpress_calendar_block_init' );
+
+
+/**
+ * runs on 20 to be later than GatherPress itself
+ */
+add_filter( 'rest_gatherpress_event_query', function ( $args, $request ) {
+	$parameters = $request->get_params();
+
+	if ( ! isset( $args['date_query'] ) ) {
+		$args['date_query'] = array();
+		$args['date_query'][0] = array();
+	}
+
+	if ( isset( $parameters['gatherpress_event_query'] ) && isset( $parameters['year'] ) ) {
+		// 
+		unset( $args['gatherpress_event_query'] );
+		
+		// Add date query for year and optional month
+		$args['date_query'][0]['year'] = $parameters['year'];
+		if ( isset( $parameters['month'] ) ) {
+			$args['date_query'][0]['month'] = $parameters['month'];
+		}
+	}
+	return $args;
+}, 20, 2 );

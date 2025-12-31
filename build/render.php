@@ -94,10 +94,10 @@ $query_args['date_query'] = array(
 $query_loop = new WP_Query( $query_args );
 // echo '<pre>' . var_export( $query_loop, true ) . '</pre>'; // DEBUG
 
-if ( ! $query_loop->have_posts() ) {
-	wp_reset_postdata();
-	return '';
-}
+// if ( ! $query_loop->have_posts() ) {
+// 	wp_reset_postdata();
+// 	return '';
+// }
 
 /**
  * Get wrapper attributes for the block

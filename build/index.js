@@ -70,20 +70,11 @@ __webpack_require__.r(__webpack_exports__);
 
 
 /**
- * Allowed inner blocks
- *
- * List of core post blocks that can be used within the calendar.
- *
- * @type {Array<string>}
- */
-
-const ALLOWED_BLOCKS = ['core/post-title', 'core/post-date', 'core/post-excerpt', 'core/post-featured-image', 'core/post-terms', 'core/post-author', 'core/post-author-name', 'core/post-author-biography', 'core/avatar'];
-
-/**
  * Default template for inner blocks
  *
  * @type {Array}
  */
+
 const TEMPLATE = [['core/post-title', {
   level: 3
 }], ['core/post-date']];
@@ -436,28 +427,29 @@ function Edit({
     const {
       getSite
     } = select(_wordpress_core_data__WEBPACK_IMPORTED_MODULE_4__.store);
-    // Create a new query var, excluding 'gatherpress_event_query'
-    // const newQuery = { ...query };
-    // if ( query.gatherpress_event_query ) {
-    // 	delete query.gatherpress_event_query;
-    // }
-    // if ( query.include_unfinished ) {
-    // 	delete query.include_unfinished;
-    // }
-    console.log('Query Context in Edit:', query);
-    /* 
-    			const queryArgs = {
-    				// context: 'view',
-    				gatherpress_event_query: 'past', // !!! Super weird temporary hack.
-    				per_page: query.perPage || 100,
-    				order: query.order || 'DESC',
-    				// orderby: query.orderBy || 'date',
-    				orderby: 'title',
-    				_embed: 'wp:term',
-    			}; */
-    const queryArgs = {
+
+    // Create a clean query object, removing GatherPress-specific parameters
+    // that interfere with the REST API query
+    const cleanQuery = {
       ...query
-    }; // Trying to debug .... with no luck yet!
+    };
+
+    // Remove GatherPress-specific query vars that don't work with getEntityRecords
+    delete cleanQuery.gatherpress_event_query;
+    delete cleanQuery.include_unfinished;
+
+    // If orderBy is 'datetime' (GatherPress specific), change to 'date'
+    if (cleanQuery.orderBy === 'datetime') {
+      cleanQuery.orderBy = 'date';
+    }
+    console.log('Original Query Context:', query);
+    console.log('Cleaned Query Context:', cleanQuery);
+    const queryArgs = {
+      per_page: cleanQuery.perPage || 100,
+      order: cleanQuery.order || 'DESC',
+      orderby: cleanQuery.orderBy || 'date',
+      _embed: 'wp:term'
+    };
 
     // Add date query filter based on the calculated month/year
     if (dateQuery && dateQuery.year && dateQuery.month) {
@@ -466,27 +458,28 @@ function Edit({
     }
 
     // Add taxonomy query if present
-    if (query.taxQuery) {
-      Object.keys(query.taxQuery).forEach(taxonomy => {
-        queryArgs[taxonomy] = query.taxQuery[taxonomy];
+    if (cleanQuery.taxQuery) {
+      Object.keys(cleanQuery.taxQuery).forEach(taxonomy => {
+        queryArgs[taxonomy] = cleanQuery.taxQuery[taxonomy];
       });
     }
 
     // Add author query if present
-    if (query.author) {
-      queryArgs.author = query.author;
+    if (cleanQuery.author) {
+      queryArgs.author = cleanQuery.author;
     }
 
     // Add search query if present
-    if (query.search) {
-      queryArgs.search = query.search;
+    if (cleanQuery.search) {
+      queryArgs.search = cleanQuery.search;
     }
 
     // Get site settings for start_of_week
     const site = getSite();
     const weekStartsOn = site?.start_of_week || 0;
+    console.log('Final Query Args:', queryArgs);
     return {
-      posts: getEntityRecords('postType', query.postType || 'post', queryArgs) || [],
+      posts: getEntityRecords('postType', cleanQuery.postType || 'post', queryArgs) || [],
       startOfWeek: weekStartsOn
     };
   },
