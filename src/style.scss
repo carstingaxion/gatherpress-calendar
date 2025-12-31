@@ -16,7 +16,7 @@
    Block Container
    ========================================================================== */
 
-.wp-block-telex-block-gatherpress-calendar {
+.wp-block-gatherpress-calendar {
 	padding: var(--wp--preset--spacing--50, 1rem);
 	margin-block: var(--wp--preset--spacing--50, 1rem);
 }
@@ -354,7 +354,7 @@
    BLOCK STYLE: Minimal
    ========================================================================== */
 
-.wp-block-telex-block-gatherpress-calendar.is-style-minimal {
+.wp-block-gatherpress-calendar.is-style-minimal {
 	.gatherpress-calendar__month {
 		font-weight: 300;
 		color: var(--wp--preset--color--contrast, #666);
@@ -437,7 +437,7 @@
    BLOCK STYLE: Bold
    ========================================================================== */
 
-.wp-block-telex-block-gatherpress-calendar.is-style-bold {
+.wp-block-gatherpress-calendar.is-style-bold {
 	.gatherpress-calendar__month {
 		font-weight: 900;
 		text-transform: uppercase;
@@ -504,7 +504,7 @@
    BLOCK STYLE: Circular
    ========================================================================== */
 
-.wp-block-telex-block-gatherpress-calendar.is-style-circular {
+.wp-block-gatherpress-calendar.is-style-circular {
 	.gatherpress-calendar__month {
 		font-weight: 500;
 		color: var(--wp--preset--color--primary, #007cba);
@@ -581,7 +581,7 @@
    BLOCK STYLE: Gradient
    ========================================================================== */
 
-.wp-block-telex-block-gatherpress-calendar.is-style-gradient {
+.wp-block-gatherpress-calendar.is-style-gradient {
 	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 	border-radius: 16px;
 	padding: clamp(1rem, 4vw, 2rem);
@@ -701,7 +701,7 @@
 		min-height: clamp(6px, 2vw, 8px);
 	}
 
-	.wp-block-telex-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__event {
+	.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__event {
 		width: clamp(8px, 2.5vw, 10px);
 		height: clamp(8px, 2.5vw, 10px);
 		min-width: clamp(8px, 2.5vw, 10px);

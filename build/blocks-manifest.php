@@ -4,10 +4,10 @@ return array(
 	'build' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'telex/block-gatherpress-calendar',
+		'name' => 'gatherpress/calendar',
 		'version' => '0.1.0',
 		'title' => 'GatherPress Calendar',
-		'category' => 'widgets',
+		'category' => 'gatherpress',
 		'icon' => 'calendar-alt',
 		'description' => 'Display query loop posts in a monthly calendar format.',
 		'ancestor' => array(

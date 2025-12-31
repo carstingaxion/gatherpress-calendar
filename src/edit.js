@@ -3,7 +3,11 @@
  *
  * This file defines the edit component that renders the block within
  * the WordPress block editor. It provides the interface for users to
- * interact with and configure the calendar block.
+ * interact with and configure the calendar block, including:
+ * - Visual calendar preview with posts from the query context
+ * - Month selection and month modifier controls
+ * - Template configuration for how posts appear
+ * - Popover styling options
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
  *
@@ -23,6 +27,7 @@ import { useState, useEffect } from '@wordpress/element';
  * Editor-specific styles
  *
  * Styles defined here are only applied within the block editor context.
+ * They help distinguish the editor view from the frontend display.
  *
  * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
  */
@@ -30,9 +35,13 @@ import './editor.scss';
 
 
 /**
- * Default template for inner blocks
+ * Default template for inner blocks.
  *
- * @type {Array}
+ * Defines the initial blocks that appear when the calendar is first added.
+ * Users can modify this template by adding, removing, or reordering blocks.
+ *
+ * @type {Array<Array>}
+ * @since 0.1.0
  */
 const TEMPLATE = [
 	['core/post-title', { level: 3 }],
@@ -40,17 +49,41 @@ const TEMPLATE = [
 ];
 
 /**
- * Calculate target date based on selectedMonth and monthModifier
+ * Calculate target date based on selectedMonth and monthModifier.
  *
- * This is the SINGLE SOURCE OF TRUTH for date calculation.
- * Used by both date query and calendar generation.
+ * This is the SINGLE SOURCE OF TRUTH for date calculation throughout the block.
+ * It's used by both the date query (for fetching posts) and the calendar generation
+ * (for displaying the grid). This ensures consistency between what posts are fetched
+ * and where they appear in the calendar.
+ *
+ * Logic:
+ * 1. If selectedMonth is set (format: "YYYY-MM"), use that specific month
+ * 2. Otherwise, use current month + monthModifier
+ * 3. JavaScript Date handles year overflow automatically (e.g., month 13 becomes January of next year)
+ *
+ * Why we set date to 1 first:
+ * Setting the date to 1 before applying monthModifier prevents issues with months
+ * that have different numbers of days. For example, if today is Jan 31 and we add
+ * 1 month without this, JavaScript would try to create Feb 31, which doesn't exist.
  *
  * @since 0.1.0
  *
- * @param {string} selectedMonth - The selected month in format YYYY-MM.
- * @param {number} monthModifier - The month offset from current month.
+ * @param {string} selectedMonth - The selected month in format "YYYY-MM" (e.g., "2025-07").
+ * @param {number} monthModifier - The month offset from current month (e.g., -1 for last month, +1 for next month).
  *
- * @return {Date} The target date object.
+ * @return {Date} The calculated target date object.
+ *
+ * @example
+ * // Get a specific month
+ * calculateTargetDate('2025-07', 0) // Returns July 2025
+ *
+ * @example
+ * // Get last month relative to today
+ * calculateTargetDate('', -1) // Returns last month's date
+ *
+ * @example
+ * // Get next month relative to today
+ * calculateTargetDate('', 1) // Returns next month's date
  */
 function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
 	let targetDate;
@@ -66,8 +99,10 @@ function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
 		// Apply month modifier if no explicit month is selected
 		if ( monthModifier !== 0 ) {
 			// Set to first day of month first to avoid date overflow issues
+			// This prevents problems like "Jan 31 + 1 month = March 3" instead of "Feb 28/29"
 			targetDate.setDate( 1 );
 			// Now apply the month modifier - JavaScript handles year overflow automatically
+			// For example: December (month 11) + 1 = January (month 0) of next year
 			targetDate.setMonth( targetDate.getMonth() + monthModifier );
 		}
 	}
@@ -76,32 +111,50 @@ function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
 }
 
 /**
- * Get day names based on start of week setting
+ * Get day names based on start of week setting.
  *
- * Uses WordPress dateI18n to get properly localized day names.
+ * Uses WordPress dateI18n to get properly localized day names that respect
+ * the site's language settings. The order of days is adjusted based on the
+ * start_of_week option (e.g., Monday-first vs Sunday-first).
+ *
+ * How it works:
+ * 1. Start with a known Sunday (2024-01-07)
+ * 2. For each day of the week, calculate which day it should be based on startOfWeek
+ * 3. Use dateI18n with 'D' format to get the translated abbreviated day name
  *
  * @since 0.1.0
  *
- * @param {number} startOfWeek - The start of week (0=Sunday, 1=Monday, etc.).
+ * @param {number} startOfWeek - The start of week (0=Sunday, 1=Monday, 2=Tuesday, etc.).
  *
- * @return {Array<string>} Array of day name labels.
+ * @return {Array<string>} Array of day name labels in the correct order.
+ *
+ * @example
+ * // Sunday-first week (US style)
+ * getDayNames(0) // Returns ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+ *
+ * @example
+ * // Monday-first week (European style)
+ * getDayNames(1) // Returns ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
  */
 function getDayNames( startOfWeek = 0 ) {
 	const days = [];
 	
 	// Base date: 2024-01-07 is a Sunday (day 0)
+	// We use a fixed date so calculations are consistent
 	const baseSunday = new Date( '2024-01-07' );
 	
 	for ( let i = 0; i < 7; i++ ) {
 		// Calculate the day of week (0=Sunday, 6=Saturday)
+		// The modulo ensures we wrap around (e.g., day 7 becomes day 0)
 		const dayOfWeek = ( startOfWeek + i ) % 7;
 		
-		// Create a date for this day of week
+		// Create a date for this day of week by adding days to base Sunday
 		const dayDate = new Date( baseSunday );
 		dayDate.setDate( baseSunday.getDate() + dayOfWeek );
 		
 		// Get the abbreviated day name using dateI18n for proper localization
 		// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.)
+		// This respects the site's language setting via WordPress core
 		days.push( dateI18n( 'D', dayDate ) );
 	}
 
@@ -109,18 +162,47 @@ function getDayNames( startOfWeek = 0 ) {
 }
 
 /**
- * Generate calendar structure
+ * Generate calendar structure with posts.
  *
- * Creates a monthly calendar grid with posts placed on their dates.
+ * Creates a monthly calendar grid where posts are placed on their respective dates.
+ * The calendar structure includes:
+ * - Month name and year
+ * - Weeks array (each week is 7 days)
+ * - Each day contains: day number, date string, and array of posts for that date
+ * - Empty days before/after the month to complete the grid
+ *
+ * Post organization:
+ * - For GatherPress events: uses gatherpress_datetime_start meta field
+ * - For other post types: uses publication date
+ * - Multiple posts can appear on the same day
  *
  * @since 0.1.0
  *
- * @param {Array} posts - Array of post objects.
+ * @param {Array<Object>} posts - Array of post objects from the REST API.
  * @param {number} startOfWeek - The start of week (0=Sunday, 1=Monday, etc.).
- * @param {string} selectedMonth - The selected month in format YYYY-MM (e.g., "2025-07").
- * @param {number} monthModifier - The month offset from current month (e.g., -1 for last month, +1 for next month).
+ * @param {string} selectedMonth - The selected month in format "YYYY-MM".
+ * @param {number} monthModifier - The month offset from current month.
  *
- * @return {Object} Calendar data structure with weeks and days.
+ * @return {Object} Calendar data structure containing:
+ *   - {string} monthName - Formatted month and year (e.g., "January 2025")
+ *   - {Array<Array<Object>>} weeks - Array of weeks, each containing 7 day objects
+ *   - {Array<string>} dayNames - Array of day name labels
+ *
+ * @example
+ * const calendar = generateCalendar(posts, 0, '', 0);
+ * // Returns:
+ * // {
+ * //   monthName: 'January 2025',
+ * //   weeks: [
+ * //     [
+ * //       { isEmpty: true },
+ * //       { day: 1, date: '2025-01-01', posts: [], isEmpty: false },
+ * //       ...
+ * //     ],
+ * //     ...
+ * //   ],
+ * //   dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+ * // }
  */
 function generateCalendar( posts, startOfWeek = 0, selectedMonth = '', monthModifier = 0 ) {
 	// Use the single source of truth for date calculation
@@ -128,15 +210,18 @@ function generateCalendar( posts, startOfWeek = 0, selectedMonth = '', monthModi
 	const year = targetDate.getFullYear();
 	const month = targetDate.getMonth();
 
-	// Organize posts by date
+	// Organize posts by date for quick lookup
+	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
 	const postsByDate = {};
 	if ( posts && posts.length > 0 ) {
 		posts.forEach( ( post ) => {
 			console.log( 'Post in Edit Calendar:', post );
 			let postDate;
+			// For GatherPress events, use event start date
 			if ( post.type === 'gatherpress_event' ) {
 				postDate = post.meta.gatherpress_datetime_start;
 			} else {
+				// For other post types, use publication date
 				postDate = post.date;
 			}
 			if ( ! postDate ) {
@@ -152,20 +237,21 @@ function generateCalendar( posts, startOfWeek = 0, selectedMonth = '', monthModi
 		} );
 	}
 
-	// Get first day of month and total days
+	// Calculate calendar dimensions
 	const firstDay = new Date( year, month, 1 );
 	const lastDay = new Date( year, month + 1, 0 );
 	const daysInMonth = lastDay.getDate();
 	let startDayOfWeek = firstDay.getDay();
 
 	// Adjust start day based on start_of_week setting
+	// This shifts the calendar so it starts on the configured day
 	startDayOfWeek = ( startDayOfWeek - startOfWeek + 7 ) % 7;
 
-	// Create weeks array
+	// Build the weeks array
 	const weeks = [];
 	let currentWeek = [];
 
-	// Fill initial empty days
+	// Fill initial empty days before the month starts
 	for ( let i = 0; i < startDayOfWeek; i++ ) {
 		currentWeek.push( { isEmpty: true } );
 	}
@@ -182,13 +268,14 @@ function generateCalendar( posts, startOfWeek = 0, selectedMonth = '', monthModi
 			isEmpty: false,
 		} );
 
+		// When week is complete (7 days), start a new week
 		if ( currentWeek.length === 7 ) {
 			weeks.push( currentWeek );
 			currentWeek = [];
 		}
 	}
 
-	// Fill remaining empty days
+	// Fill remaining empty days after the month ends
 	while ( currentWeek.length > 0 && currentWeek.length < 7 ) {
 		currentWeek.push( { isEmpty: true } );
 	}
@@ -205,11 +292,27 @@ function generateCalendar( posts, startOfWeek = 0, selectedMonth = '', monthModi
 }
 
 /**
- * Generate month options for the picker
+ * Generate month options for the month picker.
+ *
+ * Creates an array of month options spanning from last year to next year,
+ * providing users with a reasonable range of months to choose from without
+ * overwhelming them with too many options.
  *
  * @since 0.1.0
  *
- * @return {Array} Array of month options.
+ * @return {Array<Object>} Array of month options, each containing:
+ *   - {string} value - Month value in format "YYYY-MM"
+ *   - {string} label - Formatted month name and year (e.g., "January 2025")
+ *
+ * @example
+ * const options = generateMonthOptions();
+ * // Returns array like:
+ * // [
+ * //   { value: '2024-01', label: 'January 2024' },
+ * //   { value: '2024-02', label: 'February 2024' },
+ * //   ...
+ * //   { value: '2026-12', label: 'December 2026' }
+ * // ]
  */
 function generateMonthOptions() {
 	const options = [];
@@ -230,25 +333,37 @@ function generateMonthOptions() {
 }
 
 /**
- * Calculate date query parameters for the selected month
+ * Calculate date query parameters for the selected month.
  *
- * This function converts the selectedMonth attribute (or current month with modifier)
- * to year and month values that can be used in a WP_Query date_query. It handles the
- * JavaScript-specific behavior where Date.getMonth() returns a zero-based index (0-11)
- * that must be incremented by 1 to get the human-readable month number (1-12).
+ * Converts the selectedMonth attribute (or current month with modifier) to year
+ * and month values that can be used in a WP_Query date_query or REST API request.
  *
- * JavaScript Date Months:
- * - January = 0, February = 1, ..., December = 11 (zero-based)
- * 
- * Human-Readable/WP_Query Months:
- * - January = 1, February = 2, ..., December = 12 (one-based)
+ * JavaScript Date Month Behavior:
+ * - Date.getMonth() returns 0-11 (January=0, December=11) - zero-based index
+ * - WP_Query expects 1-12 (January=1, December=12) - one-based index
+ * - Therefore we must add 1 to getMonth() result for WordPress compatibility
+ *
+ * This is a common source of off-by-one errors in JavaScript date handling.
+ * Always remember: JavaScript months are zero-based, human months are one-based.
  *
  * @since 0.1.0
  *
- * @param {string} selectedMonth - The selected month in format YYYY-MM.
+ * @param {string} selectedMonth - The selected month in format "YYYY-MM".
  * @param {number} monthModifier - The month offset from current month.
  *
- * @return {Object} Date query object for WP_Query with year and month properties.
+ * @return {Object} Date query object containing:
+ *   - {number} year - Four-digit year (e.g., 2025)
+ *   - {number} month - Month number 1-12 (January=1, December=12)
+ *
+ * @example
+ * // Calculate for January 2025
+ * calculateDateQuery('2025-01', 0)
+ * // Returns: { year: 2025, month: 1 }
+ *
+ * @example
+ * // Calculate for last month (if current is Feb 2025)
+ * calculateDateQuery('', -1)
+ * // Returns: { year: 2025, month: 1 }
  */
 function calculateDateQuery( selectedMonth, monthModifier = 0 ) {
 	// Use the single source of truth for date calculation
@@ -256,9 +371,18 @@ function calculateDateQuery( selectedMonth, monthModifier = 0 ) {
 	
 	const year = targetDate.getFullYear();
 	/**
-	 * IMPORTANT: JavaScript's getMonth() returns 0-11 (January=0, December=11)
-	 * We add 1 to convert to human-readable format (January=1, December=12)
-	 * which matches WordPress WP_Query's expected month parameter format.
+	 * CRITICAL: JavaScript's getMonth() returns 0-11 (January=0, December=11)
+	 * We MUST add 1 to convert to human-readable/WP_Query format (January=1, December=12)
+	 * 
+	 * Why this matters:
+	 * - Without +1: December would be month 11, January would be month 0
+	 * - WP_Query interprets month 0 as "all months"
+	 * - WP_Query expects month 1-12 to match specific months
+	 * 
+	 * Example:
+	 * const dec = new Date('2025-12-01');
+	 * dec.getMonth()     // Returns 11 (zero-based)
+	 * dec.getMonth() + 1 // Returns 12 (one-based, correct for WP_Query)
 	 */
 	const month = targetDate.getMonth() + 1;
 
@@ -269,13 +393,25 @@ function calculateDateQuery( selectedMonth, monthModifier = 0 ) {
 }
 
 /**
- * Convert BoxControl value to CSS string
+ * Convert BoxControl value to CSS string.
+ *
+ * BoxControl can return values in different formats (string or object with
+ * individual sides). This function normalizes them to a CSS-compatible string.
  *
  * @since 0.1.0
  *
- * @param {Object|string} value - The BoxControl value.
+ * @param {Object|string|undefined} value - The BoxControl value.
  *
- * @return {string} CSS value string.
+ * @return {string} CSS value string (e.g., "10px 20px 10px 20px").
+ *
+ * @example
+ * // String input
+ * boxControlToCSS('1rem') // Returns '1rem'
+ *
+ * @example
+ * // Object input
+ * boxControlToCSS({ top: '10px', right: '20px', bottom: '10px', left: '20px' })
+ * // Returns '10px 20px 10px 20px'
  */
 function boxControlToCSS( value ) {
 	if ( ! value ) {
@@ -295,13 +431,36 @@ function boxControlToCSS( value ) {
 }
 
 /**
- * Convert BorderControl value to CSS strings
+ * Convert BorderControl value to CSS strings.
+ *
+ * BorderControl returns an object with width, style, color, and radius properties.
+ * This function converts them to individual CSS property strings that can be
+ * applied as inline styles.
  *
  * @since 0.1.0
  *
- * @param {Object} value - The BorderControl value.
+ * @param {Object|undefined} value - The BorderControl value object.
  *
- * @return {Object} CSS value strings.
+ * @return {Object} Object containing CSS property strings:
+ *   - {string} borderWidth - CSS border-width value
+ *   - {string} borderStyle - CSS border-style value
+ *   - {string} borderColor - CSS border-color value
+ *   - {string} borderRadius - CSS border-radius value
+ *
+ * @example
+ * borderControlToCSS({
+ *   width: '2px',
+ *   style: 'solid',
+ *   color: '#000',
+ *   radius: '4px'
+ * })
+ * // Returns:
+ * // {
+ * //   borderWidth: '2px',
+ * //   borderStyle: 'solid',
+ * //   borderColor: '#000',
+ * //   borderRadius: '4px'
+ * // }
  */
 function borderControlToCSS( value ) {
 	if ( ! value ) {
@@ -337,17 +496,35 @@ function borderControlToCSS( value ) {
 /**
  * Edit Component
  *
- * Renders the block's edit interface in the WordPress editor.
+ * Main editor component for the GatherPress Calendar block.
+ * Handles:
+ * - Rendering the calendar preview with posts
+ * - Month selection and month modifier controls
+ * - Template configuration interface
+ * - Popover styling controls
+ * - Query context validation
+ *
+ * Component Lifecycle:
+ * 1. Receives attributes and context from WordPress
+ * 2. Uses useSelect to fetch posts based on query context
+ * 3. Generates calendar structure from posts
+ * 4. Renders calendar preview and controls
+ * 5. Updates attributes when user interacts with controls
  *
  * @since 0.1.0
  *
- * @param {Object} props - The component props.
- * @param {Object} props.attributes - The block attributes.
- * @param {Function} props.setAttributes - Function to update attributes.
- * @param {Object} props.context - Context from parent blocks.
- * @param {string} props.clientId - The block's client ID.
+ * @param {Object} props - Component props.
+ * @param {Object} props.attributes - Block attributes containing:
+ *   - {string} selectedMonth - Selected month in format "YYYY-MM"
+ *   - {number} monthModifier - Month offset from current month
+ *   - {Object} templateConfigStyle - Popover styling configuration
+ * @param {Function} props.setAttributes - Function to update block attributes.
+ * @param {Object} props.context - Context from parent blocks, including:
+ *   - {Object} query - Query Loop query configuration
+ *   - {number} queryId - Query Loop ID for pagination
+ * @param {string} props.clientId - Unique identifier for this block instance.
  *
- * @return {Element} The React element to be rendered in the editor.
+ * @return {WPElement} React element rendered in the editor.
  */
 export default function Edit( { attributes, setAttributes, context, clientId } ) {
 	const { selectedMonth, monthModifier = 0, templateConfigStyle = {} } = attributes;
@@ -355,13 +532,25 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 	const [showMonthPicker, setShowMonthPicker] = useState(false);
 
 	/**
-	 * Calculate date query based on selectedMonth and monthModifier
+	 * Calculate date query based on selectedMonth and monthModifier.
+	 * This ensures the calendar only fetches posts for the displayed month.
 	 */
 	const dateQuery = calculateDateQuery( selectedMonth, monthModifier );
 
 	/**
-	 * Fetch posts based on query context with date filtering
-	 * The useSelect hook will automatically re-run when selectedMonth or monthModifier changes
+	 * Fetch posts based on query context with date filtering.
+	 * 
+	 * The useSelect hook automatically re-runs when dependencies change,
+	 * ensuring the calendar updates when:
+	 * - User changes selected month
+	 * - User changes month modifier
+	 * - Parent Query Loop changes its configuration
+	 * 
+	 * Why we clean the query:
+	 * - GatherPress adds 'gatherpress_event_query' parameter
+	 * - This parameter conflicts with our date_query
+	 * - We remove it and any other GatherPress-specific params
+	 * - REST API getEntityRecords doesn't understand these custom params
 	 */
 	const { posts, startOfWeek } = useSelect(
 		( select ) => {
@@ -388,6 +577,7 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 			console.log( 'Original Query Context:', query );
 			console.log( 'Cleaned Query Context:', cleanQuery );
 
+			// Build REST API query arguments
 			const queryArgs = {
 				per_page: cleanQuery.perPage || 100,
 				order: cleanQuery.order || 'DESC',
@@ -396,6 +586,7 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 			};
 
 			// Add date query filter based on the calculated month/year
+			// This is what makes the calendar only show posts from the displayed month
 			if ( dateQuery && dateQuery.year && dateQuery.month ) {
 				queryArgs.year = dateQuery.year;
 				queryArgs.month = dateQuery.month;
@@ -429,7 +620,7 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 				startOfWeek: weekStartsOn,
 			};
 		},
-		// CRITICAL: Add selectedMonth and monthModifier as dependencies so the query updates when they change
+		// CRITICAL: Dependencies array ensures query updates when these values change
 		[ query, selectedMonth, monthModifier, dateQuery.year, dateQuery.month ]
 	);
 
@@ -448,6 +639,7 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 		}
 	);
 
+	// Show placeholder if block is not inside a Query Loop
 	if ( ! query ) {
 		return (
 			<div { ...blockProps }>
@@ -466,7 +658,7 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 	const calendar = generateCalendar( posts, startOfWeek, selectedMonth, monthModifier );
 	const monthOptions = generateMonthOptions();
 
-	// Build inline styles for template config
+	// Build inline styles for template config preview
 	const templateConfigStyles = {
 		backgroundColor: templateConfigStyle.backgroundColor || undefined,
 		padding: boxControlToCSS( templateConfigStyle.padding ) || undefined,

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="gatherpress-statistics">
-	<description>Coding standards for gatherpress-statistics</description>
+<ruleset name="gatherpress-calendar">
+	<description>Coding standards for gatherpress-calendar</description>
 
 	<file>.</file>
 	<arg name="basepath" value="./"/><!-- Strip the file paths down to the relevant bit -->
@@ -15,7 +15,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="gatherpress-statistics"/>
+				<element value="gatherpress-calendar"/>
 			</property>
 		</properties>
 	</rule>

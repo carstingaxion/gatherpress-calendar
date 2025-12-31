@@ -1,0 +1,77 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "landingPage": "/wp-admin/post.php?post=4&action=edit",
+  "preferredVersions": {
+    "php": "8.2",
+    "wp": "latest"
+  },
+  "phpExtensionBundles": [
+    "kitchen-sink"
+  ],
+  "features": {
+    "networking": true
+  },
+  "steps": [
+    {
+      "step": "setSiteOptions",
+      "options": {
+        "blogname": "GatherPress Calendar",
+        "blogdescription": "Enhancing GatherPress Events with a Calendar block.",
+        "users_can_register": 1,
+        "permalink_structure": "/%year%/%monthnum%/%postname%/"
+      }
+    },
+    {
+      "step": "defineWpConfigConsts",
+      "consts": {
+          "GATHERPRESS_ALPHA_VERSION": 1
+      }
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; $user_id = wp_create_user('editor', 'editorpass', 'editor@localhost.test'); (new WP_User($user_id))->set_role('editor');"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require_once '/wordpress/wp-load.php';\n$page_args = array(\n'post_type'    => 'page',\n'post_status'  => 'publish',\n'post_title'   => 'GatherPress Calendar',\n'post_content' => '<!-- wp:query {\"queryId\":0,\"query\":{\"perPage\":12,\"pages\":0,\"offset\":0,\"postType\":\"gatherpress_event\",\"order\":\"asc\",\"author\":\"\",\"search\":\"\",\"exclude\":[],\"sticky\":\"\",\"inherit\":false,\"parents\":[],\"format\":[]},\"namespace\":\"gatherpress-event-query\",\"align\":\"full\",\"layout\":{\"type\":\"constrained\",\"justifyContent\":\"center\"}} -->\n<div class=\"wp-block-query alignfull\"><!-- wp:telex/block-gatherpress-calendar {\"templateConfigStyle\":{\"padding\":{\"top\":\"23\",\"bottom\":\"23\",\"left\":\"23\",\"right\":\"23\"},\"boxShadow\":\"0 8px 24px rgba(0, 0, 0, 0.15)\",\"borderWidth\":\"0px\",\"borderStyle\":\"none\"},\"align\":\"full\",\"className\":\"is-style-default\"} -->\n<div class=\"wp-block-telex-block-gatherpress-calendar alignfull gatherpress-calendar-block is-style-default\"><div class=\"gatherpress-calendar-template\"><!-- wp:post-title {\"level\":3,\"fontSize\":\"xx-large\"} /-->\n<!-- wp:post-excerpt /-->\n<!-- wp:post-date /--></div></div>\n<!-- /wp:telex/block-gatherpress-calendar --></div>\n<!-- /wp:query -->',\n);\n$page_id = wp_insert_post( $page_args, true );\nif ( is_wp_error( $page_id ) ) {\nerror_log( 'addPage error: ' . $page_id->get_error_message() );\n}",
+      "progress": {
+        "caption": "Crafting a GatherPress Calendar Demo Page"
+      }
+    },
+    {
+      "step": "login",
+      "username": "admin"
+    },
+    {
+      "step": "updateUserMeta",
+      "meta": {
+          "admin_color": "modern"
+      },
+      "userId": 1
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+          "resource": "wordpress.org\/plugins",
+          "slug": "gatherpress"
+      },
+      "options": {
+          "activate": true
+      }
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "git:directory",
+        "url": "https://github.com/carstingaxion/gatherpress-calendar",
+        "ref": "HEAD"
+      },
+      "options": {
+        "activate": true
+      },
+      "progress": {
+        "caption": "Installing plugin from GitHub: carstingaxion/gatherpress-calendar"
+      }
+    }
+  ]
+}

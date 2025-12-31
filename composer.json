@@ -1,6 +1,6 @@
 {
-    "name": "figuren-theater/gatherpress-statistics",
-    "description": "... like the figuren.theater WordPress Multisite network.",
+    "name": "carstingaxion/gatherpress-calendar",
+    "description": "A calendar block that displays Query Loop results in a monthly calendar format. Works with any post type, with specialized support for GatherPress events.",
     "license": "GPL-3.0+",
     "type": "wordpress-muplugin",
     "keywords": [
@@ -23,8 +23,8 @@
     "homepage": "https://websites.fuer.figuren.theater",
     "support": {
         "email": "info@figuren.theater",
-        "issues": "https://github.com/figuren-theater/gatherpress-statistics/issues",
-        "source": "https://github.com/figuren-theater/gatherpress-statistics"
+        "issues": "https://github.com/carstingaxion/gatherpress-calendar/issues",
+        "source": "https://github.com/carstingaxion/gatherpress-calendar"
     },
     "require-dev": {
         "figuren-theater/code-quality": "*"
