@@ -154,7 +154,13 @@ function generateCalendar(posts, startOfWeek = 0, selectedMonth = '', monthModif
   const postsByDate = {};
   if (posts && posts.length > 0) {
     posts.forEach(post => {
-      const postDate = post.date;
+      console.log('Post in Edit Calendar:', post);
+      let postDate;
+      if (post.type === 'gatherpress_event') {
+        postDate = post.meta.gatherpress_datetime_start;
+      } else {
+        postDate = post.date;
+      }
       if (!postDate) {
         return;
       }
@@ -416,12 +422,28 @@ function Edit({
     const {
       getSite
     } = select(_wordpress_core_data__WEBPACK_IMPORTED_MODULE_4__.store);
+    // Create a new query var, excluding 'gatherpress_event_query'
+    // const newQuery = { ...query };
+    // if ( query.gatherpress_event_query ) {
+    // 	delete query.gatherpress_event_query;
+    // }
+    // if ( query.include_unfinished ) {
+    // 	delete query.include_unfinished;
+    // }
+    console.log('Query Context in Edit:', query);
+    /* 
+    			const queryArgs = {
+    				// context: 'view',
+    				gatherpress_event_query: 'past', // !!! Super weird temporary hack.
+    				per_page: query.perPage || 100,
+    				order: query.order || 'DESC',
+    				// orderby: query.orderBy || 'date',
+    				orderby: 'title',
+    				_embed: 'wp:term',
+    			}; */
     const queryArgs = {
-      per_page: query.perPage || 100,
-      order: query.order || 'DESC',
-      orderby: query.orderBy || 'date',
-      _embed: 'wp:term'
-    };
+      ...query
+    }; // Trying to debug .... with no luck yet!
 
     // Add date query filter based on the calculated month/year
     if (dateQuery && dateQuery.year && dateQuery.month) {

@@ -35,7 +35,6 @@ $page     = empty( $_GET[ 'query-' . $query_id . '-page' ] ) ? 1 : (int) $_GET[ 
 if ( empty( $query ) ) {
 	return '';
 }
-
 /**
  * Build query arguments from the Query Loop context
  *
@@ -93,6 +92,7 @@ $query_args['date_query'] = array(
  * @var WP_Query
  */
 $query_loop = new WP_Query( $query_args );
+// echo '<pre>' . var_export( $query_loop, true ) . '</pre>'; // DEBUG
 
 if ( ! $query_loop->have_posts() ) {
 	wp_reset_postdata();
@@ -202,7 +202,13 @@ while ( $query_loop->have_posts() ) {
 	$query_loop->the_post();
 	$post_id = get_the_ID();
 
-	$post_date = get_the_date( 'Y-m-d' );
+	if ( 'gatherpress_event' === get_post_type( $post_id ) && class_exists( '\GatherPress\Core\Event' ) ) {
+		$event = new \GatherPress\Core\Event( $post_id );
+		$post_date = $event->get_datetime_start( 'Y-m-d' );
+	} else {
+		$post_date = get_the_date( 'Y-m-d' );
+	}
+
 
 	if ( ! isset( $posts_by_date[ $post_date ] ) ) {
 		$posts_by_date[ $post_date ] = array();
