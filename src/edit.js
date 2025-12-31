@@ -58,6 +58,42 @@ const TEMPLATE = [
 ];
 
 /**
+ * Calculate target date based on selectedMonth and monthModifier
+ *
+ * This is the SINGLE SOURCE OF TRUTH for date calculation.
+ * Used by both date query and calendar generation.
+ *
+ * @since 0.1.0
+ *
+ * @param {string} selectedMonth - The selected month in format YYYY-MM.
+ * @param {number} monthModifier - The month offset from current month.
+ *
+ * @return {Date} The target date object.
+ */
+function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
+	let targetDate;
+	
+	if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
+		// Use selected month (ignore monthModifier when explicit month is set)
+		const [year, month] = selectedMonth.split('-').map(Number);
+		targetDate = new Date( year, month - 1, 1 );
+	} else {
+		// Use current month with modifier
+		targetDate = new Date();
+		
+		// Apply month modifier if no explicit month is selected
+		if ( monthModifier !== 0 ) {
+			// Set to first day of month first to avoid date overflow issues
+			targetDate.setDate( 1 );
+			// Now apply the month modifier - JavaScript handles year overflow automatically
+			targetDate.setMonth( targetDate.getMonth() + monthModifier );
+		}
+	}
+	
+	return targetDate;
+}
+
+/**
  * Get day names based on start of week setting
  *
  * Uses WordPress dateI18n to get properly localized day names.
@@ -105,20 +141,8 @@ function getDayNames( startOfWeek = 0 ) {
  * @return {Object} Calendar data structure with weeks and days.
  */
 function generateCalendar( posts, startOfWeek = 0, selectedMonth = '', monthModifier = 0 ) {
-	// Determine which month to display
-	let targetDate;
-	if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
-		// Use selected month (ignore monthModifier when explicit month is set)
-		const [year, month] = selectedMonth.split('-').map(Number);
-		targetDate = new Date( year, month - 1, 1 );
-	} else {
-		// Use current month with modifier
-		targetDate = new Date();
-		if ( monthModifier !== 0 ) {
-			targetDate.setMonth( targetDate.getMonth() + monthModifier );
-		}
-	}
-
+	// Use the single source of truth for date calculation
+	const targetDate = calculateTargetDate( selectedMonth, monthModifier );
 	const year = targetDate.getFullYear();
 	const month = targetDate.getMonth();
 
@@ -245,26 +269,16 @@ function generateMonthOptions() {
  * @return {Object} Date query object for WP_Query with year and month properties.
  */
 function calculateDateQuery( selectedMonth, monthModifier = 0 ) {
-	let year, month;
-
-	if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
-		[year, month] = selectedMonth.split('-').map(Number);
-	} else {
-		const now = new Date();
-		
-		// Apply month modifier if no explicit month is selected
-		if ( monthModifier !== 0 ) {
-			now.setMonth( now.getMonth() + monthModifier );
-		}
-		
-		year = now.getFullYear();
-		/**
-		 * IMPORTANT: JavaScript's getMonth() returns 0-11 (January=0, December=11)
-		 * We add 1 to convert to human-readable format (January=1, December=12)
-		 * which matches WordPress WP_Query's expected month parameter format.
-		 */
-		month = now.getMonth() + 1;
-	}
+	// Use the single source of truth for date calculation
+	const targetDate = calculateTargetDate( selectedMonth, monthModifier );
+	
+	const year = targetDate.getFullYear();
+	/**
+	 * IMPORTANT: JavaScript's getMonth() returns 0-11 (January=0, December=11)
+	 * We add 1 to convert to human-readable format (January=1, December=12)
+	 * which matches WordPress WP_Query's expected month parameter format.
+	 */
+	const month = targetDate.getMonth() + 1;
 
 	return {
 		year: year,
