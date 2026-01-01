@@ -967,10 +967,24 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/blocks */ "@wordpress/blocks");
 /* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./style.scss */ "./src/style.scss");
-/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./edit */ "./src/edit.js");
-/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./save */ "./src/save.js");
-/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./block.json */ "./src/block.json");
+/* harmony import */ var _wordpress_compose__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/compose */ "@wordpress/compose");
+/* harmony import */ var _wordpress_compose__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_compose__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wordpress/hooks */ "@wordpress/hooks");
+/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_hooks__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wordpress/components */ "@wordpress/components");
+/* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @wordpress/i18n */ "@wordpress/i18n");
+/* harmony import */ var _wordpress_i18n__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @wordpress/data */ "@wordpress/data");
+/* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_wordpress_data__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @wordpress/block-editor */ "@wordpress/block-editor");
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./style.scss */ "./src/style.scss");
+/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./edit */ "./src/edit.js");
+/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./save */ "./src/save.js");
+/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./block.json */ "./src/block.json");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__);
 /**
  * GatherPress Calendar Block Registration
  *
@@ -982,6 +996,13 @@ __webpack_require__.r(__webpack_exports__);
  * @package GatherPressCalendar
  * @since 0.1.0
  */
+
+
+
+
+
+
+
 
 
 
@@ -1011,13 +1032,14 @@ __webpack_require__.r(__webpack_exports__);
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-registration/
  */
-(0,_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__.registerBlockType)(_block_json__WEBPACK_IMPORTED_MODULE_4__.name, {
+
+(0,_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__.registerBlockType)(_block_json__WEBPACK_IMPORTED_MODULE_10__.name, {
   /**
    * Edit function for the block
    *
    * @see ./edit.js
    */
-  edit: _edit__WEBPACK_IMPORTED_MODULE_2__["default"],
+  edit: _edit__WEBPACK_IMPORTED_MODULE_8__["default"],
   /**
    * Save function for the block
    *
@@ -1025,8 +1047,104 @@ __webpack_require__.r(__webpack_exports__);
    *
    * @see ./save.js
    */
-  save: _save__WEBPACK_IMPORTED_MODULE_3__["default"]
+  save: _save__WEBPACK_IMPORTED_MODULE_9__["default"]
 });
+
+/**
+ * Add calendar notice to Query Loop block inspector controls.
+ *
+ * This filter wraps the Query Loop block's BlockEdit component to inject
+ * a notice when a GatherPress Calendar block is present as a direct child
+ * AND the query is for gatherpress_event post type.
+ *
+ * The notice explains that the calendar will override GatherPress's
+ * 'gatherpress_event_query' setting and use date-based filtering instead.
+ *
+ * Technical approach:
+ * - Uses editor.BlockEdit filter to wrap the Query block component
+ * - Checks if selected block is core/query
+ * - Checks if query is for gatherpress_event post type
+ * - Checks if any direct child is gatherpress/calendar
+ * - Injects notice into InspectorControls
+ *
+ * @since 0.1.0
+ */
+const withCalendarNotice = (0,_wordpress_compose__WEBPACK_IMPORTED_MODULE_1__.createHigherOrderComponent)(BlockEdit => {
+  return props => {
+    // Only apply to Query Loop blocks
+    if (props.name !== 'core/query') {
+      return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(BlockEdit, {
+        ...props
+      });
+    }
+
+    /**
+     * Check if this Query block:
+     * 1. Has a calendar child
+     * 2. Is querying gatherpress_event post type
+     *
+     * Queries the block editor store to check if any direct child
+     * of this block is a GatherPress Calendar block, and if the
+     * query is specifically for GatherPress events.
+     */
+    const {
+      hasCalendarChild,
+      isGatherPressQuery
+    } = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_5__.useSelect)(select => {
+      const {
+        getBlock
+      } = select(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_6__.store);
+      const block = getBlock(props.clientId);
+      if (!block || !block.innerBlocks || block.innerBlocks.length === 0) {
+        return {
+          hasCalendarChild: false,
+          isGatherPressQuery: false
+        };
+      }
+      const hasCalendar = block.innerBlocks.some(innerBlock => innerBlock.name === 'gatherpress/calendar');
+
+      // Check if the query is for gatherpress_event post type
+      const postType = block.attributes?.query?.postType || 'post';
+      const isGatherPress = postType === 'gatherpress_event';
+      return {
+        hasCalendarChild: hasCalendar,
+        isGatherPressQuery: isGatherPress
+      };
+    }, [props.clientId, props.attributes]);
+
+    // Only show notice if both conditions are met:
+    // 1. Calendar block is present
+    // 2. Query is for gatherpress_event post type
+    const shouldShowNotice = hasCalendarChild && isGatherPressQuery;
+    return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.Fragment, {
+      children: [shouldShowNotice && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_6__.InspectorControls, {
+        children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsxs)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Notice, {
+          status: "info",
+          isDismissible: false,
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)("p", {
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('The GatherPress Calendar block is active in this Query Loop. The calendar will use date-based filtering for the selected month, overriding the "Upcoming or past events" setting.', 'gatherpress-calendar')
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)("p", {
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_4__.__)('This ensures the calendar only displays events from the specific month, regardless of whether they are past or upcoming events.', 'gatherpress-calendar')
+          })]
+        })
+      }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_11__.jsx)(BlockEdit, {
+        ...props
+      })]
+    });
+  };
+}, 'withCalendarNotice');
+
+/**
+ * Register the filter to add calendar notices to Query blocks.
+ *
+ * This filter runs on every Query block render in the editor,
+ * checking for calendar children and the post type before injecting notices.
+ *
+ * Priority 20 ensures it runs after other Query block modifications.
+ *
+ * @since 0.1.0
+ */
+(0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_2__.addFilter)('editor.BlockEdit', 'gatherpress-calendar/with-calendar-notice', withCalendarNotice, 20);
 
 /***/ },
 
@@ -1131,6 +1249,16 @@ module.exports = window["wp"]["components"];
 
 /***/ },
 
+/***/ "@wordpress/compose"
+/*!*********************************!*\
+  !*** external ["wp","compose"] ***!
+  \*********************************/
+(module) {
+
+module.exports = window["wp"]["compose"];
+
+/***/ },
+
 /***/ "@wordpress/core-data"
 /*!**********************************!*\
   !*** external ["wp","coreData"] ***!
@@ -1168,6 +1296,16 @@ module.exports = window["wp"]["date"];
 (module) {
 
 module.exports = window["wp"]["element"];
+
+/***/ },
+
+/***/ "@wordpress/hooks"
+/*!*******************************!*\
+  !*** external ["wp","hooks"] ***!
+  \*******************************/
+(module) {
+
+module.exports = window["wp"]["hooks"];
 
 /***/ },
 
