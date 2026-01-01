@@ -16,6 +16,12 @@
  * - Focus management: Popover receives focus when opened
  * - Backdrop click: Clicking outside closes popover
  *
+ * Performance Optimization:
+ * - Uses IntersectionObserver to only process visible calendars
+ * - Pauses event handling when calendar is off-screen
+ * - Reduces battery drain on mobile devices
+ * - Improves performance on pages with multiple calendars
+ *
  * Why minimal JavaScript:
  * - Core functionality works without JS (links)
  * - Better performance on slow connections
@@ -45,6 +51,30 @@
    */
   let activeBackdrop = null;
 
+  /**
+   * Active calendar reference.
+   * Tracks which calendar currently has an open popover.
+   *
+   * @type {HTMLElement|null}
+   */
+  let activeCalendar = null;
+
+  /**
+   * IntersectionObserver instance for monitoring calendar visibility.
+   * Used to optimize performance by only processing visible calendars.
+   *
+   * @type {IntersectionObserver|null}
+   */
+  let observer = null;
+
+  /**
+   * Map of calendars to their visibility state.
+   * Tracks whether each calendar is currently in the viewport.
+   *
+   * @type {WeakMap<HTMLElement, boolean>}
+   */
+  const visibilityMap = new WeakMap();
+
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -55,10 +85,10 @@
   /**
    * Initialize popover functionality for all calendars on the page.
    *
-   * Sets up event handlers for:
-   * - Click/tap on event dots
-   * - Keyboard interaction (Enter, Space, Escape)
-   * - Backdrop clicks
+   * Sets up:
+   * - IntersectionObserver for visibility tracking
+   * - Event handlers for visible calendars only
+   * - Global keyboard handlers (Escape)
    *
    * @since 0.1.0
    *
@@ -67,13 +97,78 @@
   function init() {
     const calendars = document.querySelectorAll('.gatherpress-calendar');
     if (!calendars.length) return;
-    calendars.forEach(setupCalendar);
+
+    // Set up IntersectionObserver to track calendar visibility
+    if ('IntersectionObserver' in window) {
+      setupIntersectionObserver(calendars);
+    } else {
+      // Fallback for browsers without IntersectionObserver support
+      // Set all calendars as visible and set them up immediately
+      calendars.forEach(function (calendar) {
+        visibilityMap.set(calendar, true);
+        setupCalendar(calendar);
+      });
+    }
 
     // Global escape key handler to close any open popover
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && activePopover) {
         closePopover();
       }
+    });
+  }
+
+  /**
+   * Set up IntersectionObserver to track calendar visibility.
+   *
+   * The observer watches for calendars entering/leaving the viewport
+   * and enables/disables event handlers accordingly. This provides:
+   * - Better performance by reducing event handler overhead
+   * - Lower battery consumption on mobile devices
+   * - Automatic cleanup when calendars scroll off-screen
+   *
+   * Threshold: 0.1 means calendar is considered visible when
+   * at least 10% of it is in the viewport.
+   *
+   * @since 0.1.0
+   *
+   * @param {NodeList} calendars - List of calendar elements to observe.
+   *
+   * @return {void}
+   */
+  function setupIntersectionObserver(calendars) {
+    observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        const calendar = entry.target;
+        const wasVisible = visibilityMap.get(calendar);
+        const isVisible = entry.isIntersecting;
+
+        // Update visibility state
+        visibilityMap.set(calendar, isVisible);
+        if (isVisible && !wasVisible) {
+          // Calendar entered viewport - set it up
+          setupCalendar(calendar);
+        } else if (!isVisible && wasVisible) {
+          // Calendar left viewport
+          // If this calendar has an active popover, close it
+          if (activeCalendar === calendar) {
+            closePopover();
+          }
+          // Event handlers remain but only fire for visible calendars
+        }
+      });
+    }, {
+      // Options:
+      // - threshold: 0.1 means trigger when 10% visible
+      // - rootMargin: '50px' gives a buffer zone for smoother transitions
+      threshold: 0.1,
+      rootMargin: '50px'
+    });
+
+    // Start observing all calendars
+    calendars.forEach(function (calendar) {
+      visibilityMap.set(calendar, false);
+      observer.observe(calendar);
     });
   }
 
@@ -85,6 +180,9 @@
    * - Keyboard handler (Enter/Space keys)
    * - ARIA attributes for accessibility
    *
+   * Event handlers check visibility state before processing,
+   * providing automatic optimization via IntersectionObserver.
+   *
    * @since 0.1.0
    *
    * @param {HTMLElement} calendar - The calendar container element.
@@ -94,24 +192,37 @@
   function setupCalendar(calendar) {
     const events = calendar.querySelectorAll('.gatherpress-calendar__event');
     events.forEach(function (eventLink) {
+      // Skip if already set up (prevents duplicate handlers)
+      if (eventLink.hasAttribute('data-setup')) return;
+      eventLink.setAttribute('data-setup', 'true');
+
       // Add ARIA attributes for screen readers
       eventLink.setAttribute('role', 'button');
       eventLink.setAttribute('tabindex', '0');
 
-      // Click handler - prevent navigation, show popover
-      // This is the progressive enhancement: without JS, the link works normally
+      /**
+       * Click handler - prevent navigation, show popover.
+       * Only processes if calendar is visible (optimization).
+       */
       eventLink.addEventListener('click', function (e) {
+        // Check if calendar is visible before processing
+        if (!visibilityMap.get(calendar)) return;
         e.preventDefault();
         e.stopPropagation();
-        showPopover(eventLink);
+        showPopover(eventLink, calendar);
       });
 
-      // Keyboard support for accessibility
-      // Enter and Space keys should trigger the same action as click
+      /**
+       * Keyboard support for accessibility.
+       * Enter and Space keys trigger the same action as click.
+       * Only processes if calendar is visible.
+       */
       eventLink.addEventListener('keydown', function (e) {
+        // Check if calendar is visible before processing
+        if (!visibilityMap.get(calendar)) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          showPopover(eventLink);
+          showPopover(eventLink, calendar);
         }
       });
     });
@@ -135,6 +246,7 @@
    * @since 0.1.0
    *
    * @param {HTMLAnchorElement} eventLink - The event dot link element that was clicked.
+   * @param {HTMLElement} calendar - The calendar container element.
    *
    * @return {void}
    *
@@ -145,7 +257,7 @@
    * //   <div>Post Date</div>
    * // </a>
    */
-  function showPopover(eventLink) {
+  function showPopover(eventLink, calendar) {
     // Close any existing popover first
     if (activePopover) closePopover();
 
@@ -193,17 +305,32 @@
     // Store references for cleanup
     activePopover = popover;
     activeBackdrop = backdrop;
+    activeCalendar = calendar;
 
     // Move focus to popover for keyboard navigation
     popover.focus();
 
-    // Setup position updates on scroll/resize
-    // This keeps popover aligned with the dot even if page scrolls
+    /**
+     * Setup position update handler.
+     *
+     * Only updates position when the calendar is visible.
+     * This optimization prevents unnecessary calculations when
+     * the calendar (and thus the popover) is off-screen.
+     */
     const updatePos = function () {
-      if (activePopover) positionPopover(popover, eventLink);
+      if (activePopover && visibilityMap.get(calendar)) {
+        positionPopover(popover, eventLink);
+      }
     };
-    window.addEventListener('scroll', updatePos);
-    window.addEventListener('resize', updatePos);
+
+    // Update position on scroll and resize
+    // These fire frequently, but updatePos checks visibility first
+    window.addEventListener('scroll', updatePos, {
+      passive: true
+    });
+    window.addEventListener('resize', updatePos, {
+      passive: true
+    });
 
     // Store cleanup function for later
     popover._cleanup = function () {
@@ -298,6 +425,7 @@
       }
       activePopover = null;
       activeBackdrop = null;
+      activeCalendar = null;
     }, 200);
   }
 })();
