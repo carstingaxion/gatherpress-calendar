@@ -1,211 +1,226 @@
-# GatherPress Calendar
+=== Query Map ===
 
-**Contributors:** carstenbach & WordPress Telex  
-**Tags:** block, calendar, gatherpress, events, query-loop  
-**Tested up to:** 6.8  
-**Stable tag:** 0.1.0  
-**License:** GPLv2 or later  
-**License URI:** https://www.gnu.org/licenses/gpl-2.0.html  
-**Requires at least:** 6.0  
-**Requires PHP:** 7.4  
+Contributors:      WordPress Telex
+Tags:              block, map, openstreetmap, geo, query-loop
+Tested up to:      6.8
+Stable tag:        0.1.0
+License:           GPLv2 or later
+License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+Requires at least: 6.0
+Requires PHP:      7.4
 
-A calendar block that displays Query Loop results in a monthly calendar format. Works with any post type, with specialized support for GatherPress events.
+A map block that displays Query Loop results with geographic data on an interactive OpenStreetMap. Works with any post type that has WordPress Geo Data Standard metadata, with specialized support for GatherPress events.
 
-[![Playground Demo Link](https://img.shields.io/badge/WordPress_Playground-blue?logo=wordpress&logoColor=%23fff&labelColor=%233858e9&color=%233858e9)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/carstingaxion/gatherpress-calendar/main/.wordpress-org/blueprints/blueprint.json)
+== Description ==
 
----
+Query Map is a WordPress block that renders Query Loop results on an interactive OpenStreetMap. It integrates with the WordPress Query Loop block to display posts with geographic data as markers on a map, providing an intuitive way to visualize location-based content.
 
-## Description
+= Core Functionality =
 
-GatherPress Calendar is a WordPress block that renders Query Loop results as a monthly calendar. It integrates with the WordPress Query Loop block to display posts organized by their publication date (or event date for GatherPress events) in a structured calendar view.
+**Query Loop Integration**
+The block must be used as a child of the core Query Loop block. It reads the query context and displays matching posts as markers on an OpenStreetMap based on their geographic coordinates.
 
-![](.wordpress-org/screenshot-1.png)
----
+**Geographic Data Support**
+- Uses WordPress Geo Data Standard for location information
+- Reads geo_latitude and geo_longitude from post metadata
+- For GatherPress events, uses venue coordinates from gatherpress_venue meta
+- Falls back gracefully for posts without geographic data
+- Supports any post type with proper geo metadata
 
-## Core Functionality
+**Interactive Map Display**
+- OpenStreetMap tiles via Leaflet.js library
+- Clustered markers for better performance with many posts
+- Click markers to view post popover with content
+- Zoom and pan controls for navigation
+- Responsive design that works on all screen sizes
 
-### Query Loop Integration
-The block must be used as a child of the core Query Loop block. It reads the query context and displays matching posts in a calendar grid based on their dates.
+**Post Template System**
+Uses WordPress InnerBlocks to define how each post appears in marker popovers:
+- Configure once in the editor
+- Supports any core post blocks (Post Title, Post Date, Post Excerpt, etc.)
+- Template applies to all post markers on the map
 
-### Date-Based Display
-- Posts are placed on calendar days according to their publication date  
-- For GatherPress events, uses the event start date (`gatherpress_datetime_start` meta field)  
-- Automatically filters the query to only fetch posts within the displayed month for performance  
+**Progressive Enhancement**
+- Without JavaScript: Displays a static list of posts with addresses
+- With JavaScript: Shows interactive map with markers and popovers
+- Keyboard accessible with full ARIA support
+- Works on all modern browsers
 
-### Month Selection
-- **Default:** Displays the current month  
-- **Manual Selection:** Choose any specific month from a date picker  
-- **Month Modifier:** Display months relative to current (e.g., `-1` for last month, `+1` for next month)  
-- When a modifier is set, the calendar automatically updates as time passes  
+= Display Features =
 
-### Post Template System
-Uses WordPress InnerBlocks to define how each post appears in the calendar:
-- Configure once in the editor  
-- Supports any core post blocks (Post Title, Post Date, Post Excerpt, etc.)  
-- Template applies to all posts in the calendar  
+**Map Controls**
+- Zoom in/out buttons
+- Pan by dragging
+- Double-click to zoom
+- Scroll wheel zoom
+- Touch gestures on mobile
 
-### Progressive Enhancement
-- Without JavaScript: Event dots are clickable links to post permalinks  
-- With JavaScript: Clicking dots shows a popover overlay with post content  
-- Keyboard accessible with Escape key to close and full focus management  
+**Marker Features**
+- Color-coded by post type or category
+- Custom icons available
+- Cluster groups for many markers
+- Popup on click showing post content
+- Direct link to full post
 
----
+**Customizable Styling**
+Control the appearance of:
+- Map height and width
+- Marker colors and icons
+- Popup background and borders
+- Typography and spacing
+- Border radius and shadows
 
-## Display Features
+= Technical Implementation =
 
-### Responsive Design
-- Uses CSS container queries for optimal display at any width  
-- Hides day name headers on very narrow screens (< 400px)  
-- Square day cells maintained with CSS `aspect-ratio`  
-- All layouts tested from 320px to 2560px viewports  
+**Dynamic Rendering**
+The block uses server-side rendering (render.php) to:
+- Access the full Query Loop context
+- Generate map structure with proper post data
+- Read WordPress Geo Data Standard metadata
+- Apply WordPress formatting and translations
 
-### Visual Indicators
-- **Today's date:** Highlighted with color and underline  
-- **Days with posts:** Subtle background color and underline  
-- **Multiple events per day:** Shown as colored dots (up to 6 colors, then gray)  
+**External Dependencies**
+- Leaflet.js: Industry-standard mapping library
+- OpenStreetMap tiles: Free, open-source map data
+- Loaded from CDN for optimal performance
+- No API keys or usage limits required
 
-### Block Styles
-Five distinct visual presentations:
-1. **Classic:** Traditional calendar with borders and backgrounds  
-2. **Minimal:** Clean, borderless design with subtle spacing  
-3. **Bold:** High contrast with thick borders and strong typography  
-4. **Circular:** Rounded cells with soft shadows  
-5. **Gradient:** Colorful gradient background with glass-morphism effects  
+**Localization**
+- Map interface uses WordPress core translations
+- Automatically adapts to site language
+- RTL support for right-to-left languages
+- Regional map tile preferences
 
-### Customizable Popover Styling
-Control the appearance of event popovers:
-- Background color  
-- Padding (top, right, bottom, left)  
-- Border (width, style, color, radius)  
-- Box shadow blur  
-
----
-
-## Technical Implementation
-
-### Dynamic Rendering
-The block uses server-side rendering (`render.php`) to:
-- Access the full Query Loop context  
-- Generate calendar structure with proper post data  
-- Apply WordPress date/time formatting and translations  
-- Respect the `start_of_week` WordPress option  
-
-### Localization
-- Day names use WordPress core translations via `wp_date()`  
-- Month names use WordPress date formatting  
-- Automatically adapts to site language and regional settings  
-
-### Query Optimization
-The block injects a `date_query` parameter into the Query Loop:
-
-```php
-array(
-    'year'  => 2025,
-    'month' => 1
-);
-```
-This limits database queries to only posts within the displayed month, improving performance for large post archives.
-
-### GatherPress Integration
-
+**GatherPress Integration**
 When used with GatherPress events:
-- Reads event start date from `gatherpress_datetime_start` meta
-- Automatically removes conflicting `gatherpress_event_query` parameter
-- Falls back gracefully for non-event post types
-- Works with GatherPress's past/upcoming event filters when not using date_query
+- Reads venue coordinates from gatherpress_venue meta
+- Automatically extracts latitude/longitude
+- Falls back to WordPress Geo Data Standard if needed
+- Works with GatherPress's past/upcoming event filters
 
-# Usage Instructions
+= Usage Instructions =
 
-## Basic Setup
-
+**Basic Setup**
 1. Add a Query Loop block to your page
-2. Configure the Query Loop to fetch your desired posts (post type, taxonomy, etc.)
-3. Inside the Query Loop, add the GatherPress Calendar block
-4. Add post blocks (Post Title, Post Date, etc.) inside the calendar to define your template
-5. The calendar will display posts organized by date
+2. Configure the Query Loop to fetch posts with geographic data
+3. Inside the Query Loop, add the Query Map block
+4. Add post blocks (Post Title, Post Excerpt, etc.) inside the map to define your popup template
+5. The map will display all queried posts with valid coordinates
 
-## Month Configuration
+**Geographic Data Requirements**
+Posts must have one of the following:
+- `geo_latitude` and `geo_longitude` post meta (WordPress Geo Data Standard)
+- For GatherPress events: venue with coordinates in `gatherpress_venue` meta
 
-- Leave "Current Selection" empty to show the current month
-- Click "Change Month" to select a specific month
-- Use "Month Offset" to display relative months (-1 = last month, +1 = next month)
-- Month offset only works when no specific month is selected
+**Map Configuration**
+- Adjust map height in the block settings
+- Choose initial zoom level and center point
+- Configure marker colors and clustering
+- Customize popup appearance in the "Template Style" panel
 
-## Styling
+**Post Types**
+The block works with any post type that has geographic metadata:
+- Posts: With geo coordinates in post meta
+- Pages: With geo coordinates in post meta
+- Custom Post Types: With geo coordinates in post meta
+- GatherPress Events: Uses venue coordinates
 
-- Choose a block style from the styles panel (Classic, Minimal, Bold, Circular, Gradient)
-- Customize popover appearance in the "Template Style" panel
-- Use WordPress theme.json to override colors and spacing
+== Installation ==
 
-## Post Types
-
-The block works with any post type:
-- Posts: Uses publication date
-- Pages: Uses publication date
-- Custom Post Types: Uses publication date
-- GatherPress Events: Uses event start date
-
-# Installation
-
-1. Upload the plugin files to `/wp-content/plugins/gatherpress-calendar/`
+1. Upload the plugin files to `/wp-content/plugins/query-map/`
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Add a Query Loop block to your content
-4. Insert the GatherPress Calendar block inside the Query Loop
-5. Configure the calendar and post template to your needs
+4. Insert the Query Map block inside the Query Loop
+5. Configure the map and post template to your needs
 
-# Frequently Asked Questions
+== Frequently Asked Questions ==
 
-## Why must the block be inside a Query Loop?
+= Why must the block be inside a Query Loop? =
 
-The block reads the Query Loop's context to determine which posts to display. This allows you to use WordPress's powerful query building interface to filter posts by taxonomy, author, date range, search terms, etc.
+The block reads the Query Loop's context to determine which posts to display. This allows you to use WordPress's powerful query building interface to filter posts by taxonomy, author, geographic bounds, search terms, etc.
 
-## How does it determine which date to use?
+= How does it determine which coordinates to use? =
 
-For standard posts and custom post types, it uses the publication date. For GatherPress events, it uses the event start date from the `gatherpress_datetime_start` meta field.
+For GatherPress events, it uses the venue coordinates from the `gatherpress_venue` meta field. For other post types, it uses `geo_latitude` and `geo_longitude` from the WordPress Geo Data Standard.
 
-## Can I show multiple posts on the same day?
+= What if a post doesn't have coordinates? =
 
-Yes. Each post appears as a colored dot on its date. Click or tap the dot to see the post content in a popover.
+Posts without valid coordinates are simply not displayed on the map. The block gracefully handles missing data and only shows posts with complete geographic information.
 
-## Does it work without JavaScript?
+= Does it work without JavaScript? =
 
-Yes. The dots are regular links. Without JavaScript, clicking a dot navigates to the post. JavaScript adds the popover overlay as progressive enhancement.
+Yes. Without JavaScript, the block displays a list of post titles with addresses as links. JavaScript adds the interactive map as progressive enhancement.
 
-## How do I change what shows in the popover?
+= How do I change what shows in the marker popup? =
 
-Add or remove blocks inside the calendar in the editor. Any blocks you add (Post Title, Post Excerpt, Post Featured Image, etc.) will appear in the popover for each post.
+Add or remove blocks inside the map block in the editor. Any blocks you add (Post Title, Post Excerpt, Post Featured Image, etc.) will appear in the popup when users click a marker.
 
-## Can I display past or future months?
+= Can I use custom map tiles or styles? =
 
-Yes. Use the month picker to select a specific month, or use the month offset feature to display months relative to current (e.g., -2 for two months ago).
+Currently the block uses OpenStreetMap tiles. Future versions may support custom tile providers and map styles.
 
-## How does it handle different locales?
+= How does it handle many posts? =
 
-The block uses WordPress's `wp_date()` function for all date formatting and respects the `start_of_week` option. Day and month names automatically translate to your site language.
+The block uses marker clustering to group nearby markers together. As you zoom in, clusters break apart into individual markers. This keeps the map performant even with hundreds of posts.
 
-# Screenshots
+= Is there a limit to how many posts can be shown? =
 
-1. Classic calendar style showing GatherPress events
-2. Calendar configuration in the block editor
-3. Minimal block style with clean design
-4. Bold block style with high contrast
-5. Circular block style with rounded cells
-6. Gradient block style with colorful background
-7. Popover showing event details on mobile
-8. Template configuration interface in editor
+The map respects your Query Loop's "posts per page" setting. For best performance, we recommend limiting to 100-200 posts per map.
 
-# Changelog
+== Screenshots ==
 
-## 0.1.0
+1. Interactive map showing multiple post locations
+2. Map configuration in the block editor
+3. Marker popup showing post content
+4. Marker clustering for many posts
+5. Mobile responsive design
+6. Template configuration interface
+7. Map with custom styling
+8. Query Loop integration example
 
+== Changelog ==
+
+= 0.1.0 =
 * Initial release
-* Monthly calendar view for Query Loop posts
-* Support for any post type with GatherPress specialization
-* Five block styles (Classic, Minimal, Bold, Circular, Gradient)
-* Progressive enhancement with JavaScript popovers
-* Month selection and month modifier
-* Customizable popover styling
-* Full localization support
-* Container query responsive design
-* Accessibility features (keyboard navigation, ARIA labels)
-* Print-friendly styles
+* OpenStreetMap integration with Leaflet.js
+* Support for WordPress Geo Data Standard
+* Query Loop integration
+* Marker clustering
+* Interactive popovers
+* Customizable popup styling
+* GatherPress event support
+* Responsive design
+* Progressive enhancement
+* Full accessibility support
+* Print-friendly fallback
+
+== Upgrade Notice ==
+
+= 0.1.0 =
+Initial release of Query Map block.
+
+== External Services ==
+
+This plugin relies on the following external services:
+
+**Leaflet.js**
+- Purpose: Interactive map rendering
+- URL: https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
+- Privacy Policy: https://github.com/Leaflet/Leaflet/blob/main/PRIVACY.md
+- License: BSD-2-Clause
+- Data sent: None (library loaded from CDN)
+
+**OpenStreetMap Tiles**
+- Purpose: Map imagery and geographic data
+- URL: https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
+- Privacy Policy: https://wiki.osmfoundation.org/wiki/Privacy_Policy
+- License: ODbL (Open Database License)
+- Data sent: Map tile requests include coordinates of visible area
+
+**Leaflet MarkerCluster**
+- Purpose: Marker clustering for performance
+- URL: https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js
+- License: MIT
+- Data sent: None (library loaded from CDN)
+
+No personal data is collected or transmitted to these services. Map tile requests are made directly from the user's browser and are subject to OpenStreetMap's privacy policy.

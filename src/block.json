@@ -1,88 +1,36 @@
 {
-	"$schema": "https://schemas.wp.org/trunk/block.json",
-	"apiVersion": 3,
-	"name": "gatherpress/calendar",
-	"version": "0.1.0",
-	"title": "GatherPress Calendar",
-	"category": "gatherpress",
-	"icon": "calendar-alt",
-	"description": "Display query loop posts in a monthly calendar format.",
-	"ancestor": ["core/query"],
+	"$schema": "https://schemas.wp.org/trunk/block.json", 
+	"apiVersion": 3, 
+	"name": "gatherpress/query-map", 
+	"version": "0.1.0", 
+	"title": "Query Map",
+	"category": "gatherpress", 
+	"icon": "location-alt", 
+	"description": "Display query loop posts on an interactive OpenStreetMap based on their geo coordinates.", 
+	"ancestor": ["core/query"], 
 	"usesContext": [ "queryId", "query", "queryContext", "displayLayout", "templateSlug", "previewPostType" ],
-	"attributes": {
-		"selectedMonth": {
-			"type": "string",
-			"default": ""
+	"attributes": { 
+		"mapHeight": { 
+			"type": "string", 
+			"default": "500px" 
 		},
-		"monthModifier": {
-			"type": "number",
-			"default": 0
-		},
-		"templateConfigStyle": {
-			"type": "object",
-			"default": {}
+		"defaultZoom": {
+			"type": "number", 
+			"default": 10 
 		}
 	},
-	"example": {},
+	"example": {}, 
 	"supports": {
-		"reusable": false,
-		"html": false,
-		"align": true,
-		"alignWide": true,
-		"customClassName": true,
-		"typography": {
-			"fontSize": true,
-			"lineHeight": true,
-			"__experimentalFontFamily": true,
-			"__experimentalFontWeight": true,
-			"__experimentalFontStyle": true,
-			"__experimentalTextTransform": true,
-			"__experimentalTextDecoration": true,
-			"__experimentalLetterSpacing": true,
-			"__experimentalDefaultControls": {
-				"fontSize": true
-			}
-		},
-		"color": {
-			"gradients": true,
-			"link": true,
-			"__experimentalDefaultControls": {
-				"background": true,
-				"text": true
-			}
-		},
-		"spacing": {
-			"margin": true,
-			"padding": true
-		}
+		"reusable": false, 
+		"html": false, 
+		"align": true, 
+		"alignWide": true, 
+		"customClassName": true
 	},
-	"styles": [
-		{
-			"name": "default",
-			"label": "Classic",
-			"isDefault": true
-		},
-		{
-			"name": "minimal",
-			"label": "Minimal"
-		},
-		{
-			"name": "bold",
-			"label": "Bold"
-		},
-		{
-			"name": "circular",
-			"label": "Circular"
-		},
-		{
-			"name": "gradient",
-			"label": "Gradient"
-		}
-	],
-	"textdomain": "gatherpress-calendar",
-	"editorScript": "file:./index.js",
-	"editorStyle": "file:./index.css",
-	"style": "file:./style-index.css",
-	"viewScript": "file:./view.js",
-	"render": "file:./render.php"
+	"textdomain": "gatherpress-calendar", 
+	"editorScript": "file:./index.js", 
+	"editorStyle": "file:./index.css", 
+	"style": "file:./style-index.css", 
+	"viewScript": "file:./view.js", 
+	"render": "file:./render.php" 
 }
