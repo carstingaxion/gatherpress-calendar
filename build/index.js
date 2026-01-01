@@ -243,6 +243,7 @@ function getDayNames(startOfWeek = 0) {
 function generateCalendar(posts, startOfWeek = 0, selectedMonth = '', monthModifier = 0) {
   // Use the single source of truth for date calculation
   const targetDate = calculateTargetDate(selectedMonth, monthModifier);
+  // console.log( 'Generating calendar for date:', targetDate );
   const year = targetDate.getFullYear();
   const month = targetDate.getMonth();
 
@@ -251,7 +252,7 @@ function generateCalendar(posts, startOfWeek = 0, selectedMonth = '', monthModif
   const postsByDate = {};
   if (posts && posts.length > 0) {
     posts.forEach(post => {
-      console.log('Post in Edit Calendar:', post);
+      // console.log( 'Post in Edit Calendar:', post );
       let postDate;
       // For GatherPress events, use event start date
       if (post.type === 'gatherpress_event') {
@@ -632,8 +633,9 @@ function Edit({
     if (cleanQuery.orderBy === 'datetime') {
       cleanQuery.orderBy = 'date';
     }
-    console.log('Original Query Context:', query);
-    console.log('Cleaned Query Context:', cleanQuery);
+
+    // console.log( 'Original Query Context:', query );
+    // console.log( 'Cleaned Query Context:', cleanQuery );
 
     // Build REST API query arguments
     const queryArgs = {
@@ -670,7 +672,9 @@ function Edit({
     // Get site settings for start_of_week
     const site = getSite();
     const weekStartsOn = site?.start_of_week || 0;
-    console.log('Final Query Args:', queryArgs);
+
+    // console.log( 'Final Query Args:', queryArgs );
+
     return {
       posts: getEntityRecords('postType', cleanQuery.postType || 'post', queryArgs) || [],
       startOfWeek: weekStartsOn

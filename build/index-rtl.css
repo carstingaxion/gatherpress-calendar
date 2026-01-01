@@ -39,10 +39,12 @@
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
   border-color: var(--wp--preset--color--primary, #007cba);
 }
-/**
- * Template configuration label
- * Styled to stand out similar to popover headers
- */
+.gatherpress-calendar {
+  /**
+   * Template configuration label
+   * Styled to stand out similar to popover headers
+   */
+}
 .gatherpress-calendar__template-label {
   margin-block: 0 var(--wp--preset--spacing--40, 1rem);
   font-weight: 600;
@@ -53,9 +55,11 @@
   padding-block-end: var(--wp--preset--spacing--30, 0.75rem);
   border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
 }
-/**
- * Inner blocks container within template config
- */
+.gatherpress-calendar {
+  /**
+   * Inner blocks container within template config
+   */
+}
 .gatherpress-calendar__template-config .gatherpress-calendar-template {
   display: block;
   /* Add spacing between blocks */
