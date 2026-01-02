@@ -15,18 +15,19 @@ const TEMPLATE = [
 export default function Edit( { attributes, setAttributes, context } ) {
 	const { mapHeight, defaultZoom } = attributes;
 	const { query } = context;
-	const mapRef = useRef( null );
+	const mapContainerRef = useRef( null );
 	const mapInstanceRef = useRef( null );
-	const markersRef = useRef( [] );
-	const [ leafletLoaded, setLeafletLoaded ] = useState( false );
+	const markersClusterRef = useRef( null );
+	const initTimeoutRef = useRef( null );
+	const [ mapReady, setMapReady ] = useState( false );
 
-	const { posts } = useSelect(
+	const { posts, isResolving } = useSelect(
 		( select ) => {
 			if ( ! query ) {
-				return { posts: [] };
+				return { posts: [], isResolving: false };
 			}
 
-			const { getEntityRecords } = select( coreStore );
+			const { getEntityRecords, isResolving: checkResolving } = select( coreStore );
 			
 			const cleanQuery = { ...query };
 			delete cleanQuery.gatherpress_event_query;
@@ -57,133 +58,181 @@ export default function Edit( { attributes, setAttributes, context } ) {
 				queryArgs.search = cleanQuery.search;
 			}
 
+			const postType = cleanQuery.postType || 'post';
+			const fetchedPosts = getEntityRecords( 'postType', postType, queryArgs ) || [];
+			const resolving = checkResolving( 'getEntityRecords', [ 'postType', postType, queryArgs ] );
+
 			return {
-				posts: getEntityRecords( 'postType', cleanQuery.postType || 'post', queryArgs ) || [],
+				posts: fetchedPosts,
+				isResolving: resolving,
 			};
 		},
 		[ query ]
 	);
 
-	// Load Leaflet library
+	// Initialize map - single effect with proper timing
 	useEffect( () => {
-		// Check if Leaflet is already loaded
-		if ( window.L ) {
-			setLeafletLoaded( true );
+		// Check if Leaflet is available
+		if ( typeof window === 'undefined' || ! window.L || ! window.L.markerClusterGroup ) {
 			return;
 		}
 
-		// Load Leaflet CSS
-		const link = document.createElement( 'link' );
-		link.rel = 'stylesheet';
-		link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-		link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-		link.crossOrigin = '';
-		document.head.appendChild( link );
+		// Don't re-initialize
+		if ( mapInstanceRef.current ) {
+			return;
+		}
 
-		// Load Leaflet JS
-		const script = document.createElement( 'script' );
-		script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-		script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-		script.crossOrigin = '';
-		script.onload = () => setLeafletLoaded( true );
-		script.onerror = () => console.error( 'Failed to load Leaflet' );
-		document.head.appendChild( script );
+		const container = mapContainerRef.current;
+		if ( ! container ) {
+			return;
+		}
+
+		// Critical: Ensure container has explicit dimensions
+		const initializeMap = () => {
+			try {
+				// Clear any existing content
+				container.innerHTML = '';
+				
+				// Set explicit dimensions to ensure Leaflet can initialize
+				container.style.width = '100%';
+				container.style.height = mapHeight;
+				container.style.position = 'relative';
+
+				// Initialize Leaflet map
+				const map = window.L.map( container, {
+					preferCanvas: true,
+					zoomControl: true,
+				} ).setView( [ 20, 0 ], 2 );
+
+				// Add tile layer
+				window.L.tileLayer(
+					'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+					{
+						attribution: '© OpenStreetMap contributors',
+						maxZoom: 19,
+					}
+				).addTo( map );
+
+				// Create marker cluster group
+				const markersCluster = window.L.markerClusterGroup( {
+					showCoverageOnHover: false,
+					maxClusterRadius: 80,
+					spiderfyOnMaxZoom: true,
+					zoomToBoundsOnClick: true,
+				} );
+				map.addLayer( markersCluster );
+
+				// Store references
+				mapInstanceRef.current = map;
+				markersClusterRef.current = markersCluster;
+				setMapReady( true );
+
+				// Force proper sizing after initialization
+				setTimeout( () => {
+					if ( map ) {
+						map.invalidateSize();
+					}
+				}, 250 );
+			} catch ( error ) {
+				console.error( '[Query Map] Error initializing map:', error );
+			}
+		};
+
+		// Use multiple timing strategies to ensure initialization
+		// 1. Immediate requestAnimationFrame
+		const rafId = requestAnimationFrame( () => {
+			// 2. Small delay to ensure DOM is painted
+			initTimeoutRef.current = setTimeout( initializeMap, 100 );
+		} );
 
 		return () => {
-			if ( link.parentNode ) {
-				link.parentNode.removeChild( link );
+			cancelAnimationFrame( rafId );
+			if ( initTimeoutRef.current ) {
+				clearTimeout( initTimeoutRef.current );
 			}
-			if ( script.parentNode ) {
-				script.parentNode.removeChild( script );
+		};
+	}, [] ); // Empty deps - initialize once only
+
+	// Cleanup on unmount
+	useEffect( () => {
+		return () => {
+			if ( mapInstanceRef.current ) {
+				try {
+					if ( markersClusterRef.current ) {
+						markersClusterRef.current.clearLayers();
+						markersClusterRef.current = null;
+					}
+					mapInstanceRef.current.remove();
+					mapInstanceRef.current = null;
+					setMapReady( false );
+				} catch ( e ) {
+					console.error( '[Query Map] Error during cleanup:', e );
+				}
 			}
 		};
 	}, [] );
 
-	// Initialize map
-	useEffect( () => {
-		if ( ! leafletLoaded || ! mapRef.current || mapInstanceRef.current ) {
-			return;
-		}
-
-		try {
-			const map = window.L.map( mapRef.current ).setView( [ 51.505, -0.09 ], defaultZoom );
-			
-			window.L.tileLayer( 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-				attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-				maxZoom: 19
-			} ).addTo( map );
-
-			mapInstanceRef.current = map;
-
-			// Small delay to ensure map renders properly
-			setTimeout( () => {
-				map.invalidateSize();
-			}, 100 );
-		} catch ( error ) {
-			console.error( 'Failed to initialize map:', error );
-		}
-
-		return () => {
-			if ( mapInstanceRef.current ) {
-				try {
-					mapInstanceRef.current.remove();
-				} catch ( e ) {
-					console.error( 'Error removing map:', e );
-				}
-				mapInstanceRef.current = null;
-			}
-		};
-	}, [ leafletLoaded, defaultZoom ] );
-
 	// Update markers when posts change
 	useEffect( () => {
-		if ( ! mapInstanceRef.current || ! leafletLoaded || ! posts || posts.length === 0 ) {
+		if ( ! mapReady || ! mapInstanceRef.current || ! markersClusterRef.current ) {
 			return;
 		}
 
-		const map = mapInstanceRef.current;
-		
-		// Clear existing markers
-		markersRef.current.forEach( ( marker ) => {
-			try {
-				map.removeLayer( marker );
-			} catch ( e ) {
-				// Marker might already be removed
-			}
-		} );
-		markersRef.current = [];
+		if ( ! posts || posts.length === 0 ) {
+			return;
+		}
 
-		// Add markers for posts with geo data
-		const bounds = [];
-		posts.forEach( ( post ) => {
+		// Clear existing markers
+		markersClusterRef.current.clearLayers();
+
+		// Filter posts with valid geodata
+		const validPosts = posts.filter( ( post ) => {
 			const lat = post.meta?.geo_latitude || post.meta?.[ 'geo_latitude' ];
 			const lng = post.meta?.geo_longitude || post.meta?.[ 'geo_longitude' ];
-			
-			if ( lat && lng ) {
-				try {
-					const marker = window.L.marker( [ parseFloat( lat ), parseFloat( lng ) ] ).addTo( map );
-					marker.bindPopup( post.title?.rendered || __( '(No title)', 'gatherpress-calendar' ) );
-					markersRef.current.push( marker );
-					bounds.push( [ parseFloat( lat ), parseFloat( lng ) ] );
-				} catch ( error ) {
-					console.error( 'Error adding marker:', error );
-				}
+			return lat && lng && ! isNaN( parseFloat( lat ) ) && ! isNaN( parseFloat( lng ) );
+		} );
+
+		if ( validPosts.length === 0 ) {
+			return;
+		}
+
+		const bounds = [];
+
+		// Add markers for each post
+		validPosts.forEach( ( post ) => {
+			const lat = parseFloat( post.meta.geo_latitude || post.meta[ 'geo_latitude' ] );
+			const lng = parseFloat( post.meta.geo_longitude || post.meta[ 'geo_longitude' ] );
+
+			try {
+				const marker = window.L.marker( [ lat, lng ] );
+				
+				const title = post.title?.rendered || __( '(No title)', 'gatherpress-calendar' );
+				const popupContent = `<div class="query-map-popup"><strong>${title}</strong></div>`;
+				marker.bindPopup( popupContent );
+
+				markersClusterRef.current.addLayer( marker );
+				bounds.push( [ lat, lng ] );
+			} catch ( error ) {
+				console.error( '[Query Map] Error adding marker:', error );
 			}
 		} );
 
-		// Fit map to markers
+		// Fit bounds to show all markers
 		if ( bounds.length > 0 ) {
 			try {
 				if ( bounds.length === 1 ) {
-					map.setView( bounds[ 0 ], defaultZoom );
+					mapInstanceRef.current.setView( bounds[ 0 ], defaultZoom );
 				} else {
-					map.fitBounds( bounds, { padding: [ 50, 50 ] } );
+					const boundsObj = window.L.latLngBounds( bounds );
+					if ( boundsObj.isValid() ) {
+						mapInstanceRef.current.fitBounds( boundsObj, { padding: [ 50, 50 ] } );
+					}
 				}
 			} catch ( error ) {
-				console.error( 'Error fitting bounds:', error );
+				console.error( '[Query Map] Error fitting bounds:', error );
 			}
 		}
-	}, [ posts, leafletLoaded, defaultZoom ] );
+	}, [ posts, mapReady, defaultZoom ] );
 
 	const blockProps = useBlockProps( {
 		className: 'gatherpress-query-map-block',
@@ -214,6 +263,14 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		);
 	}
 
+	const postsWithGeo = posts.filter( ( post ) => {
+		const lat = post.meta?.geo_latitude || post.meta?.[ 'geo_latitude' ];
+		const lng = post.meta?.geo_longitude || post.meta?.[ 'geo_longitude' ];
+		return lat && lng;
+	} );
+
+	const hasLeaflet = typeof window !== 'undefined' && window.L && window.L.markerClusterGroup;
+
 	return (
 		<>
 			<InspectorControls>
@@ -233,18 +290,33 @@ export default function Edit( { attributes, setAttributes, context } ) {
 						help={ __( 'Initial zoom level for the map', 'gatherpress-calendar' ) }
 					/>
 				</PanelBody>
+				<PanelBody title={ __( 'Debug Info', 'gatherpress-calendar' ) } initialOpen={ false }>
+					<p><strong>Leaflet:</strong> { hasLeaflet ? `Ready (${window.L?.version})` : 'Loading...' }</p>
+					<p><strong>Map:</strong> { mapReady ? 'Initialized' : 'Not ready' }</p>
+					<p><strong>Total posts:</strong> { posts.length }</p>
+					<p><strong>Posts with geodata:</strong> { postsWithGeo.length }</p>
+				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
 				<div className="gatherpress-query-map">
-					{ ! leafletLoaded ? (
+					{ ! hasLeaflet ? (
 						<div className="gatherpress-query-map__loading" style={ { height: mapHeight } }>
-							<p>{ __( 'Loading map...', 'gatherpress-calendar' ) }</p>
+							<p>{ __( 'Loading map library...', 'gatherpress-calendar' ) }</p>
+						</div>
+					) : isResolving ? (
+						<div className="gatherpress-query-map__loading" style={ { height: mapHeight } }>
+							<p>{ __( 'Loading posts...', 'gatherpress-calendar' ) }</p>
+						</div>
+					) : postsWithGeo.length === 0 ? (
+						<div className="gatherpress-query-map__empty" style={ { height: mapHeight } }>
+							<p>{ __( 'No posts with geographic data found.', 'gatherpress-calendar' ) }</p>
+							<p>{ __( 'Generate demo data from Tools → Query Map Demo', 'gatherpress-calendar' ) }</p>
 						</div>
 					) : (
 						<div
-							ref={ mapRef }
+							ref={ mapContainerRef }
 							className="gatherpress-query-map__map"
-							style={ { height: mapHeight } }
+							style={ { height: mapHeight, width: '100%' } }
 						/>
 					) }
 					<div className="gatherpress-query-map__template-config">

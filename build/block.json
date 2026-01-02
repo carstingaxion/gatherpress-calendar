@@ -1,12 +1,12 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "gatherpress/calendar",
+  "name": "gatherpress/query-map",
   "version": "0.1.0",
-  "title": "GatherPress Calendar",
+  "title": "Query Map",
   "category": "gatherpress",
-  "icon": "calendar-alt",
-  "description": "Display query loop posts in a monthly calendar format.",
+  "icon": "location-alt",
+  "description": "Display query loop posts on an interactive OpenStreetMap based on their geo coordinates.",
   "ancestor": [
     "core/query"
   ],
@@ -19,17 +19,13 @@
     "previewPostType"
   ],
   "attributes": {
-    "selectedMonth": {
+    "mapHeight": {
       "type": "string",
-      "default": ""
+      "default": "500px"
     },
-    "monthModifier": {
+    "defaultZoom": {
       "type": "number",
-      "default": 0
-    },
-    "templateConfigStyle": {
-      "type": "object",
-      "default": {}
+      "default": 10
     }
   },
   "example": {},
@@ -38,56 +34,8 @@
     "html": false,
     "align": true,
     "alignWide": true,
-    "customClassName": true,
-    "typography": {
-      "fontSize": true,
-      "lineHeight": true,
-      "__experimentalFontFamily": true,
-      "__experimentalFontWeight": true,
-      "__experimentalFontStyle": true,
-      "__experimentalTextTransform": true,
-      "__experimentalTextDecoration": true,
-      "__experimentalLetterSpacing": true,
-      "__experimentalDefaultControls": {
-        "fontSize": true
-      }
-    },
-    "color": {
-      "gradients": true,
-      "link": true,
-      "__experimentalDefaultControls": {
-        "background": true,
-        "text": true
-      }
-    },
-    "spacing": {
-      "margin": true,
-      "padding": true
-    }
+    "customClassName": true
   },
-  "styles": [
-    {
-      "name": "default",
-      "label": "Classic",
-      "isDefault": true
-    },
-    {
-      "name": "minimal",
-      "label": "Minimal"
-    },
-    {
-      "name": "bold",
-      "label": "Bold"
-    },
-    {
-      "name": "circular",
-      "label": "Circular"
-    },
-    {
-      "name": "gradient",
-      "label": "Gradient"
-    }
-  ],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",

@@ -2,109 +2,72 @@
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[4].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[4].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[4].use[3]!./src/editor.scss ***!
   \****************************************************************************************************************************************************************************************************************************************/
 /**
- * GatherPress Calendar Block Editor Styles
- *
- * Styles defined in this file are applied exclusively within the
- * WordPress block editor. These styles help distinguish the editor
- * view from the frontend display and provide enhanced styling for
- * the template configuration area.
- *
- * @package GatherPressCalendar
- * @since 0.1.0
- */
-/**
- * Editor-specific block styles
- */
-.wp-block-gatherpress-calendar {
-  /* background-color: #fff;*/
+* Query Map Block Editor Styles
+*
+* Styles applied exclusively within the WordPress block editor.
+*
+* @package QueryMap 
+* @since 0.1.0
+*/
+.wp-block-gatherpress-query-map {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
 }
-/**
- * Template configuration area - visible in editor only
- * Styled to match the event popover for visual consistency
- */
-.gatherpress-calendar__template-config {
-  display: block;
-  margin-block-start: var(--wp--preset--spacing--50, 2rem);
-  /* Popover-style appearance - defaults that can be overridden by attributes */
+.query-map-editor__preview {
+  min-height: 400px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  background: var(--wp--preset--color--base, #fff);
-  border: 1px solid var(--wp--preset--color--contrast, #ddd);
-  border-radius: var(--wp--custom--border-radius--medium, 8px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  padding: var(--wp--preset--spacing--50, 1.5rem);
-  /* Subtle hover effect */
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
-.gatherpress-calendar__template-config:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-  border-color: var(--wp--preset--color--primary, #007cba);
+.query-map-editor__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  color: #666;
 }
-.gatherpress-calendar {
-  /**
-   * Template configuration label
-   * Styled to stand out similar to popover headers
-   */
+.query-map-editor__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #007cba;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
-.gatherpress-calendar__template-label {
-  margin-block: 0 var(--wp--preset--spacing--40, 1rem);
+.query-map-editor__template-config {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+.query-map-editor__template-label {
+  margin: 0 0 1rem;
   font-weight: 600;
-  font-size: var(--wp--preset--font-size--small, 0.875rem);
-  color: var(--wp--preset--color--contrast, #1e1e1e);
+  font-size: 0.875rem;
+  color: #1e1e1e;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding-block-end: var(--wp--preset--spacing--30, 0.75rem);
-  border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e8e8e8;
 }
-.gatherpress-calendar {
-  /**
-   * Inner blocks container within template config
-   */
-}
-.gatherpress-calendar__template-config .gatherpress-calendar-template {
-  display: block;
-  /* Add spacing between blocks */
-}
-.gatherpress-calendar__template-config .gatherpress-calendar-template > .block-editor-block-list__layout > .wp-block {
-  margin-block-end: var(--wp--preset--spacing--30, 0.75rem);
-}
-.gatherpress-calendar__template-config .gatherpress-calendar-template > .block-editor-block-list__layout > .wp-block:last-child {
-  margin-block-end: 0;
-}
-.gatherpress-calendar__template-config .gatherpress-calendar-template {
-  /* Style the blocks to look like they're part of a card */
-}
-.gatherpress-calendar__template-config .gatherpress-calendar-template .wp-block {
-  padding: var(--wp--preset--spacing--20, 0.5rem);
-  border-radius: var(--wp--custom--border-radius--small, 4px);
-  transition: background 0.2s ease;
-}
-.gatherpress-calendar__template-config .gatherpress-calendar-template .wp-block:hover {
-  background: var(--wp--preset--color--base, #fff);
-}
-/**
- * Editor calendar enhancements
- */
-.editor-styles-wrapper .gatherpress-calendar__table th {
-  background: #f0f0f1;
-}
-.editor-styles-wrapper .gatherpress-calendar__table td.has-posts {
-  background: #e7f5fe;
-}
-.editor-styles-wrapper .gatherpress-calendar__event {
-  cursor: default;
-  pointer-events: none;
-}
-/**
- * Responsive adjustments for template config in editor
- */
-@media (max-width: 768px) {
-  .gatherpress-calendar__template-config {
-    padding: var(--wp--preset--spacing--40, 1rem);
-    margin-block-start: var(--wp--preset--spacing--40, 1rem);
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
-  .gatherpress-calendar__template-label {
-    font-size: var(--wp--preset--font-size--small, 0.8125rem);
-  }
+}
+/* Leaflet map container in editor */
+.leaflet-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+.query-map-marker-popup .wp-block {
+  margin: 0 0 0.75rem;
+}
+.query-map-marker-popup .wp-block:last-child {
+  margin-bottom: 0;
 }
 
 /*# sourceMappingURL=index.css.map*/

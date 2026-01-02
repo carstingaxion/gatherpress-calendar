@@ -4,12 +4,12 @@ return array(
 	'build' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'gatherpress/calendar',
+		'name' => 'gatherpress/query-map',
 		'version' => '0.1.0',
-		'title' => 'GatherPress Calendar',
+		'title' => 'Query Map',
 		'category' => 'gatherpress',
-		'icon' => 'calendar-alt',
-		'description' => 'Display query loop posts in a monthly calendar format.',
+		'icon' => 'location-alt',
+		'description' => 'Display query loop posts on an interactive OpenStreetMap based on their geo coordinates.',
 		'ancestor' => array(
 			'core/query'
 		),
@@ -22,19 +22,13 @@ return array(
 			'previewPostType'
 		),
 		'attributes' => array(
-			'selectedMonth' => array(
+			'mapHeight' => array(
 				'type' => 'string',
-				'default' => ''
+				'default' => '500px'
 			),
-			'monthModifier' => array(
+			'defaultZoom' => array(
 				'type' => 'number',
-				'default' => 0
-			),
-			'templateConfigStyle' => array(
-				'type' => 'object',
-				'default' => array(
-					
-				)
+				'default' => 10
 			)
 		),
 		'example' => array(
@@ -45,55 +39,7 @@ return array(
 			'html' => false,
 			'align' => true,
 			'alignWide' => true,
-			'customClassName' => true,
-			'typography' => array(
-				'fontSize' => true,
-				'lineHeight' => true,
-				'__experimentalFontFamily' => true,
-				'__experimentalFontWeight' => true,
-				'__experimentalFontStyle' => true,
-				'__experimentalTextTransform' => true,
-				'__experimentalTextDecoration' => true,
-				'__experimentalLetterSpacing' => true,
-				'__experimentalDefaultControls' => array(
-					'fontSize' => true
-				)
-			),
-			'color' => array(
-				'gradients' => true,
-				'link' => true,
-				'__experimentalDefaultControls' => array(
-					'background' => true,
-					'text' => true
-				)
-			),
-			'spacing' => array(
-				'margin' => true,
-				'padding' => true
-			)
-		),
-		'styles' => array(
-			array(
-				'name' => 'default',
-				'label' => 'Classic',
-				'isDefault' => true
-			),
-			array(
-				'name' => 'minimal',
-				'label' => 'Minimal'
-			),
-			array(
-				'name' => 'bold',
-				'label' => 'Bold'
-			),
-			array(
-				'name' => 'circular',
-				'label' => 'Circular'
-			),
-			array(
-				'name' => 'gradient',
-				'label' => 'Gradient'
-			)
+			'customClassName' => true
 		),
 		'textdomain' => 'gatherpress-calendar',
 		'editorScript' => 'file:./index.js',

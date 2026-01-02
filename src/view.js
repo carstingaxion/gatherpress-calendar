@@ -1,8 +1,8 @@
 /**
  * Query Map Block Frontend Script
  *
- * Initializes OpenStreetMap via Leaflet and displays posts with geo data as markers.
- * Depends on Leaflet being loaded first via wp_enqueue_script.
+ * Initializes OpenStreetMap via Leaflet and displays posts with geo data as clustered markers.
+ * Depends on Leaflet and Leaflet MarkerCluster being loaded first via wp_enqueue_script.
  *
  * @package QueryMap
  * @since 0.1.0
@@ -14,6 +14,11 @@
 	// Wait for DOM and Leaflet to be ready
 	if ( typeof L === 'undefined' ) {
 		console.error( 'Leaflet library not loaded' );
+		return;
+	}
+
+	if ( typeof L.markerClusterGroup === 'undefined' ) {
+		console.error( 'Leaflet MarkerCluster library not loaded' );
 		return;
 	}
 
@@ -54,10 +59,19 @@
 				maxZoom: 19
 			} ).addTo( map );
 
+			// Create marker cluster group
+			const markersCluster = L.markerClusterGroup( {
+				showCoverageOnHover: false,
+				maxClusterRadius: 80,
+				spiderfyOnMaxZoom: true,
+				zoomToBoundsOnClick: true,
+				disableClusteringAtZoom: 18
+			} );
+
 			// Add markers for each post
 			const bounds = [];
 			posts.forEach( function( post ) {
-				const marker = L.marker( [ post.lat, post.lng ] ).addTo( map );
+				const marker = L.marker( [ post.lat, post.lng ] );
 				
 				// Bind popup with post content
 				if ( post.content ) {
@@ -67,8 +81,12 @@
 					} );
 				}
 				
+				markersCluster.addLayer( marker );
 				bounds.push( [ post.lat, post.lng ] );
 			} );
+
+			// Add cluster group to map
+			map.addLayer( markersCluster );
 
 			// Fit map to show all markers if there are multiple
 			if ( bounds.length > 1 ) {
