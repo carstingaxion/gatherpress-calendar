@@ -69,18 +69,18 @@ add_action( 'init', __NAMESPACE__ . '\block_init' );
  */
 function rest_gatherpress_event_query( array $args, WP_REST_Request $request ): array {
 		$parameters = $request->get_params();
-
-		// Initialize date_query if it doesn't exist
-		if ( ! isset( $args['date_query'] ) ) {
-			$args['date_query']    = array();
-			$args['date_query'][0] = array();
-		}
-
+		
 		// If both gatherpress_event_query and year parameters exist,
 		// remove the GatherPress query and add date filtering
 		if ( isset( $parameters['gatherpress_event_query'] ) && isset( $parameters['year'] ) ) {
 			// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering
 			unset( $args['gatherpress_event_query'] );
+	
+			// Initialize date_query if it doesn't exist
+			if ( ! isset( $args['date_query'] ) ) {
+				$args['date_query']    = array();
+				$args['date_query'][0] = array();
+			}
 
 			// Add date query for year and optional month
 			// This limits results to posts published/scheduled within the specified timeframe

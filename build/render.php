@@ -308,6 +308,12 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 					'month' => $this->month,
 				),
 			);
+			$query_args['posts_per_page'] = 999; // Fetch all posts for the month, 999 to avoid -1.
+
+			unset( $query_args['paged'] ); // Remove paged to avoid conflicts
+			unset( $query_args['orderby'] ); // Remove orderby to avoid conflicts
+			unset( $query_args['gatherpress_event_query'] );
+			unset( $query_args['include_unfinished'] );
 
 			return $query_args;
 		}
@@ -329,7 +335,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		private function organize_posts_by_date( array $query_args ): void {
 			$this->posts_by_date = array();
 			$query_loop          = new \WP_Query( $query_args );
-
+			// error_log('Query Args: ' . print_r($query_args, true));
 			while ( $query_loop->have_posts() ) {
 				$query_loop->the_post();
 				$post_id = (int) get_the_ID();
@@ -350,7 +356,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				}
 				$this->posts_by_date[ $post_date ][] = $post_id;
 			}
-
+			// error_log('Posts by date: ' . var_export($this->posts_by_date, true));
 			wp_reset_postdata();
 		}
 
@@ -794,9 +800,10 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			array_shift( $innerContent );
 
 			// ensure all items are strings
-			$block_instance['innerContent'] = array_values(
-				array_map( '\strval', $innerContent )
-			);
+			// $block_instance['innerContent'] = array_values(
+			// 	array_map( '\strval', $innerContent )
+			// );
+			$block_instance['innerContent'] = array_values( $innerContent );
 			return $block_instance;
 		}
 	}

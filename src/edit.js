@@ -593,22 +593,15 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			const cleanQuery = { ...query };
 
 			// Remove GatherPress-specific query vars that don't work with getEntityRecords
-			delete cleanQuery.gatherpress_event_query;
-			delete cleanQuery.include_unfinished;
-
-			// If orderBy is 'datetime' (GatherPress specific), change to 'date'
-			if ( cleanQuery.orderBy === 'datetime' ) {
-				cleanQuery.orderBy = 'date';
-			}
+			// delete cleanQuery.gatherpress_event_query;
+			// delete cleanQuery.include_unfinished;
 
 			// console.log( 'Original Query Context:', query );
 			// console.log( 'Cleaned Query Context:', cleanQuery );
 
 			// Build REST API query arguments
 			const queryArgs = {
-				per_page: cleanQuery.perPage || 100,
-				order: cleanQuery.order || 'DESC',
-				orderby: cleanQuery.orderBy || 'date',
+				per_page: 100,
 				_embed: 'wp:term',
 			};
 
