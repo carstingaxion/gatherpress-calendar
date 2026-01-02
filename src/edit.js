@@ -11,17 +11,31 @@
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
 
-import { __ } from '@wordpress/i18n';
-import { useBlockProps, useInnerBlocksProps, BlockContextProvider, InspectorControls, PanelColorSettings } from '@wordpress/block-editor';
-import { Placeholder, PanelBody, Button, RangeControl, __experimentalBoxControl as BoxControl, __experimentalBorderControl as BorderControl, __experimentalNumberControl as NumberControl } from '@wordpress/components';
+import { __, sprintf } from '@wordpress/i18n';
+import {
+	useBlockProps,
+	useInnerBlocksProps,
+	InspectorControls,
+	PanelColorSettings,
+} from '@wordpress/block-editor';
+/* eslint-disable @wordpress/no-unsafe-wp-apis */
+import {
+	Placeholder,
+	PanelBody,
+	Button,
+	RangeControl,
+	BoxControl,
+	BorderControl,
+	__experimentalNumberControl as NumberControl,
+} from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 import { dateI18n } from '@wordpress/date';
-import { useState, useEffect } from '@wordpress/element';
+import { useState } from '@wordpress/element';
 
 /**
  * Editor-specific styles
@@ -33,7 +47,6 @@ import { useState, useEffect } from '@wordpress/element';
  */
 import './editor.scss';
 
-
 /**
  * Default template for inner blocks.
  *
@@ -43,10 +56,7 @@ import './editor.scss';
  * @type {Array<Array>}
  * @since 0.1.0
  */
-const TEMPLATE = [
-	['core/post-title', { level: 3 }],
-	['core/post-date'],
-];
+const TEMPLATE = [ [ 'core/post-title', { level: 3 } ], [ 'core/post-date' ] ];
 
 /**
  * Calculate target date based on selectedMonth and monthModifier.
@@ -87,15 +97,15 @@ const TEMPLATE = [
  */
 function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
 	let targetDate;
-	
+
 	if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
 		// Use selected month (ignore monthModifier when explicit month is set)
-		const [year, month] = selectedMonth.split('-').map(Number);
+		const [ year, month ] = selectedMonth.split( '-' ).map( Number );
 		targetDate = new Date( year, month - 1, 1 );
 	} else {
 		// Use current month with modifier
 		targetDate = new Date();
-		
+
 		// Apply month modifier if no explicit month is selected
 		if ( monthModifier !== 0 ) {
 			// Set to first day of month first to avoid date overflow issues
@@ -106,7 +116,7 @@ function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
 			targetDate.setMonth( targetDate.getMonth() + monthModifier );
 		}
 	}
-	
+
 	return targetDate;
 }
 
@@ -138,20 +148,20 @@ function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
  */
 function getDayNames( startOfWeek = 0 ) {
 	const days = [];
-	
+
 	// Base date: 2024-01-07 is a Sunday (day 0)
 	// We use a fixed date so calculations are consistent
 	const baseSunday = new Date( '2024-01-07' );
-	
+
 	for ( let i = 0; i < 7; i++ ) {
 		// Calculate the day of week (0=Sunday, 6=Saturday)
 		// The modulo ensures we wrap around (e.g., day 7 becomes day 0)
 		const dayOfWeek = ( startOfWeek + i ) % 7;
-		
+
 		// Create a date for this day of week by adding days to base Sunday
 		const dayDate = new Date( baseSunday );
 		dayDate.setDate( baseSunday.getDate() + dayOfWeek );
-		
+
 		// Get the abbreviated day name using dateI18n for proper localization
 		// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.)
 		// This respects the site's language setting via WordPress core
@@ -178,10 +188,10 @@ function getDayNames( startOfWeek = 0 ) {
  *
  * @since 0.1.0
  *
- * @param {Array<Object>} posts - Array of post objects from the REST API.
- * @param {number} startOfWeek - The start of week (0=Sunday, 1=Monday, etc.).
- * @param {string} selectedMonth - The selected month in format "YYYY-MM".
- * @param {number} monthModifier - The month offset from current month.
+ * @param {Array<Object>} posts         - Array of post objects from the REST API.
+ * @param {number}        startOfWeek   - The start of week (0=Sunday, 1=Monday, etc.).
+ * @param {string}        selectedMonth - The selected month in format "YYYY-MM".
+ * @param {number}        monthModifier - The month offset from current month.
  *
  * @return {Object} Calendar data structure containing:
  *   - {string} monthName - Formatted month and year (e.g., "January 2025")
@@ -204,7 +214,12 @@ function getDayNames( startOfWeek = 0 ) {
  * //   dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
  * // }
  */
-function generateCalendar( posts, startOfWeek = 0, selectedMonth = '', monthModifier = 0 ) {
+function generateCalendar(
+	posts,
+	startOfWeek = 0,
+	selectedMonth = '',
+	monthModifier = 0
+) {
 	// Use the single source of truth for date calculation
 	const targetDate = calculateTargetDate( selectedMonth, monthModifier );
 	// console.log( 'Generating calendar for date:', targetDate );
@@ -259,7 +274,10 @@ function generateCalendar( posts, startOfWeek = 0, selectedMonth = '', monthModi
 
 	// Fill days with posts
 	for ( let day = 1; day <= daysInMonth; day++ ) {
-		const dateStr = `${ year }-${ String( month + 1 ).padStart( 2, '0' ) }-${ String( day ).padStart( 2, '0' ) }`;
+		const dateStr = `${ year }-${ String( month + 1 ).padStart(
+			2,
+			'0'
+		) }-${ String( day ).padStart( 2, '0' ) }`;
 		const dayPosts = postsByDate[ dateStr ] || [];
 
 		currentWeek.push( {
@@ -369,17 +387,17 @@ function generateMonthOptions() {
 function calculateDateQuery( selectedMonth, monthModifier = 0 ) {
 	// Use the single source of truth for date calculation
 	const targetDate = calculateTargetDate( selectedMonth, monthModifier );
-	
+
 	const year = targetDate.getFullYear();
 	/**
 	 * CRITICAL: JavaScript's getMonth() returns 0-11 (January=0, December=11)
 	 * We MUST add 1 to convert to human-readable/WP_Query format (January=1, December=12)
-	 * 
+	 *
 	 * Why this matters:
 	 * - Without +1: December would be month 11, January would be month 0
 	 * - WP_Query interprets month 0 as "all months"
 	 * - WP_Query expects month 1-12 to match specific months
-	 * 
+	 *
 	 * Example:
 	 * const dec = new Date('2025-12-01');
 	 * dec.getMonth()     // Returns 11 (zero-based)
@@ -388,8 +406,8 @@ function calculateDateQuery( selectedMonth, monthModifier = 0 ) {
 	const month = targetDate.getMonth() + 1;
 
 	return {
-		year: year,
-		month: month,
+		year,
+		month,
 	};
 }
 
@@ -418,16 +436,16 @@ function boxControlToCSS( value ) {
 	if ( ! value ) {
 		return '';
 	}
-	
+
 	if ( typeof value === 'string' ) {
 		return value;
 	}
-	
+
 	if ( typeof value === 'object' ) {
 		const { top = '0', right = '0', bottom = '0', left = '0' } = value;
-		return `${top} ${right} ${bottom} ${left}`;
+		return `${ top } ${ right } ${ bottom } ${ left }`;
 	}
-	
+
 	return '';
 }
 
@@ -467,30 +485,35 @@ function borderControlToCSS( value ) {
 	if ( ! value ) {
 		return {};
 	}
-	
+
 	const result = {};
-	
+
 	if ( value.width ) {
 		result.borderWidth = value.width;
 	}
-	
+
 	if ( value.style ) {
 		result.borderStyle = value.style;
 	}
-	
+
 	if ( value.color ) {
 		result.borderColor = value.color;
 	}
-	
+
 	if ( value.radius ) {
 		if ( typeof value.radius === 'string' ) {
 			result.borderRadius = value.radius;
 		} else if ( typeof value.radius === 'object' ) {
-			const { topLeft = '0', topRight = '0', bottomRight = '0', bottomLeft = '0' } = value.radius;
-			result.borderRadius = `${topLeft} ${topRight} ${bottomRight} ${bottomLeft}`;
+			const {
+				topLeft = '0',
+				topRight = '0',
+				bottomRight = '0',
+				bottomLeft = '0',
+			} = value.radius;
+			result.borderRadius = `${ topLeft } ${ topRight } ${ bottomRight } ${ bottomLeft }`;
 		}
 	}
-	
+
 	return result;
 }
 
@@ -514,23 +537,26 @@ function borderControlToCSS( value ) {
  *
  * @since 0.1.0
  *
- * @param {Object} props - Component props.
- * @param {Object} props.attributes - Block attributes containing:
- *   - {string} selectedMonth - Selected month in format "YYYY-MM"
- *   - {number} monthModifier - Month offset from current month
- *   - {Object} templateConfigStyle - Popover styling configuration
+ * @param {Object}   props               - Component props.
+ * @param {Object}   props.attributes    - Block attributes containing:
+ *                                       - {string} selectedMonth - Selected month in format "YYYY-MM"
+ *                                       - {number} monthModifier - Month offset from current month
+ *                                       - {Object} templateConfigStyle - Popover styling configuration
  * @param {Function} props.setAttributes - Function to update block attributes.
- * @param {Object} props.context - Context from parent blocks, including:
- *   - {Object} query - Query Loop query configuration
- *   - {number} queryId - Query Loop ID for pagination
- * @param {string} props.clientId - Unique identifier for this block instance.
+ * @param {Object}   props.context       - Context from parent blocks, including:
+ *                                       - {Object} query - Query Loop query configuration
+ *                                       - {number} queryId - Query Loop ID for pagination
  *
- * @return {WPElement} React element rendered in the editor.
+ * @return {Element} React element rendered in the editor.
  */
-export default function Edit( { attributes, setAttributes, context, clientId } ) {
-	const { selectedMonth, monthModifier = 0, templateConfigStyle = {} } = attributes;
-	const { query, queryId } = context;
-	const [showMonthPicker, setShowMonthPicker] = useState(false);
+export default function Edit( { attributes, setAttributes, context } ) {
+	const {
+		selectedMonth,
+		monthModifier = 0,
+		templateConfigStyle = {},
+	} = attributes;
+	const { query } = context;
+	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 
 	/**
 	 * Calculate date query based on selectedMonth and monthModifier.
@@ -540,13 +566,13 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 
 	/**
 	 * Fetch posts based on query context with date filtering.
-	 * 
+	 *
 	 * The useSelect hook automatically re-runs when dependencies change,
 	 * ensuring the calendar updates when:
 	 * - User changes selected month
 	 * - User changes month modifier
 	 * - Parent Query Loop changes its configuration
-	 * 
+	 *
 	 * Why we clean the query:
 	 * - GatherPress adds 'gatherpress_event_query' parameter
 	 * - This parameter conflicts with our date_query
@@ -561,20 +587,20 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 
 			const { getEntityRecords } = select( coreStore );
 			const { getSite } = select( coreStore );
-			
+
 			// Create a clean query object, removing GatherPress-specific parameters
 			// that interfere with the REST API query
 			const cleanQuery = { ...query };
-			
+
 			// Remove GatherPress-specific query vars that don't work with getEntityRecords
 			delete cleanQuery.gatherpress_event_query;
 			delete cleanQuery.include_unfinished;
-			
+
 			// If orderBy is 'datetime' (GatherPress specific), change to 'date'
 			if ( cleanQuery.orderBy === 'datetime' ) {
 				cleanQuery.orderBy = 'date';
 			}
-			
+
 			// console.log( 'Original Query Context:', query );
 			// console.log( 'Cleaned Query Context:', cleanQuery );
 
@@ -617,12 +643,17 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 			// console.log( 'Final Query Args:', queryArgs );
 
 			return {
-				posts: getEntityRecords( 'postType', cleanQuery.postType || 'post', queryArgs ) || [],
+				posts:
+					getEntityRecords(
+						'postType',
+						cleanQuery.postType || 'post',
+						queryArgs
+					) || [],
 				startOfWeek: weekStartsOn,
 			};
 		},
 		// CRITICAL: Dependencies array ensures query updates when these values change
-		[ query, selectedMonth, monthModifier, dateQuery.year, dateQuery.month ]
+		[ query, dateQuery ]
 	);
 
 	const blockProps = useBlockProps( {
@@ -634,7 +665,6 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 			className: 'gatherpress-calendar-template',
 		},
 		{
-			// allowedBlocks: ALLOWED_BLOCKS,
 			template: TEMPLATE,
 			templateLock: false,
 		}
@@ -646,7 +676,10 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 			<div { ...blockProps }>
 				<Placeholder
 					icon="calendar-alt"
-					label={ __( 'GatherPress Calendar', 'gatherpress-calendar' ) }
+					label={ __(
+						'GatherPress Calendar',
+						'gatherpress-calendar'
+					) }
 					instructions={ __(
 						'This block must be used inside a Query Loop block.',
 						'gatherpress-calendar'
@@ -656,7 +689,12 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 		);
 	}
 
-	const calendar = generateCalendar( posts, startOfWeek, selectedMonth, monthModifier );
+	const calendar = generateCalendar(
+		posts,
+		startOfWeek,
+		selectedMonth,
+		monthModifier
+	);
 	const monthOptions = generateMonthOptions();
 
 	// Build inline styles for template config preview
@@ -672,25 +710,71 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 		boxShadow: templateConfigStyle.boxShadow || undefined,
 	};
 
+	/**
+	 * Generate dynamic help text for month offset control.
+	 *
+	 * Uses sprintf to properly format the text based on the current modifier value.
+	 * This provides clear, localized feedback about what the current offset means.
+	 */
+	let monthOffsetHelp;
+	if ( monthModifier === 0 ) {
+		monthOffsetHelp = __( 'Showing current month', 'gatherpress-calendar' );
+	} else if ( monthModifier < 0 ) {
+		// For negative values, use absolute value in the message
+		monthOffsetHelp = sprintf(
+			/* translators: %d: number of months ago */
+			__( 'Showing %d month(s) ago', 'gatherpress-calendar' ),
+			Math.abs( monthModifier )
+		);
+	} else {
+		// For positive values
+		monthOffsetHelp = sprintf(
+			/* translators: %d: number of months ahead */
+			__( 'Showing %d month(s) ahead', 'gatherpress-calendar' ),
+			monthModifier
+		);
+	}
+
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }>
+				<PanelBody
+					title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }
+				>
 					<p>
-						{ __( 'Select a specific month to display, or leave empty to show the current month.', 'gatherpress-calendar' ) }
+						{ __(
+							'Select a specific month to display, or leave empty to show the current month.',
+							'gatherpress-calendar'
+						) }
 					</p>
 					{ showMonthPicker ? (
 						<>
-							<div style={{ marginBottom: '12px', maxHeight: '200px', overflowY: 'auto', border: '1px solid #ddd', borderRadius: '4px' }}>
+							<div
+								style={ {
+									marginBottom: '12px',
+									maxHeight: '200px',
+									overflowY: 'auto',
+									border: '1px solid #ddd',
+									borderRadius: '4px',
+								} }
+							>
 								{ monthOptions.map( ( option ) => (
 									<Button
 										key={ option.value }
-										isPressed={ selectedMonth === option.value }
+										isPressed={
+											selectedMonth === option.value
+										}
 										onClick={ () => {
-											setAttributes( { selectedMonth: option.value } );
+											setAttributes( {
+												selectedMonth: option.value,
+											} );
 											setShowMonthPicker( false );
 										} }
-										style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px' }}
+										style={ {
+											width: '100%',
+											justifyContent: 'flex-start',
+											padding: '8px 12px',
+										} }
 									>
 										{ option.label }
 									</Button>
@@ -699,80 +783,154 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 							<Button
 								isSecondary
 								onClick={ () => setShowMonthPicker( false ) }
-								style={{ width: '100%' }}
+								style={ { width: '100%' } }
 							>
 								{ __( 'Cancel', 'gatherpress-calendar' ) }
 							</Button>
 						</>
 					) : (
 						<>
-							<div style={{ marginBottom: '12px', padding: '8px', background: '#f0f0f1', borderRadius: '4px' }}>
-								<strong>{ __( 'Current Selection:', 'gatherpress-calendar' ) }</strong>
+							<div
+								style={ {
+									marginBottom: '12px',
+									padding: '8px',
+									background: '#f0f0f1',
+									borderRadius: '4px',
+								} }
+							>
+								<strong>
+									{ __(
+										'Current Selection:',
+										'gatherpress-calendar'
+									) }
+								</strong>
 								<br />
-								{ selectedMonth ? monthOptions.find( o => o.value === selectedMonth )?.label : __( 'Current Month', 'gatherpress-calendar' ) }
+								{ selectedMonth
+									? monthOptions.find(
+											( o ) => o.value === selectedMonth
+									  )?.label
+									: __(
+											'Current Month',
+											'gatherpress-calendar'
+									  ) }
 								{ ! selectedMonth && monthModifier !== 0 && (
 									<>
 										{ ' ' }
-										{ monthModifier > 0 ? `+${monthModifier}` : monthModifier }
-										{ ' ' }
-										{ monthModifier === 1 ? __( 'month', 'gatherpress-calendar' ) : __( 'months', 'gatherpress-calendar' ) }
+										{ monthModifier > 0
+											? `+${ monthModifier }`
+											: monthModifier }{ ' ' }
+										{ monthModifier === 1
+											? __(
+													'month',
+													'gatherpress-calendar'
+											  )
+											: __(
+													'months',
+													'gatherpress-calendar'
+											  ) }
 									</>
 								) }
 							</div>
 							<Button
 								isPrimary
 								onClick={ () => setShowMonthPicker( true ) }
-								style={{ width: '100%', marginBottom: '8px' }}
+								style={ { width: '100%', marginBottom: '8px' } }
 							>
 								{ __( 'Change Month', 'gatherpress-calendar' ) }
 							</Button>
 							{ selectedMonth && (
 								<Button
 									isSecondary
-									onClick={ () => setAttributes( { selectedMonth: '' } ) }
-									style={{ width: '100%' }}
+									onClick={ () =>
+										setAttributes( { selectedMonth: '' } )
+									}
+									style={ { width: '100%' } }
 								>
-									{ __( 'Reset to Current Month', 'gatherpress-calendar' ) }
+									{ __(
+										'Reset to Current Month',
+										'gatherpress-calendar'
+									) }
 								</Button>
 							) }
 						</>
 					) }
-					
+
 					{ ! selectedMonth && (
 						<>
-							<hr style={{ margin: '16px 0', borderTop: '1px solid #ddd' }} />
-							<p style={{ marginTop: '16px', marginBottom: '8px', fontWeight: '500' }}>
+							<hr
+								style={ {
+									margin: '16px 0',
+									borderTop: '1px solid #ddd',
+								} }
+							/>
+							<p
+								style={ {
+									marginTop: '16px',
+									marginBottom: '8px',
+									fontWeight: '500',
+								} }
+							>
 								{ __( 'Month Offset', 'gatherpress-calendar' ) }
 							</p>
-							<p style={{ fontSize: '12px', color: '#757575', marginBottom: '12px' }}>
-								{ __( 'Display a month relative to the current month. For example, -1 shows last month, +1 shows next month. The calendar will automatically update as time passes.', 'gatherpress-calendar' ) }
+							<p
+								style={ {
+									fontSize: '12px',
+									color: '#757575',
+									marginBottom: '12px',
+								} }
+							>
+								{ __(
+									'Display a month relative to the current month. For example, -1 shows last month, +1 shows next month. The calendar will automatically update as time passes.',
+									'gatherpress-calendar'
+								) }
 							</p>
 							<NumberControl
-								label={ __( 'Months from current', 'gatherpress-calendar' ) }
+								label={ __(
+									'Months from current',
+									'gatherpress-calendar'
+								) }
 								value={ monthModifier }
 								onChange={ ( value ) => {
-									const numValue = value === '' ? 0 : parseInt( value, 10 );
-									setAttributes( { monthModifier: isNaN( numValue ) ? 0 : numValue } );
+									const numValue =
+										value === ''
+											? 0
+											: parseInt( value, 10 );
+									setAttributes( {
+										monthModifier: isNaN( numValue )
+											? 0
+											: numValue,
+									} );
 								} }
 								min={ -12 }
 								max={ 12 }
 								step={ 1 }
-								help={ monthModifier === 0 ? __( 'Showing current month', 'gatherpress-calendar' ) : ( monthModifier < 0 ? __( `Showing ${Math.abs(monthModifier)} month(s) ago`, 'gatherpress-calendar' ) : __( `Showing ${monthModifier} month(s) ahead`, 'gatherpress-calendar' ) ) }
+								help={ monthOffsetHelp }
 							/>
 							{ monthModifier !== 0 && (
 								<Button
 									isSecondary
-									onClick={ () => setAttributes( { monthModifier: 0 } ) }
-									style={{ width: '100%', marginTop: '8px' }}
+									onClick={ () =>
+										setAttributes( { monthModifier: 0 } )
+									}
+									style={ {
+										width: '100%',
+										marginTop: '8px',
+									} }
 								>
-									{ __( 'Reset Month Offset', 'gatherpress-calendar' ) }
+									{ __(
+										'Reset Month Offset',
+										'gatherpress-calendar'
+									) }
 								</Button>
 							) }
 						</>
 					) }
 				</PanelBody>
 
-				<PanelBody title={ __( 'Template Style', 'gatherpress-calendar' ) } initialOpen={ false }>
+				<PanelBody
+					title={ __( 'Template Style', 'gatherpress-calendar' ) }
+					initialOpen={ false }
+				>
 					<PanelColorSettings
 						title={ __( 'Background', 'gatherpress-calendar' ) }
 						colorSettings={ [
@@ -786,7 +944,10 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 										},
 									} );
 								},
-								label: __( 'Background Color', 'gatherpress-calendar' ),
+								label: __(
+									'Background Color',
+									'gatherpress-calendar'
+								),
 							},
 						] }
 					/>
@@ -826,13 +987,23 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 					/>
 
 					<RangeControl
-						label={ __( 'Box Shadow Blur', 'gatherpress-calendar' ) }
-						value={ parseInt( templateConfigStyle.boxShadow?.match(/\d+/)?.[0] || 0 ) }
+						label={ __(
+							'Box Shadow Blur',
+							'gatherpress-calendar'
+						) }
+						value={ parseInt(
+							templateConfigStyle.boxShadow?.match(
+								/\d+/
+							)?.[ 0 ] || 0
+						) }
 						onChange={ ( blur ) => {
 							setAttributes( {
 								templateConfigStyle: {
 									...templateConfigStyle,
-									boxShadow: blur > 0 ? `0 8px ${blur}px rgba(0, 0, 0, 0.15)` : undefined,
+									boxShadow:
+										blur > 0
+											? `0 8px ${ blur }px rgba(0, 0, 0, 0.15)`
+											: undefined,
 								},
 							} );
 						} }
@@ -843,7 +1014,9 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 			</InspectorControls>
 			<div { ...blockProps }>
 				<div className="gatherpress-calendar">
-					<h2 className="gatherpress-calendar__month">{ calendar.monthName }</h2>
+					<h2 className="gatherpress-calendar__month">
+						{ calendar.monthName }
+					</h2>
 					<table className="gatherpress-calendar__table">
 						<thead>
 							<tr>
@@ -860,7 +1033,11 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 											key={ dayIndex }
 											className={ `gatherpress-calendar__day ${
 												day.isEmpty ? 'is-empty' : ''
-											} ${ day.posts?.length > 0 ? 'has-posts' : '' }` }
+											} ${
+												day.posts?.length > 0
+													? 'has-posts'
+													: ''
+											}` }
 										>
 											{ ! day.isEmpty && (
 												<>
@@ -869,13 +1046,25 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 													</div>
 													{ day.posts?.length > 0 && (
 														<div className="gatherpress-calendar__events">
-															{ day.posts.map( ( post ) => (
-																<div
-																	key={ post.id }
-																	className="gatherpress-calendar__event"
-																	title={ post.title?.rendered || __( '(No title)', 'gatherpress-calendar' ) }
-																/>
-															) ) }
+															{ day.posts.map(
+																( post ) => (
+																	<div
+																		key={
+																			post.id
+																		}
+																		className="gatherpress-calendar__event"
+																		title={
+																			post
+																				.title
+																				?.rendered ||
+																			__(
+																				'(No title)',
+																				'gatherpress-calendar'
+																			)
+																		}
+																	/>
+																)
+															) }
 														</div>
 													) }
 												</>
@@ -887,7 +1076,10 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 						</tbody>
 					</table>
 
-					<div className="gatherpress-calendar__template-config" style={ templateConfigStyles }>
+					<div
+						className="gatherpress-calendar__template-config"
+						style={ templateConfigStyles }
+					>
 						<p className="gatherpress-calendar__template-label">
 							{ __(
 								'Configure how events appear in the calendar by adding blocks below:',

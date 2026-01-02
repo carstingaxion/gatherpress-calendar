@@ -6,7 +6,7 @@
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-registration/
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
 
@@ -16,8 +16,10 @@ import { addFilter } from '@wordpress/hooks';
 import { Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
-import { store as blockEditorStore } from '@wordpress/block-editor';
-import { InspectorControls } from '@wordpress/block-editor';
+import {
+	store as blockEditorStore,
+	InspectorControls,
+} from '@wordpress/block-editor';
 
 /**
  * Style imports
@@ -82,81 +84,84 @@ registerBlockType( metadata.name, {
  *
  * @since 0.1.0
  */
-const withCalendarNotice = createHigherOrderComponent(
-	( BlockEdit ) => {
-		return ( props ) => {
-			// Only apply to Query Loop blocks
-			if ( props.name !== 'core/query' ) {
-				return <BlockEdit { ...props } />;
-			}
+const withCalendarNotice = createHigherOrderComponent( ( BlockEdit ) => {
+	return ( props ) => {
+		// Only apply to Query Loop blocks
+		if ( props.name !== 'core/query' ) {
+			return <BlockEdit { ...props } />;
+		}
 
-			/**
-			 * Check if this Query block:
-			 * 1. Has a calendar child
-			 * 2. Is querying gatherpress_event post type
-			 *
-			 * Queries the block editor store to check if any direct child
-			 * of this block is a GatherPress Calendar block, and if the
-			 * query is specifically for GatherPress events.
-			 */
-			const { hasCalendarChild, isGatherPressQuery } = useSelect(
-				( select ) => {
-					const { getBlock } = select( blockEditorStore );
-					const block = getBlock( props.clientId );
+		/**
+		 * Check if this Query block:
+		 * 1. Has a calendar child
+		 * 2. Is querying gatherpress_event post type
+		 *
+		 * Queries the block editor store to check if any direct child
+		 * of this block is a GatherPress Calendar block, and if the
+		 * query is specifically for GatherPress events.
+		 */
+		const { hasCalendarChild, isGatherPressQuery } = useSelect(
+			( select ) => {
+				const { getBlock } = select( blockEditorStore );
+				const block = getBlock( props.clientId );
 
-					if ( ! block || ! block.innerBlocks || block.innerBlocks.length === 0 ) {
-						return { hasCalendarChild: false, isGatherPressQuery: false };
-					}
-
-					const hasCalendar = block.innerBlocks.some(
-						( innerBlock ) => innerBlock.name === 'gatherpress/calendar'
-					);
-
-					// Check if the query is for gatherpress_event post type
-					const postType = block.attributes?.query?.postType || 'post';
-					const isGatherPress = postType === 'gatherpress_event';
-
+				if (
+					! block ||
+					! block.innerBlocks ||
+					block.innerBlocks.length === 0
+				) {
 					return {
-						hasCalendarChild: hasCalendar,
-						isGatherPressQuery: isGatherPress,
+						hasCalendarChild: false,
+						isGatherPressQuery: false,
 					};
-				},
-				[ props.clientId, props.attributes ]
-			);
+				}
 
-			// Only show notice if both conditions are met:
-			// 1. Calendar block is present
-			// 2. Query is for gatherpress_event post type
-			const shouldShowNotice = hasCalendarChild && isGatherPressQuery;
+				const hasCalendar = block.innerBlocks.some(
+					( innerBlock ) => innerBlock.name === 'gatherpress/calendar'
+				);
 
-			return (
-				<>
-					
-					{ shouldShowNotice && (
-						<InspectorControls>
-							<Notice status="info" isDismissible={ false }>
-								<p>
-									{ __(
-										'The GatherPress Calendar block is active in this Query Loop. The calendar will use date-based filtering for the selected month, overriding the "Upcoming or past events" setting.',
-										'gatherpress-calendar'
-									) }
-								</p>
-								<p>
-									{ __(
-										'This ensures the calendar only displays events from the specific month, regardless of whether they are past or upcoming events.',
-										'gatherpress-calendar'
-									) }
-								</p>
-							</Notice>
-						</InspectorControls>
-					) }
-					<BlockEdit { ...props } />
-				</>
-			);
-		};
-	},
-	'withCalendarNotice'
-);
+				// Check if the query is for gatherpress_event post type
+				const postType = block.attributes?.query?.postType || 'post';
+				const isGatherPress = postType === 'gatherpress_event';
+
+				return {
+					hasCalendarChild: hasCalendar,
+					isGatherPressQuery: isGatherPress,
+				};
+			},
+			[ props.clientId ]
+		);
+
+		// Only show notice if both conditions are met:
+		// 1. Calendar block is present
+		// 2. Query is for gatherpress_event post type
+		const shouldShowNotice = hasCalendarChild && isGatherPressQuery;
+
+		return (
+			<>
+				{ shouldShowNotice && (
+					<InspectorControls>
+						<Notice status="info" isDismissible={ false }>
+							<p>
+								{ __(
+									'The GatherPress Calendar block is active in this Query Loop. The calendar will use date-based filtering for the selected month, overriding the "Upcoming or past events" setting.',
+									'gatherpress-calendar'
+								) }
+							</p>
+							<p>
+								{ __(
+									'This ensures the calendar only displays events from the specific month, regardless of whether they are past or upcoming events.',
+									'gatherpress-calendar'
+								) }
+							</p>
+						</Notice>
+					</InspectorControls>
+				) }
+				<BlockEdit { ...props } />
+			</>
+		);
+	};
+}, 'withCalendarNotice' );
 
 /**
  * Register the filter to add calendar notices to Query blocks.

@@ -2,11 +2,10 @@
     "name": "carstingaxion/gatherpress-calendar",
     "description": "A calendar block that displays Query Loop results in a monthly calendar format. Works with any post type, with specialized support for GatherPress events.",
     "license": "GPL-3.0+",
-    "type": "wordpress-muplugin",
+    "type": "wordpress-plugin",
     "keywords": [
         "wordpress",
-        "wordpress-plugin",
-        "wordpress-muplugin"
+        "wordpress-plugin"
     ],
     "authors": [
         {

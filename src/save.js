@@ -8,7 +8,7 @@
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#save
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
 

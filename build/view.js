@@ -2,6 +2,7 @@
 /*!*********************!*\
   !*** ./src/view.js ***!
   \*********************/
+/* eslint-env browser */
 /**
  * GatherPress Calendar Block Frontend Script
  *
@@ -28,7 +29,7 @@
  * - Improved accessibility baseline
  * - Graceful degradation for JS-disabled browsers
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
 
@@ -96,7 +97,9 @@
    */
   function init() {
     const calendars = document.querySelectorAll('.gatherpress-calendar');
-    if (!calendars.length) return;
+    if (!calendars.length) {
+      return;
+    }
 
     // Set up IntersectionObserver to track calendar visibility
     if ('IntersectionObserver' in window) {
@@ -193,7 +196,9 @@
     const events = calendar.querySelectorAll('.gatherpress-calendar__event');
     events.forEach(function (eventLink) {
       // Skip if already set up (prevents duplicate handlers)
-      if (eventLink.hasAttribute('data-setup')) return;
+      if (eventLink.hasAttribute('data-setup')) {
+        return;
+      }
       eventLink.setAttribute('data-setup', 'true');
 
       // Add ARIA attributes for screen readers
@@ -206,7 +211,9 @@
        */
       eventLink.addEventListener('click', function (e) {
         // Check if calendar is visible before processing
-        if (!visibilityMap.get(calendar)) return;
+        if (!visibilityMap.get(calendar)) {
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
         showPopover(eventLink, calendar);
@@ -219,7 +226,9 @@
        */
       eventLink.addEventListener('keydown', function (e) {
         // Check if calendar is visible before processing
-        if (!visibilityMap.get(calendar)) return;
+        if (!visibilityMap.get(calendar)) {
+          return;
+        }
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           showPopover(eventLink, calendar);
@@ -246,7 +255,7 @@
    * @since 0.1.0
    *
    * @param {HTMLAnchorElement} eventLink - The event dot link element that was clicked.
-   * @param {HTMLElement} calendar - The calendar container element.
+   * @param {HTMLElement}       calendar  - The calendar container element.
    *
    * @return {void}
    *
@@ -259,7 +268,9 @@
    */
   function showPopover(eventLink, calendar) {
     // Close any existing popover first
-    if (activePopover) closePopover();
+    if (activePopover) {
+      closePopover();
+    }
 
     // Extract content and custom styling
     const content = eventLink.innerHTML;
@@ -355,7 +366,7 @@
    *
    * @since 0.1.0
    *
-   * @param {HTMLElement} popover - The popover element to position.
+   * @param {HTMLElement} popover   - The popover element to position.
    * @param {HTMLElement} eventLink - The event dot link element.
    *
    * @return {void}
@@ -373,8 +384,12 @@
     let left = linkRect.left + linkRect.width / 2 - popRect.width / 2;
 
     // Keep in viewport horizontally
-    if (left < gap) left = gap;
-    if (left + popRect.width > vw - gap) left = vw - popRect.width - gap;
+    if (left < gap) {
+      left = gap;
+    }
+    if (left + popRect.width > vw - gap) {
+      left = vw - popRect.width - gap;
+    }
 
     // Keep in viewport vertically
     // If popover would extend below viewport, show it above the dot instead
@@ -382,7 +397,9 @@
       top = linkRect.top - popRect.height - gap;
     }
     // If still not enough space, clamp to viewport top
-    if (top < gap) top = gap;
+    if (top < gap) {
+      top = gap;
+    }
 
     // Apply calculated position
     popover.style.top = top + 'px';
@@ -406,14 +423,20 @@
    * @return {void}
    */
   function closePopover() {
-    if (!activePopover) return;
+    if (!activePopover) {
+      return;
+    }
 
     // Clean up event listeners
-    if (activePopover._cleanup) activePopover._cleanup();
+    if (activePopover._cleanup) {
+      activePopover._cleanup();
+    }
 
     // Start fade-out animation
     activePopover.classList.remove('is-active');
-    if (activeBackdrop) activeBackdrop.classList.remove('is-active');
+    if (activeBackdrop) {
+      activeBackdrop.classList.remove('is-active');
+    }
 
     // Remove from DOM after animation completes
     setTimeout(function () {

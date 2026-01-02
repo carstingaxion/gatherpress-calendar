@@ -52,12 +52,13 @@ __webpack_require__.r(__webpack_exports__);
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
 
 
 
+/* eslint-disable @wordpress/no-unsafe-wp-apis */
 
 
 
@@ -214,10 +215,10 @@ function getDayNames(startOfWeek = 0) {
  *
  * @since 0.1.0
  *
- * @param {Array<Object>} posts - Array of post objects from the REST API.
- * @param {number} startOfWeek - The start of week (0=Sunday, 1=Monday, etc.).
- * @param {string} selectedMonth - The selected month in format "YYYY-MM".
- * @param {number} monthModifier - The month offset from current month.
+ * @param {Array<Object>} posts         - Array of post objects from the REST API.
+ * @param {number}        startOfWeek   - The start of week (0=Sunday, 1=Monday, etc.).
+ * @param {string}        selectedMonth - The selected month in format "YYYY-MM".
+ * @param {number}        monthModifier - The month offset from current month.
  *
  * @return {Object} Calendar data structure containing:
  *   - {string} monthName - Formatted month and year (e.g., "January 2025")
@@ -411,12 +412,12 @@ function calculateDateQuery(selectedMonth, monthModifier = 0) {
   /**
    * CRITICAL: JavaScript's getMonth() returns 0-11 (January=0, December=11)
    * We MUST add 1 to convert to human-readable/WP_Query format (January=1, December=12)
-   * 
+   *
    * Why this matters:
    * - Without +1: December would be month 11, January would be month 0
    * - WP_Query interprets month 0 as "all months"
    * - WP_Query expects month 1-12 to match specific months
-   * 
+   *
    * Example:
    * const dec = new Date('2025-12-01');
    * dec.getMonth()     // Returns 11 (zero-based)
@@ -424,8 +425,8 @@ function calculateDateQuery(selectedMonth, monthModifier = 0) {
    */
   const month = targetDate.getMonth() + 1;
   return {
-    year: year,
-    month: month
+    year,
+    month
   };
 }
 
@@ -551,24 +552,22 @@ function borderControlToCSS(value) {
  *
  * @since 0.1.0
  *
- * @param {Object} props - Component props.
- * @param {Object} props.attributes - Block attributes containing:
- *   - {string} selectedMonth - Selected month in format "YYYY-MM"
- *   - {number} monthModifier - Month offset from current month
- *   - {Object} templateConfigStyle - Popover styling configuration
+ * @param {Object}   props               - Component props.
+ * @param {Object}   props.attributes    - Block attributes containing:
+ *                                       - {string} selectedMonth - Selected month in format "YYYY-MM"
+ *                                       - {number} monthModifier - Month offset from current month
+ *                                       - {Object} templateConfigStyle - Popover styling configuration
  * @param {Function} props.setAttributes - Function to update block attributes.
- * @param {Object} props.context - Context from parent blocks, including:
- *   - {Object} query - Query Loop query configuration
- *   - {number} queryId - Query Loop ID for pagination
- * @param {string} props.clientId - Unique identifier for this block instance.
+ * @param {Object}   props.context       - Context from parent blocks, including:
+ *                                       - {Object} query - Query Loop query configuration
+ *                                       - {number} queryId - Query Loop ID for pagination
  *
- * @return {WPElement} React element rendered in the editor.
+ * @return {Element} React element rendered in the editor.
  */
 function Edit({
   attributes,
   setAttributes,
-  context,
-  clientId
+  context
 }) {
   const {
     selectedMonth,
@@ -576,8 +575,7 @@ function Edit({
     templateConfigStyle = {}
   } = attributes;
   const {
-    query,
-    queryId
+    query
   } = context;
   const [showMonthPicker, setShowMonthPicker] = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_6__.useState)(false);
 
@@ -589,13 +587,13 @@ function Edit({
 
   /**
    * Fetch posts based on query context with date filtering.
-   * 
+   *
    * The useSelect hook automatically re-runs when dependencies change,
    * ensuring the calendar updates when:
    * - User changes selected month
    * - User changes month modifier
    * - Parent Query Loop changes its configuration
-   * 
+   *
    * Why we clean the query:
    * - GatherPress adds 'gatherpress_event_query' parameter
    * - This parameter conflicts with our date_query
@@ -681,14 +679,13 @@ function Edit({
     };
   },
   // CRITICAL: Dependencies array ensures query updates when these values change
-  [query, selectedMonth, monthModifier, dateQuery.year, dateQuery.month]);
+  [query, dateQuery]);
   const blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps)({
     className: 'gatherpress-calendar-block'
   });
   const innerBlocksProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useInnerBlocksProps)({
     className: 'gatherpress-calendar-template'
   }, {
-    // allowedBlocks: ALLOWED_BLOCKS,
     template: TEMPLATE,
     templateLock: false
   });
@@ -719,6 +716,25 @@ function Edit({
     }),
     boxShadow: templateConfigStyle.boxShadow || undefined
   };
+
+  /**
+   * Generate dynamic help text for month offset control.
+   *
+   * Uses sprintf to properly format the text based on the current modifier value.
+   * This provides clear, localized feedback about what the current offset means.
+   */
+  let monthOffsetHelp;
+  if (monthModifier === 0) {
+    monthOffsetHelp = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Showing current month', 'gatherpress-calendar');
+  } else if (monthModifier < 0) {
+    // For negative values, use absolute value in the message
+    monthOffsetHelp = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.sprintf)(/* translators: %d: number of months ago */
+    (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Showing %d month(s) ago', 'gatherpress-calendar'), Math.abs(monthModifier));
+  } else {
+    // For positive values
+    monthOffsetHelp = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.sprintf)(/* translators: %d: number of months ahead */
+    (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Showing %d month(s) ahead', 'gatherpress-calendar'), monthModifier);
+  }
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InspectorControls, {
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
@@ -820,7 +836,7 @@ function Edit({
             min: -12,
             max: 12,
             step: 1,
-            help: monthModifier === 0 ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Showing current month', 'gatherpress-calendar') : monthModifier < 0 ? (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)(`Showing ${Math.abs(monthModifier)} month(s) ago`, 'gatherpress-calendar') : (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)(`Showing ${monthModifier} month(s) ahead`, 'gatherpress-calendar')
+            help: monthOffsetHelp
           }), monthModifier !== 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.Button, {
             isSecondary: true,
             onClick: () => setAttributes({
@@ -850,7 +866,7 @@ function Edit({
             },
             label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Background Color', 'gatherpress-calendar')
           }]
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.__experimentalBoxControl, {
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.BoxControl, {
           label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Padding', 'gatherpress-calendar'),
           values: templateConfigStyle.padding,
           onChange: padding => {
@@ -861,7 +877,7 @@ function Edit({
               }
             });
           }
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.__experimentalBorderControl, {
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.BorderControl, {
           label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Border', 'gatherpress-calendar'),
           value: {
             width: templateConfigStyle.borderWidth,
@@ -993,10 +1009,9 @@ __webpack_require__.r(__webpack_exports__);
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-registration/
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
-
 
 
 
@@ -1110,7 +1125,7 @@ const withCalendarNotice = (0,_wordpress_compose__WEBPACK_IMPORTED_MODULE_1__.cr
         hasCalendarChild: hasCalendar,
         isGatherPressQuery: isGatherPress
       };
-    }, [props.clientId, props.attributes]);
+    }, [props.clientId]);
 
     // Only show notice if both conditions are met:
     // 1. Calendar block is present
@@ -1172,7 +1187,7 @@ __webpack_require__.r(__webpack_exports__);
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#save
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
 
@@ -1486,7 +1501,7 @@ module.exports = window["ReactJSXRuntime"];
 /******/ 			return __webpack_require__.O(result);
 /******/ 		}
 /******/ 		
-/******/ 		var chunkLoadingGlobal = globalThis["webpackChunkblock_gatherpress_calendar"] = globalThis["webpackChunkblock_gatherpress_calendar"] || [];
+/******/ 		var chunkLoadingGlobal = globalThis["webpackChunkgatherpress_calendar"] = globalThis["webpackChunkgatherpress_calendar"] || [];
 /******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
 /******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 /******/ 	})();
