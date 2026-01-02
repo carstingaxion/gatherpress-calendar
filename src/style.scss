@@ -13,348 +13,6 @@
  */
 
 /* ==========================================================================
-   Block Container
-   ========================================================================== */
-
-.wp-block-gatherpress-calendar {
-	padding: var(--wp--preset--spacing--50, 1rem);
-	margin-block: var(--wp--preset--spacing--50, 1rem);
-
-	/* ==========================================================================
-	   BLOCK STYLE: Minimal
-	   ========================================================================== */
-
-	&.is-style-minimal {
-		.gatherpress-calendar__month {
-			font-weight: 300;
-			color: var(--wp--preset--color--contrast, #666);
-		}
-
-		.gatherpress-calendar__table {
-			background: transparent;
-			border: none;
-			gap: 0;
-
-			th {
-				background: transparent;
-				border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
-				text-transform: none;
-				letter-spacing: 0;
-				font-weight: 300;
-				color: var(--wp--preset--color--contrast, #999);
-			}
-
-			td {
-				background: transparent;
-				border-bottom: 1px solid var(--wp--preset--color--contrast, #f5f5f5);
-
-				&.is-empty {
-					opacity: 0.2;
-				}
-
-				&.is-today {
-					background: transparent;
-
-					.gatherpress-calendar__day-number {
-						background: var(--wp--preset--color--primary, #007cba);
-						color: white;
-						width: clamp(24px, 5vw, 32px);
-						height: clamp(24px, 5vw, 32px);
-						display: flex;
-						align-items: center;
-						justify-content: center;
-						border-radius: 50%;
-						margin-inline: auto;
-						font-weight: 300;
-
-						&::after {
-							display: none;
-						}
-					}
-				}
-
-				&.has-posts {
-					background: transparent;
-
-					.gatherpress-calendar__day-number::after {
-						background: var(--wp--preset--color--contrast, #999);
-						opacity: 0.5;
-					}
-				}
-			}
-		}
-
-		.gatherpress-calendar__day-number {
-			font-weight: 300;
-			color: var(--wp--preset--color--contrast, #333);
-		}
-
-		.gatherpress-calendar__event {
-			width: clamp(6px, 2vw, 8px);
-			height: clamp(6px, 2vw, 8px);
-			min-width: clamp(6px, 2vw, 8px);
-			min-height: clamp(6px, 2vw, 8px);
-			opacity: 0.7;
-
-			&:hover {
-				opacity: 1;
-				transform: scale(1.5);
-			}
-		}
-	}
-
-	/* ==========================================================================
-	   BLOCK STYLE: Bold
-	   ========================================================================== */
-
-	&.is-style-bold {
-		.gatherpress-calendar__month {
-			font-weight: 900;
-			text-transform: uppercase;
-			letter-spacing: 0.1em;
-			color: var(--wp--preset--color--contrast, #000);
-			text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
-		}
-
-		.gatherpress-calendar__table {
-			gap: clamp(2px, 0.5vw, 4px);
-			background: var(--wp--preset--color--contrast, #1e1e1e);
-			border: clamp(2px, 0.5vw, 4px) solid var(--wp--preset--color--contrast, #1e1e1e);
-
-			th {
-				background: var(--wp--preset--color--contrast, #1e1e1e);
-				color: var(--wp--preset--color--base, #fff);
-				font-weight: 900;
-				letter-spacing: 0.1em;
-			}
-
-			td {
-				&.is-empty {
-					background: var(--wp--preset--color--contrast, #333);
-				}
-
-				&.is-today {
-					background: var(--wp--preset--color--primary, #007cba);
-					box-shadow: inset 0 0 0 clamp(2px, 0.5vw, 4px) rgba(255, 255, 255, 0.3);
-
-					.gatherpress-calendar__day-number {
-						color: white;
-						font-weight: 900;
-
-						&::after {
-							display: none;
-						}
-					}
-				}
-
-				&.has-posts .gatherpress-calendar__day-number::after {
-					background: var(--wp--preset--color--primary, #007cba);
-				}
-			}
-		}
-
-		.gatherpress-calendar__day-number {
-			font-weight: 900;
-			color: var(--wp--preset--color--contrast, #1e1e1e);
-		}
-
-		.gatherpress-calendar__event {
-			width: clamp(14px, 3vw, 18px);
-			height: clamp(14px, 3vw, 18px);
-			min-width: clamp(14px, 3vw, 18px);
-			min-height: clamp(14px, 3vw, 18px);
-			border: clamp(2px, 0.5vw, 3px) solid white;
-			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-
-			&:hover {
-				transform: scale(1.2) rotate(45deg);
-			}
-		}
-	}
-
-	/* ==========================================================================
-	   BLOCK STYLE: Circular
-	   ========================================================================== */
-
-	&.is-style-circular {
-		.gatherpress-calendar__month {
-			font-weight: 500;
-			color: var(--wp--preset--color--primary, #007cba);
-		}
-
-		.gatherpress-calendar__table {
-			gap: clamp(0.5rem, 2vw, 1rem);
-			background: transparent;
-			border: none;
-			padding: clamp(0.5rem, 2vw, 1rem);
-
-			th {
-				background: transparent;
-				border: none;
-				color: var(--wp--preset--color--primary, #007cba);
-				font-weight: 600;
-				text-transform: none;
-				border-radius: 50%;
-			}
-
-			td {
-				border-radius: 50%;
-				background: var(--wp--preset--color--base-2, #f0f4f8);
-				border: 2px solid transparent;
-				transition: all 0.3s ease;
-
-				&.is-empty {
-					background: transparent;
-					opacity: 0.3;
-				}
-
-				&.has-posts {
-					background: var(--wp--preset--color--base, #fff);
-					border-color: var(--wp--preset--color--contrast, #d0dae5);
-					box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-					.gatherpress-calendar__day-number::after {
-						background: var(--wp--preset--color--primary, #007cba);
-					}
-				}
-
-				&.is-today {
-					background: linear-gradient(135deg, var(--wp--preset--color--primary, #007cba) 0%, var(--wp--preset--color--secondary, #0693e3) 100%);
-					border-color: var(--wp--preset--color--primary, #007cba);
-					box-shadow: 0 4px 16px rgba(0, 124, 186, 0.3);
-
-					.gatherpress-calendar__day-number {
-						color: white;
-						font-weight: 700;
-
-						&::after {
-							display: none;
-						}
-					}
-				}
-			}
-		}
-
-		.gatherpress-calendar__day-number {
-			font-weight: 600;
-		}
-
-		.gatherpress-calendar__event {
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-
-			&:hover {
-				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
-				transform: scale(1.4);
-			}
-		}
-	}
-
-	/* ==========================================================================
-	   BLOCK STYLE: Gradient
-	   ========================================================================== */
-
-	&.is-style-gradient {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		border-radius: 16px;
-		padding: clamp(1rem, 4vw, 2rem);
-
-		.gatherpress-calendar__month {
-			font-weight: 700;
-			color: white;
-			text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-		}
-
-		.gatherpress-calendar__table {
-			gap: clamp(0.5rem, 1.5vw, 0.75rem);
-			background: transparent;
-			border: none;
-			padding: clamp(0.5rem, 1.5vw, 0.75rem);
-
-			th {
-				background: rgba(255, 255, 255, 0.15);
-				backdrop-filter: blur(10px);
-				color: white;
-				font-weight: 700;
-				text-transform: uppercase;
-				letter-spacing: 0.1em;
-				border-radius: 8px;
-				border: 1px solid rgba(255, 255, 255, 0.2);
-			}
-
-			td {
-				background: rgba(255, 255, 255, 0.1);
-				backdrop-filter: blur(10px);
-				border: 1px solid rgba(255, 255, 255, 0.2);
-				border-radius: 8px;
-				transition: all 0.3s ease;
-
-				&.is-empty {
-					background: rgba(255, 255, 255, 0.05);
-					opacity: 0.4;
-				}
-
-				&.has-posts {
-					background: rgba(255, 255, 255, 0.2);
-					border-color: rgba(255, 255, 255, 0.3);
-
-					.gatherpress-calendar__day-number {
-						color: white;
-
-						&::after {
-							background: white;
-						}
-					}
-				}
-
-				&.is-today {
-					background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%);
-					border: 2px solid white;
-					box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.2);
-
-					.gatherpress-calendar__day-number {
-						color: white;
-						font-weight: 900;
-						text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-
-						&::after {
-							display: none;
-						}
-					}
-				}
-			}
-		}
-
-		.gatherpress-calendar__day-number {
-			color: white;
-			font-weight: 700;
-			text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-		}
-
-		.gatherpress-calendar__event {
-			background: rgba(255, 255, 255, 0.9);
-			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-			border: 2px solid rgba(255, 255, 255, 0.5);
-
-			&:hover {
-				background: white;
-				transform: scale(1.3);
-				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-			}
-
-			/* Override color variations */
-			&:nth-child(1),
-			&:nth-child(2),
-			&:nth-child(3),
-			&:nth-child(4),
-			&:nth-child(5),
-			&:nth-child(n+6) {
-				background: rgba(255, 255, 255, 0.9);
-			}
-		}
-	}
-}
-
-/* ==========================================================================
    Calendar Wrapper
    ========================================================================== */
 
@@ -363,9 +21,9 @@
 	max-width: var(--wp--style--global--wide-size, 1200px);
 	margin-inline: auto;
 
-	/* ==========================================================================
+	/* ======================================================================
 	   Month Header
-	   ========================================================================== */
+	   ====================================================================== */
 
 	&__month {
 		text-align: center;
@@ -376,9 +34,9 @@
 		line-height: 1.2;
 	}
 
-	/* ==========================================================================
+	/* ======================================================================
 	   Calendar Table - CSS Grid Layout
-	   ========================================================================== */
+	   ====================================================================== */
 
 	&__table {
 		width: 100%;
@@ -397,9 +55,9 @@
 			display: contents;
 		}
 
-		/* ==========================================================================
+		/* ==================================================================
 		   Day Name Headers
-		   ========================================================================== */
+		   ================================================================== */
 
 		th {
 			background: var(--wp--preset--color--base-2, #f8f9fa);
@@ -417,9 +75,9 @@
 			justify-content: center;
 		}
 
-		/* ==========================================================================
+		/* ==================================================================
 		   Day Cells - Square with aspect-ratio
-		   ========================================================================== */
+		   ================================================================== */
 
 		td {
 			background: var(--wp--preset--color--base, #fff);
@@ -437,9 +95,9 @@
 				opacity: 0.5;
 			}
 
-			/* ==========================================================================
+			/* ==============================================================
 			   Today's Date Highlight
-			   ========================================================================== */
+			   ============================================================== */
 
 			&.is-today {
 				background: rgba(0, 124, 186, 0.05);
@@ -450,7 +108,7 @@
 					position: relative;
 
 					&::after {
-						content: '';
+						content: "";
 						position: absolute;
 						bottom: -4px;
 						left: 50%;
@@ -463,9 +121,9 @@
 				}
 			}
 
-			/* ==========================================================================
+			/* ==============================================================
 			   Days with Posts Highlight
-			   ========================================================================== */
+			   ============================================================== */
 
 			&.has-posts {
 				background: rgba(0, 124, 186, 0.03);
@@ -476,7 +134,7 @@
 					position: relative;
 
 					&::after {
-						content: '';
+						content: "";
 						position: absolute;
 						bottom: -4px;
 						left: 50%;
@@ -492,9 +150,9 @@
 		}
 	}
 
-	/* ==========================================================================
+	/* ======================================================================
 	   Day Content Wrapper
-	   ========================================================================== */
+	   ====================================================================== */
 
 	&__day-content {
 		width: 100%;
@@ -506,9 +164,9 @@
 		position: relative;
 	}
 
-	/* ==========================================================================
+	/* ==================================================================
 	   Day Number
-	   ========================================================================== */
+	   ================================================================== */
 
 	&__day-number {
 		font-weight: 600;
@@ -519,9 +177,9 @@
 		flex-shrink: 0;
 	}
 
-	/* ==========================================================================
+	/* ==================================================================
 	   Events Container
-	   ========================================================================== */
+	   ================================================================== */
 
 	&__events {
 		display: flex;
@@ -534,9 +192,9 @@
 		min-height: 0;
 	}
 
-	/* ==========================================================================
+	/* ==================================================================
 	   Event Dots (Links)
-	   ========================================================================== */
+	   ================================================================== */
 
 	&__event {
 		width: clamp(8px, 2.5vw, 12px);
@@ -592,9 +250,9 @@
 		}
 	}
 
-	/* ==========================================================================
+	/* ==================================================================
 	   Popover (JavaScript-enhanced)
-	   ========================================================================== */
+	   ================================================================== */
 
 	&__popover {
 		position: fixed;
@@ -674,9 +332,9 @@
 		}
 	}
 
-	/* ==========================================================================
+	/* ==================================================================
 	   Template Config (Editor Only)
-	   ========================================================================== */
+	   ================================================================== */
 
 	&__template-config {
 		display: none;
@@ -684,10 +342,357 @@
 }
 
 /* ==========================================================================
-   Container Queries - Hide day names on narrow screens
+   Block Container
    ========================================================================== */
 
+.wp-block-gatherpress-calendar {
+	padding: var(--wp--preset--spacing--50, 1rem);
+	margin-block: var(--wp--preset--spacing--50, 1rem);
+
+	/* ======================================================================
+	   BLOCK STYLE: Minimal
+	   ====================================================================== */
+
+	&.is-style-minimal {
+
+		.gatherpress-calendar__month {
+			font-weight: 300;
+			color: var(--wp--preset--color--contrast, #666);
+		}
+
+		.gatherpress-calendar__table {
+			background: transparent;
+			border: none;
+			gap: 0;
+
+			th {
+				background: transparent;
+				border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
+				text-transform: none;
+				letter-spacing: 0;
+				font-weight: 300;
+				color: var(--wp--preset--color--contrast, #999);
+			}
+
+			td {
+				background: transparent;
+				border-bottom: 1px solid var(--wp--preset--color--contrast, #f5f5f5);
+
+				&.is-empty {
+					opacity: 0.2;
+				}
+
+				&.is-today {
+					background: transparent;
+
+					.gatherpress-calendar__day-number {
+						background: var(--wp--preset--color--primary, #007cba);
+						color: #fff;
+						width: clamp(24px, 5vw, 32px);
+						height: clamp(24px, 5vw, 32px);
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						border-radius: 50%;
+						margin-inline: auto;
+						font-weight: 300;
+
+						&::after {
+							display: none;
+						}
+					}
+				}
+
+				&.has-posts {
+					background: transparent;
+
+					.gatherpress-calendar__day-number::after {
+						background: var(--wp--preset--color--contrast, #999);
+						opacity: 0.5;
+					}
+				}
+			}
+		}
+
+		.gatherpress-calendar__day-number {
+			font-weight: 300;
+			color: var(--wp--preset--color--contrast, #333);
+		}
+
+		.gatherpress-calendar__event {
+			width: clamp(6px, 2vw, 8px);
+			height: clamp(6px, 2vw, 8px);
+			min-width: clamp(6px, 2vw, 8px);
+			min-height: clamp(6px, 2vw, 8px);
+			opacity: 0.7;
+
+			&:hover {
+				opacity: 1;
+				transform: scale(1.5);
+			}
+		}
+	}
+
+	/* ======================================================================
+	   BLOCK STYLE: Bold
+	   ====================================================================== */
+
+	&.is-style-bold {
+
+		.gatherpress-calendar__month {
+			font-weight: 900;
+			text-transform: uppercase;
+			letter-spacing: 0.1em;
+			color: var(--wp--preset--color--contrast, #000);
+			text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+		}
+
+		.gatherpress-calendar__table {
+			gap: clamp(2px, 0.5vw, 4px);
+			background: var(--wp--preset--color--contrast, #1e1e1e);
+			border: clamp(2px, 0.5vw, 4px) solid var(--wp--preset--color--contrast, #1e1e1e);
+
+			th {
+				background: var(--wp--preset--color--contrast, #1e1e1e);
+				color: var(--wp--preset--color--base, #fff);
+				font-weight: 900;
+				letter-spacing: 0.1em;
+			}
+
+			td {
+
+				&.is-empty {
+					background: var(--wp--preset--color--contrast, #333);
+				}
+
+				&.is-today {
+					background: var(--wp--preset--color--primary, #007cba);
+					box-shadow: inset 0 0 0 clamp(2px, 0.5vw, 4px) rgba(255, 255, 255, 0.3);
+
+					.gatherpress-calendar__day-number {
+						color: #fff;
+						font-weight: 900;
+
+						&::after {
+							display: none;
+						}
+					}
+				}
+
+				&.has-posts .gatherpress-calendar__day-number::after {
+					background: var(--wp--preset--color--primary, #007cba);
+				}
+			}
+		}
+
+		.gatherpress-calendar__day-number {
+			font-weight: 900;
+			color: var(--wp--preset--color--contrast, #1e1e1e);
+		}
+
+		.gatherpress-calendar__event {
+			width: clamp(14px, 3vw, 18px);
+			height: clamp(14px, 3vw, 18px);
+			min-width: clamp(14px, 3vw, 18px);
+			min-height: clamp(14px, 3vw, 18px);
+			border: clamp(2px, 0.5vw, 3px) solid #fff;
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+
+			&:hover {
+				transform: scale(1.2) rotate(45deg);
+			}
+		}
+	}
+
+	/* ======================================================================
+	   BLOCK STYLE: Circular
+	   ====================================================================== */
+
+	&.is-style-circular {
+
+		.gatherpress-calendar__month {
+			font-weight: 500;
+			color: var(--wp--preset--color--primary, #007cba);
+		}
+
+		.gatherpress-calendar__table {
+			gap: clamp(0.5rem, 2vw, 1rem);
+			background: transparent;
+			border: none;
+			padding: clamp(0.5rem, 2vw, 1rem);
+
+			th {
+				background: transparent;
+				border: none;
+				color: var(--wp--preset--color--primary, #007cba);
+				font-weight: 600;
+				text-transform: none;
+				border-radius: 50%;
+			}
+
+			td {
+				border-radius: 50%;
+				background: var(--wp--preset--color--base-2, #f0f4f8);
+				border: 2px solid transparent;
+				transition: all 0.3s ease;
+
+				&.is-empty {
+					background: transparent;
+					opacity: 0.3;
+				}
+
+				&.has-posts {
+					background: var(--wp--preset--color--base, #fff);
+					border-color: var(--wp--preset--color--contrast, #d0dae5);
+					box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+					.gatherpress-calendar__day-number::after {
+						background: var(--wp--preset--color--primary, #007cba);
+					}
+				}
+
+				&.is-today {
+					background: linear-gradient(135deg, var(--wp--preset--color--primary, #007cba) 0%, var(--wp--preset--color--secondary, #0693e3) 100%);
+					border-color: var(--wp--preset--color--primary, #007cba);
+					box-shadow: 0 4px 16px rgba(0, 124, 186, 0.3);
+
+					.gatherpress-calendar__day-number {
+						color: #fff;
+						font-weight: 700;
+
+						&::after {
+							display: none;
+						}
+					}
+				}
+			}
+		}
+
+		.gatherpress-calendar__day-number {
+			font-weight: 600;
+		}
+
+		.gatherpress-calendar__event {
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+
+			&:hover {
+				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+				transform: scale(1.4);
+			}
+		}
+	}
+
+	/* ======================================================================
+	   BLOCK STYLE: Gradient
+	   ====================================================================== */
+
+	&.is-style-gradient {
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		border-radius: 16px;
+		padding: clamp(1rem, 4vw, 2rem);
+
+		.gatherpress-calendar__month {
+			font-weight: 700;
+			color: #fff;
+			text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+		}
+
+		.gatherpress-calendar__table {
+			gap: clamp(0.5rem, 1.5vw, 0.75rem);
+			background: transparent;
+			border: none;
+			padding: clamp(0.5rem, 1.5vw, 0.75rem);
+
+			th {
+				background: rgba(255, 255, 255, 0.15);
+				backdrop-filter: blur(10px);
+				color: #fff;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				border-radius: 8px;
+				border: 1px solid rgba(255, 255, 255, 0.2);
+			}
+
+			td {
+				background: rgba(255, 255, 255, 0.1);
+				backdrop-filter: blur(10px);
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				border-radius: 8px;
+				transition: all 0.3s ease;
+
+				&.is-empty {
+					background: rgba(255, 255, 255, 0.05);
+					opacity: 0.4;
+				}
+
+				&.has-posts {
+					background: rgba(255, 255, 255, 0.2);
+					border-color: rgba(255, 255, 255, 0.3);
+
+					.gatherpress-calendar__day-number {
+						color: #fff;
+
+						&::after {
+							background: #fff;
+						}
+					}
+				}
+
+				&.is-today {
+					background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%);
+					border: 2px solid #fff;
+					box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.2);
+
+					.gatherpress-calendar__day-number {
+						color: #fff;
+						font-weight: 900;
+						text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+						&::after {
+							display: none;
+						}
+					}
+				}
+			}
+		}
+
+		.gatherpress-calendar__day-number {
+			color: #fff;
+			font-weight: 700;
+			text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+		}
+
+		.gatherpress-calendar__event {
+			background: rgba(255, 255, 255, 0.9);
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+			border: 2px solid rgba(255, 255, 255, 0.5);
+
+			&:hover {
+				background: #fff;
+				transform: scale(1.3);
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+			}
+
+			/* Override color variations */
+			&:nth-child(1),
+			&:nth-child(2),
+			&:nth-child(3),
+			&:nth-child(4),
+			&:nth-child(5),
+			&:nth-child(n+6) {
+				background: rgba(255, 255, 255, 0.9);
+			}
+		}
+	}
+}
+
+/* ======================================================================
+   Container Queries - Hide day names on narrow screens
+   ====================================================================== */
+
 @container calendar (max-width: 400px) {
+
 	.gatherpress-calendar__table th {
 		display: none;
 	}
@@ -711,12 +716,14 @@
 	}
 }
 
-/* ==========================================================================
+/* ======================================================================
    Traditional Responsive Fallback
-   ========================================================================== */
+   ====================================================================== */
 
 @media (max-width: 400px) {
+
 	@supports not (container-type: inline-size) {
+
 		.gatherpress-calendar__table th {
 			display: none;
 		}
@@ -734,11 +741,12 @@
 	}
 }
 
-/* ==========================================================================
+/* ======================================================================
    Print Styles
-   ========================================================================== */
+   ====================================================================== */
 
 @media print {
+
 	.gatherpress-calendar__table {
 		break-inside: avoid;
 

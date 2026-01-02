@@ -14,7 +14,8 @@
  * Editor-specific block styles
  */
 .wp-block-gatherpress-calendar {
-	/* background-color: #fff;*/ 
+
+	/* background-color: #fff;*/
 }
 
 /**
@@ -22,10 +23,11 @@
  * Styled to match the event popover for visual consistency
  */
 .gatherpress-calendar {
+
 	&__template-config {
 		display: block;
 		margin-block-start: var(--wp--preset--spacing--50, 2rem);
-		
+
 		/* Popover-style appearance - defaults that can be overridden by attributes */
 		position: relative;
 		background: var(--wp--preset--color--base, #fff);
@@ -33,10 +35,10 @@
 		border-radius: var(--wp--custom--border-radius--medium, 8px);
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 		padding: var(--wp--preset--spacing--50, 1.5rem);
-		
+
 		/* Subtle hover effect */
 		transition: box-shadow 0.3s ease, border-color 0.3s ease;
-		
+
 		&:hover {
 			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 			border-color: var(--wp--preset--color--primary, #007cba);
@@ -63,25 +65,25 @@
 	 */
 	&__template-config &-template {
 		display: block;
-		
-		/* Add spacing between blocks */
-		> .block-editor-block-list__layout > .wp-block {
-			margin-block-end: var(--wp--preset--spacing--30, 0.75rem);
-			
-			&:last-child {
-				margin-block-end: 0;
-			}
-		}
-		
+
 		/* Style the blocks to look like they're part of a card */
 		.wp-block {
 			padding: var(--wp--preset--spacing--20, 0.5rem);
 			border-radius: var(--wp--custom--border-radius--small, 4px);
 			// background: var(--wp--preset--color--base-2, #fafafa);
 			transition: background 0.2s ease;
-			
+
 			&:hover {
 				background: var(--wp--preset--color--base, #fff);
+			}
+		}
+
+		/* Add spacing between blocks */
+		> .block-editor-block-list__layout > .wp-block {
+			margin-block-end: var(--wp--preset--spacing--30, 0.75rem);
+
+			&:last-child {
+				margin-block-end: 0;
 			}
 		}
 	}
@@ -91,8 +93,11 @@
  * Editor calendar enhancements
  */
 .editor-styles-wrapper {
+
 	.gatherpress-calendar {
+
 		&__table {
+
 			th {
 				background: #f0f0f1;
 			}
@@ -113,12 +118,14 @@
  * Responsive adjustments for template config in editor
  */
 @media (max-width: 768px) {
+
 	.gatherpress-calendar {
+
 		&__template-config {
 			padding: var(--wp--preset--spacing--40, 1rem);
 			margin-block-start: var(--wp--preset--spacing--40, 1rem);
 		}
-		
+
 		&__template-label {
 			font-size: var(--wp--preset--font-size--small, 0.8125rem);
 		}

@@ -14,6 +14,10 @@
  * @package GatherPressCalendar
  */
 
+namespace GatherPress\Calendar;
+
+use WP_REST_Request;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
@@ -33,10 +37,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function gatherpress_calendar_block_init(): void {
+function block_init(): void {
 	register_block_type( __DIR__ . '/build/' );
 }
-add_action( 'init', 'gatherpress_calendar_block_init' );
+add_action( 'init', __NAMESPACE__ . '\block_init' );
 
 
 /**
@@ -63,9 +67,7 @@ add_action( 'init', 'gatherpress_calendar_block_init' );
  *
  * @return array Modified query arguments with date_query added and gatherpress_event_query removed.
  */
-add_filter(
-	'rest_gatherpress_event_query',
-	function ( array $args, WP_REST_Request $request ): array {
+function rest_gatherpress_event_query( array $args, WP_REST_Request $request ): array {
 		$parameters = $request->get_params();
 
 		// Initialize date_query if it doesn't exist
@@ -88,7 +90,5 @@ add_filter(
 			}
 		}
 		return $args;
-	},
-	20,
-	2
-);
+	}
+add_filter( 'rest_gatherpress_event_query', __NAMESPACE__ . '\rest_gatherpress_event_query', 20, 2 );
