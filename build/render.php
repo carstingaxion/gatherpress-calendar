@@ -94,6 +94,14 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		private string $today;
 
 		/**
+		 * The date format used throughout the class.
+		 *
+		 * @since 0.1.0
+		 * @var string
+		 */
+		const DATE_FORMAT = 'Y-m-d';
+
+		/**
 		 * Original global post object for restoration.
 		 *
 		 * @since 0.1.0
@@ -110,10 +118,11 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 */
 		private function __construct() {
 			// Initialize start_of_week from WordPress settings
-			$this->start_of_week = (int) get_option( 'start_of_week', 0 );
+			$start_of_week = get_option( 'start_of_week', 0 );
+			$this->start_of_week = is_numeric( $start_of_week ) ? (int) $start_of_week : 0;
 			
 			// Initialize today's date using site timezone
-			$this->today = gmdate( 'Y-m-d', current_time( 'timestamp' ) );
+			$this->today = gmdate( self::DATE_FORMAT, current_time( 'timestamp' ) );
 		}
 
 		/**
@@ -167,7 +176,11 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array     $attributes Block attributes containing selectedMonth and monthModifier.
+		 * @param array{
+		 *   selectedMonth?: string,
+		 *   monthModifier?: int,
+		 *   templateConfigStyle?: array<string, mixed>,
+		 * }     $attributes Block attributes containing selectedMonth and monthModifier.
 		 * @param string    $content    Block default content (inner blocks).
 		 * @param \WP_Block $block      Block instance with context from parent Query Loop.
 		 *
@@ -175,7 +188,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 */
 		public function render( array $attributes, string $content, \WP_Block $block ): string {
 			// Store original global post for restoration
-			$this->original_post = $GLOBALS['post'] ?? null;
+			$this->original_post = ( $GLOBALS['post'] instanceof \WP_Post ) ? $GLOBALS['post'] : null;
 
 			// Get query context from parent Query Loop block
 			$query = $block->context['query'] ?? array();
@@ -211,7 +224,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array $attributes Block attributes.
+		 * @param array<string, mixed> $attributes Block attributes.
 		 *
 		 * @return void
 		 */
@@ -262,15 +275,15 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * @since 0.1.0
 		 *
 		 * @param \WP_Block $block Block instance with context.
-		 * @param array     $query Query parameters from parent Query Loop.
+		 * @param array<string|null, int|string|array<mixed>> $query Query parameters from parent Query Loop.
 		 *
-		 * @return array WP_Query compatible arguments.
+		 * @return array<string|null, int|string|array<mixed>> WP_Query compatible arguments.
 		 */
 		private function build_query_args( \WP_Block $block, array $query ): array {
-			$query_id = $block->context['queryId'] ?? 0;
-			$page     = empty( $_GET[ 'query-' . $query_id . '-page' ] ) ? 1 : (int) $_GET[ 'query-' . $query_id . '-page' ];
+			$query_id   = is_int( $block->context['queryId'] ) ? $block->context['queryId'] : 0;
+			$page_param = 'query-' . $query_id . '-page';
+			$page       = empty( $_GET[ $page_param ] ) || ! is_int( $_GET[ $page_param ] ) ? 1 : $_GET[ $page_param ];
 
-			$query['paged'] = $page;
 			$query_args     = build_query_vars_from_query_block( $block, $page );
 
 			/**
@@ -319,16 +332,16 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 
 			while ( $query_loop->have_posts() ) {
 				$query_loop->the_post();
-				$post_id = get_the_ID();
+				$post_id = (int) get_the_ID();
 
 				// Determine which date to use based on post type
 				if ( 'gatherpress_event' === get_post_type( $post_id ) && class_exists( '\GatherPress\Core\Event' ) ) {
 					// For GatherPress events, use event start date
 					$event     = new \GatherPress\Core\Event( $post_id );
-					$post_date = $event->get_datetime_start( 'Y-m-d' );
+					$post_date = $event->get_datetime_start( self::DATE_FORMAT );
 				} else {
 					// For other post types, use publication date
-					$post_date = get_the_date( 'Y-m-d' );
+					$post_date = get_the_date( self::DATE_FORMAT );
 				}
 
 				// Group posts by date
@@ -382,7 +395,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				</div>
 			</div>
 			<?php
-			return ob_get_clean();
+			return (string) ob_get_clean();
 		}
 
 		/**
@@ -401,7 +414,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *               - weeks: Array of weeks, each containing 7 days
 		 */
 		private function calculate_calendar_structure(): array {
-			$first_day      = mktime( 0, 0, 0, $this->month, 1, $this->year );
+			$first_day      = (int) mktime( 0, 0, 0, $this->month, 1, $this->year );
 			$days_in_month  = (int) gmdate( 't', $first_day );
 			$start_day_week = (int) gmdate( 'w', $first_day );
 			$month_name     = wp_date( 'F Y', $first_day );
@@ -602,7 +615,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				echo '</tr>';
 			}
 
-			return ob_get_clean();
+			return (string) ob_get_clean();
 		}
 
 		/**
@@ -651,7 +664,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				<?php endif; ?>
 			</td>
 			<?php
-			return ob_get_clean();
+			return (string) ob_get_clean();
 		}
 
 		/**
@@ -662,7 +675,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array     $post_ids       Array of post IDs for this day.
+		 * @param int[]     $post_ids       Array of post IDs for this day.
 		 * @param string    $popover_styles Inline styles for popovers.
 		 * @param \WP_Block $block          Block instance for inner blocks.
 		 *
@@ -675,7 +688,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				echo $this->render_single_event_dot( $post_id, $popover_styles, $block );
 			}
 
-			return ob_get_clean();
+			return (string) ob_get_clean();
 		}
 
 		/**
@@ -695,12 +708,17 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * @return string HTML for event dot.
 		 */
 		private function render_single_event_dot( int $post_id, string $popover_styles, \WP_Block $block ): string {
+			$post = get_post( $post_id );
+			if ( ! $post instanceof \WP_Post ) {
+				return '';
+			}
+			
 			// Override global $post for inner block rendering
-			$GLOBALS['post'] = get_post( $post_id );
+			$GLOBALS['post'] = $post;
 			setup_postdata( $GLOBALS['post'] );
 
 			$post_type  = get_post_type( $GLOBALS['post'] );
-			$post_url   = get_permalink( $post_id );
+			$post_url   = (string) get_permalink( $post_id );
 			$post_title = get_the_title( $post_id );
 
 			/**
@@ -709,11 +727,11 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			 * This ensures blocks like core/post-excerpt that use context
 			 * receive the correct postId and postType.
 			 *
-			 * @param array $context Block context.
+			 * @param array{postType: string, postId, int} $context Block context.
 			 *
 			 * @return array Modified context with postType and postId.
 			 */
-			$filter_block_context = static function ( $context ) use ( $post_id, $post_type ) {
+			$filter_block_context = static function ( array $context ) use ( $post_id, $post_type ) {
 				$context['postType'] = $post_type;
 				$context['postId']   = $post_id;
 				return $context;
@@ -738,14 +756,14 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			<a
 				href="<?php echo esc_url( $post_url ); ?>"
 				class="gatherpress-calendar__event"
-				data-post-id="<?php echo esc_attr( $post_id ); ?>"
+				data-post-id="<?php echo esc_attr( (string) $post_id ); ?>"
 				data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
 				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
 			>
 				<?php echo $inner_content; ?>
 			</a>
 			<?php
-			return ob_get_clean();
+			return (string) ob_get_clean();
 		}
 
 		/**
@@ -758,20 +776,43 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @param \WP_Block $block Block instance.
 		 *
-		 * @return array Modified block configuration.
+		 * @return array{
+		 *   blockName: string,
+		 *   innerHTML: string,
+		 *   innerContent: list<string>,
+		 * } & array<string, mixed>
 		 */
 		private function prepare_inner_blocks_instance( \WP_Block $block ): array {
 			$block_instance                  = $block->parsed_block;
 			$block_instance['blockName']     = 'core/null';
 			$block_instance['innerHTML']     = '';
-			array_pop( $block_instance['innerContent'] );
-			array_shift( $block_instance['innerContent'] );
-			$block_instance['innerContent'] = array_values( $block_instance['innerContent'] );
+			$innerContent = is_array( $block_instance['innerContent'] )
+				? $block_instance['innerContent']
+				: [];
 
+			array_pop( $innerContent );
+			array_shift( $innerContent );
+
+			// ensure all items are strings
+			$block_instance['innerContent'] = array_values(
+				array_map( '\strval', $innerContent )
+			);
 			return $block_instance;
 		}
 	}
 endif;
+
+/**
+ * Extract and sanitize block attributes.
+ *
+ * @var array{
+ *   selectedMonth?: string,
+ *   monthModifier?: int,
+ *   templateConfigStyle?: array<string, mixed>,
+ * } $attributes
+ * @var string $content
+ * @var \WP_Block $block
+ */
 
 // Render the block using the singleton instance
 echo Block_Renderer::get_instance()->render( $attributes, $content, $block );
