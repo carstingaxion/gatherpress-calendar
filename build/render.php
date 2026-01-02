@@ -271,6 +271,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * Converts Query Loop settings to WP_Query arguments and adds:
 		 * - Pagination support
 		 * - Date filtering for the target month
+		 * - Calendar query marker for the REST filter
 		 *
 		 * @since 0.1.0
 		 *
@@ -287,10 +288,15 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			$query_args     = build_query_vars_from_query_block( $block, $page );
 
 			/**
-			 * Add date query parameters to filter posts by year and month.
+			 * Add calendar query marker and date query parameters.
 			 *
-			 * This optimization limits the database query to only fetch posts within
-			 * the displayed month, improving performance for large post archives.
+			 * gatherpress_calendar_query: Marker for the rest_gatherpress_event_query filter
+			 * to identify this as a calendar query that should be optimized
+			 *
+			 * This marker creates a clear contract:
+			 * - Frontend (render.php): "I'm rendering a calendar for this month"
+			 * - Editor (edit.js): "I'm previewing a calendar for this month"
+			 * - Filter: "I see this is a calendar query, I'll optimize it accordingly"
 			 *
 			 * date_query format:
 			 * array(
@@ -302,6 +308,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			 *
 			 * @see https://developer.wordpress.org/reference/classes/wp_query/#date-parameters
 			 */
+			$query_args['gatherpress_calendar_query'] = true;
 			$query_args['date_query'] = array(
 				array(
 					'year'  => $this->year,

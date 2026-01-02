@@ -573,11 +573,11 @@ export default function Edit( { attributes, setAttributes, context } ) {
 	 * - User changes month modifier
 	 * - Parent Query Loop changes its configuration
 	 *
-	 * Why we clean the query:
-	 * - GatherPress adds 'gatherpress_event_query' parameter
-	 * - This parameter conflicts with our date_query
-	 * - We remove it and any other GatherPress-specific params
-	 * - REST API getEntityRecords doesn't understand these custom params
+	 * Why we add gatherpress_calendar_query:
+	 * - This acts as a unique identifier for calendar queries
+	 * - The PHP filter checks for this marker before modifying the query
+	 * - Ensures we only affect calendar block queries, not others
+	 * - Prevents conflicts with other GatherPress or plugin queries
 	 */
 	const { posts, startOfWeek } = useSelect(
 		( select ) => {
@@ -592,22 +592,24 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			// that interfere with the REST API query
 			const cleanQuery = { ...query };
 
-			// Remove GatherPress-specific query vars that don't work with getEntityRecords
-			// delete cleanQuery.gatherpress_event_query;
-			// delete cleanQuery.include_unfinished;
-
-			// console.log( 'Original Query Context:', query );
-			// console.log( 'Cleaned Query Context:', cleanQuery );
-
 			// Build REST API query arguments
 			const queryArgs = {
 				per_page: 100,
 				_embed: 'wp:term',
 			};
 
-			// Add date query filter based on the calculated month/year
-			// This is what makes the calendar only show posts from the displayed month
+			/**
+			 * Add calendar identifier and date query filter.
+			 *
+			 * gatherpress_calendar_query: Marker for the PHP filter to identify this query
+			 * year/month: Date parameters for filtering posts to the displayed month
+			 *
+			 * This combination ensures:
+			 * 1. Only calendar queries are modified by the filter
+			 * 2. Performance is optimized by fetching only relevant posts
+			 */
 			if ( dateQuery && dateQuery.year && dateQuery.month ) {
+				queryArgs.gatherpress_calendar_query = true;
 				queryArgs.year = dateQuery.year;
 				queryArgs.month = dateQuery.month;
 			}
@@ -632,8 +634,6 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			// Get site settings for start_of_week
 			const site = getSite();
 			const weekStartsOn = site?.start_of_week || 0;
-
-			// console.log( 'Final Query Args:', queryArgs );
 
 			return {
 				posts:
