@@ -216,16 +216,4 @@ The block uses WordPress's `wp_date()` function for all date formatting and resp
 
 ## Changelog
 
-### 0.1.0
-
-- Initial release
-- Monthly calendar view for Query Loop posts
-- Support for any post type with GatherPress specialization
-- Five block styles (Classic, Minimal, Bold, Circular, Gradient)
-- Progressive enhancement with JavaScript popovers
-- Month selection and month modifier
-- Customizable popover styling
-- Full localization support
-- Container query responsive design
-- Accessibility features (keyboard navigation, ARIA labels)
-- Print-friendly styles
+All notable changes to this project will be documented in the [CHANGELOG.md](CHANGELOG.md).
