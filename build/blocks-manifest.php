@@ -35,6 +35,14 @@ return array(
 				'default' => array(
 					
 				)
+			),
+			'showMonthHeading' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'monthHeadingLevel' => array(
+				'type' => 'number',
+				'default' => 2
 			)
 		),
 		'example' => array(

@@ -6,6 +6,7 @@
  * interact with and configure the calendar block, including:
  * - Visual calendar preview with posts from the query context
  * - Month selection and month modifier controls
+ * - Month heading visibility and level controls
  * - Template configuration for how posts appear
  * - Popover styling options
  *
@@ -30,12 +31,13 @@ import {
 	RangeControl,
 	BoxControl,
 	BorderControl,
+	ToggleControl,
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 import { dateI18n } from '@wordpress/date';
-import { useState } from '@wordpress/element';
+import { useState, createElement } from '@wordpress/element';
 
 /**
  * Editor-specific styles
@@ -524,6 +526,7 @@ function borderControlToCSS( value ) {
  * Handles:
  * - Rendering the calendar preview with posts
  * - Month selection and month modifier controls
+ * - Month heading visibility and level controls
  * - Template configuration interface
  * - Popover styling controls
  * - Query context validation
@@ -542,6 +545,8 @@ function borderControlToCSS( value ) {
  *                                       - {string} selectedMonth - Selected month in format "YYYY-MM"
  *                                       - {number} monthModifier - Month offset from current month
  *                                       - {Object} templateConfigStyle - Popover styling configuration
+ *                                       - {boolean} showMonthHeading - Whether to show month heading
+ *                                       - {number} monthHeadingLevel - Heading level (1-6)
  * @param {Function} props.setAttributes - Function to update block attributes.
  * @param {Object}   props.context       - Context from parent blocks, including:
  *                                       - {Object} query - Query Loop query configuration
@@ -554,6 +559,8 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		selectedMonth,
 		monthModifier = 0,
 		templateConfigStyle = {},
+		showMonthHeading = true,
+		monthHeadingLevel = 2,
 	} = attributes;
 	const { query } = context;
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
@@ -727,6 +734,20 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			monthModifier
 		);
 	}
+
+	/**
+	 * Render month heading with dynamic tag level.
+	 *
+	 * Uses createElement to dynamically render h1-h6 based on monthHeadingLevel attribute.
+	 * This provides flexibility for proper heading hierarchy in different contexts.
+	 */
+	const MonthHeading = showMonthHeading
+		? createElement(
+				`h${ monthHeadingLevel }`,
+				{ className: 'gatherpress-calendar__month' },
+				calendar.monthName
+		  )
+		: null;
 
 	return (
 		<>
@@ -918,6 +939,48 @@ export default function Edit( { attributes, setAttributes, context } ) {
 							) }
 						</>
 					) }
+
+					<hr
+						style={ {
+							margin: '16px 0',
+							borderTop: '1px solid #ddd',
+						} }
+					/>
+
+					<ToggleControl
+						label={ __( 'Show Month Heading', 'gatherpress-calendar' ) }
+						checked={ showMonthHeading }
+						onChange={ ( value ) =>
+							setAttributes( { showMonthHeading: value } )
+						}
+						help={ __(
+							'Display the month name and year above the calendar.',
+							'gatherpress-calendar'
+						) }
+					/>
+
+					{ showMonthHeading && (
+						<RangeControl
+							label={ __(
+								'Heading Level',
+								'gatherpress-calendar'
+							) }
+							value={ monthHeadingLevel }
+							onChange={ ( value ) =>
+								setAttributes( {
+									monthHeadingLevel: value || 2,
+								} )
+							}
+							min={ 1 }
+							max={ 6 }
+							step={ 1 }
+							help={ __(
+								'Select the HTML heading level (h1-h6) for the month name.',
+								'gatherpress-calendar'
+							) }
+						/>
+					) }
+
 				</PanelBody>
 
 				<PanelBody
@@ -1007,9 +1070,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			</InspectorControls>
 			<div { ...blockProps }>
 				<div className="gatherpress-calendar">
-					<h2 className="gatherpress-calendar__month">
-						{ calendar.monthName }
-					</h2>
+					{ MonthHeading }
 					<table className="gatherpress-calendar__table">
 						<thead>
 							<tr>

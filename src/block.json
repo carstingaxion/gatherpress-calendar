@@ -21,6 +21,14 @@
 		"templateConfigStyle": {
 			"type": "object",
 			"default": {}
+		},
+		"showMonthHeading": {
+			"type": "boolean",
+			"default": true
+		},
+		"monthHeadingLevel": {
+			"type": "number",
+			"default": 2
 		}
 	},
 	"example": {},

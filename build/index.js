@@ -8,7 +8,7 @@
   \************************/
 (module) {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"gatherpress/calendar","version":"0.1.0","title":"GatherPress Calendar","category":"gatherpress","icon":"calendar-alt","description":"Display query loop posts in a monthly calendar format.","ancestor":["core/query"],"usesContext":["queryId","query","queryContext","displayLayout","templateSlug","previewPostType"],"attributes":{"selectedMonth":{"type":"string","default":""},"monthModifier":{"type":"number","default":0},"templateConfigStyle":{"type":"object","default":{}}},"example":{},"supports":{"reusable":false,"html":false,"align":true,"alignWide":true,"customClassName":true,"typography":{"fontSize":true,"lineHeight":true,"__experimentalFontFamily":true,"__experimentalFontWeight":true,"__experimentalFontStyle":true,"__experimentalTextTransform":true,"__experimentalTextDecoration":true,"__experimentalLetterSpacing":true,"__experimentalDefaultControls":{"fontSize":true}},"color":{"gradients":true,"link":true,"__experimentalDefaultControls":{"background":true,"text":true}},"spacing":{"margin":true,"padding":true}},"styles":[{"name":"default","label":"Classic","isDefault":true},{"name":"minimal","label":"Minimal"},{"name":"bold","label":"Bold"},{"name":"circular","label":"Circular"},{"name":"gradient","label":"Gradient"}],"textdomain":"gatherpress-calendar","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","viewScript":"file:./view.js","render":"file:./render.php"}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"gatherpress/calendar","version":"0.1.0","title":"GatherPress Calendar","category":"gatherpress","icon":"calendar-alt","description":"Display query loop posts in a monthly calendar format.","ancestor":["core/query"],"usesContext":["queryId","query","queryContext","displayLayout","templateSlug","previewPostType"],"attributes":{"selectedMonth":{"type":"string","default":""},"monthModifier":{"type":"number","default":0},"templateConfigStyle":{"type":"object","default":{}},"showMonthHeading":{"type":"boolean","default":true},"monthHeadingLevel":{"type":"number","default":2}},"example":{},"supports":{"reusable":false,"html":false,"align":true,"alignWide":true,"customClassName":true,"typography":{"fontSize":true,"lineHeight":true,"__experimentalFontFamily":true,"__experimentalFontWeight":true,"__experimentalFontStyle":true,"__experimentalTextTransform":true,"__experimentalTextDecoration":true,"__experimentalLetterSpacing":true,"__experimentalDefaultControls":{"fontSize":true}},"color":{"gradients":true,"link":true,"__experimentalDefaultControls":{"background":true,"text":true}},"spacing":{"margin":true,"padding":true}},"styles":[{"name":"default","label":"Classic","isDefault":true},{"name":"minimal","label":"Minimal"},{"name":"bold","label":"Bold"},{"name":"circular","label":"Circular"},{"name":"gradient","label":"Gradient"}],"textdomain":"gatherpress-calendar","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","viewScript":"file:./view.js","render":"file:./render.php"}');
 
 /***/ },
 
@@ -47,6 +47,7 @@ __webpack_require__.r(__webpack_exports__);
  * interact with and configure the calendar block, including:
  * - Visual calendar preview with posts from the query context
  * - Month selection and month modifier controls
+ * - Month heading visibility and level controls
  * - Template configuration for how posts appear
  * - Popover styling options
  *
@@ -539,6 +540,7 @@ function borderControlToCSS(value) {
  * Handles:
  * - Rendering the calendar preview with posts
  * - Month selection and month modifier controls
+ * - Month heading visibility and level controls
  * - Template configuration interface
  * - Popover styling controls
  * - Query context validation
@@ -557,6 +559,8 @@ function borderControlToCSS(value) {
  *                                       - {string} selectedMonth - Selected month in format "YYYY-MM"
  *                                       - {number} monthModifier - Month offset from current month
  *                                       - {Object} templateConfigStyle - Popover styling configuration
+ *                                       - {boolean} showMonthHeading - Whether to show month heading
+ *                                       - {number} monthHeadingLevel - Heading level (1-6)
  * @param {Function} props.setAttributes - Function to update block attributes.
  * @param {Object}   props.context       - Context from parent blocks, including:
  *                                       - {Object} query - Query Loop query configuration
@@ -572,7 +576,9 @@ function Edit({
   const {
     selectedMonth,
     monthModifier = 0,
-    templateConfigStyle = {}
+    templateConfigStyle = {},
+    showMonthHeading = true,
+    monthHeadingLevel = 2
   } = attributes;
   const {
     query
@@ -727,6 +733,16 @@ function Edit({
     monthOffsetHelp = (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.sprintf)(/* translators: %d: number of months ahead */
     (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Showing %d month(s) ahead', 'gatherpress-calendar'), monthModifier);
   }
+
+  /**
+   * Render month heading with dynamic tag level.
+   *
+   * Uses createElement to dynamically render h1-h6 based on monthHeadingLevel attribute.
+   * This provides flexibility for proper heading hierarchy in different contexts.
+   */
+  const MonthHeading = showMonthHeading ? (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_6__.createElement)(`h${monthHeadingLevel}`, {
+    className: 'gatherpress-calendar__month'
+  }, calendar.monthName) : null;
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.Fragment, {
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InspectorControls, {
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
@@ -840,6 +856,28 @@ function Edit({
             },
             children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Reset Month Offset', 'gatherpress-calendar')
           })]
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("hr", {
+          style: {
+            margin: '16px 0',
+            borderTop: '1px solid #ddd'
+          }
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.ToggleControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Show Month Heading', 'gatherpress-calendar'),
+          checked: showMonthHeading,
+          onChange: value => setAttributes({
+            showMonthHeading: value
+          }),
+          help: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Display the month name and year above the calendar.', 'gatherpress-calendar')
+        }), showMonthHeading && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.RangeControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Heading Level', 'gatherpress-calendar'),
+          value: monthHeadingLevel,
+          onChange: value => setAttributes({
+            monthHeadingLevel: value || 2
+          }),
+          min: 1,
+          max: 6,
+          step: 1,
+          help: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Select the HTML heading level (h1-h6) for the month name.', 'gatherpress-calendar')
         })]
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
         title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Template Style', 'gatherpress-calendar'),
@@ -907,10 +945,7 @@ function Edit({
       ...blockProps,
       children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("div", {
         className: "gatherpress-calendar",
-        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("h2", {
-          className: "gatherpress-calendar__month",
-          children: calendar.monthName
-        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("table", {
+        children: [MonthHeading, /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsxs)("table", {
           className: "gatherpress-calendar__table",
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("thead", {
             children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_8__.jsx)("tr", {

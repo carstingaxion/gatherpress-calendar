@@ -180,7 +180,9 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *   selectedMonth?: string,
 		 *   monthModifier?: int,
 		 *   templateConfigStyle?: array<string, mixed>,
-		 * }     $attributes Block attributes containing selectedMonth and monthModifier.
+		 *   showMonthHeading?: bool,
+		 *   monthHeadingLevel?: int,
+		 * }     $attributes Block attributes containing selectedMonth, monthModifier, and heading settings.
 		 * @param string    $content    Block default content (inner blocks).
 		 * @param \WP_Block $block      Block instance with context from parent Query Loop.
 		 *
@@ -374,7 +376,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * 1. Getting block wrapper attributes
 		 * 2. Calculating calendar structure
 		 * 3. Preparing popover styles
-		 * 4. Rendering calendar table
+		 * 4. Rendering calendar table with optional heading
 		 *
 		 * @since 0.1.0
 		 *
@@ -387,12 +389,21 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
 			$calendar_data      = $this->calculate_calendar_structure();
 			$popover_styles     = $this->prepare_popover_styles( $attributes );
+			$show_month_heading = $attributes['showMonthHeading'] ?? true;
+			$month_heading_level = $attributes['monthHeadingLevel'] ?? 2;
 
 			ob_start();
 			?>
 			<div <?php echo $wrapper_attributes; ?>>
 				<div class="gatherpress-calendar">
-					<h2 class="gatherpress-calendar__month"><?php echo esc_html( $calendar_data['month_name'] ); ?></h2>
+					<?php if ( $show_month_heading ) : ?>
+						<?php
+						// Ensure heading level is valid (1-6)
+						$heading_level = max( 1, min( 6, (int) $month_heading_level ) );
+						$heading_tag = 'h' . $heading_level;
+						?>
+						<<?php echo esc_attr( $heading_tag ); ?> class="gatherpress-calendar__month"><?php echo esc_html( $calendar_data['month_name'] ); ?></<?php echo esc_attr( $heading_tag ); ?>>
+					<?php endif; ?>
 					<table class="gatherpress-calendar__table">
 						<thead>
 							<tr>
@@ -823,6 +834,8 @@ endif;
  *   selectedMonth?: string,
  *   monthModifier?: int,
  *   templateConfigStyle?: array<string, mixed>,
+ *   showMonthHeading?: bool,
+ *   monthHeadingLevel?: int,
  * } $attributes
  * @var string $content
  * @var \WP_Block $block
