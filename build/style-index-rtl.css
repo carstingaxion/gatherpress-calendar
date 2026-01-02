@@ -27,9 +27,7 @@
 }
 .gatherpress-calendar__month {
   text-align: center;
-  font-size: clamp(1.25rem, 4vw, 1.75rem);
   margin-block: 0 var(--wp--preset--spacing--40, 1rem);
-  font-weight: 600;
   color: var(--wp--preset--color--contrast, #1e1e1e);
   line-height: 1.2;
 }

@@ -37,7 +37,7 @@ import {
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 import { dateI18n } from '@wordpress/date';
-import { useState, createElement } from '@wordpress/element';
+import { useState, createElement, useMemo } from '@wordpress/element';
 
 /**
  * Editor-specific styles
@@ -738,16 +738,27 @@ export default function Edit( { attributes, setAttributes, context } ) {
 	/**
 	 * Render month heading with dynamic tag level.
 	 *
-	 * Uses createElement to dynamically render h1-h6 based on monthHeadingLevel attribute.
-	 * This provides flexibility for proper heading hierarchy in different contexts.
+	 * Uses useMemo to memoize the heading element and only recreate it when
+	 * the dependencies (monthHeadingLevel, showMonthHeading, calendar.monthName) change.
+	 * This ensures the heading updates properly when the level control changes.
+	 *
+	 * createElement dynamically creates h1-h6 based on monthHeadingLevel attribute,
+	 * providing flexibility for proper heading hierarchy in different contexts.
 	 */
-	const MonthHeading = showMonthHeading
-		? createElement(
-				`h${ monthHeadingLevel }`,
-				{ className: 'gatherpress-calendar__month' },
-				calendar.monthName
-		  )
-		: null;
+	const MonthHeading = useMemo( () => {
+		if ( ! showMonthHeading ) {
+			return null;
+		}
+
+		// Ensure heading level is valid (1-6)
+		const level = Math.max( 1, Math.min( 6, monthHeadingLevel ) );
+
+		return createElement(
+			`h${ level }`,
+			{ className: 'gatherpress-calendar__month' },
+			calendar.monthName
+		);
+	}, [ showMonthHeading, monthHeadingLevel, calendar.monthName ] );
 
 	return (
 		<>
