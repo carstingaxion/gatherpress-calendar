@@ -85,26 +85,26 @@ function rest_gatherpress_event_query( array $args, WP_REST_Request $request ): 
 		$parameters = $request->get_params();
 		
 		// Only proceed if this is a calendar query (identified by our marker)
-		// AND it has year/month parameters for date filtering
-		if ( isset( $parameters['gatherpress_calendar_query'] ) && isset( $parameters['year'] ) ) {
-			// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering
-			unset( $args['gatherpress_event_query'] );
+		// AND it has year/month parameters for date filtering.
+	if ( isset( $parameters['gatherpress_calendar_query'] ) && isset( $parameters['year'] ) ) {
+		// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering.
+		unset( $args['gatherpress_event_query'] );
 	
-			// Initialize date_query if it doesn't exist
-			if ( ! isset( $args['date_query'] ) ) {
-				$args['date_query']    = array();
-				$args['date_query'][0] = array();
-			}
-
-			// Add date query for year and optional month
-			// This limits results to posts published/scheduled within the specified timeframe
-			$args['date_query'][0]['year'] = $parameters['year'];
-			if ( isset( $parameters['month'] ) ) {
-				$args['date_query'][0]['month'] = $parameters['month'];
-			}
+		// Initialize date_query if it doesn't exist.
+		if ( ! isset( $args['date_query'] ) ) {
+			$args['date_query']    = array();
+			$args['date_query'][0] = array();
 		}
-		return $args;
+
+		// Add date query for year and optional month.
+		// This limits results to posts published/scheduled within the specified timeframe.
+		$args['date_query'][0]['year'] = $parameters['year'];
+		if ( isset( $parameters['month'] ) ) {
+			$args['date_query'][0]['month'] = $parameters['month'];
+		}
 	}
+		return $args;
+}
 add_filter( 'rest_gatherpress_event_query', __NAMESPACE__ . '\rest_gatherpress_event_query', 20, 2 );
 
 
@@ -142,12 +142,12 @@ function posts_where( string $where, \WP_Query $query ): string {
 	$date_conditions = array();
 
 	if ( ! empty( $date_filter['year'] ) ) {
-		$year = absint( $date_filter['year'] );
+		$year              = absint( $date_filter['year'] );
 		$date_conditions[] = $wpdb->prepare( 'YEAR(ge.datetime_start_gmt) = %d', $year );
 	}
 
 	if ( ! empty( $date_filter['month'] ) ) {
-		$month = absint( $date_filter['month'] );
+		$month             = absint( $date_filter['month'] );
 		$date_conditions[] = $wpdb->prepare( 'MONTH(ge.datetime_start_gmt) = %d', $month );
 	}
 
@@ -162,7 +162,7 @@ function posts_where( string $where, \WP_Query $query ): string {
 	);
 
 	$events_table = $wpdb->prefix . 'gatherpress_events';
-	$date_where = implode( ' AND ', $date_conditions );
+	$date_where   = implode( ' AND ', $date_conditions );
 
 	$where .= " AND {$wpdb->posts}.ID IN (
 		SELECT ge.post_id 

@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
+if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 	/**
 	 * Block_Renderer Class
 	 *
@@ -41,7 +41,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 	 *
 	 * @since 0.1.0
 	 */
-	final class Block_Renderer {
+	class Block_Renderer {
 
 		/**
 		 * Singleton instance.
@@ -117,12 +117,12 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * @since 0.1.0
 		 */
 		private function __construct() {
-			// Initialize start_of_week from WordPress settings
-			$start_of_week = get_option( 'start_of_week', 0 );
+			// Initialize start_of_week from WordPress settings.
+			$start_of_week       = get_option( 'start_of_week', 0 );
 			$this->start_of_week = is_numeric( $start_of_week ) ? (int) $start_of_week : 0;
 			
-			// Initialize today's date using site timezone
-			$this->today = gmdate( self::DATE_FORMAT, current_time( 'timestamp' ) );
+			// Initialize today's date using site timezone.
+			$this->today = wp_date( self::DATE_FORMAT );
 		}
 
 		/**
@@ -150,7 +150,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * @return void
 		 */
 		private function __clone() {
-			// Singleton - prevent cloning
+			// Singleton - prevent cloning.
 		}
 
 		/**
@@ -159,6 +159,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * @since 0.1.0
 		 *
 		 * @return void
+		 * @throws \Exception Always throws exception to prevent unserialization.
 		 */
 		public function __wakeup() {
 			throw new \Exception( 'Cannot unserialize singleton' );
@@ -182,33 +183,34 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *   templateConfigStyle?: array<string, mixed>,
 		 *   showMonthHeading?: bool,
 		 *   monthHeadingLevel?: int,
-		 * }     $attributes Block attributes containing selectedMonth, monthModifier, and heading settings.
+		 * }                $attributes Block attributes containing selectedMonth, monthModifier, and heading settings.
 		 * @param string    $content    Block default content (inner blocks).
 		 * @param \WP_Block $block      Block instance with context from parent Query Loop.
 		 *
 		 * @return string Rendered block HTML or empty string if invalid context.
 		 */
 		public function render( array $attributes, string $content, \WP_Block $block ): string {
-			// Store original global post for restoration
+			// Store original global post for restoration.
 			$this->original_post = ( $GLOBALS['post'] instanceof \WP_Post ) ? $GLOBALS['post'] : null;
 
-			// Get query context from parent Query Loop block
+			// Get query context from parent Query Loop block.
+			/** @var array<string, int|string|array<mixed>> $query */
 			$query = $block->context['query'] ?? array();
 			if ( empty( $query ) ) {
 				return '';
 			}
 
-			// Calculate target month and year
+			// Calculate target month and year.
 			$this->calculate_target_date( $attributes );
 
-			// Fetch and organize posts
-			$query_args = $this->build_query_args( $block, $query );
+			// Fetch and organize posts.
+			$query_args = $this->build_query_args( $block );
 			$this->organize_posts_by_date( $query_args );
 
-			// Generate calendar HTML
+			// Generate calendar HTML.
 			$html = $this->generate_calendar_html( $attributes, $block );
 
-			// Restore original global post
+			// Restore original global post.
 			wp_reset_postdata();
 			$GLOBALS['post'] = $this->original_post;
 
@@ -235,15 +237,15 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			$month_modifier = $attributes['monthModifier'] ?? 0;
 
 			if ( ! empty( $selected_month ) && preg_match( '/^\d{4}-\d{2}$/', $selected_month ) ) {
-				// Use selected month (ignore monthModifier when explicit month is set)
-				list( $year, $month ) = explode( '-', $selected_month );
-				$this->year  = (int) $year;
-				$this->month = (int) $month;
+				// Use selected month (ignore monthModifier when explicit month is set).
+				[ $year, $month ] = explode( '-', $selected_month );
+				$this->year       = (int) $year;
+				$this->month      = (int) $month;
 			} else {
-				// Use current month with modifier
+				// Use current month with modifier.
 				$now = current_time( 'timestamp' );
 
-				// Apply month modifier if no explicit month is selected
+				// Apply month modifier if no explicit month is selected.
 				if ( 0 !== $month_modifier ) {
 					/**
 					 * Calculate target month using strtotime relative format.
@@ -278,21 +280,23 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * @since 0.1.0
 		 *
 		 * @param \WP_Block $block Block instance with context.
-		 * @param array<string|null, int|string|array<mixed>> $query Query parameters from parent Query Loop.
 		 *
-		 * @return array<string|null, int|string|array<mixed>> WP_Query compatible arguments.
+		 * @return array<string, mixed> WP_Query compatible arguments.
 		 */
-		private function build_query_args( \WP_Block $block, array $query ): array {
+		private function build_query_args( \WP_Block $block ): array {
 			$query_id   = is_int( $block->context['queryId'] ) ? $block->context['queryId'] : 0;
 			$page_param = 'query-' . $query_id . '-page';
-			$page       = empty( $_GET[ $page_param ] ) || ! is_int( $_GET[ $page_param ] ) ? 1 : $_GET[ $page_param ];
+			$page = isset( $_GET[ $page_param ] )
+				? max( 1, (int) $_GET[ $page_param ] )
+				: 1;
 
-			$query_args     = build_query_vars_from_query_block( $block, $page );
+			/** @var array<string, mixed> $query_args */
+			$query_args = build_query_vars_from_query_block( $block, $page );
 
 			/**
 			 * Add calendar query marker and date query parameters.
 			 *
-			 * gatherpress_calendar_query: Marker for the rest_gatherpress_event_query filter
+			 * The 'gatherpress_calendar_query' is used as Marker for the rest_gatherpress_event_query filter
 			 * to identify this as a calendar query that should be optimized
 			 *
 			 * This marker creates a clear contract:
@@ -311,16 +315,16 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			 * @see https://developer.wordpress.org/reference/classes/wp_query/#date-parameters
 			 */
 			$query_args['gatherpress_calendar_query'] = true;
-			$query_args['date_query'] = array(
+			$query_args['date_query']                 = array(
 				array(
 					'year'  => $this->year,
 					'month' => $this->month,
 				),
 			);
-			$query_args['posts_per_page'] = 999; // Fetch all posts for the month, 999 to avoid -1.
+			$query_args['posts_per_page']             = 999; // Fetch all posts for the month, 999 to avoid -1.
 
-			unset( $query_args['paged'] ); // Remove paged to avoid conflicts
-			unset( $query_args['orderby'] ); // Remove orderby to avoid conflicts
+			unset( $query_args['paged'] ); // Remove paged to avoid conflicts.
+			unset( $query_args['orderby'] ); // Remove orderby to avoid conflicts.
 			unset( $query_args['gatherpress_event_query'] );
 			unset( $query_args['include_unfinished'] );
 
@@ -337,7 +341,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array $query_args WP_Query arguments.
+		 * @param array<string, mixed> $query_args WP_Query arguments.
 		 *
 		 * @return void
 		 */
@@ -349,17 +353,20 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				$query_loop->the_post();
 				$post_id = (int) get_the_ID();
 
-				// Determine which date to use based on post type
+				// Determine which date to use based on post type.
 				if ( 'gatherpress_event' === get_post_type( $post_id ) && class_exists( '\GatherPress\Core\Event' ) ) {
-					// For GatherPress events, use event start date
+					// For GatherPress events, use event start date.
 					$event     = new \GatherPress\Core\Event( $post_id );
 					$post_date = $event->get_datetime_start( self::DATE_FORMAT );
 				} else {
-					// For other post types, use publication date
+					// For other post types, use publication date.
 					$post_date = get_the_date( self::DATE_FORMAT );
 				}
-
-				// Group posts by date
+				// Ensure a valid date string for array key.
+				if ( ! is_string( $post_date ) || '' === $post_date ) {
+					continue;
+				}
+				// Group posts by date.
 				if ( ! isset( $this->posts_by_date[ $post_date ] ) ) {
 					$this->posts_by_date[ $post_date ] = array();
 				}
@@ -380,36 +387,42 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array     $attributes Block attributes.
+		 * @param array{
+		 *   selectedMonth?: string,
+		 *   monthModifier?: int,
+		 *   templateConfigStyle?: array<string, mixed>,
+		 *   showMonthHeading?: bool,
+		 *   monthHeadingLevel?: int,
+		 * }                $attributes Block attributes.
 		 * @param \WP_Block $block      Block instance.
 		 *
 		 * @return string Complete calendar HTML.
 		 */
 		private function generate_calendar_html( array $attributes, \WP_Block $block ): string {
-			$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
-			$calendar_data      = $this->calculate_calendar_structure();
-			$popover_styles     = $this->prepare_popover_styles( $attributes );
-			$show_month_heading = $attributes['showMonthHeading'] ?? true;
+			$wrapper_attributes  = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
+			$calendar_data       = $this->calculate_calendar_structure();
+			$popover_styles      = $this->prepare_popover_styles( $attributes );
+			$show_month_heading  = $attributes['showMonthHeading'] ?? true;
 			$month_heading_level = $attributes['monthHeadingLevel'] ?? 2;
 
 			ob_start();
 			?>
 			<div <?php echo $wrapper_attributes; ?>>
 				<div class="gatherpress-calendar">
-					<?php if ( $show_month_heading ) : ?>
+					<?php if ( $show_month_heading ) { ?>
 						<?php
-						// Ensure heading level is valid (1-6)
+						// Ensure heading level is valid (1-6).
 						$heading_level = max( 1, min( 6, (int) $month_heading_level ) );
-						$heading_tag = 'h' . $heading_level;
+						$heading_tag   = 'h' . $heading_level;
 						?>
 						<<?php echo esc_attr( $heading_tag ); ?> class="gatherpress-calendar__month"><?php echo esc_html( $calendar_data['month_name'] ); ?></<?php echo esc_attr( $heading_tag ); ?>>
-					<?php endif; ?>
+					<?php } ?>
 					<table class="gatherpress-calendar__table">
 						<thead>
 							<tr>
-								<?php foreach ( $calendar_data['day_names'] as $day_name ) : ?>
+								<?php foreach ( $calendar_data['day_names'] as $day_name ) { ?>
 									<th><?php echo esc_html( $day_name ); ?></th>
-								<?php endforeach; ?>
+								<?php } ?>
 							</tr>
 						</thead>
 						<tbody>
@@ -432,16 +445,20 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @return array Calendar data structure with keys:
-		 *               - month_name: Formatted month and year string
-		 *               - day_names: Array of translated day name strings
-		 *               - weeks: Array of weeks, each containing 7 days
+		 * @return array{
+		 *   month_name: string,
+		 *   day_names: list<string>,
+		 *   weeks: list<list<array<string, mixed>>>
+		 * } Calendar data structure with keys:
+		 *     - month_name: Formatted month and year string
+		 *     - day_names: Array of translated day name strings
+		 *     - weeks: Array of weeks, each containing 7 days
 		 */
 		private function calculate_calendar_structure(): array {
 			$first_day      = (int) mktime( 0, 0, 0, $this->month, 1, $this->year );
 			$days_in_month  = (int) gmdate( 't', $first_day );
 			$start_day_week = (int) gmdate( 'w', $first_day );
-			$month_name     = wp_date( 'F Y', $first_day );
+			$month_name     = (string) wp_date( 'F Y', $first_day );
 
 			/**
 			 * Adjust start day based on start_of_week setting.
@@ -473,23 +490,23 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @return array Array of translated day name strings.
+		 * @return list<string> Array of translated day name strings.
 		 */
 		private function get_day_names(): array {
 			$day_names = array();
 
 			for ( $i = 0; $i < 7; $i++ ) {
-				// Calculate the day of week (0=Sunday, 6=Saturday)
+				// Calculate the day of week (0=Sunday, 6=Saturday).
 				$day_of_week = ( $this->start_of_week + $i ) % 7;
 
-				// Create a timestamp for a date with this day of week
-				// Using a known week: 2024-01-07 is a Sunday (day 0)
+				// Create a timestamp for a date with this day of week.
+				// Using a known week: 2024-01-07 is a Sunday (day 0).
 				$base_sunday   = strtotime( '2024-01-07' );
 				$day_timestamp = $base_sunday + ( $day_of_week * DAY_IN_SECONDS );
 
-				// Get the abbreviated day name using wp_date for proper localization
-				// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.)
-				$day_names[] = wp_date( 'D', $day_timestamp );
+				// Get the abbreviated day name using wp_date for proper localization,
+				// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.).
+				$day_names[] = (string) wp_date( 'D', $day_timestamp );
 			}
 
 			return $day_names;
@@ -506,21 +523,30 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 * @param int $start_day_week Number of empty days before month starts.
 		 * @param int $days_in_month  Number of days in the month.
 		 *
-		 * @return array Array of weeks, each containing 7 day objects.
+		 * @return list<list<array{
+		 *   isEmpty: bool,
+		 *   day?: int,
+		 *   date?: string,
+		 *   posts: list<int>
+		 * }>> Array of weeks, each containing 7 day objects.
 		 */
 		private function build_weeks( int $start_day_week, int $days_in_month ): array {
 			$weeks        = array();
 			$current_week = array();
 
-			// Fill initial empty days before the month starts
+			// Fill initial empty days before the month starts.
 			for ( $i = 0; $i < $start_day_week; $i++ ) {
 				$current_week[] = array( 'isEmpty' => true );
 			}
 
-			// Fill days with posts
+			// Fill days with posts.
 			for ( $day = 1; $day <= $days_in_month; $day++ ) {
 				$date_str  = sprintf( '%04d-%02d-%02d', $this->year, $this->month, $day );
-				$day_posts = $this->posts_by_date[ $date_str ] ?? array();
+				// The array_values() ensures $day_posts is list<int>.
+				//$day_posts = array_values( $this->posts_by_date[ $date_str ] ?? array() );
+				// Ensure $day_posts is a list of integers for static analysis
+				/** @var int[] $day_posts */
+				$day_posts = array_map( '\intval', array_values( $this->posts_by_date[ $date_str ] ?? [] ) );
 
 				$current_week[] = array(
 					'day'     => $day,
@@ -529,16 +555,19 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 					'isEmpty' => false,
 				);
 
-				// When week is complete (7 days), start a new week
+				// When week is complete (7 days), start a new week.
 				if ( 7 === count( $current_week ) ) {
 					$weeks[]      = $current_week;
 					$current_week = array();
 				}
 			}
 
-			// Fill remaining empty days after the month ends
+			// Fill remaining empty days after the month ends.
 			while ( count( $current_week ) > 0 && count( $current_week ) < 7 ) {
-				$current_week[] = array( 'isEmpty' => true );
+				$current_week[] = array(
+					'isEmpty' => true,
+					'posts'   => [],
+				);
 			}
 
 			if ( count( $current_week ) > 0 ) {
@@ -571,11 +600,11 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			if ( ! empty( $template_config_style['padding'] ) ) {
 				$padding = $template_config_style['padding'];
 				if ( is_array( $padding ) ) {
-					$padding_str  = '';
-					$padding_str .= isset( $padding['top'] ) ? esc_attr( $padding['top'] ) . ' ' : '0 ';
-					$padding_str .= isset( $padding['right'] ) ? esc_attr( $padding['right'] ) . ' ' : '0 ';
-					$padding_str .= isset( $padding['bottom'] ) ? esc_attr( $padding['bottom'] ) . ' ' : '0 ';
-					$padding_str .= isset( $padding['left'] ) ? esc_attr( $padding['left'] ) : '0';
+					$padding_str      = '';
+					$padding_str     .= isset( $padding['top'] ) ? esc_attr( $padding['top'] ) . ' ' : '0 ';
+					$padding_str     .= isset( $padding['right'] ) ? esc_attr( $padding['right'] ) . ' ' : '0 ';
+					$padding_str     .= isset( $padding['bottom'] ) ? esc_attr( $padding['bottom'] ) . ' ' : '0 ';
+					$padding_str     .= isset( $padding['left'] ) ? esc_attr( $padding['left'] ) : '0';
 					$popover_styles[] = 'padding: ' . trim( $padding_str );
 				} elseif ( is_string( $padding ) ) {
 					$popover_styles[] = 'padding: ' . esc_attr( $padding );
@@ -597,11 +626,11 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			if ( ! empty( $template_config_style['borderRadius'] ) ) {
 				$border_radius = $template_config_style['borderRadius'];
 				if ( is_array( $border_radius ) ) {
-					$radius_str  = '';
-					$radius_str .= isset( $border_radius['topLeft'] ) ? esc_attr( $border_radius['topLeft'] ) . ' ' : '0 ';
-					$radius_str .= isset( $border_radius['topRight'] ) ? esc_attr( $border_radius['topRight'] ) . ' ' : '0 ';
-					$radius_str .= isset( $border_radius['bottomRight'] ) ? esc_attr( $border_radius['bottomRight'] ) . ' ' : '0 ';
-					$radius_str .= isset( $border_radius['bottomLeft'] ) ? esc_attr( $border_radius['bottomLeft'] ) : '0';
+					$radius_str       = '';
+					$radius_str      .= isset( $border_radius['topLeft'] ) ? esc_attr( $border_radius['topLeft'] ) . ' ' : '0 ';
+					$radius_str      .= isset( $border_radius['topRight'] ) ? esc_attr( $border_radius['topRight'] ) . ' ' : '0 ';
+					$radius_str      .= isset( $border_radius['bottomRight'] ) ? esc_attr( $border_radius['bottomRight'] ) . ' ' : '0 ';
+					$radius_str      .= isset( $border_radius['bottomLeft'] ) ? esc_attr( $border_radius['bottomLeft'] ) : '0';
 					$popover_styles[] = 'border-radius: ' . trim( $radius_str );
 				} elseif ( is_string( $border_radius ) ) {
 					$popover_styles[] = 'border-radius: ' . esc_attr( $border_radius );
@@ -622,9 +651,9 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array     $weeks          Array of weeks to render.
-		 * @param string    $popover_styles Inline styles for popovers.
-		 * @param \WP_Block $block          Block instance for inner blocks.
+		 * @param list<list<array<string, mixed>>> $weeks          Array of weeks to render.
+		 * @param string                           $popover_styles Inline styles for popovers.
+		 * @param \WP_Block                        $block          Block instance for inner blocks.
 		 *
 		 * @return string HTML for calendar weeks.
 		 */
@@ -652,14 +681,19 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array     $day            Day data object.
+		 * @param array{
+		 *   isEmpty: bool,
+		 *   day?: int,
+		 *   date?: string,
+		 *   posts: list<int>
+		 * }                $day            Day data object.
 		 * @param string    $popover_styles Inline styles for popovers.
 		 * @param \WP_Block $block          Block instance for inner blocks.
 		 *
 		 * @return string HTML for day cell.
 		 */
 		private function render_day_cell( array $day, string $popover_styles, \WP_Block $block ): string {
-			// Build CSS classes
+			// Build CSS classes.
 			$classes = array( 'gatherpress-calendar__day' );
 			if ( ! empty( $day['isEmpty'] ) ) {
 				$classes[] = 'is-empty';
@@ -674,18 +708,18 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 			ob_start();
 			?>
 			<td class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
-				<?php if ( empty( $day['isEmpty'] ) ) : ?>
+				<?php if ( empty( $day['isEmpty'] ) && ! empty( $day['date'] ) && ! empty( $day['day'] ) ) { ?>
 					<label class="gatherpress-calendar__day-content" for="zoom-<?php echo esc_attr( $day['date'] ); ?>">
 						<div class="gatherpress-calendar__day-number">
-							<?php echo esc_html( $day['day'] ); ?>
+							<?php echo esc_html( (string) $day['day'] ); ?>
 						</div>
-						<?php if ( ! empty( $day['posts'] ) ) : ?>
+						<?php if ( ! empty( $day['posts'] ) ) { ?>
 							<div class="gatherpress-calendar__events">
 								<?php echo $this->render_event_dots( $day['posts'], $popover_styles, $block ); ?>
 							</div>
-						<?php endif; ?>
+						<?php } ?>
 					</label>
-				<?php endif; ?>
+				<?php } ?>
 			</td>
 			<?php
 			return (string) ob_get_clean();
@@ -737,7 +771,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				return '';
 			}
 			
-			// Override global $post for inner block rendering
+			// Override global $post for inner block rendering.
 			$GLOBALS['post'] = $post;
 			setup_postdata( $GLOBALS['post'] );
 
@@ -761,17 +795,17 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				return $context;
 			};
 
-			// Use priority 1 so other render_block_* filters have access to the values
+			// Use priority 1 so other render_block_* filters have access to the values.
 			add_filter( 'render_block_context', $filter_block_context, 1 );
 
-			// Get the inner blocks template content
+			// Get the inner blocks template content.
 			$block_instance = $this->prepare_inner_blocks_instance( $block );
 			$inner_content  = ( new \WP_Block( $block_instance ) )->render( array( 'dynamic' => false ) );
 
-			// Remove the context filter
+			// Remove the context filter.
 			remove_filter( 'render_block_context', $filter_block_context, 1 );
 
-			// Reset post data
+			// Reset post data.
 			wp_reset_postdata();
 			$GLOBALS['post'] = $this->original_post;
 
@@ -782,9 +816,10 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 				class="gatherpress-calendar__event"
 				data-post-id="<?php echo esc_attr( (string) $post_id ); ?>"
 				data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
+				<?php /* translators: %s Post title */ ?>
 				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
 			>
-				<?php echo $inner_content; ?>
+				<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped by WP_Block::render(). ?>
 			</a>
 			<?php
 			return (string) ob_get_clean();
@@ -800,32 +835,24 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) :
 		 *
 		 * @param \WP_Block $block Block instance.
 		 *
-		 * @return array{
-		 *   blockName: string,
-		 *   innerHTML: string,
-		 *   innerContent: list<string>,
-		 * } & array<string, mixed>
+		 * @return array<string, mixed> Modified block instance array.
 		 */
 		private function prepare_inner_blocks_instance( \WP_Block $block ): array {
-			$block_instance                  = $block->parsed_block;
-			$block_instance['blockName']     = 'core/null';
-			$block_instance['innerHTML']     = '';
-			$innerContent = is_array( $block_instance['innerContent'] )
+			$block_instance              = $block->parsed_block;
+			$block_instance['blockName'] = 'core/null';
+			$block_instance['innerHTML'] = '';
+			$inner_content               = is_array( $block_instance['innerContent'] )
 				? $block_instance['innerContent']
 				: [];
 
-			array_pop( $innerContent );
-			array_shift( $innerContent );
+			array_pop( $inner_content );
+			array_shift( $inner_content );
 
-			// ensure all items are strings
-			// $block_instance['innerContent'] = array_values(
-			// 	array_map( '\strval', $innerContent )
-			// );
-			$block_instance['innerContent'] = array_values( $innerContent );
+			$block_instance['innerContent'] = array_values( $inner_content );
 			return $block_instance;
 		}
 	}
-endif;
+}
 
 /**
  * Extract and sanitize block attributes.
@@ -841,5 +868,5 @@ endif;
  * @var \WP_Block $block
  */
 
-// Render the block using the singleton instance
+// Render the block using the singleton instance.
 echo Block_Renderer::get_instance()->render( $attributes, $content, $block );
