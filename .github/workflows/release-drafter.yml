@@ -16,4 +16,4 @@ on:
 jobs:
   call-workflow-release-drafter:
     uses: figuren-theater/.github/.github/workflows/release-drafter.yml@main
-    secrets: inherit
+    secrets: USED_AS_BOT_TOKEN
