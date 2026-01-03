@@ -19,7 +19,7 @@ A calendar block that displays Query Loop results in a monthly calendar format. 
 
 GatherPress Calendar is a WordPress block that renders Query Loop results as a monthly calendar. It integrates with the WordPress Query Loop block to display posts organized by their publication date (or event date for GatherPress events) in a structured calendar view.
 
-![Screenshot of the WordPress block editor with an Calendar block in place, inside a core query loop.](.wordpress-org/screenshot-1.png)
+https://github.com/user-attachments/assets/7089ef0c-e2aa-417a-a3fb-a5861315869b
 
 ---
 
