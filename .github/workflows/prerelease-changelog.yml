@@ -8,5 +8,6 @@ on:
 jobs:
   call-workflow-update-changelog:
     uses: figuren-theater/.github/.github/workflows/prerelease-changelog-update.yml@main
-    secrets: USED_AS_BOT_TOKEN
+    secrets:
+      BOT_TOKEN: ${{ secrets.USED_AS_BOT_TOKEN }}
 
