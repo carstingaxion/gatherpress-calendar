@@ -14,9 +14,13 @@
  * @package GatherPressCalendar
  */
 
+declare(strict_types=1);
+
 namespace GatherPress\Calendar;
 
 use WP_REST_Request;
+use WP_Query;
+use wpdb;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -40,7 +44,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function block_init(): void {
 	register_block_type( __DIR__ . '/build/' );
 }
-add_action( 'init', __NAMESPACE__ . '\block_init' );
+add_action( 'init', __NAMESPACE__ . '\\block_init' );
 
 
 /**
@@ -66,10 +70,10 @@ add_action( 'init', __NAMESPACE__ . '\block_init' );
  *
  * @since 0.1.0
  *
- * @param array           $args    WP_Query arguments that will be used for the REST request.
- * @param WP_REST_Request $request The REST request object containing parameters.
+ * @param array<string, mixed> $args    WP_Query arguments that will be used for the REST request.
+ * @param WP_REST_Request      $request The REST request object containing parameters.
  *
- * @return array Modified query arguments with date_query added and gatherpress_event_query removed.
+ * @return array<string, mixed> Modified query arguments with date_query added and gatherpress_event_query removed.
  *
  * @example
  * // Request from calendar block (edit.js or render.php):
@@ -86,26 +90,27 @@ function rest_gatherpress_event_query( array $args, WP_REST_Request $request ): 
 		
 		// Only proceed if this is a calendar query (identified by our marker)
 		// AND it has year/month parameters for date filtering.
-	if ( isset( $parameters['gatherpress_calendar_query'] ) && isset( $parameters['year'] ) ) {
+	if ( isset( $parameters['gatherpress_calendar_query'] ) && isset( $parameters['year'] ) && is_numeric( $parameters['year'] ) ) {
 		// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering.
 		unset( $args['gatherpress_event_query'] );
 	
 		// Initialize date_query if it doesn't exist.
-		if ( ! isset( $args['date_query'] ) ) {
+		if ( ! isset( $args['date_query'] ) || ! is_array( $args['date_query'] ) || ! isset( $args['date_query'][0] ) || ! is_array( $args['date_query'][0] ) ) {
 			$args['date_query']    = array();
 			$args['date_query'][0] = array();
 		}
 
 		// Add date query for year and optional month.
 		// This limits results to posts published/scheduled within the specified timeframe.
-		$args['date_query'][0]['year'] = $parameters['year'];
-		if ( isset( $parameters['month'] ) ) {
-			$args['date_query'][0]['month'] = $parameters['month'];
+		$args['date_query'][0]['year'] = (int) $parameters['year'];
+
+		if ( isset( $parameters['month'] ) && is_numeric( $parameters['month'] ) ) {
+			$args['date_query'][0]['month'] = (int) $parameters['month'];
 		}
 	}
-		return $args;
+	return $args;
 }
-add_filter( 'rest_gatherpress_event_query', __NAMESPACE__ . '\rest_gatherpress_event_query', 20, 2 );
+add_filter( 'rest_gatherpress_event_query', __NAMESPACE__ . '\\rest_gatherpress_event_query', 20, 2 );
 
 
 /**
@@ -115,25 +120,25 @@ add_filter( 'rest_gatherpress_event_query', __NAMESPACE__ . '\rest_gatherpress_e
  *
  * @since 0.1.0
  *
- * @global \wpdb $wpdb WordPress database abstraction object.
- * @param string    $where The WHERE clause of the query.
- * @param \WP_Query $query The WP_Query instance.
+ * @global wpdb $wpdb WordPress database abstraction object.
+ *
+ * @param string   $where The WHERE clause of the query.
+ * @param WP_Query $query The WP_Query instance.
+ *
  * @return string Modified WHERE clause.
  */
-function posts_where( string $where, \WP_Query $query ): string {
+function posts_where( string $where, WP_Query $query ): string {
 	global $wpdb;
 
-	if ( empty( $query->query_vars['date_query'] ) ) {
+	if ( ! ( $wpdb instanceof wpdb ) ) {
 		return $where;
 	}
 
-	$post_type = $query->get( 'post_type' );
-	if ( 'gatherpress_event' !== $post_type && ! in_array( 'gatherpress_event', (array) $post_type, true ) ) {
+	if ( empty( $query->query_vars['date_query'] ) || ! is_array( $query->query_vars['date_query'] ) ) {
 		return $where;
 	}
 
-	$date_query = $query->query_vars['date_query'];
-	if ( ! is_array( $date_query ) || empty( $date_query ) ) {
+	if ( 'gatherpress_event' !== $query->get( 'post_type' ) && ! in_array( 'gatherpress_event', (array) $query->get( 'post_type' ), true ) ) {
 		return $where;
 	}
 
@@ -161,6 +166,10 @@ function posts_where( string $where, \WP_Query $query ): string {
 		$where
 	);
 
+	if ( ! is_string( $where ) ) {
+		$where = '';
+	}
+
 	$events_table = $wpdb->prefix . 'gatherpress_events';
 	$date_where   = implode( ' AND ', $date_conditions );
 
@@ -172,4 +181,4 @@ function posts_where( string $where, \WP_Query $query ): string {
 
 	return $where;
 }
-add_filter( 'posts_where', __NAMESPACE__ . '\posts_where', 10, 2 );
+add_filter( 'posts_where', __NAMESPACE__ . '\\posts_where', 10, 2 );
