@@ -72,6 +72,13 @@
       "progress": {
         "caption": "Installing plugin from GitHub: carstingaxion/gatherpress-calendar"
       }
+    },
+    {
+      "step": "importWxr",
+      "file": {
+        "resource": "url",
+        "url": "https://raw.githubusercontent.com/GatherPress/gatherpress-demo-data/main/GatherPress-demo-data-0.33.0.xml"
+      }
     }
   ]
 }
