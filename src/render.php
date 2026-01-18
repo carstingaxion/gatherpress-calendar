@@ -197,9 +197,9 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			$this->original_post = ( isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof \WP_Post ) ? $GLOBALS['post'] : null;
 
 			// Get query context from parent Query Loop block.
-			/** @var array<string, int|string|array<mixed>> $query */
-			$query = $block->context['query'] ?? array();
-			if ( empty( $query ) ) {
+			/** @var array<string, mixed>|null $query */
+			$query = $block->context['query'] ?? null;
+			if ( ! is_array( $query ) || empty( $query ) ) {
 				return '';
 			}
 
@@ -241,12 +241,17 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 
 			if ( ! empty( $selected_month ) && preg_match( '/^\d{4}-\d{2}$/', $selected_month ) ) {
 				// Use selected month (ignore monthModifier when explicit month is set).
-				[ $year, $month ] = explode( '-', $selected_month );
-				$this->year       = (int) $year;
-				$this->month      = (int) $month;
+				$parts = explode( '-', $selected_month );
+				if ( count( $parts ) === 2 ) {
+					$this->year  = (int) $parts[0];
+					$this->month = (int) $parts[1];
+				}
 			} else {
 				// Use current month with modifier.
 				$now = current_time( 'timestamp' );
+				if ( ! is_int( $now ) ) {
+					$now = time();
+				}
 
 				// Apply month modifier if no explicit month is selected.
 				if ( 0 !== $month_modifier ) {
@@ -263,8 +268,14 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 					 * - sprintf( '%+d months', 0 )  => '+0 months' (current month)
 					 */
 					$target_timestamp = strtotime( sprintf( '%+d months', $month_modifier ), $now );
-					$this->year       = (int) gmdate( 'Y', $target_timestamp );
-					$this->month      = (int) gmdate( 'n', $target_timestamp );
+					if ( false !== $target_timestamp ) {
+						$this->year  = (int) gmdate( 'Y', $target_timestamp );
+						$this->month = (int) gmdate( 'n', $target_timestamp );
+					} else {
+						// Fallback to current month if strtotime fails.
+						$this->year  = (int) gmdate( 'Y', $now );
+						$this->month = (int) gmdate( 'n', $now );
+					}
 				} else {
 					$this->year  = (int) gmdate( 'Y', $now );
 					$this->month = (int) gmdate( 'n', $now );
@@ -354,7 +365,10 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 
 			while ( $query_loop->have_posts() ) {
 				$query_loop->the_post();
-				$post_id = (int) get_the_ID();
+				$post_id = get_the_ID();
+				if ( ! is_int( $post_id ) || 0 === $post_id ) {
+					continue;
+				}
 
 				// Determine which date to use based on post type.
 				$post_type = get_post_type( $post_id );
@@ -461,10 +475,17 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 		 *     - weeks: Array of weeks, each containing 7 days
 		 */
 		private function calculate_calendar_structure(): array {
-			$first_day      = (int) mktime( 0, 0, 0, $this->month, 1, $this->year );
+			$first_day = mktime( 0, 0, 0, $this->month, 1, $this->year );
+			if ( false === $first_day ) {
+				$first_day = time();
+			}
+
 			$days_in_month  = (int) gmdate( 't', $first_day );
 			$start_day_week = (int) gmdate( 'w', $first_day );
-			$month_name     = (string) wp_date( 'F Y', $first_day );
+			$month_name     = wp_date( 'F Y', $first_day );
+			if ( ! is_string( $month_name ) ) {
+				$month_name = '';
+			}
 
 			/**
 			 * Adjust start day based on start_of_week setting.
@@ -507,12 +528,18 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 
 				// Create a timestamp for a date with this day of week.
 				// Using a known week: 2024-01-07 is a Sunday (day 0).
-				$base_sunday   = strtotime( '2024-01-07' );
+				$base_sunday = strtotime( '2024-01-07' );
+				if ( false === $base_sunday ) {
+					continue;
+				}
 				$day_timestamp = $base_sunday + ( $day_of_week * DAY_IN_SECONDS );
 
 				// Get the abbreviated day name using wp_date for proper localization,
 				// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.).
-				$day_names[] = (string) wp_date( 'D', $day_timestamp );
+				$day_name = wp_date( 'D', $day_timestamp );
+				if ( is_string( $day_name ) ) {
+					$day_names[] = $day_name;
+				}
 			}
 
 			return $day_names;
@@ -542,17 +569,17 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 
 			// Fill initial empty days before the month starts.
 			for ( $i = 0; $i < $start_day_week; $i++ ) {
-				$current_week[] = array( 'isEmpty' => true );
+				$current_week[] = array(
+					'isEmpty' => true,
+					'posts'   => array(),
+				);
 			}
 
 			// Fill days with posts.
 			for ( $day = 1; $day <= $days_in_month; $day++ ) {
-				$date_str  = sprintf( '%04d-%02d-%02d', $this->year, $this->month, $day );
-				// The array_values() ensures $day_posts is list<int>.
-				//$day_posts = array_values( $this->posts_by_date[ $date_str ] ?? array() );
-				// Ensure $day_posts is a list of integers for static analysis
-				/** @var int[] $day_posts */
-				$day_posts = array_map( '\intval', array_values( $this->posts_by_date[ $date_str ] ?? [] ) );
+				$date_str = sprintf( '%04d-%02d-%02d', $this->year, $this->month, $day );
+				/** @var list<int> $day_posts */
+				$day_posts = isset( $this->posts_by_date[ $date_str ] ) ? $this->posts_by_date[ $date_str ] : array();
 
 				$current_week[] = array(
 					'day'     => $day,
@@ -600,51 +627,51 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			$template_config_style = isset( $attributes['templateConfigStyle'] ) && is_array( $attributes['templateConfigStyle'] ) ? $attributes['templateConfigStyle'] : array();
 			$popover_styles        = array();
 
-			if ( ! empty( $template_config_style['backgroundColor'] ) ) {
+			if ( isset( $template_config_style['backgroundColor'] ) && is_string( $template_config_style['backgroundColor'] ) && '' !== $template_config_style['backgroundColor'] ) {
 				$popover_styles[] = 'background-color: ' . esc_attr( $template_config_style['backgroundColor'] );
 			}
 
-			if ( ! empty( $template_config_style['padding'] ) ) {
+			if ( isset( $template_config_style['padding'] ) ) {
 				$padding = $template_config_style['padding'];
 				if ( is_array( $padding ) ) {
 					$padding_str      = '';
-					$padding_str     .= isset( $padding['top'] ) ? esc_attr( $padding['top'] ) . ' ' : '0 ';
-					$padding_str     .= isset( $padding['right'] ) ? esc_attr( $padding['right'] ) . ' ' : '0 ';
-					$padding_str     .= isset( $padding['bottom'] ) ? esc_attr( $padding['bottom'] ) . ' ' : '0 ';
-					$padding_str     .= isset( $padding['left'] ) ? esc_attr( $padding['left'] ) : '0';
+					$padding_str     .= isset( $padding['top'] ) && is_string( $padding['top'] ) ? esc_attr( $padding['top'] ) . ' ' : '0 ';
+					$padding_str     .= isset( $padding['right'] ) && is_string( $padding['right'] ) ? esc_attr( $padding['right'] ) . ' ' : '0 ';
+					$padding_str     .= isset( $padding['bottom'] ) && is_string( $padding['bottom'] ) ? esc_attr( $padding['bottom'] ) . ' ' : '0 ';
+					$padding_str     .= isset( $padding['left'] ) && is_string( $padding['left'] ) ? esc_attr( $padding['left'] ) : '0';
 					$popover_styles[] = 'padding: ' . trim( $padding_str );
-				} elseif ( is_string( $padding ) ) {
+				} elseif ( is_string( $padding ) && '' !== $padding ) {
 					$popover_styles[] = 'padding: ' . esc_attr( $padding );
 				}
 			}
 
-			if ( ! empty( $template_config_style['borderWidth'] ) ) {
+			if ( isset( $template_config_style['borderWidth'] ) && is_string( $template_config_style['borderWidth'] ) && '' !== $template_config_style['borderWidth'] ) {
 				$popover_styles[] = 'border-width: ' . esc_attr( $template_config_style['borderWidth'] );
 			}
 
-			if ( ! empty( $template_config_style['borderStyle'] ) ) {
+			if ( isset( $template_config_style['borderStyle'] ) && is_string( $template_config_style['borderStyle'] ) && '' !== $template_config_style['borderStyle'] ) {
 				$popover_styles[] = 'border-style: ' . esc_attr( $template_config_style['borderStyle'] );
 			}
 
-			if ( ! empty( $template_config_style['borderColor'] ) ) {
+			if ( isset( $template_config_style['borderColor'] ) && is_string( $template_config_style['borderColor'] ) && '' !== $template_config_style['borderColor'] ) {
 				$popover_styles[] = 'border-color: ' . esc_attr( $template_config_style['borderColor'] );
 			}
 
-			if ( ! empty( $template_config_style['borderRadius'] ) ) {
+			if ( isset( $template_config_style['borderRadius'] ) ) {
 				$border_radius = $template_config_style['borderRadius'];
 				if ( is_array( $border_radius ) ) {
 					$radius_str       = '';
-					$radius_str      .= isset( $border_radius['topLeft'] ) ? esc_attr( $border_radius['topLeft'] ) . ' ' : '0 ';
-					$radius_str      .= isset( $border_radius['topRight'] ) ? esc_attr( $border_radius['topRight'] ) . ' ' : '0 ';
-					$radius_str      .= isset( $border_radius['bottomRight'] ) ? esc_attr( $border_radius['bottomRight'] ) . ' ' : '0 ';
-					$radius_str      .= isset( $border_radius['bottomLeft'] ) ? esc_attr( $border_radius['bottomLeft'] ) : '0';
+					$radius_str      .= isset( $border_radius['topLeft'] ) && is_string( $border_radius['topLeft'] ) ? esc_attr( $border_radius['topLeft'] ) . ' ' : '0 ';
+					$radius_str      .= isset( $border_radius['topRight'] ) && is_string( $border_radius['topRight'] ) ? esc_attr( $border_radius['topRight'] ) . ' ' : '0 ';
+					$radius_str      .= isset( $border_radius['bottomRight'] ) && is_string( $border_radius['bottomRight'] ) ? esc_attr( $border_radius['bottomRight'] ) . ' ' : '0 ';
+					$radius_str      .= isset( $border_radius['bottomLeft'] ) && is_string( $border_radius['bottomLeft'] ) ? esc_attr( $border_radius['bottomLeft'] ) : '0';
 					$popover_styles[] = 'border-radius: ' . trim( $radius_str );
-				} elseif ( is_string( $border_radius ) ) {
+				} elseif ( is_string( $border_radius ) && '' !== $border_radius ) {
 					$popover_styles[] = 'border-radius: ' . esc_attr( $border_radius );
 				}
 			}
 
-			if ( ! empty( $template_config_style['boxShadow'] ) ) {
+			if ( isset( $template_config_style['boxShadow'] ) && is_string( $template_config_style['boxShadow'] ) && '' !== $template_config_style['boxShadow'] ) {
 				$popover_styles[] = 'box-shadow: ' . esc_attr( $template_config_style['boxShadow'] );
 			}
 
@@ -708,28 +735,34 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			if ( ! empty( $day['posts'] ) ) {
 				$classes[] = 'has-posts';
 			}
-			if ( ! empty( $day['date'] ) && $day['date'] === $this->today ) {
+			if ( isset( $day['date'] ) && is_string( $day['date'] ) && $day['date'] === $this->today ) {
 				$classes[] = 'is-today';
 			}
 
 			ob_start();
 			?>
 			<td class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
-				<?php if ( empty( $day['isEmpty'] ) && ! empty( $day['date'] ) && ! empty( $day['day'] ) ) { ?>
+				<?php if ( empty( $day['isEmpty'] ) && isset( $day['date'] ) && is_string( $day['date'] ) && isset( $day['day'] ) && is_int( $day['day'] ) ) { ?>
 					<label class="gatherpress-calendar__day-content" for="zoom-<?php echo esc_attr( $day['date'] ); ?>">
 						<div class="gatherpress-calendar__day-number">
 							<?php echo esc_html( (string) $day['day'] ); ?>
 						</div>
-						<?php if ( ! empty( $day['posts'] ) ) { ?>
+						<?php
+						$day_posts = isset( $day['posts'] ) && is_array( $day['posts'] ) ? $day['posts'] : array();
+						if ( ! empty( $day_posts ) ) {
+							?>
 							<div class="gatherpress-calendar__events">
-								<?php echo $this->render_event_dots( $day['posts'], $popover_styles, $block ); ?>
+								<?php echo $this->render_event_dots( $day_posts, $popover_styles, $block ); ?>
 							</div>
-						<?php } ?>
+							<?php
+						}
+						?>
 					</label>
 				<?php } ?>
 			</td>
 			<?php
-			return (string) ob_get_clean();
+			$output = ob_get_clean();
+			return is_string( $output ) ? $output : '';
 		}
 
 		/**
@@ -740,9 +773,9 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param int[]     $post_ids       Array of post IDs for this day.
-		 * @param string    $popover_styles Inline styles for popovers.
-		 * @param \WP_Block $block          Block instance for inner blocks.
+		 * @param array<mixed> $post_ids       Array of post IDs for this day.
+		 * @param string       $popover_styles Inline styles for popovers.
+		 * @param \WP_Block    $block          Block instance for inner blocks.
 		 *
 		 * @return string HTML for event dots.
 		 */
@@ -750,10 +783,13 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			ob_start();
 
 			foreach ( $post_ids as $post_id ) {
-				echo $this->render_single_event_dot( $post_id, $popover_styles, $block );
+				if ( is_int( $post_id ) ) {
+					echo $this->render_single_event_dot( $post_id, $popover_styles, $block );
+				}
 			}
 
-			return (string) ob_get_clean();
+			$output = ob_get_clean();
+			return is_string( $output ) ? $output : '';
 		}
 
 		/**
@@ -779,12 +815,25 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			}
 			
 			// Override global $post for inner block rendering.
-			$GLOBALS['post'] = $post;
-			setup_postdata( $GLOBALS['post'] );
+			if ( isset( $GLOBALS['post'] ) ) {
+				$GLOBALS['post'] = $post;
+			}
+			setup_postdata( $post );
 
-			$post_type  = get_post_type( $GLOBALS['post'] );
-			$post_url   = (string) get_permalink( $post_id );
+			$post_type = get_post_type( $post );
+			if ( ! is_string( $post_type ) ) {
+				$post_type = 'post';
+			}
+
+			$post_url = get_permalink( $post_id );
+			if ( ! is_string( $post_url ) ) {
+				$post_url = '';
+			}
+
 			$post_title = get_the_title( $post_id );
+			if ( ! is_string( $post_title ) ) {
+				$post_title = '';
+			}
 
 			/**
 			 * Filter to add post context for inner blocks.
@@ -792,11 +841,11 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			 * This ensures blocks like core/post-excerpt that use context
 			 * receive the correct postId and postType.
 			 *
-			 * @param array{postType: string, postId, int} $context Block context.
+			 * @param array<string, mixed> $context Block context.
 			 *
-			 * @return array Modified context with postType and postId.
+			 * @return array<string, mixed> Modified context with postType and postId.
 			 */
-			$filter_block_context = static function ( array $context ) use ( $post_id, $post_type ) {
+			$filter_block_context = static function ( array $context ) use ( $post_id, $post_type ): array {
 				$context['postType'] = $post_type;
 				$context['postId']   = $post_id;
 				return $context;
@@ -814,7 +863,9 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 
 			// Reset post data.
 			wp_reset_postdata();
-			$GLOBALS['post'] = $this->original_post;
+			if ( isset( $GLOBALS['post'] ) ) {
+				$GLOBALS['post'] = $this->original_post;
+			}
 
 			ob_start();
 			?>
@@ -829,7 +880,8 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 				<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped by WP_Block::render(). ?>
 			</a>
 			<?php
-			return (string) ob_get_clean();
+			$output = ob_get_clean();
+			return is_string( $output ) ? $output : '';
 		}
 
 		/**
@@ -848,9 +900,9 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			$block_instance              = $block->parsed_block;
 			$block_instance['blockName'] = 'core/null';
 			$block_instance['innerHTML'] = '';
-			$inner_content               = is_array( $block_instance['innerContent'] )
+			$inner_content               = isset( $block_instance['innerContent'] ) && is_array( $block_instance['innerContent'] )
 				? $block_instance['innerContent']
-				: [];
+				: array();
 
 			array_pop( $inner_content );
 			array_shift( $inner_content );
@@ -876,4 +928,4 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
  */
 
 // Render the block using the singleton instance.
-echo Block_Renderer::get_instance()->render( $attributes, $content, $block );
+echo Block_Renderer::get_instance()->render( $attributes, $content, $block ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

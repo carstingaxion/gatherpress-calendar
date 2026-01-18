@@ -159,6 +159,7 @@
   /* ==================================================================
      Day Number
      ================================================================== */
+  /* stylelint-disable-next-line no-descending-specificity */
 }
 .gatherpress-calendar__day-number {
   font-weight: 600;
@@ -257,7 +258,6 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
-  tabindex: -1;
 }
 .gatherpress-calendar__popover.is-active {
   opacity: 1;
@@ -383,6 +383,9 @@
   background: var(--wp--preset--color--contrast, #999);
   opacity: 0.5;
 }
+.wp-block-gatherpress-calendar.is-style-minimal {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
 .wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__day-number {
   font-weight: 300;
   color: var(--wp--preset--color--contrast, #333);
@@ -438,9 +441,15 @@
 .wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table td.has-posts .gatherpress-calendar__day-number::after {
   background: var(--wp--preset--color--primary, #007cba);
 }
+.wp-block-gatherpress-calendar.is-style-bold {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
 .wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__day-number {
   font-weight: 900;
   color: var(--wp--preset--color--contrast, #1e1e1e);
+}
+.wp-block-gatherpress-calendar.is-style-bold {
+  /* stylelint-disable-next-line no-descending-specificity */
 }
 .wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__event {
   width: clamp(14px, 3vw, 18px);
@@ -506,8 +515,14 @@
 .wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number::after {
   display: none;
 }
+.wp-block-gatherpress-calendar.is-style-circular {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
 .wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__day-number {
   font-weight: 600;
+}
+.wp-block-gatherpress-calendar.is-style-circular {
+  /* stylelint-disable-next-line no-descending-specificity */
 }
 .wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__event {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -581,10 +596,16 @@
 .wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number::after {
   display: none;
 }
+.wp-block-gatherpress-calendar.is-style-gradient {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
 .wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__day-number {
   color: #fff;
   font-weight: 700;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.wp-block-gatherpress-calendar.is-style-gradient {
+  /* stylelint-disable-next-line no-descending-specificity */
 }
 .wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__event {
   background: rgba(255, 255, 255, 0.9);

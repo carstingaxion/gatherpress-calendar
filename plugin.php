@@ -142,16 +142,17 @@ function posts_where( string $where, WP_Query $query ): string {
 		return $where;
 	}
 
-	$date_filter = is_array( $date_query[0] ) ? $date_query[0] : array();
+	$date_filter_raw = $query->query_vars['date_query'][0] ?? array();
+	$date_filter     = is_array( $date_filter_raw ) ? $date_filter_raw : array();
 
 	$date_conditions = array();
 
-	if ( ! empty( $date_filter['year'] ) ) {
+	if ( ! empty( $date_filter['year'] ) && is_numeric( $date_filter['year'] ) ) {
 		$year              = absint( $date_filter['year'] );
 		$date_conditions[] = $wpdb->prepare( 'YEAR(ge.datetime_start_gmt) = %d', $year );
 	}
 
-	if ( ! empty( $date_filter['month'] ) ) {
+	if ( ! empty( $date_filter['month'] ) && is_numeric( $date_filter['month'] ) ) {
 		$month             = absint( $date_filter['month'] );
 		$date_conditions[] = $wpdb->prepare( 'MONTH(ge.datetime_start_gmt) = %d', $month );
 	}
