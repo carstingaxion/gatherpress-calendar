@@ -40,6 +40,8 @@ export function createCloseButton() {
 /**
  * Create popover element with content.
  *
+ * Getting content from a hidden container referenced by data-event-content.
+ *
  * @since 0.1.0
  *
  * @param {string} content     - HTML content for the popover.
@@ -110,6 +112,9 @@ export function animateOut( popover, backdrop, callback ) {
  * Show popover with event content.
  *
  * Creates and displays a popover overlay containing the event's inner blocks content.
+ *
+ * - Gets content from hidden container referenced by data-event-content
+ * - Creates and displays popover with that content
  * The popover is positioned near the clicked event dot and includes:
  * - Post content from inner blocks (title, date, excerpt, etc.)
  * - Close button (×)
@@ -128,8 +133,23 @@ export function showPopover( eventLink, calendar ) {
 		closePopover();
 	}
 
-	// Extract content and custom styling.
-	const content = eventLink.innerHTML;
+	// Get content from hidden container.
+	const contentId = eventLink.getAttribute( 'data-event-content' );
+	if ( ! contentId ) {
+		return;
+	}
+
+	const contentContainer = document.getElementById( contentId );
+	if ( ! contentContainer ) {
+		return;
+	}
+
+	const content = contentContainer.innerHTML;
+	if ( ! content ) {
+		return;
+	}
+
+	// Get custom styling.
 	const customStyle = eventLink.getAttribute( 'data-popover-style' ) || '';
 
 	// Create and append elements.

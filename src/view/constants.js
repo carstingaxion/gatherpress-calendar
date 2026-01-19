@@ -42,6 +42,7 @@ export const ANIMATION_CONFIG = {
 export const CLASS_NAMES = {
 	calendar: 'gatherpress-calendar',
 	event: 'gatherpress-calendar__event',
+	eventContent: 'gatherpress-calendar__event-content',
 	popover: 'gatherpress-calendar__popover',
 	popoverClose: 'gatherpress-calendar__popover-close',
 	backdrop: 'gatherpress-calendar__backdrop',

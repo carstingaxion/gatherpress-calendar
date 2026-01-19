@@ -209,11 +209,6 @@
 		display: inline-block;
 		text-decoration: none;
 
-		/* Hide content by default - shown in popover */
-		> * {
-			display: none;
-		}
-
 		/* Hover state */
 		&:hover {
 			transform: scale(1.3);
@@ -246,6 +241,20 @@
 
 		&:nth-child(n+6) {
 			background: var(--wp--preset--color--contrast, #666);
+		}
+	}
+
+	/* ==================================================================
+	   Hidden Event Content Containers
+	   These hold the actual post content, hidden by default
+	   ================================================================== */
+
+	&__event-content {
+		display: none;
+
+		/* Ensure content is accessible to screen readers even when hidden */
+		&[hidden] {
+			display: none;
 		}
 	}
 
@@ -760,11 +769,18 @@
 		}
 	}
 
+	/* Hide event dots in print, show content containers instead */
 	.gatherpress-calendar__event {
-		width: auto;
-		height: auto;
-		border-radius: 0;
-		background: transparent;
+		display: none;
+	}
+
+	.gatherpress-calendar__event-content {
+		display: block !important;
+		margin-block-start: 0.5rem;
+		padding: 0.5rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		page-break-inside: avoid;
 
 		> * {
 			display: block !important;
