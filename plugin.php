@@ -22,9 +22,12 @@ use WP_REST_Request;
 use WP_Query;
 use wpdb;
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly.
-}
+// Exit if accessed directly.
+defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
+
+// Constants.
+define( 'GATHERPRESS_CALENDAR_VERSION', current( get_file_data( __FILE__, array( 'Version' ), 'plugin' ) ) );
+define( 'GATHERPRESS_CALENDAR_CORE_PATH', __DIR__ );
 
 /**
  * Registers the GatherPress Calendar block.
@@ -76,7 +79,7 @@ add_action( 'init', __NAMESPACE__ . '\\block_init' );
  * @return array<string, mixed> Modified query arguments with date_query added and gatherpress_event_query removed.
  *
  * @example
- * // Request from calendar block (edit.js or render.php):
+ * // Request from calendar block (edit.js):
  * // GET /wp-json/wp/v2/gatherpress_event?gatherpress_calendar_query=1&year=2025&month=1
  *
  * // This filter will:
