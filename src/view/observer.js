@@ -37,33 +37,35 @@ export function setupIntersectionObserver( calendars ) {
 	 *
 	 * @param {IntersectionObserverEntry[]} entries - Array of intersection changes.
 	 */
-	setObserver( new IntersectionObserver(
-		function ( entries ) {
-			entries.forEach( function ( entry ) {
-				const calendar = entry.target;
-				const wasVisible = visibilityMap.get( calendar );
-				const isVisible = entry.isIntersecting;
+	setObserver(
+		new IntersectionObserver(
+			function ( entries ) {
+				entries.forEach( function ( entry ) {
+					const calendar = entry.target;
+					const wasVisible = visibilityMap.get( calendar );
+					const isVisible = entry.isIntersecting;
 
-				// Update visibility state.
-				visibilityMap.set( calendar, isVisible );
+					// Update visibility state.
+					visibilityMap.set( calendar, isVisible );
 
-				if ( isVisible && ! wasVisible ) {
-					// Calendar entered viewport - set it up.
-					setupCalendar( calendar );
-				} else if ( ! isVisible && wasVisible ) {
-					// Calendar left viewport.
-					// If this calendar has an active popover, close it.
-					if ( state.calendar === calendar ) {
-						closePopover();
+					if ( isVisible && ! wasVisible ) {
+						// Calendar entered viewport - set it up.
+						setupCalendar( calendar );
+					} else if ( ! isVisible && wasVisible ) {
+						// Calendar left viewport.
+						// If this calendar has an active popover, close it.
+						if ( state.calendar === calendar ) {
+							closePopover();
+						}
 					}
-				}
-			} );
-		},
-		{
-			threshold: OBSERVER_CONFIG.threshold,
-			rootMargin: OBSERVER_CONFIG.rootMargin,
-		}
-	));
+				} );
+			},
+			{
+				threshold: OBSERVER_CONFIG.threshold,
+				rootMargin: OBSERVER_CONFIG.rootMargin,
+			}
+		)
+	);
 
 	// Start observing all calendars.
 	calendars.forEach( function ( calendar ) {
@@ -84,8 +86,8 @@ export function setupIntersectionObserver( calendars ) {
  */
 export function cleanupObserver() {
 	const observer = getObserver();
-	if (observer) { 
-		observer.disconnect(); 
-		setObserver(null); 
+	if ( observer ) {
+		observer.disconnect();
+		setObserver( null );
 	}
 }
