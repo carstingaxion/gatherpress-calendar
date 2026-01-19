@@ -1,0 +1,24 @@
+/* ======================================================================
+   Traditional Responsive Fallback
+   ====================================================================== */
+
+@media (max-width: 400px) {
+
+	@supports not (container-type: inline-size) {
+
+		.gatherpress-calendar__table th {
+			display: none;
+		}
+
+		.gatherpress-calendar__day-number {
+			font-size: clamp(0.625rem, 1.5vw, 0.7rem);
+		}
+
+		.gatherpress-calendar__event {
+			width: clamp(6px, 2vw, 8px);
+			height: clamp(6px, 2vw, 8px);
+			min-width: clamp(6px, 2vw, 8px);
+			min-height: clamp(6px, 2vw, 8px);
+		}
+	}
+}

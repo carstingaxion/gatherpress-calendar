@@ -677,7 +677,7 @@ const state = {
  *
  * @type {WeakMap<HTMLElement, boolean>}
  */
-let visibilityMap = new WeakMap();
+const visibilityMap = new WeakMap();
 
 /**
  * IntersectionObserver instance for monitoring calendar visibility.
@@ -687,17 +687,17 @@ let visibilityMap = new WeakMap();
 let observerInstance = null;
 
 /**
-* Set the observer instance.
-* @param {IntersectionObserver|null} instance - The observer instance.
-*/
+ * Set the observer instance.
+ * @param {IntersectionObserver|null} instance - The observer instance.
+ */
 function setObserver(instance) {
   observerInstance = instance;
 }
 
 /**
-* Get the observer instance.
-* @return {IntersectionObserver|null} 
-*/
+ * Get the observer instance.
+ * @return {IntersectionObserver|null} - The observer instance.
+ */
 function getObserver() {
   return observerInstance;
 }

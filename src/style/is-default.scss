@@ -1,0 +1,344 @@
+/* ==========================================================================
+   Block Container
+   ========================================================================== */
+
+.wp-block-gatherpress-calendar {
+	padding: var(--wp--preset--spacing--50, 1rem);
+	margin-block: var(--wp--preset--spacing--50, 1rem);
+}
+
+/* ==========================================================================
+   Calendar Wrapper
+   ========================================================================== */
+
+.gatherpress-calendar {
+	width: 100%;
+	max-width: var(--wp--style--global--wide-size, 1200px);
+	margin-inline: auto;
+
+	/* ======================================================================
+	   Month Header
+	   ====================================================================== */
+
+	&__month {
+		text-align: center;
+		margin-block: 0 var(--wp--preset--spacing--40, 1rem);
+		color: var(--wp--preset--color--contrast, #1e1e1e);
+		line-height: 1.2;
+	}
+
+	/* ======================================================================
+	   Calendar Table - CSS Grid Layout
+	   ====================================================================== */
+
+	&__table {
+		width: 100%;
+		display: grid;
+		grid-template-columns: repeat(7, 1fr);
+		gap: 1px;
+		background: var(--wp--preset--color--contrast, #ddd);
+		border: 1px solid var(--wp--preset--color--contrast, #ddd);
+		container-type: inline-size;
+		container-name: calendar;
+		border-collapse: collapse;
+
+		thead,
+		tbody,
+		tr {
+			display: contents;
+		}
+
+		/* ==================================================================
+		   Day Name Headers
+		   ================================================================== */
+
+		th {
+			background: var(--wp--preset--color--base-2, #f8f9fa);
+			color: var(--wp--preset--color--contrast, #495057);
+			font-weight: 600;
+			text-align: center;
+			padding: clamp(0.5rem, 2vw, 0.75rem);
+			font-size: clamp(0.625rem, 2vw, 0.875rem);
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			border: none;
+			aspect-ratio: 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		/* ==================================================================
+		   Day Cells - Square with aspect-ratio
+		   ================================================================== */
+
+		td {
+			background: var(--wp--preset--color--base, #fff);
+			position: relative;
+			aspect-ratio: 1;
+			min-height: 0;
+			border: none;
+			display: flex;
+			align-items: stretch;
+			justify-content: stretch;
+			overflow: visible;
+
+			&.is-empty {
+				background: var(--wp--preset--color--base-2, #f8f9fa);
+				opacity: 0.5;
+			}
+
+			/* ==============================================================
+			   Today's Date Highlight
+			   ============================================================== */
+
+			&.is-today {
+				background: rgba(0, 124, 186, 0.05);
+
+				.gatherpress-calendar__day-number {
+					color: var(--wp--preset--color--primary, #007cba);
+					font-weight: 700;
+					position: relative;
+
+					&::after {
+						content: "";
+						position: absolute;
+						bottom: -4px;
+						left: 50%;
+						transform: translateX(-50%);
+						width: 20px;
+						height: 2px;
+						background: var(--wp--preset--color--primary, #007cba);
+						border-radius: 1px;
+					}
+				}
+			}
+
+			/* ==============================================================
+			   Days with Posts Highlight
+			   ============================================================== */
+
+			&.has-posts {
+				background: rgba(0, 124, 186, 0.03);
+
+				.gatherpress-calendar__day-number {
+					color: var(--wp--preset--color--primary, #007cba);
+					font-weight: 600;
+					position: relative;
+
+					&::after {
+						content: "";
+						position: absolute;
+						bottom: -4px;
+						left: 50%;
+						transform: translateX(-50%);
+						width: 16px;
+						height: 2px;
+						background: var(--wp--preset--color--primary, #007cba);
+						border-radius: 1px;
+						opacity: 0.6;
+					}
+				}
+			}
+		}
+	}
+
+	/* ======================================================================
+	   Day Content Wrapper
+	   ====================================================================== */
+
+	&__day-content {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: clamp(0.25rem, 1vw, 0.5rem);
+		padding: clamp(0.25rem, 1.5vw, 0.75rem);
+		position: relative;
+	}
+
+	/* ==================================================================
+	   Day Number
+	   ================================================================== */
+
+	/* stylelint-disable-next-line no-descending-specificity */
+	&__day-number {
+		font-weight: 600;
+		font-size: clamp(0.75rem, 2vw, 0.875rem);
+		color: var(--wp--preset--color--contrast, #495057);
+		line-height: 1;
+		text-align: center;
+		flex-shrink: 0;
+	}
+
+	/* ==================================================================
+	   Events Container
+	   ================================================================== */
+
+	&__events {
+		display: flex;
+		flex-wrap: wrap;
+		gap: clamp(0.25rem, 1vw, 0.5rem);
+		align-items: flex-start;
+		justify-content: center;
+		align-content: start;
+		flex: 1;
+		min-height: 0;
+	}
+
+	/* ==================================================================
+	   Event Dots (Links)
+	   ================================================================== */
+
+	&__event {
+		width: clamp(8px, 2.5vw, 12px);
+		height: clamp(8px, 2.5vw, 12px);
+		min-width: clamp(8px, 2.5vw, 12px);
+		min-height: clamp(8px, 2.5vw, 12px);
+		border-radius: 50%;
+		background: var(--wp--preset--color--primary, #007cba);
+		cursor: pointer;
+		position: relative;
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+		flex-shrink: 0;
+		display: inline-block;
+		text-decoration: none;
+
+		/* Hover state */
+		&:hover {
+			transform: scale(1.3);
+			box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.2);
+		}
+
+		/* Focus state for accessibility */
+		&:focus-visible {
+			outline: 2px solid var(--wp--preset--color--contrast, #007cba);
+			outline-offset: 2px;
+			transform: scale(1.3);
+		}
+
+		/* Color variations for multiple events */
+		&:nth-child(2) {
+			background: var(--wp--preset--color--secondary, #e65054);
+		}
+
+		&:nth-child(3) {
+			background: var(--wp--preset--color--tertiary, #4ab866);
+		}
+
+		&:nth-child(4) {
+			background: var(--wp--preset--color--vivid-purple, #9b51e0);
+		}
+
+		&:nth-child(5) {
+			background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
+		}
+
+		&:nth-child(n+6) {
+			background: var(--wp--preset--color--contrast, #666);
+		}
+	}
+
+	/* ==================================================================
+	   Hidden Event Content Containers
+	   These hold the actual post content, hidden by default
+	   ================================================================== */
+
+	&__event-content {
+		display: none;
+
+		/* Ensure content is accessible to screen readers even when hidden */
+		&[hidden] {
+			display: none;
+		}
+	}
+
+	/* ==================================================================
+	   Popover (JavaScript-enhanced)
+	   ================================================================== */
+
+	&__popover {
+		position: fixed;
+		z-index: 1000;
+		background: var(--wp--preset--color--base, #fff);
+		border: 1px solid var(--wp--preset--color--contrast, #ddd);
+		border-radius: 8px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+		padding: var(--wp--preset--spacing--40, 1rem);
+		max-width: 350px;
+		width: calc(100vw - 2rem);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+
+		&.is-active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+
+		> * {
+			margin-block: 0 var(--wp--preset--spacing--30, 0.75rem);
+			color: var(--wp--preset--color--contrast, #1e1e1e);
+			display: block !important;
+
+			&:last-child {
+				margin-block-end: 0;
+			}
+		}
+
+		a {
+			color: var(--wp--preset--color--primary, #007cba);
+			text-decoration: none;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+	}
+
+	/* Close button */
+	&__popover-close {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		padding: 0.25rem;
+		color: var(--wp--preset--color--contrast, #666);
+		font-size: 1.5rem;
+		line-height: 1;
+		transition: color 0.2s ease;
+
+		&:hover {
+			color: var(--wp--preset--color--contrast, #1e1e1e);
+		}
+	}
+
+	/* Backdrop */
+	&__backdrop {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 999;
+		background: rgba(0, 0, 0, 0.3);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+
+		&.is-active {
+			opacity: 1;
+			pointer-events: auto;
+		}
+	}
+
+	/* ==================================================================
+	   Template Config (Editor Only)
+	   ================================================================== */
+
+	&__template-config {
+		display: none;
+	}
+}

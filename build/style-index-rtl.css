@@ -11,15 +11,16 @@
  * - Intrinsic sizing with clamp()
  * - aspect-ratio for consistent shapes
  *
- * NEW ARCHITECTURE:
- * - Event dots are simple links (no nested content)
- * - Content containers are hidden by default
- * - JavaScript shows content in popovers
- * - Creates valid HTML (no nested links)
- *
  * @package GatherPressCalendar
  * @since 0.1.0
  */
+/* ==========================================================================
+   Block Container
+   ========================================================================== */
+.wp-block-gatherpress-calendar {
+  padding: var(--wp--preset--spacing--50, 1rem);
+  margin-block: var(--wp--preset--spacing--50, 1rem);
+}
 /* ==========================================================================
    Calendar Wrapper
    ========================================================================== */
@@ -337,16 +338,9 @@
 .gatherpress-calendar__template-config {
   display: none;
 }
-/* ==========================================================================
-   Block Container
-   ========================================================================== */
-.wp-block-gatherpress-calendar {
-  padding: var(--wp--preset--spacing--50, 1rem);
-  margin-block: var(--wp--preset--spacing--50, 1rem);
-  /* ======================================================================
-     BLOCK STYLE: Minimal
-     ====================================================================== */
-}
+/* ======================================================================
+    BLOCK STYLE: Minimal
+    ====================================================================== */
 .wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__month {
   font-weight: 300;
   color: var(--wp--preset--color--contrast, #666);
@@ -414,11 +408,9 @@
   opacity: 1;
   transform: scale(1.5);
 }
-.wp-block-gatherpress-calendar {
-  /* ======================================================================
-     BLOCK STYLE: Bold
-     ====================================================================== */
-}
+/* ======================================================================
+    BLOCK STYLE: Bold
+    ====================================================================== */
 .wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__month {
   font-weight: 900;
   text-transform: uppercase;
@@ -475,11 +467,9 @@
 .wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__event:hover {
   transform: scale(1.2) rotate(-45deg);
 }
-.wp-block-gatherpress-calendar {
-  /* ======================================================================
-     BLOCK STYLE: Circular
-     ====================================================================== */
-}
+/* ======================================================================
+    BLOCK STYLE: Circular
+    ====================================================================== */
 .wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__month {
   font-weight: 500;
   color: var(--wp--preset--color--primary, #007cba);
@@ -544,11 +534,9 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
   transform: scale(1.4);
 }
-.wp-block-gatherpress-calendar {
-  /* ======================================================================
-     BLOCK STYLE: Gradient
-     ====================================================================== */
-}
+/* ======================================================================
+    BLOCK STYLE: Gradient
+    ====================================================================== */
 .wp-block-gatherpress-calendar.is-style-gradient {
   background: linear-gradient(-135deg, #667eea 0%, #764ba2 100%);
   border-radius: 16px;
