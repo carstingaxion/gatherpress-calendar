@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       GatherPress Calendar
  * Plugin URI:        https://wordpress.org/plugins/gatherpress-calendar
- * Description:       A foundational calendar block for GatherPress, designed to display events in an organized and accessible manner.
+ * Description:       A calendar block that displays Query Loop results in a monthly calendar format. Works with any post type, with specialized support for GatherPress events.
  * Version:           0.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
@@ -46,6 +46,32 @@ define( 'GATHERPRESS_CALENDAR_CORE_PATH', __DIR__ );
  */
 function block_init(): void {
 	register_block_type( __DIR__ . '/build/' );
+
+
+
+	$pattern = '<!-- wp:query {"queryId":1,"query":{"perPage":5,"pages":0,"offset":0,"postType":"gatherpress_event","gatherpress_event_query":"upcoming","include_unfinished":1,"order":"asc","orderBy":"datetime","inherit":false},"namespace":"gatherpress-event-query","align":"wide","layout":{"type":"constrained"}} -->
+<div class="wp-block-query alignwide"><!-- wp:gatherpress/calendar {"align":"wide","style":{"spacing":{"padding":{"top":"0","bottom":"0","left":"0","right":"0"}}}} -->
+<div class="wp-block-gatherpress-calendar alignwide gatherpress-calendar-block" style="padding-top:0;padding-right:0;padding-bottom:0;padding-left:0"><div class="gatherpress-calendar-template"><!-- wp:group {"style":{"border":{"bottom":{"color":"var:preset|color|accent-5","width":"1px"},"top":{},"right":{},"left":{}}},"layout":{"type":"flex","flexWrap":"nowrap","verticalAlignment":"center"}} -->
+<div class="wp-block-group" style="border-bottom-color:var(--wp--preset--color--accent-5);border-bottom-width:1px"><!-- wp:gatherpress/event-date {"displayType":"start","style":{"elements":{"link":{"color":{"text":"var:preset|color|contrast"}}}},"textColor":"contrast","fontSize":"large","fontFamily":"system-serif"} /-->
+
+<!-- wp:post-title {"level":3,"isLink":true} /--></div>
+<!-- /wp:group -->
+
+<!-- wp:post-excerpt /--></div></div>
+<!-- /wp:gatherpress/calendar --></div>
+<!-- /wp:query -->';
+
+	register_block_pattern(
+		'gatherpress/calendar',
+		array(
+			'title'         => __( 'Event Calendar', 'gatherpress-calendar' ),
+			'description'   => _x( 'Show GatherPress events in a monthly calendar format.', 'Block pattern description', 'gatherpress-calendar' ),
+			'content'       => $pattern,
+			'categories'    => array( 'gatherpress' ),
+			'keywords'      => array( 'calendar', 'event', 'query' ),
+			'viewportWidth' => 1400,
+		)
+	);
 }
 add_action( 'init', __NAMESPACE__ . '\\block_init' );
 

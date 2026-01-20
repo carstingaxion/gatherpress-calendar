@@ -112,12 +112,12 @@ if ( ! class_exists( '\GatherPress\Calendar\Calendar_Structure_Builder' ) ) {
 
 			// Empty days after month.
 			$week_count = count( $current_week );
-			while ( count( $current_week ) > 0 && count( $current_week ) < 7 ) {
+			while ( $week_count > 0 && $week_count < 7 ) {
 				$current_week[] = array(
 					'isEmpty' => true,
 					'posts'   => array(),
 				);
-				$week_count++;
+				++$week_count;
 			}
 
 			if ( count( $current_week ) > 0 ) {
