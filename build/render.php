@@ -32,9 +32,15 @@ require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-html-rend
 require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-block-renderer.php';
 
 /**
- * Render the block.
+ * Extract and sanitize block attributes and render the block.
  *
- * @var array<string, mixed> $attributes
+ * @var array{
+ *   selectedMonth: string,
+ *   monthModifier: int,
+ *   templateConfigStyle: array<string, mixed>,
+ *   showMonthHeading: bool,
+ *   monthHeadingLevel: int,
+ * } $attributes
  * @var string $content
  * @var \WP_Block $block
  */
