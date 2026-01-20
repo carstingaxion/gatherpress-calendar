@@ -122,12 +122,13 @@ export function animateOut( popover, backdrop, callback ) {
  *
  * @since 0.1.0
  *
- * @param {HTMLAnchorElement} eventLink - The event dot link element that was clicked.
- * @param {HTMLElement}       calendar  - The calendar container element.
+ * @param {HTMLAnchorElement} eventLink   - The event dot link element that was clicked.
+ * @param {HTMLElement}       calendar    - The calendar container element.
+ * @param {boolean}           viaKeyboard - Whether opened via keyboard.
  *
  * @return {void}
  */
-export function showPopover( eventLink, calendar ) {
+export function showPopover( eventLink, calendar, viaKeyboard ) {
 	// Close any existing popover first.
 	if ( state.popover ) {
 		closePopover();
@@ -170,6 +171,7 @@ export function showPopover( eventLink, calendar ) {
 	state.backdrop = backdrop;
 	state.calendar = calendar;
 	state.triggerElement = eventLink;
+	state.openedViaKeyboard = viaKeyboard;
 
 	// Move focus to popover for keyboard navigation.
 	popover.focus();
@@ -203,8 +205,9 @@ export function closePopover() {
 		return;
 	}
 
-	// Store reference to trigger element before cleanup.
+	// Store reference to trigger element and keyboard flag before cleanup.
 	const triggerElement = state.triggerElement;
+	const wasKeyboard = state.openedViaKeyboard;
 
 	// Clean up event listeners.
 	if ( state.cleanup ) {
@@ -223,8 +226,12 @@ export function closePopover() {
 			backdrop.parentNode.removeChild( backdrop );
 		}
 		resetState();
-		// Return focus to the event dot that triggered the popover.
-		if ( triggerElement && typeof triggerElement.focus === 'function' ) {
+		// Only return focus if opened via keyboard.
+		if (
+			wasKeyboard &&
+			triggerElement &&
+			typeof triggerElement.focus === 'function'
+		) {
 			triggerElement.focus();
 		}
 	} );

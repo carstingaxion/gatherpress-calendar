@@ -24,7 +24,8 @@ export function handleEventClick( event, eventLink, calendar ) {
 
 	event.preventDefault();
 	event.stopPropagation();
-	showPopover( eventLink, calendar );
+	// Pass false to indicate this was opened via mouse.
+	showPopover( eventLink, calendar, false );
 }
 
 /**
@@ -49,7 +50,8 @@ export function handleEventKeydown( event, eventLink, calendar ) {
 
 	if ( event.key === 'Enter' || event.key === ' ' ) {
 		event.preventDefault();
-		showPopover( eventLink, calendar );
+		// Pass true to indicate this was opened via keyboard.
+		showPopover( eventLink, calendar, true );
 	}
 }
 

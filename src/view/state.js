@@ -16,6 +16,7 @@ export const state = {
 	backdrop: null,
 	calendar: null,
 	triggerElement: null,
+	openedViaKeyboard: false,
 	cleanup: null,
 };
 
@@ -66,6 +67,7 @@ export function resetState() {
 	state.backdrop = null;
 	state.calendar = null;
 	state.triggerElement = null;
+	state.openedViaKeyboard = false;
 	state.cleanup = null;
 }
 
