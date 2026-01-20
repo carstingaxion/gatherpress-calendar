@@ -169,6 +169,7 @@ export function showPopover( eventLink, calendar ) {
 	state.popover = popover;
 	state.backdrop = backdrop;
 	state.calendar = calendar;
+	state.triggerElement = eventLink;
 
 	// Move focus to popover for keyboard navigation.
 	popover.focus();
@@ -202,6 +203,9 @@ export function closePopover() {
 		return;
 	}
 
+	// Store reference to trigger element before cleanup.
+	const triggerElement = state.triggerElement;
+
 	// Clean up event listeners.
 	if ( state.cleanup ) {
 		state.cleanup();
@@ -219,5 +223,9 @@ export function closePopover() {
 			backdrop.parentNode.removeChild( backdrop );
 		}
 		resetState();
+		// Return focus to the event dot that triggered the popover.
+		if ( triggerElement && typeof triggerElement.focus === 'function' ) {
+			triggerElement.focus();
+		}
 	} );
 }

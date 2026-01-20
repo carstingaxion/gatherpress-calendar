@@ -5,15 +5,17 @@
  * simultaneously and provides easy cleanup.
  *
  * @type {Object}
- * @property {HTMLElement|null} popover  - Currently active popover element.
- * @property {HTMLElement|null} backdrop - Currently active backdrop element.
- * @property {HTMLElement|null} calendar - Calendar that owns the active popover.
- * @property {Function|null}    cleanup  - Cleanup function for event listeners.
+ * @property {HTMLElement|null} popover        - Currently active popover element.
+ * @property {HTMLElement|null} backdrop       - Currently active backdrop element.
+ * @property {HTMLElement|null} calendar       - Calendar that owns the active popover.
+ * @property {HTMLElement|null} triggerElement - Event dot that triggered the popover (for focus return).
+ * @property {Function|null}    cleanup        - Cleanup function for event listeners.
  */
 export const state = {
 	popover: null,
 	backdrop: null,
 	calendar: null,
+	triggerElement: null,
 	cleanup: null,
 };
 
@@ -63,6 +65,7 @@ export function resetState() {
 	state.popover = null;
 	state.backdrop = null;
 	state.calendar = null;
+	state.triggerElement = null;
 	state.cleanup = null;
 }
 
