@@ -265,7 +265,7 @@
 		border-radius: 8px;
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 		padding: var(--wp--preset--spacing--40, 1rem);
-		max-width: 350px;
+		max-width: 500px;
 		width: calc(100vw - 2rem);
 		opacity: 0;
 		pointer-events: none;
@@ -279,19 +279,10 @@
 		> * {
 			margin-block: 0 var(--wp--preset--spacing--30, 0.75rem);
 			color: var(--wp--preset--color--contrast, #1e1e1e);
-			display: block !important;
+			// display: block !important;
 
 			&:last-child {
 				margin-block-end: 0;
-			}
-		}
-
-		a {
-			color: var(--wp--preset--color--primary, #007cba);
-			text-decoration: none;
-
-			&:hover {
-				text-decoration: underline;
 			}
 		}
 	}

@@ -11,13 +11,11 @@
  * @package GatherPressCalendar
  * @since 0.1.0
  */
-@use 'style/is-default.scss';
-
-@use 'style/is-style-minimal.scss';
-@use 'style/is-style-bold.scss';
-@use 'style/is-style-circular.scss';
-@use 'style/is-style-gradient.scss';
-
-@use 'style/container-queries.scss';
-@use 'style/media-queries.scss';
-@use 'style/print.scss';
+@use "style/is-default";
+@use "style/is-style-minimal";
+@use "style/is-style-bold";
+@use "style/is-style-circular";
+@use "style/is-style-gradient";
+@use "style/container-queries";
+@use "style/media-queries";
+@use "style/print";

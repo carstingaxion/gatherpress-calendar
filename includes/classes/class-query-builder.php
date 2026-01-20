@@ -37,11 +37,13 @@ if ( ! class_exists( '\GatherPress\Calendar\Query_Builder' ) ) {
 		public static function build_query_args( \WP_Block $block, int $year, int $month ): array {
 			$query_id   = isset( $block->context['queryId'] ) && is_int( $block->context['queryId'] ) ? $block->context['queryId'] : 0;
 			$page_param = 'query-' . $query_id . '-page';
-			$page       = isset( $_GET[ $page_param ] ) && is_numeric( $_GET[ $page_param ] )
-				? max( 1, (int) $_GET[ $page_param ] )
-				: 1;
+			$page       = isset( $_GET[ $page_param ] ) && is_numeric( $_GET[ $page_param ] ) ? max( 1, (int) $_GET[ $page_param ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-			/** @var array<string, mixed> $query_args */
+			/**
+			 * Type safety.
+			 *
+			 * @var array<string, mixed> $query_args
+			 */
 			$query_args = build_query_vars_from_query_block( $block, $page );
 
 			// Add calendar query marker and date filtering.
@@ -52,7 +54,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Query_Builder' ) ) {
 					'month' => $month,
 				),
 			);
-			$query_args['posts_per_page']             = 999;
+			$query_args['posts_per_page']             = 99;
 
 			// Remove conflicting parameters.
 			unset( $query_args['paged'] );

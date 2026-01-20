@@ -59,14 +59,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param array<string, mixed> $attributes     Block attributes.
-		 * @param array{
-		 *   month_name: string,
-		 *   day_names: list<string>,
-		 *   weeks: list<list<array<string, mixed>>>
-		 * }                                                        $calendar_data  Calendar structure.
-		 * @param string               $popover_styles Popover styles.
-		 * @param \WP_Block            $block          Block instance.
+		 * @param array<string, mixed>                                                                      $attributes     Block attributes.
+		 * @param array{month_name: string,day_names: list<string>,weeks: list<list<array<string, mixed>>>} $calendar_data  Calendar structure.
+		 * @param string                                                                                    $popover_styles Popover styles.
+		 * @param \WP_Block                                                                                 $block          Block instance.
 		 *
 		 * @return string Calendar HTML.
 		 */
@@ -77,7 +73,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 
 			ob_start();
 			?>
-			<div <?php echo $wrapper_attributes; ?>>
+			<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
 				<div class="gatherpress-calendar">
 					<?php if ( $show_month_heading ) { ?>
 						<?php
@@ -95,7 +91,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 							</tr>
 						</thead>
 						<tbody>
-							<?php echo $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles, $block ); ?>
+							<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles, $block ) ); ?>
 						</tbody>
 					</table>
 				</div>
@@ -121,7 +117,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			foreach ( $weeks as $week ) {
 				echo '<tr>';
 				foreach ( $week as $day ) {
-					echo $this->render_day_cell( $day, $popover_styles, $block );
+					echo wp_kses_post( $this->render_day_cell( $day, $popover_styles, $block ) );
 				}
 				echo '</tr>';
 			}
@@ -151,13 +147,15 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			if ( isset( $day['date'] ) && is_string( $day['date'] ) && $day['date'] === $this->today ) {
 				$classes[] = 'is-today';
 			}
+			$should_render = ( empty( $day['isEmpty'] ) && isset( $day['date'] ) && is_string( $day['date'] ) && isset( $day['day'] ) && is_int( $day['day'] ) );
 
 			ob_start();
 			?>
 			<td class="<?php echo esc_attr( implode( ' ', $classes ) ); ?>">
-				<?php if ( empty( $day['isEmpty'] ) && isset( $day['date'] ) && is_string( $day['date'] ) && isset( $day['day'] ) && is_int( $day['day'] ) ) { ?>
+				<?php if ( $should_render ) { ?>
 					<div class="gatherpress-calendar__day-content">
 						<div class="gatherpress-calendar__day-number">
+							<?php // @phpstan-ignore-next-line cast.string ?>
 							<?php echo esc_html( (string) $day['day'] ); ?>
 						</div>
 						<?php
@@ -165,7 +163,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						if ( ! empty( $day_posts ) ) {
 							?>
 							<div class="gatherpress-calendar__events">
-								<?php echo $this->render_event_dots( $day_posts, $popover_styles, $block ); ?>
+								<?php echo wp_kses_post( $this->render_event_dots( $day_posts, $popover_styles, $block ) ); ?>
 							</div>
 							<?php
 						}
@@ -174,8 +172,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 				<?php } ?>
 			</td>
 			<?php
-			$output = ob_get_clean();
-			return is_string( $output ) ? $output : '';
+			return (string) ob_get_clean();
 		}
 
 		/**
@@ -198,7 +195,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 
 			foreach ( $post_ids as $post_id ) {
 				if ( is_int( $post_id ) ) {
-					echo $this->render_single_event_dot( $post_id, $popover_styles, $block );
+					echo wp_kses_post( $this->render_single_event_dot( $post_id, $popover_styles, $block ) );
 				}
 			}
 
@@ -232,7 +229,11 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			}
 
 			if ( isset( $GLOBALS['post'] ) ) {
-				$GLOBALS['post'] = $post;
+				// "Overriding WordPress globals is prohibited."
+				//
+				// I know! But as found out a lot of times,
+				// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
+				$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 			}
 			setup_postdata( $post );
 
@@ -246,7 +247,12 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 				$post_url = '';
 			}
 
-			$post_title = get_the_title( $post_id );
+			$post_title = the_title_attribute(
+				array(
+					'echo' => false,
+					'post' => $post,
+				) 
+			);
 			if ( ! is_string( $post_title ) ) {
 				$post_title = '';
 			}
@@ -267,7 +273,11 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 
 			wp_reset_postdata();
 			if ( isset( $GLOBALS['post'] ) ) {
-				$GLOBALS['post'] = $this->original_post;
+				// "Overriding WordPress globals is prohibited."
+				//
+				// I know! But as found out a lot of times,
+				// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
+				$GLOBALS['post'] = $this->original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 			}
 
 			// Generate unique ID for this event content.
@@ -303,7 +313,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @param \WP_Block $block Block instance.
 		 *
-		 * @return array<string, mixed> Inner blocks instance.
+		 * @return array{blockName?: string|null, attrs?: array{string?: mixed}, innerBlocks?: array{string?: mixed}, innerHTML?: string, innerContent?: array{string?: mixed}} Inner blocks instance.
 		 */
 		private function prepare_inner_blocks_instance( \WP_Block $block ): array {
 			$block_instance              = $block->parsed_block;
@@ -317,6 +327,18 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			array_shift( $inner_content );
 
 			$block_instance['innerContent'] = array_values( $inner_content );
+
+			/**
+			 * Type safety first
+			 * 
+			 * @var array{
+			 *   blockName: string,
+			 *   attrs: array<string, mixed>,
+			 *   innerBlocks: array<int, array<string, mixed>>,
+			 *   innerHTML: string,
+			 *   innerContent: array<int, string|null>,
+			 * } $block_instance
+			 */
 			return $block_instance;
 		}
 	}

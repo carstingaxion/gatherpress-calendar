@@ -96,8 +96,12 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 		 * @return string Rendered HTML.
 		 */
 		public function render( array $attributes, string $content, \WP_Block $block ): string {
-			// Validate query context.
-			/** @var array<string, mixed>|null $query */
+
+			/**
+			 * Validate query context.
+			 *
+			 * @var array<string, mixed>|null $query
+			 */
 			$query = $block->context['query'] ?? null;
 			if ( ! is_array( $query ) || empty( $query ) ) {
 				return '';

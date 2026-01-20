@@ -4,76 +4,76 @@
 
 .wp-block-gatherpress-calendar.is-style-circular {
 
-    .gatherpress-calendar__month {
-        font-weight: 500;
-        color: var(--wp--preset--color--primary, #007cba);
-    }
+	.gatherpress-calendar__month {
+		font-weight: 500;
+		color: var(--wp--preset--color--primary, #007cba);
+	}
 
-    .gatherpress-calendar__table {
-        gap: clamp(0.5rem, 2vw, 1rem);
-        background: transparent;
-        border: none;
-        padding: clamp(0.5rem, 2vw, 1rem);
+	.gatherpress-calendar__table {
+		gap: clamp(0.5rem, 2vw, 1rem);
+		background: transparent;
+		border: none;
+		padding: clamp(0.5rem, 2vw, 1rem);
 
-        th {
-            background: transparent;
-            border: none;
-            color: var(--wp--preset--color--primary, #007cba);
-            font-weight: 600;
-            text-transform: none;
-            border-radius: 50%;
-        }
+		th {
+			background: transparent;
+			border: none;
+			color: var(--wp--preset--color--primary, #007cba);
+			font-weight: 600;
+			text-transform: none;
+			border-radius: 50%;
+		}
 
-        td {
-            border-radius: 50%;
-            background: var(--wp--preset--color--base-2, #f0f4f8);
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
+		td {
+			border-radius: 50%;
+			background: var(--wp--preset--color--base-2, #f0f4f8);
+			border: 2px solid transparent;
+			transition: all 0.3s ease;
 
-            &.is-empty {
-                background: transparent;
-                opacity: 0.3;
-            }
+			&.is-empty {
+				background: transparent;
+				opacity: 0.3;
+			}
 
-            &.has-posts {
-                background: var(--wp--preset--color--base, #fff);
-                border-color: var(--wp--preset--color--contrast, #d0dae5);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+			&.has-posts {
+				background: var(--wp--preset--color--base, #fff);
+				border-color: var(--wp--preset--color--contrast, #d0dae5);
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-                .gatherpress-calendar__day-number::after {
-                    background: var(--wp--preset--color--primary, #007cba);
-                }
-            }
+				.gatherpress-calendar__day-number::after {
+					background: var(--wp--preset--color--primary, #007cba);
+				}
+			}
 
-            &.is-today {
-                background: linear-gradient(135deg, var(--wp--preset--color--primary, #007cba) 0%, var(--wp--preset--color--secondary, #0693e3) 100%);
-                border-color: var(--wp--preset--color--primary, #007cba);
-                box-shadow: 0 4px 16px rgba(0, 124, 186, 0.3);
+			&.is-today {
+				background: linear-gradient(135deg, var(--wp--preset--color--primary, #007cba) 0%, var(--wp--preset--color--secondary, #0693e3) 100%);
+				border-color: var(--wp--preset--color--primary, #007cba);
+				box-shadow: 0 4px 16px rgba(0, 124, 186, 0.3);
 
-                .gatherpress-calendar__day-number {
-                    color: #fff;
-                    font-weight: 700;
+				.gatherpress-calendar__day-number {
+					color: #fff;
+					font-weight: 700;
 
-                    &::after {
-                        display: none;
-                    }
-                }
-            }
-        }
-    }
+					&::after {
+						display: none;
+					}
+				}
+			}
+		}
+	}
 
-    /* stylelint-disable-next-line no-descending-specificity */
-    .gatherpress-calendar__day-number {
-        font-weight: 600;
-    }
+	/* stylelint-disable-next-line no-descending-specificity */
+	.gatherpress-calendar__day-number {
+		font-weight: 600;
+	}
 
-    /* stylelint-disable-next-line no-descending-specificity */
-    .gatherpress-calendar__event {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+	/* stylelint-disable-next-line no-descending-specificity */
+	.gatherpress-calendar__event {
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 
-        &:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
-            transform: scale(1.4);
-        }
-    }
+		&:hover {
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+			transform: scale(1.4);
+		}
+	}
 }

@@ -4,81 +4,81 @@
 
 .wp-block-gatherpress-calendar.is-style-minimal {
 
-    .gatherpress-calendar__month {
-        font-weight: 300;
-        color: var(--wp--preset--color--contrast, #666);
-    }
+	.gatherpress-calendar__month {
+		font-weight: 300;
+		color: var(--wp--preset--color--contrast, #666);
+	}
 
-    .gatherpress-calendar__table {
-        background: transparent;
-        border: none;
-        gap: 0;
+	.gatherpress-calendar__table {
+		background: transparent;
+		border: none;
+		gap: 0;
 
-        th {
-            background: transparent;
-            border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
-            text-transform: none;
-            letter-spacing: 0;
-            font-weight: 300;
-            color: var(--wp--preset--color--contrast, #999);
-        }
+		th {
+			background: transparent;
+			border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
+			text-transform: none;
+			letter-spacing: 0;
+			font-weight: 300;
+			color: var(--wp--preset--color--contrast, #999);
+		}
 
-        td {
-            background: transparent;
-            border-bottom: 1px solid var(--wp--preset--color--contrast, #f5f5f5);
+		td {
+			background: transparent;
+			border-bottom: 1px solid var(--wp--preset--color--contrast, #f5f5f5);
 
-            &.is-empty {
-                opacity: 0.2;
-            }
+			&.is-empty {
+				opacity: 0.2;
+			}
 
-            &.is-today {
-                background: transparent;
+			&.is-today {
+				background: transparent;
 
-                .gatherpress-calendar__day-number {
-                    background: var(--wp--preset--color--primary, #007cba);
-                    color: #fff;
-                    width: clamp(24px, 5vw, 32px);
-                    height: clamp(24px, 5vw, 32px);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 50%;
-                    margin-inline: auto;
-                    font-weight: 300;
+				.gatherpress-calendar__day-number {
+					background: var(--wp--preset--color--primary, #007cba);
+					color: #fff;
+					width: clamp(24px, 5vw, 32px);
+					height: clamp(24px, 5vw, 32px);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					border-radius: 50%;
+					margin-inline: auto;
+					font-weight: 300;
 
-                    &::after {
-                        display: none;
-                    }
-                }
-            }
+					&::after {
+						display: none;
+					}
+				}
+			}
 
-            &.has-posts {
-                background: transparent;
+			&.has-posts {
+				background: transparent;
 
-                .gatherpress-calendar__day-number::after {
-                    background: var(--wp--preset--color--contrast, #999);
-                    opacity: 0.5;
-                }
-            }
-        }
-    }
+				.gatherpress-calendar__day-number::after {
+					background: var(--wp--preset--color--contrast, #999);
+					opacity: 0.5;
+				}
+			}
+		}
+	}
 
-    /* stylelint-disable-next-line no-descending-specificity */
-    .gatherpress-calendar__day-number {
-        font-weight: 300;
-        color: var(--wp--preset--color--contrast, #333);
-    }
+	/* stylelint-disable-next-line no-descending-specificity */
+	.gatherpress-calendar__day-number {
+		font-weight: 300;
+		color: var(--wp--preset--color--contrast, #333);
+	}
 
-    .gatherpress-calendar__event {
-        width: clamp(6px, 2vw, 8px);
-        height: clamp(6px, 2vw, 8px);
-        min-width: clamp(6px, 2vw, 8px);
-        min-height: clamp(6px, 2vw, 8px);
-        opacity: 0.7;
+	.gatherpress-calendar__event {
+		width: clamp(6px, 2vw, 8px);
+		height: clamp(6px, 2vw, 8px);
+		min-width: clamp(6px, 2vw, 8px);
+		min-height: clamp(6px, 2vw, 8px);
+		opacity: 0.7;
 
-        &:hover {
-            opacity: 1;
-            transform: scale(1.5);
-        }
-    }
+		&:hover {
+			opacity: 1;
+			transform: scale(1.5);
+		}
+	}
 }

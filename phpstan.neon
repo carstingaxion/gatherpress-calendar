@@ -4,6 +4,7 @@ parameters:
     level: max
     inferPrivatePropertyTypeFromConstructor: true
     paths:
+        - includes/classes
         - src/
         - plugin.php
     excludePaths:

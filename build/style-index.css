@@ -267,7 +267,7 @@
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   padding: var(--wp--preset--spacing--40, 1rem);
-  max-width: 350px;
+  max-width: 500px;
   width: calc(100vw - 2rem);
   opacity: 0;
   pointer-events: none;
@@ -280,17 +280,9 @@
 .gatherpress-calendar__popover > * {
   margin-block: 0 var(--wp--preset--spacing--30, 0.75rem);
   color: var(--wp--preset--color--contrast, #1e1e1e);
-  display: block !important;
 }
 .gatherpress-calendar__popover > *:last-child {
   margin-block-end: 0;
-}
-.gatherpress-calendar__popover a {
-  color: var(--wp--preset--color--primary, #007cba);
-  text-decoration: none;
-}
-.gatherpress-calendar__popover a:hover {
-  text-decoration: underline;
 }
 .gatherpress-calendar {
   /* Close button */

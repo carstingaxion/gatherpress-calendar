@@ -63,8 +63,9 @@ if ( ! class_exists( '\GatherPress\Calendar\Date_Calculator' ) ) {
 			}
 
 			// Use current month with modifier.
-			$now = current_time( 'timestamp' );
-			if ( ! is_int( $now ) ) {
+			$local_time = current_datetime();
+			$now        = $local_time->getTimestamp() + $local_time->getOffset();
+			if ( ! $now ) {
 				$now = time();
 			}
 
@@ -99,6 +100,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Date_Calculator' ) ) {
 			for ( $i = 0; $i < 7; $i++ ) {
 				$day_of_week = ( $start_of_week + $i ) % 7;
 				$base_sunday = strtotime( '2024-01-07' );
+				// @phpstan-ignore-next-line
 				if ( false === $base_sunday ) {
 					continue;
 				}

@@ -73,8 +73,8 @@ add_action( 'init', __NAMESPACE__ . '\\block_init' );
  *
  * @since 0.1.0
  *
- * @param array<string, mixed> $args    WP_Query arguments that will be used for the REST request.
- * @param WP_REST_Request      $request The REST request object containing parameters.
+ * @param array<string, mixed>                                                                          $args    WP_Query arguments that will be used for the REST request.
+ * @param WP_REST_Request<array{gatherpress_calendar_query:string|null, year:int|null, month:int|null}> $request Request object which may contain gatherpress_calendar_query filter marker, year and month.
  *
  * @return array<string, mixed> Modified query arguments with date_query added and gatherpress_event_query removed.
  *
@@ -89,28 +89,35 @@ add_action( 'init', __NAMESPACE__ . '\\block_init' );
  * // 4. Result: Only events from January 2025
  */
 function rest_gatherpress_event_query( array $args, WP_REST_Request $request ): array {
-		$parameters = $request->get_params();
+	$parameters = $request->get_params();
 		
-		// Only proceed if this is a calendar query (identified by our marker)
-		// AND it has year/month parameters for date filtering.
-	if ( isset( $parameters['gatherpress_calendar_query'] ) && isset( $parameters['year'] ) && is_numeric( $parameters['year'] ) ) {
-		// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering.
-		unset( $args['gatherpress_event_query'] );
-	
-		// Initialize date_query if it doesn't exist.
-		if ( ! isset( $args['date_query'] ) || ! is_array( $args['date_query'] ) || ! isset( $args['date_query'][0] ) || ! is_array( $args['date_query'][0] ) ) {
-			$args['date_query']    = array();
-			$args['date_query'][0] = array();
-		}
-
-		// Add date query for year and optional month.
-		// This limits results to posts published/scheduled within the specified timeframe.
-		$args['date_query'][0]['year'] = (int) $parameters['year'];
-
-		if ( isset( $parameters['month'] ) && is_numeric( $parameters['month'] ) ) {
-			$args['date_query'][0]['month'] = (int) $parameters['month'];
-		}
+	// Only proceed if this is a calendar query (identified by our marker)
+	// AND it has year/month parameters for date filtering.
+	if ( ! isset( $parameters['gatherpress_calendar_query'] )
+		|| ! isset( $parameters['year'] ) 
+		|| empty( $parameters['year'] )
+	) {
+		return $args;
 	}
+
+	// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering.
+	unset( $args['gatherpress_event_query'] );
+
+	// Initialize date_query if it doesn't exist.
+	if ( ! isset( $args['date_query'] ) || ! is_array( $args['date_query'] ) ) {
+		$args['date_query'] = array();
+	}
+
+	// Add date query for year and optional month.
+	// This limits results to posts published/scheduled within the specified timeframe.
+	$args['date_query'][0] = array(
+		'year' => (int) $parameters['year'],
+	);
+
+	if ( isset( $parameters['month'] ) && ! empty( $parameters['month'] ) ) {
+		$args['date_query'][0]['month'] = (int) $parameters['month'];
+	}
+
 	return $args;
 }
 add_filter( 'rest_gatherpress_event_query', __NAMESPACE__ . '\\rest_gatherpress_event_query', 20, 2 );

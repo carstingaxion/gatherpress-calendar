@@ -11,7 +11,7 @@
 
 A calendar block that displays Query Loop results in a monthly calendar format. Works with any post type, with specialized support for GatherPress events.
 
-[![Playground Demo Link](https://img.shields.io/badge/WordPress_Playground-blue?logo=wordpress&logoColor=%23fff&labelColor=%233858e9&color=%233858e9)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/carstingaxion/gatherpress-calendar/main/.wordpress-org/blueprints/blueprint.json)
+[![Playground Demo Link](https://img.shields.io/badge/WordPress_Playground-blue?logo=wordpress&logoColor=%23fff&labelColor=%233858e9&color=%233858e9)](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/carstingaxion/gatherpress-calendar/main/.wordpress-org/blueprints/blueprint.json) [![Build, test & measure](https://github.com/carstingaxion/gatherpress-calendar/actions/workflows/build-test-measure.yml/badge.svg?branch=main)](https://github.com/carstingaxion/gatherpress-calendar/actions/workflows/build-test-measure.yml)
 
 ---
 
@@ -128,10 +128,8 @@ This limits database queries to only posts within the displayed month, improving
 
 When used with GatherPress events:
 
-- Reads event start date from `gatherpress_datetime_start` meta
-- Automatically removes conflicting `gatherpress_event_query` parameter
-- Falls back gracefully for non-event post types
-- Works with GatherPress's past/upcoming event filters when not using date_query
+- Reads event start date from GatherPress' own event database-table
+- Automatically removes conflicting query parameters like 'upcoming' or 'past'
 
 ## Usage Instructions
 

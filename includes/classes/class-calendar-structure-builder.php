@@ -89,7 +89,12 @@ if ( ! class_exists( '\GatherPress\Calendar\Calendar_Structure_Builder' ) ) {
 			// Days with posts.
 			for ( $day = 1; $day <= $days_in_month; $day++ ) {
 				$date_str = sprintf( '%04d-%02d-%02d', $year, $month, $day );
-				/** @var list<int> $day_posts */
+
+				/**
+				 * Type safety ;)
+				 *
+				 * @var list<int> $day_posts
+				 */
 				$day_posts = $posts_by_date[ $date_str ] ?? array();
 
 				$current_week[] = array(
@@ -106,11 +111,13 @@ if ( ! class_exists( '\GatherPress\Calendar\Calendar_Structure_Builder' ) ) {
 			}
 
 			// Empty days after month.
+			$week_count = count( $current_week );
 			while ( count( $current_week ) > 0 && count( $current_week ) < 7 ) {
 				$current_week[] = array(
 					'isEmpty' => true,
 					'posts'   => array(),
 				);
+				$week_count++;
 			}
 
 			if ( count( $current_week ) > 0 ) {

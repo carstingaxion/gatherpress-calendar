@@ -33,45 +33,89 @@ if ( ! class_exists( '\GatherPress\Calendar\Style_Processor' ) ) {
 		 * @return string Inline style attribute value.
 		 */
 		public static function prepare_popover_styles( array $attributes ): string {
-			/** @var array<string, mixed> $template_config_style */
-			$template_config_style = isset( $attributes['templateConfigStyle'] ) && is_array( $attributes['templateConfigStyle'] ) ? $attributes['templateConfigStyle'] : array();
-			$popover_styles        = array();
+			$template_config_style = self::get_template_config_style( $attributes );
 
-			if ( isset( $template_config_style['backgroundColor'] ) && is_string( $template_config_style['backgroundColor'] ) && '' !== $template_config_style['backgroundColor'] ) {
-				$popover_styles[] = 'background-color: ' . esc_attr( $template_config_style['backgroundColor'] );
+			if ( empty( $template_config_style ) ) {
+				return '';
 			}
 
-			if ( isset( $template_config_style['padding'] ) ) {
-				$padding_str = self::process_padding( $template_config_style['padding'] );
-				if ( ! empty( $padding_str ) ) {
-					$popover_styles[] = 'padding: ' . $padding_str;
-				}
-			}
-
-			if ( isset( $template_config_style['borderWidth'] ) && is_string( $template_config_style['borderWidth'] ) && '' !== $template_config_style['borderWidth'] ) {
-				$popover_styles[] = 'border-width: ' . esc_attr( $template_config_style['borderWidth'] );
-			}
-
-			if ( isset( $template_config_style['borderStyle'] ) && is_string( $template_config_style['borderStyle'] ) && '' !== $template_config_style['borderStyle'] ) {
-				$popover_styles[] = 'border-style: ' . esc_attr( $template_config_style['borderStyle'] );
-			}
-
-			if ( isset( $template_config_style['borderColor'] ) && is_string( $template_config_style['borderColor'] ) && '' !== $template_config_style['borderColor'] ) {
-				$popover_styles[] = 'border-color: ' . esc_attr( $template_config_style['borderColor'] );
-			}
-
-			if ( isset( $template_config_style['borderRadius'] ) ) {
-				$radius_str = self::process_border_radius( $template_config_style['borderRadius'] );
-				if ( ! empty( $radius_str ) ) {
-					$popover_styles[] = 'border-radius: ' . $radius_str;
-				}
-			}
-
-			if ( isset( $template_config_style['boxShadow'] ) && is_string( $template_config_style['boxShadow'] ) && '' !== $template_config_style['boxShadow'] ) {
-				$popover_styles[] = 'box-shadow: ' . esc_attr( $template_config_style['boxShadow'] );
-			}
+			$popover_styles = array_merge(
+				self::get_simple_styles( $template_config_style ),
+				self::get_complex_styles( $template_config_style )
+			);
 
 			return ! empty( $popover_styles ) ? implode( '; ', $popover_styles ) : '';
+		}
+
+		/**
+		 * Normalize templateConfigStyle attribute.
+		 *
+		 * @param array<string, mixed|null> $attributes Block attributes.
+		 * @return array<string, mixed>
+		 */
+		private static function get_template_config_style( array $attributes ): array {
+			/**
+			 * Type safety.
+			 *
+			 * @var array<string, mixed> $style
+			 */
+			$style = isset( $attributes['templateConfigStyle'] ) && is_array( $attributes['templateConfigStyle'] )
+				? $attributes['templateConfigStyle']
+				: array();
+
+			return $style;
+		}
+
+		/**
+		 * Handle simple string-based CSS properties.
+		 *
+		 * @param array<string, mixed> $style Extracted custom template styling from the block attributes.
+		 * @return string[]
+		 */
+		private static function get_simple_styles( array $style ): array {
+			$map = array(
+				'backgroundColor' => 'background-color',
+				'borderWidth'     => 'border-width',
+				'borderStyle'     => 'border-style',
+				'borderColor'     => 'border-color',
+				'boxShadow'       => 'box-shadow',
+			);
+
+			$styles = array();
+
+			foreach ( $map as $key => $css_property ) {
+				if ( isset( $style[ $key ] ) && is_string( $style[ $key ] ) && ! empty( $style[ $key ] ) ) {
+					$styles[] = $css_property . ': ' . esc_attr( $style[ $key ] );
+				}
+			}
+
+			return $styles;
+		}
+
+		/**
+		 * Handle styles requiring processing.
+		 *
+		 * @param array<string, mixed> $style Extracted custom template styling from the block attributes.
+		 * @return string[]
+		 */
+		private static function get_complex_styles( array $style ): array {
+			$styles = array();
+
+			if ( isset( $style['padding'] ) ) {
+				$padding = self::process_padding( $style['padding'] );
+				if ( ! empty( $padding ) ) {
+					$styles[] = 'padding: ' . $padding;
+				}
+			}
+
+			if ( isset( $style['borderRadius'] ) ) {
+				$radius = self::process_border_radius( $style['borderRadius'] );
+				if ( ! empty( $radius ) ) {
+					$styles[] = 'border-radius: ' . $radius;
+				}
+			}
+
+			return $styles;
 		}
 
 		/**
