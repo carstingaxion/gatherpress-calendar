@@ -3,7 +3,7 @@
  * Plugin Name:       GatherPress Calendar
  * Plugin URI:        https://wordpress.org/plugins/gatherpress-calendar
  * Description:       A calendar block that displays Query Loop results in a monthly calendar format. Works with any post type, with specialized support for GatherPress events.
- * Version:           0.1.0
+ * Version:           0.3.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            carstenbach & WordPress Telex
