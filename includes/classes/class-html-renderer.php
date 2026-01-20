@@ -80,7 +80,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						$heading_level = max( 1, min( 6, $month_heading_level ) );
 						$heading_tag   = 'h' . $heading_level;
 						?>
-						<<?php echo esc_attr( $heading_tag ); ?> class="gatherpress-calendar__month"><?php echo esc_html( $calendar_data['month_name'] ); ?></<?php echo esc_attr( $heading_tag ); ?>>
+						<<?php echo esc_attr( $heading_tag ); ?> class="gatherpress-calendar__month wp-block-heading"><?php echo esc_html( $calendar_data['month_name'] ); ?></<?php echo esc_attr( $heading_tag ); ?>>
 					<?php } ?>
 					<table class="gatherpress-calendar__table">
 						<thead>

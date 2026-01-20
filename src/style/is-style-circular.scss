@@ -5,8 +5,7 @@
 .wp-block-gatherpress-calendar.is-style-circular {
 
 	.gatherpress-calendar__month {
-		font-weight: 500;
-		color: var(--wp--preset--color--primary, #007cba);
+		color: var(--wp--preset--color--primary, inherit);
 	}
 
 	.gatherpress-calendar__table {

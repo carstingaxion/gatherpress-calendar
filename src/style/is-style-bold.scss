@@ -4,14 +4,6 @@
 
 .wp-block-gatherpress-calendar.is-style-bold {
 
-	.gatherpress-calendar__month {
-		font-weight: 900;
-		text-transform: uppercase;
-		letter-spacing: 0.1em;
-		color: var(--wp--preset--color--contrast, #000);
-		text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
-	}
-
 	.gatherpress-calendar__table {
 		gap: clamp(2px, 0.5vw, 4px);
 		background: var(--wp--preset--color--contrast, #1e1e1e);

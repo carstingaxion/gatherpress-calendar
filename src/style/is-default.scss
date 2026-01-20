@@ -22,9 +22,7 @@
 
 	&__month {
 		text-align: center;
-		margin-block: 0 var(--wp--preset--spacing--40, 1rem);
-		color: var(--wp--preset--color--contrast, #1e1e1e);
-		line-height: 1.2;
+		color: var(--wp--preset--color--contrast, inherit);
 	}
 
 	/* ======================================================================
