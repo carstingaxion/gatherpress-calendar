@@ -1,6 +1,6 @@
 # GatherPress Calendar
 
-**Contributors:** carstenbach & WordPress Telex  
+**Contributors:** carstenbach, WordPress Telex & patriciabt  
 **Tags:** block, calendar, gatherpress, events, query-loop  
 **Tested up to:** 6.8  
 **Stable tag:** 0.3.1  
