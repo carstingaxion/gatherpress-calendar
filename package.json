@@ -5,8 +5,8 @@
     "author": "Carsten Bach",
     "license": "GPL-2.0-or-later",
     "keywords": [
-        "calendar", 
-        "query", 
+        "calendar",
+        "query",
         "wordpress"
     ],
     "homepage": "https://github.com/carstingaxion/gatherpress-calendar#readme",
@@ -19,7 +19,7 @@
     },
     "main": "build/index.js",
     "devDependencies": {
-        "@wordpress/scripts": "^30.15.0"
+        "@wordpress/scripts": "^35.0.0"
     },
     "scripts": {
         "build": "wp-scripts build --webpack-copy-php --experimental-modules",
