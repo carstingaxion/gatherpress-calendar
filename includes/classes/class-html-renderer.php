@@ -56,6 +56,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 * Constructor.
 		 *
 		 * @since 0.1.0
+		 * @param \WP_Block $block The parent gatherpress/calendar block instance.
 		 */
 		public function __construct( \WP_Block $block ) {
 			$this->original_post = ( isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof \WP_Post ) ? $GLOBALS['post'] : null;
@@ -234,8 +235,8 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param int       $post_id        Post ID.
-		 * @param string    $popover_styles Popover styles.
+		 * @param int    $post_id        Post ID.
+		 * @param string $popover_styles Popover styles.
 		 *
 		 * @return string Event dot HTML with hidden content.
 		 */
@@ -323,7 +324,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 					data-wp-class--is-active="state.isCurrentEventOpen"
 					data-wp-watch="callbacks.positionPopover"
 					data-wp-on-window--resize="callbacks.onWindowChange"
-                	data-wp-on-window--scroll="callbacks.onWindowChange"
+					data-wp-on-window--scroll="callbacks.onWindowChange"
 					hidden
 				>
 					<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

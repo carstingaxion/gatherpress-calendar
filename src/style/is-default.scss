@@ -188,7 +188,8 @@
 	   Event Dots Wrapper
 	   ================================================================== */
 	&__event-item {
-		& > a {
+
+		> a {
 			background: var(--wp--preset--color--primary, #007cba);
 		}
 
@@ -205,7 +206,7 @@
 			background: var(--wp--preset--color--vivid-purple, #9b51e0);
 		}
 
-		&:nth-child(5) > a{
+		&:nth-child(5) > a {
 			background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
 		}
 
@@ -213,6 +214,7 @@
 			background: var(--wp--preset--color--contrast, #666);
 		}
 	}
+
 	/* ==================================================================
 	   Event Dots (Links)
 	   ================================================================== */
@@ -223,7 +225,7 @@
 		min-width: clamp(8px, 2.5vw, 12px);
 		min-height: clamp(8px, 2.5vw, 12px);
 		border-radius: 50%;
-		
+
 		cursor: pointer;
 		position: relative;
 		transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -255,10 +257,10 @@
 	&__popover {
 		position: fixed;
 		z-index: 9999;
-		
+
 		/* Reset relative offsets since JS manages top/left */
 		margin: 0;
-		
+
 		// &[hidden] {
 		// 	display: none !important;
 		// }

@@ -97,7 +97,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 		 */
 		public function render( array $attributes, string $content, \WP_Block $block ): string {
 
-			// Enable Interactivity API for this block
+			// Enable Interactivity API for this block.
 			wp_interactivity_state(
 				'gatherpress/calendar',
 				array(

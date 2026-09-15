@@ -14,9 +14,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /**
  * Calculate popover position near trigger element
- * 
+ *
  * Replaces: positionPopover() function from current view.js.
- * 
+ *
  * @param {HTMLElement} triggerEl - The event dot element
  * @param {HTMLElement} popoverEl - The popover element
  * @return {Object} Position object with top and left
@@ -37,7 +37,9 @@ function calculatePosition(triggerEl, popoverEl) {
   let left = triggerRect.left + triggerRect.width / 2 - popoverRect.width / 2;
 
   // Keep in viewport horizontally
-  if (left < margin) left = margin;
+  if (left < margin) {
+    left = margin;
+  }
   if (left + popoverRect.width > vw - margin) {
     left = vw - popoverRect.width - margin;
   }
@@ -47,7 +49,9 @@ function calculatePosition(triggerEl, popoverEl) {
     // Show above if no space below
     top = triggerRect.top - popoverRect.height - gap;
   }
-  if (top < margin) top = margin;
+  if (top < margin) {
+    top = margin;
+  }
   return {
     top,
     left
@@ -56,9 +60,9 @@ function calculatePosition(triggerEl, popoverEl) {
 
 /**
  * Parse inline style string to object
- * 
+ *
  * Converts "background: #fff; padding: 1rem" to object.
- * 
+ *
  * @param {string} styleString - CSS style string
  * @return {Object} Styles object
  */
@@ -152,7 +156,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _view_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./view/helpers */ "./src/view/helpers.js");
 /**
  * GatherPress Calendar Interactivity Store
- * 
+ *
  * This file defines the reactive state and actions for the calendar block
  * using the WordPress Interactivity API.
  */
@@ -165,10 +169,6 @@ __webpack_require__.r(__webpack_exports__);
  * Internal dependencies
  */
 
-const POPOVER_CONFIG = {
-  gap: 8,
-  margin: 12
-};
 const OBSERVER_CONFIG = {
   threshold: 0.1,
   rootMargin: '50px'
@@ -217,49 +217,6 @@ const OBSERVER_CONFIG = {
       state.activeEventId = state.activeEventId === context.eventId ? null : context.eventId;
     }),
     /**
-           * Open popover for an event
-           * 
-           * Called when event dot is clicked or activated via keyboard.
-           * Replaces: handleEventClick() and showPopover() functions.
-           * 
-           * @param {Event} event - The triggering event
-          
-          openPopover: (event) => {
-              event.preventDefault();
-              
-              const context = getContext();
-              const { state } = store('gatherpress/calendar');
-              const element = getElement();
-              
-              // Get content from the referenced hidden container
-              const contentId = element.ref.getAttribute('data-event-content');
-              const contentContainer = document.getElementById(contentId);
-              
-              if (!contentContainer) return;
-              
-              // Get custom styles from attribute
-              const customStyles = element.ref.getAttribute('data-popover-style');
-              const stylesObject = customStyles 
-              ? parseStyleString(customStyles) 
-              : {};
-              
-              // Update reactive state (triggers re-render)
-              state.popoverOpen = true;
-              state.popoverContent = contentContainer.innerHTML;
-              state.popoverStyles = stylesObject;
-              state.activeEventId = element.ref.getAttribute('data-post-id');
-              
-              // Store trigger reference in context for positioning
-              context.triggerRef = element.ref;
-              
-              // Calculate position (will be used in callback)
-              state.popoverPosition = calculatePosition(
-              element.ref,
-              // Popover element will be available after render
-              );
-          }, */
-
-    /**
      * Closes any open popover
      */
     closePopover: () => {
@@ -269,11 +226,11 @@ const OBSERVER_CONFIG = {
       state.activeEventId = null;
     },
     /**
-           * Handle keyboard events on event dots
-           * 
-           * Replaces: handleEventKeydown() function.
-           * Enter/Space trigger popover, Escape closes it.
-           */
+     * Handle keyboard events on event dots
+     *
+     * Replaces: handleEventKeydown() function.
+     * Enter/Space trigger popover, Escape closes it.
+     */
     handleKeydown: (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.withSyncEvent)(event => {
       const {
         actions
@@ -289,9 +246,9 @@ const OBSERVER_CONFIG = {
     }),
     /**
      * Handle backdrop click
-     * 
+     *
      * Clicking backdrop closes popover.
-         */
+     */
     handleBackdropClick: () => {
       const {
         actions
@@ -305,9 +262,6 @@ const OBSERVER_CONFIG = {
      * Replaces setupIntersectionObserver() and cleanupObserver().
      */
     initCalendarObserver: () => {
-      const {
-        ref: calendarEl
-      } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getElement)();
       const context = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getContext)();
       const {
         state,
@@ -317,17 +271,16 @@ const OBSERVER_CONFIG = {
         context.isCalendarVisible = true;
         return;
       }
-      const observer = new IntersectionObserver(entries => {
+      const {
+        ref: calendarEl
+      } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getElement)();
+      const observer = new window.IntersectionObserver(entries => {
         entries.forEach(entry => {
           const isVisible = entry.isIntersecting;
           context.isCalendarVisible = isVisible;
-
           // If calendar leaves the viewport, close any popovers inside it
           if (!isVisible && state.activeEventId) {
-            const hasActiveEvent = calendarEl.querySelector(`[data-wp-context*='"eventId":"${state.activeEventId}"']`);
-            if (hasActiveEvent) {
-              actions.closePopover();
-            }
+            actions.closePopover();
           }
         });
       }, OBSERVER_CONFIG);
@@ -339,21 +292,25 @@ const OBSERVER_CONFIG = {
       };
     },
     /**
-    * Reactively recalculates position whenever isCurrentEventOpen becomes true
-    */
+     * Reactively recalculates position whenever isCurrentEventOpen becomes true
+     */
     positionPopover: () => {
       const {
         state
       } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('gatherpress/calendar');
 
       // Only calculate if this specific event is open
-      if (!state.isCurrentEventOpen) return;
+      if (!state.isCurrentEventOpen) {
+        return;
+      }
       const {
         ref: popoverEl
       } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getElement)();
       const itemWrapper = popoverEl.closest('.gatherpress-calendar__event-item');
       const triggerEl = itemWrapper?.querySelector('.gatherpress-calendar__event');
-      if (!triggerEl || !popoverEl) return;
+      if (!triggerEl || !popoverEl) {
+        return;
+      }
 
       // Calculate coordinates
       const pos = (0,_view_helpers__WEBPACK_IMPORTED_MODULE_1__.calculatePosition)(triggerEl, popoverEl);
