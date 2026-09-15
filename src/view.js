@@ -39,8 +39,15 @@ store('gatherpress/calendar', {
         // ID of the currently active event (for focus management)
         // Replaces: state.triggerElement reference
         activeEventId: null,
-        
-        // Reference to the trigger element (for positioning)
+
+		// Derived getter: evaluates true if this item's context matches activeEventId
+		get isCurrentEventOpen() {
+			const context = getContext();
+			const { state } = store('gatherpress/calendar');
+			return state.activeEventId === context.eventId;
+		},
+
+		// Reference to the trigger element (for positioning)
         // This is derived, not stored in state
         get triggerElement() {
             const context = getContext();
@@ -49,7 +56,19 @@ store('gatherpress/calendar', {
     },
 
     actions: {
-        /**
+		/**
+		 * Toggles the popover open/closed
+		 */
+		togglePopover: (event) => {
+			event.preventDefault();
+			const context = getContext();
+			const { state } = store('gatherpress/calendar');
+
+			// If already open, close it; otherwise open this event
+			state.activeEventId = state.activeEventId === context.eventId ? null : context.eventId;
+		},
+
+		/**
          * Open popover for an event
          * 
          * Called when event dot is clicked or activated via keyboard.
@@ -97,7 +116,7 @@ store('gatherpress/calendar', {
          * 
          * Replaces: closePopover() function.
          * Handles focus return automatically via directives.
-         */
+        
         closePopover: () => {
             const { state } = store('gatherpress/calendar');
             const context = getContext();
@@ -114,9 +133,17 @@ store('gatherpress/calendar', {
             state.popoverPosition = { top: 0, left: 0 };
             state.activeEventId = null;
             context.triggerRef = null;
-        },
-        
-        /**
+        }, */
+
+		/**
+		 * Closes any open popover
+		 */
+		closePopover: () => {
+			const { state } = store('gatherpress/calendar');
+			state.activeEventId = null;
+		},
+
+		/**
          * Handle keyboard events on event dots
          * 
          * Replaces: handleEventKeydown() function.
@@ -126,12 +153,13 @@ store('gatherpress/calendar', {
             const { actions } = store('gatherpress/calendar');
             
             if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            actions.openPopover(event);
+				event.preventDefault();
+				// actions.openPopover(event);
+				actions.togglePopover(event);
             }
             
             if (event.key === 'Escape') {
-            actions.closePopover();
+        		actions.closePopover();
             }
         },
         
@@ -147,7 +175,29 @@ store('gatherpress/calendar', {
     },
 
     callbacks: {
-        /**
+		/**
+		 * Reactively recalculates position whenever isCurrentEventOpen becomes true
+		 */
+		positionPopover: () => {
+			const { state } = store('gatherpress/calendar');
+
+			// Only calculate if this specific event is open
+			if (!state.isCurrentEventOpen) return;
+
+			const { ref: popoverEl } = getElement();
+			const itemWrapper = popoverEl.closest('.gatherpress-calendar__event-item');
+			const triggerEl = itemWrapper?.querySelector('.gatherpress-calendar__event');
+
+			if (!triggerEl || !popoverEl) return;
+
+			// Calculate coordinates
+			const pos = calculatePosition(triggerEl, popoverEl);
+
+			// Apply directly to the element
+			popoverEl.style.top = `${pos.top}px`;
+			popoverEl.style.left = `${pos.left}px`;
+		},
+		/**
          * Update popover position
          * 
          * Called after popover renders to position it near the trigger.
