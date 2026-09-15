@@ -100,6 +100,32 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 							<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles, $block ) ); ?>
 						</tbody>
 					</table>
+					<!-- Backdrop -->
+					<div 
+						class="gatherpress-calendar__backdrop"
+						data-wp-class--is-active="state.popoverOpen"
+						data-wp-on--click="actions.handleBackdropClick"
+					></div>
+
+					<!-- Popover -->
+					<div 
+						class="gatherpress-calendar__popover"
+						data-wp-class--is-active="state.popoverOpen"
+						data-wp-style--top="state.popoverPosition.top"
+						data-wp-style--left="state.popoverPosition.left"
+						data-wp-watch="callbacks.updatePosition"
+						role="dialog"
+						aria-modal="true"
+						tabindex="-1"
+					>
+						<div data-wp-html="state.popoverContent"></div>
+						
+						<button
+							class="gatherpress-calendar__popover-close"
+							data-wp-on--click="actions.closePopover"
+							aria-label="<?php echo esc_attr__( 'Close', 'gatherpress-calendar' ); ?>"
+						>&times;</button>
+					</div>
 				</div>
 			</div>
 			<?php
