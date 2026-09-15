@@ -63,74 +63,31 @@ store('gatherpress/calendar', {
             const context = getContext();
             const { state } = store('gatherpress/calendar');
             const element = getElement();
-            
-            const eventId = element.ref.getAttribute('data-event-id');
-            
+            const eventId = element.ref.getAttribute('data-post-id');
+
             // Get custom styles from attribute
             const customStyles = element.ref.getAttribute('data-popover-style');
             const stylesObject = customStyles 
             ? parseStyleString(customStyles) 
             : {};
-            
-            // Update reactive state (triggers re-render)
-            state.popoverOpen = true;
-            // Get content from state instead of DOM
-            state.popoverContent = state.eventContents[eventId] || '';
-            state.popoverStyles  = stylesObject;
-            state.activeEventId  = element.ref.getAttribute('data-post-id');
-            
-            // Store trigger reference in context for positioning
-            context.triggerRef = element.ref;
-            
+
+            // Verify content exists
+            if (eventId && state.eventContents && state.eventContents[eventId]) {
+                state.popoverContent = state.eventContents[eventId];
+                state.popoverOpen = true;
+                state.activeEventId = eventId;
+                context.triggerRef = element.ref;
+            }
+
             // Calculate position (will be used in callback)
             state.popoverPosition = calculatePosition(
             element.ref,
             // Popover element will be available after render
             );
+
+
         },
-        /**
-         * Open popover for an event
-         * 
-         * Called when event dot is clicked or activated via keyboard.
-         * Replaces: handleEventClick() and showPopover() functions.
-         * 
-         * @param {Event} event - The triggering event
-         */
-        openPopover: (event) => {
-            event.preventDefault();
-            
-            const context = getContext();
-            const { state } = store('gatherpress/calendar');
-            const element = getElement();
-            
-            // Get content from the referenced hidden container
-            const contentId = element.ref.getAttribute('data-event-content');
-            const contentContainer = document.getElementById(contentId);
-            
-            if (!contentContainer) return;
-            
-            // Get custom styles from attribute
-            const customStyles = element.ref.getAttribute('data-popover-style');
-            const stylesObject = customStyles 
-            ? parseStyleString(customStyles) 
-            : {};
-            
-            // Update reactive state (triggers re-render)
-            state.popoverOpen = true;
-            state.popoverContent = contentContainer.innerHTML;
-            state.popoverStyles = stylesObject;
-            state.activeEventId = element.ref.getAttribute('data-post-id');
-            
-            // Store trigger reference in context for positioning
-            context.triggerRef = element.ref;
-            
-            // Calculate position (will be used in callback)
-            state.popoverPosition = calculatePosition(
-            element.ref,
-            // Popover element will be available after render
-            );
-        },
-        
+
         /**
          * Close the popover
          * 
@@ -143,7 +100,7 @@ store('gatherpress/calendar', {
             
             // Return focus to trigger element
             if (context.triggerRef) {
-            context.triggerRef.focus();
+                context.triggerRef.focus();
             }
             
             // Clear state
@@ -165,12 +122,12 @@ store('gatherpress/calendar', {
             const { actions } = store('gatherpress/calendar');
             
             if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            actions.openPopover(event);
+                event.preventDefault();
+                actions.openPopoverById(event);
             }
             
             if (event.key === 'Escape') {
-            actions.closePopover();
+                actions.closePopover();
             }
         },
         
@@ -225,6 +182,17 @@ store('gatherpress/calendar', {
         onLoad: () => {
             // Any initialization code
             // Most of this is now handled by directives
+        },
+
+        /**
+         * Reactively injects HTML content into the popover whenever state.popoverContent changes.
+         */
+        renderPopoverContent: () => {
+            const { state } = store('gatherpress/calendar');
+            const { ref } = getElement();
+
+            // Accessing state.popoverContent subscribes this callback to its changes
+            ref.innerHTML = state.popoverContent || '';
         },
     }
 });

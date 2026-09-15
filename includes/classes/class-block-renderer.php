@@ -197,9 +197,10 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			} else {
 				wp_reset_postdata();
 			}
-	
+
 			return $rendered_content;
 		}
+
 	}
 
 }

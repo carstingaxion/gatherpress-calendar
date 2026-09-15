@@ -208,60 +208,19 @@ __webpack_require__.r(__webpack_exports__);
         state
       } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('gatherpress/calendar');
       const element = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getElement)();
-      const eventId = element.ref.getAttribute('data-event-id');
+      const eventId = element.ref.getAttribute('data-post-id');
 
       // Get custom styles from attribute
       const customStyles = element.ref.getAttribute('data-popover-style');
       const stylesObject = customStyles ? (0,_view_helpers__WEBPACK_IMPORTED_MODULE_1__.parseStyleString)(customStyles) : {};
 
-      // Update reactive state (triggers re-render)
-      state.popoverOpen = true;
-      // Get content from state instead of DOM
-      state.popoverContent = state.eventContents[eventId] || '';
-      state.popoverStyles = stylesObject;
-      state.activeEventId = element.ref.getAttribute('data-post-id');
-
-      // Store trigger reference in context for positioning
-      context.triggerRef = element.ref;
-
-      // Calculate position (will be used in callback)
-      state.popoverPosition = (0,_view_helpers__WEBPACK_IMPORTED_MODULE_1__.calculatePosition)(element.ref
-      // Popover element will be available after render
-      );
-    },
-    /**
-     * Open popover for an event
-     * 
-     * Called when event dot is clicked or activated via keyboard.
-     * Replaces: handleEventClick() and showPopover() functions.
-     * 
-     * @param {Event} event - The triggering event
-     */
-    openPopover: event => {
-      event.preventDefault();
-      const context = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getContext)();
-      const {
-        state
-      } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('gatherpress/calendar');
-      const element = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getElement)();
-
-      // Get content from the referenced hidden container
-      const contentId = element.ref.getAttribute('data-event-content');
-      const contentContainer = document.getElementById(contentId);
-      if (!contentContainer) return;
-
-      // Get custom styles from attribute
-      const customStyles = element.ref.getAttribute('data-popover-style');
-      const stylesObject = customStyles ? (0,_view_helpers__WEBPACK_IMPORTED_MODULE_1__.parseStyleString)(customStyles) : {};
-
-      // Update reactive state (triggers re-render)
-      state.popoverOpen = true;
-      state.popoverContent = contentContainer.innerHTML;
-      state.popoverStyles = stylesObject;
-      state.activeEventId = element.ref.getAttribute('data-post-id');
-
-      // Store trigger reference in context for positioning
-      context.triggerRef = element.ref;
+      // Verify content exists
+      if (eventId && state.eventContents && state.eventContents[eventId]) {
+        state.popoverContent = state.eventContents[eventId];
+        state.popoverOpen = true;
+        state.activeEventId = eventId;
+        context.triggerRef = element.ref;
+      }
 
       // Calculate position (will be used in callback)
       state.popoverPosition = (0,_view_helpers__WEBPACK_IMPORTED_MODULE_1__.calculatePosition)(element.ref
@@ -308,7 +267,7 @@ __webpack_require__.r(__webpack_exports__);
       } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('gatherpress/calendar');
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        actions.openPopover(event);
+        actions.openPopoverById(event);
       }
       if (event.key === 'Escape') {
         actions.closePopover();
@@ -366,6 +325,20 @@ __webpack_require__.r(__webpack_exports__);
     onLoad: () => {
       // Any initialization code
       // Most of this is now handled by directives
+    },
+    /**
+     * Reactively injects HTML content into the popover whenever state.popoverContent changes.
+     */
+    renderPopoverContent: () => {
+      const {
+        state
+      } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('gatherpress/calendar');
+      const {
+        ref
+      } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getElement)();
+
+      // Accessing state.popoverContent subscribes this callback to its changes
+      ref.innerHTML = state.popoverContent || '';
     }
   }
 });

@@ -125,7 +125,11 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						data-wp-style--border-radius="context.customStyles.borderRadius"
 						data-wp-style--box-shadow="context.customStyles.boxShadow"
 					>
-						<div data-wp-html="state.popoverContent"></div>
+						<!-- <div data-wp-html="state.popoverContent"></div> -->
+						 <div 
+							class="gatherpress-calendar__popover-content"
+							data-wp-watch="callbacks.renderPopoverContent"
+						></div>
 						
 						<button
 							class="gatherpress-calendar__popover-close"
@@ -267,14 +271,14 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 				return '';
 			}
 
-			if ( isset( $GLOBALS['post'] ) ) {
-				// "Overriding WordPress globals is prohibited."
-				//
-				// I know! But as found out a lot of times,
-				// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
-				$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-			}
-			setup_postdata( $post );
+			// if ( isset( $GLOBALS['post'] ) ) {
+			// 	// "Overriding WordPress globals is prohibited."
+			// 	//
+			// 	// I know! But as found out a lot of times,
+			// 	// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
+			// 	$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			// }
+			// setup_postdata( $post );
 
 			// $post_type = get_post_type( $post );
 			// if ( ! is_string( $post_type ) ) {
@@ -310,30 +314,28 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 
 			// remove_filter( 'render_block_context', $filter_block_context, 1 );
 
-			wp_reset_postdata();
-			if ( isset( $GLOBALS['post'] ) ) {
-				// "Overriding WordPress globals is prohibited."
-				//
-				// I know! But as found out a lot of times,
-				// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
-				$GLOBALS['post'] = $this->original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-			}
+			// wp_reset_postdata();
+			// if ( isset( $GLOBALS['post'] ) ) {
+			// 	// "Overriding WordPress globals is prohibited."
+			// 	//
+			// 	// I know! But as found out a lot of times,
+			// 	// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
+			// 	$GLOBALS['post'] = $this->original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			// }
 
-			// Generate unique ID for this event content.
-			$event_content_id = 'event-content-' . $post_id;
+			// // Generate unique ID for this event content.
+			// $event_content_id = 'event-content-' . $post_id;
 
 			ob_start();
 			?>
 			<a
 				href="<?php echo esc_url( $post_url ); ?>"
 				class="gatherpress-calendar__event"
+				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
 				data-post-id="<?php echo esc_attr( (string) $post_id ); ?>"
-				data-event-content="<?php echo esc_attr( $event_content_id ); ?>"
 				data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
 				<?php /* translators: %s Post title */ ?>
-				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
 				data-wp-on--click="actions.openPopoverById"
-				data-event-id="<?php echo esc_attr( (string) $post_id ); ?>"
 				data-wp-on--keydown="actions.handleKeydown"
 				role="button"
 				tabindex="0"
