@@ -33,6 +33,7 @@
 	},
 	"example": {},
 	"supports": {
+		"interactivity": true,
 		"reusable": false,
 		"html": false,
 		"align": true,
