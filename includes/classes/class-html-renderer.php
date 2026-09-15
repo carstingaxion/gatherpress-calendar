@@ -84,6 +84,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			<div data-wp-interactive="gatherpress/calendar" <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
 				<div 
 					class="gatherpress-calendar"
+					data-wp-init="callbacks.initCalendarObserver"
 					data-wp-context='{
 						"triggerRef": null,
 						"customStyles": <?php echo wp_json_encode( $popover_styles ); ?>
@@ -321,6 +322,8 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 					data-wp-bind--hidden="!state.isCurrentEventOpen"
 					data-wp-class--is-active="state.isCurrentEventOpen"
 					data-wp-watch="callbacks.positionPopover"
+					data-wp-on-window--resize="callbacks.onWindowChange"
+                	data-wp-on-window--scroll="callbacks.onWindowChange"
 					hidden
 				>
 					<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

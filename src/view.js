@@ -8,23 +8,25 @@
 /**
  * WordPress dependencies
  */
-import { store, getContext, getElement } from '@wordpress/interactivity';
+import { store, getContext, getElement, withSyncEvent } from '@wordpress/interactivity';
 /**
  * Internal dependencies
  */
 import { calculatePosition, parseStyleString } from './view/helpers';
 
+const POPOVER_CONFIG = {
+  gap: 8,
+  margin: 12,
+};
+
+const OBSERVER_CONFIG = {
+  threshold: 0.1,
+  rootMargin: '50px',
+};
 
 store('gatherpress/calendar', {
     state: {
-        // Whether the popover is currently visible
-        // Replaces: state.popover !== null check in current code
-        popoverOpen: false,
-        
-        // HTML content to display in popover
-        // Replaces: Reading from hidden content containers
-        popoverContent: '',
-        
+
         // Inline styles object for popover customization
         // Replaces: data-popover-style attribute parsing
         popoverStyles: {},
@@ -59,14 +61,14 @@ store('gatherpress/calendar', {
 		/**
 		 * Toggles the popover open/closed
 		 */
-		togglePopover: (event) => {
+		togglePopover: withSyncEvent( (event) => {
 			event.preventDefault();
 			const context = getContext();
 			const { state } = store('gatherpress/calendar');
 
 			// If already open, close it; otherwise open this event
 			state.activeEventId = state.activeEventId === context.eventId ? null : context.eventId;
-		},
+		}),
 
 		/**
          * Open popover for an event
@@ -75,7 +77,7 @@ store('gatherpress/calendar', {
          * Replaces: handleEventClick() and showPopover() functions.
          * 
          * @param {Event} event - The triggering event
-         */
+        
         openPopover: (event) => {
             event.preventDefault();
             
@@ -109,30 +111,6 @@ store('gatherpress/calendar', {
             element.ref,
             // Popover element will be available after render
             );
-        },
-        
-        /**
-         * Close the popover
-         * 
-         * Replaces: closePopover() function.
-         * Handles focus return automatically via directives.
-        
-        closePopover: () => {
-            const { state } = store('gatherpress/calendar');
-            const context = getContext();
-            
-            // Return focus to trigger element
-            if (context.triggerRef) {
-            context.triggerRef.focus();
-            }
-            
-            // Clear state
-            state.popoverOpen = false;
-            state.popoverContent = '';
-            state.popoverStyles = {};
-            state.popoverPosition = { top: 0, left: 0 };
-            state.activeEventId = null;
-            context.triggerRef = null;
         }, */
 
 		/**
@@ -149,7 +127,7 @@ store('gatherpress/calendar', {
          * Replaces: handleEventKeydown() function.
          * Enter/Space trigger popover, Escape closes it.
          */
-        handleKeydown: (event) => {
+        handleKeydown: withSyncEvent( (event) => {
             const { actions } = store('gatherpress/calendar');
             
             if (event.key === 'Enter' || event.key === ' ') {
@@ -161,7 +139,7 @@ store('gatherpress/calendar', {
             if (event.key === 'Escape') {
         		actions.closePopover();
             }
-        },
+        }),
         
         /**
          * Handle backdrop click
@@ -175,7 +153,46 @@ store('gatherpress/calendar', {
     },
 
     callbacks: {
-		/**
+        /**
+         * Initializes IntersectionObserver on mount.
+         * Replaces setupIntersectionObserver() and cleanupObserver().
+         */
+        initCalendarObserver: () => {
+            const { ref: calendarEl } = getElement();
+            const context = getContext();
+            const { state, actions } = store('gatherpress/calendar');
+
+            if (!('IntersectionObserver' in window)) {
+                context.isCalendarVisible = true;
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                const isVisible = entry.isIntersecting;
+                context.isCalendarVisible = isVisible;
+
+                // If calendar leaves the viewport, close any popovers inside it
+                if (!isVisible && state.activeEventId) {
+                    const hasActiveEvent = calendarEl.querySelector(
+                        `[data-wp-context*='"eventId":"${state.activeEventId}"']`
+                    );
+                    if (hasActiveEvent) {
+                        actions.closePopover();
+                    }
+                }
+            });
+            }, OBSERVER_CONFIG);
+
+            observer.observe(calendarEl);
+
+            // Returning a function from data-wp-init acts as the unmount cleanup
+            return () => {
+            observer.disconnect();
+            };
+        },
+
+        /**
 		 * Reactively recalculates position whenever isCurrentEventOpen becomes true
 		 */
 		positionPopover: () => {
@@ -197,45 +214,19 @@ store('gatherpress/calendar', {
 			popoverEl.style.top = `${pos.top}px`;
 			popoverEl.style.left = `${pos.left}px`;
 		},
-		/**
-         * Update popover position
-         * 
-         * Called after popover renders to position it near the trigger.
-         * Replaces: positionPopover() and createPositionUpdater() functions.
-         * 
-         * Uses data-wp-watch directive for reactive updates.
-         */
-        updatePosition: () => {
-            const { state } = store('gatherpress/calendar');
-            const context = getContext();
-            const element = getElement();
-            
-            // Only run if popover is open
-            if (!state.popoverOpen || !context.triggerRef) return;
-            
-            const popoverEl = element.ref;
-            const triggerEl = context.triggerRef;
-            
-            // Calculate optimal position
-            const position = calculatePosition(triggerEl, popoverEl);
-            
-            // Update position in state (reactive)
-            state.popoverPosition = position;
-            
-            // Apply directly to element for immediate effect
-            popoverEl.style.top = `${position.top}px`;
-            popoverEl.style.left = `${position.left}px`;
-        },
-        
+
         /**
-         * Initialize event handlers
-         * 
-         * Replaces: IntersectionObserver setup.
-         * Note: Interactivity API handles visibility automatically.
+         * Repositions the popover on window resize / scroll.
          */
-        onLoad: () => {
-            // Any initialization code
-            // Most of this is now handled by directives
+        onWindowChange: () => {
+            const { state, callbacks } = store('gatherpress/calendar');
+            const context = getContext();
+
+            // Only calculate if this popover is open AND the calendar is visible
+            if (state.isCurrentEventOpen && context.isCalendarVisible !== false) {
+                callbacks.positionPopover();
+            }
         },
+
     }
 });
