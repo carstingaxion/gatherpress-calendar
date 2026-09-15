@@ -124,7 +124,8 @@ store( 'gatherpress/calendar', {
 		 *
 		 * Replaces: handleEventKeydown() function.
 		 * Enter/Space trigger popover, Escape closes it.
-		 * @param event
+		 *
+		 * @param {Event} event - The triggering event
 		 */
 		handleKeydown: ( event ) => {
 			const { actions } = store( 'gatherpress/calendar' );
@@ -162,13 +163,13 @@ store( 'gatherpress/calendar', {
 		updatePosition: () => {
 			const { state } = store( 'gatherpress/calendar' );
 			const context = getContext();
-			const element = getElement();
 
 			// Only run if popover is open
 			if ( ! state.popoverOpen || ! context.triggerRef ) {
 				return;
 			}
 
+			const element = getElement();
 			const popoverEl = element.ref;
 			const triggerEl = context.triggerRef;
 
