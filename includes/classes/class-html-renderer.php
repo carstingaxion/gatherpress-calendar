@@ -117,6 +117,13 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						role="dialog"
 						aria-modal="true"
 						tabindex="-1"
+						data-wp-style--background-color="context.customStyles.backgroundColor"
+						data-wp-style--padding="context.customStyles.padding"
+						data-wp-style--border-width="context.customStyles.borderWidth"
+						data-wp-style--border-style="context.customStyles.borderStyle"
+						data-wp-style--border-color="context.customStyles.borderColor"
+						data-wp-style--border-radius="context.customStyles.borderRadius"
+						data-wp-style--box-shadow="context.customStyles.boxShadow"
 					>
 						<div data-wp-html="state.popoverContent"></div>
 						
