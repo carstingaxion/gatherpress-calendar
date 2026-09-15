@@ -8,15 +8,37 @@
 import { store, getContext, getElement } from '@wordpress/interactivity';
 
 store('gatherpress/calendar', {
-  // State: Reactive data
-  state: {
-    // Global state for popover
-    popoverOpen: false,
-    popoverContent: '',
-    popoverStyles: {},
-    popoverPosition: { top: 0, left: 0 },
-    activeEventId: null,
-  },
+    state: {
+        // Whether the popover is currently visible
+        // Replaces: state.popover !== null check in current code
+        popoverOpen: false,
+        
+        // HTML content to display in popover
+        // Replaces: Reading from hidden content containers
+        popoverContent: '',
+        
+        // Inline styles object for popover customization
+        // Replaces: data-popover-style attribute parsing
+        popoverStyles: {},
+        
+        // Calculated position for the popover
+        // Replaces: positionPopover() function logic
+        popoverPosition: {
+            top: 0,
+            left: 0,
+        },
+        
+        // ID of the currently active event (for focus management)
+        // Replaces: state.triggerElement reference
+        activeEventId: null,
+        
+        // Reference to the trigger element (for positioning)
+        // This is derived, not stored in state
+        get triggerElement() {
+            const context = getContext();
+            return context.triggerRef;
+        },
+    },
 
   // Actions: Event handlers
   actions: {
