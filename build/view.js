@@ -14,9 +14,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /**
  * Calculate popover position near trigger element
- * 
+ *
  * Replaces: positionPopover() function from current view.js.
- * 
+ *
  * @param {HTMLElement} triggerEl - The event dot element
  * @param {HTMLElement} popoverEl - The popover element
  * @return {Object} Position object with top and left
@@ -37,7 +37,9 @@ function calculatePosition(triggerEl, popoverEl) {
   let left = triggerRect.left + triggerRect.width / 2 - popoverRect.width / 2;
 
   // Keep in viewport horizontally
-  if (left < margin) left = margin;
+  if (left < margin) {
+    left = margin;
+  }
   if (left + popoverRect.width > vw - margin) {
     left = vw - popoverRect.width - margin;
   }
@@ -47,7 +49,9 @@ function calculatePosition(triggerEl, popoverEl) {
     // Show above if no space below
     top = triggerRect.top - popoverRect.height - gap;
   }
-  if (top < margin) top = margin;
+  if (top < margin) {
+    top = margin;
+  }
   return {
     top,
     left
@@ -56,9 +60,9 @@ function calculatePosition(triggerEl, popoverEl) {
 
 /**
  * Parse inline style string to object
- * 
+ *
  * Converts "background: #fff; padding: 1rem" to object.
- * 
+ *
  * @param {string} styleString - CSS style string
  * @return {Object} Styles object
  */
@@ -152,7 +156,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _view_helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./view/helpers */ "./src/view/helpers.js");
 /**
  * GatherPress Calendar Interactivity Store
- * 
+ *
  * This file defines the reactive state and actions for the calendar block
  * using the WordPress Interactivity API.
  */
@@ -190,25 +194,18 @@ __webpack_require__.r(__webpack_exports__);
     get triggerElement() {
       const context = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getContext)();
       return context.triggerRef;
-    },
-    get popoverTransform() {
-      const {
-        top,
-        left
-      } = this.popoverPosition;
-      return `translate(${left}px, ${top}px)`;
     }
   },
   actions: {
     /**
      * Open popover for an event
-     * 
+     *
      * Called when event dot is clicked or activated via keyboard.
      * Replaces: handleEventClick() and showPopover() functions.
-     * 
+     *
      * @param {Event} event - The triggering event
      */
-    openPopoverById: event => {
+    openPopoverById: (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.withSyncEvent)(event => {
       event.preventDefault();
       const context = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getContext)();
       const {
@@ -233,10 +230,10 @@ __webpack_require__.r(__webpack_exports__);
       state.popoverPosition = (0,_view_helpers__WEBPACK_IMPORTED_MODULE_1__.calculatePosition)(element.ref
       // Popover element will be available after render
       );
-    },
+    }),
     /**
      * Close the popover
-     * 
+     *
      * Replaces: closePopover() function.
      * Handles focus return automatically via directives.
      */
@@ -264,11 +261,13 @@ __webpack_require__.r(__webpack_exports__);
     },
     /**
      * Handle keyboard events on event dots
-     * 
+     *
      * Replaces: handleEventKeydown() function.
      * Enter/Space trigger popover, Escape closes it.
+     *
+     * @param {Event} event - The triggering event
      */
-    handleKeydown: event => {
+    handleKeydown: (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.withSyncEvent)(event => {
       const {
         actions
       } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('gatherpress/calendar');
@@ -279,12 +278,12 @@ __webpack_require__.r(__webpack_exports__);
       if (event.key === 'Escape') {
         actions.closePopover();
       }
-    },
+    }),
     /**
      * Handle backdrop click
-     * 
+     *
      * Clicking backdrop closes popover.
-         */
+     */
     handleBackdropClick: () => {
       const {
         actions
@@ -295,10 +294,10 @@ __webpack_require__.r(__webpack_exports__);
   callbacks: {
     /**
      * Update popover position
-     * 
+     *
      * Called after popover renders to position it near the trigger.
      * Replaces: positionPopover() and createPositionUpdater() functions.
-     * 
+     *
      * Uses data-wp-watch directive for reactive updates.
      */
     updatePosition: () => {
@@ -306,10 +305,12 @@ __webpack_require__.r(__webpack_exports__);
         state
       } = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('gatherpress/calendar');
       const context = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getContext)();
-      const element = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getElement)();
 
       // Only run if popover is open
-      if (!state.popoverOpen || !context.triggerRef) return;
+      if (!state.popoverOpen || !context.triggerRef) {
+        return;
+      }
+      const element = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getElement)();
       const popoverEl = element.ref;
       const triggerEl = context.triggerRef;
 
@@ -325,7 +326,7 @@ __webpack_require__.r(__webpack_exports__);
     },
     /**
      * Initialize event handlers
-     * 
+     *
      * Replaces: IntersectionObserver setup.
      * Note: Interactivity API handles visibility automatically.
      */

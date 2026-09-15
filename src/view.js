@@ -8,7 +8,7 @@
 /**
  * WordPress dependencies
  */
-import { store, getContext, getElement } from '@wordpress/interactivity';
+import { store, getContext, getElement, withSyncEvent } from '@wordpress/interactivity';
 /**
  * Internal dependencies
  */
@@ -46,10 +46,6 @@ store( 'gatherpress/calendar', {
 			return context.triggerRef;
 		},
 
-		get popoverTransform() {
-			const { top, left } = this.popoverPosition;
-			return `translate(${ left }px, ${ top }px)`;
-		},
 	},
 
 	actions: {
@@ -61,7 +57,7 @@ store( 'gatherpress/calendar', {
 		 *
 		 * @param {Event} event - The triggering event
 		 */
-		openPopoverById: ( event ) => {
+		openPopoverById:  withSyncEvent( ( event ) => {
 			event.preventDefault();
 
 			const context = getContext();
@@ -93,7 +89,7 @@ store( 'gatherpress/calendar', {
 				element.ref
 				// Popover element will be available after render
 			);
-		},
+		}),
 
 		/**
 		 * Close the popover
@@ -127,7 +123,7 @@ store( 'gatherpress/calendar', {
 		 *
 		 * @param {Event} event - The triggering event
 		 */
-		handleKeydown: ( event ) => {
+		handleKeydown: withSyncEvent( ( event ) => {
 			const { actions } = store( 'gatherpress/calendar' );
 
 			if ( event.key === 'Enter' || event.key === ' ' ) {
@@ -138,7 +134,7 @@ store( 'gatherpress/calendar', {
 			if ( event.key === 'Escape' ) {
 				actions.closePopover();
 			}
-		},
+		}),
 
 		/**
 		 * Handle backdrop click
