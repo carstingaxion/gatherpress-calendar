@@ -5,7 +5,15 @@
  * using the WordPress Interactivity API.
  */
 
+/**
+ * WordPress dependencies
+ */
 import { store, getContext, getElement } from '@wordpress/interactivity';
+/**
+ * Internal dependencies
+ */
+import { calculatePosition, parseStyleString } from './view/helpers';
+
 
 store('gatherpress/calendar', {
     state: {
