@@ -190,6 +190,13 @@ __webpack_require__.r(__webpack_exports__);
     get triggerElement() {
       const context = (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.getContext)();
       return context.triggerRef;
+    },
+    get popoverTransform() {
+      const {
+        top,
+        left
+      } = this.popoverPosition;
+      return `translate(${left}px, ${top}px)`;
     }
   },
   actions: {

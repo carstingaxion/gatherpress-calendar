@@ -257,6 +257,7 @@
   width: calc(100vw - 2rem);
   opacity: 0;
   pointer-events: none;
+  transition: opacity, transform 2s ease;
 }
 .gatherpress-calendar__popover.is-active {
   opacity: 1;

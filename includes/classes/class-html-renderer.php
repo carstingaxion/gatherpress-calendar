@@ -111,8 +111,8 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 					<div 
 						class="gatherpress-calendar__popover"
 						data-wp-class--is-active="state.popoverOpen"
-						data-wp-style--top="state.popoverPosition.top"
-						data-wp-style--left="state.popoverPosition.left"
+				
+						data-wp-style.transform="state.popoverTransform"
 						data-wp-watch="callbacks.updatePosition"
 						role="dialog"
 						aria-modal="true"
@@ -271,20 +271,6 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 				return '';
 			}
 
-			// if ( isset( $GLOBALS['post'] ) ) {
-			// 	// "Overriding WordPress globals is prohibited."
-			// 	//
-			// 	// I know! But as found out a lot of times,
-			// 	// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
-			// 	$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-			// }
-			// setup_postdata( $post );
-
-			// $post_type = get_post_type( $post );
-			// if ( ! is_string( $post_type ) ) {
-			// 	$post_type = 'post';
-			// }
-
 			$post_url = get_permalink( $post_id );
 			if ( ! is_string( $post_url ) ) {
 				$post_url = '';
@@ -299,32 +285,6 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			if ( ! is_string( $post_title ) ) {
 				$post_title = '';
 			}
-
-			// // Render inner blocks content.
-			// $filter_block_context = static function ( array $context ) use ( $post_id, $post_type ): array {
-			// 	$context['postType'] = $post_type;
-			// 	$context['postId']   = $post_id;
-			// 	return $context;
-			// };
-
-			// add_filter( 'render_block_context', $filter_block_context, 1 );
-
-			// $block_instance = $this->prepare_inner_blocks_instance( $block );
-			// $inner_content  = ( new \WP_Block( $block_instance ) )->render( array( 'dynamic' => false ) );
-
-			// remove_filter( 'render_block_context', $filter_block_context, 1 );
-
-			// wp_reset_postdata();
-			// if ( isset( $GLOBALS['post'] ) ) {
-			// 	// "Overriding WordPress globals is prohibited."
-			// 	//
-			// 	// I know! But as found out a lot of times,
-			// 	// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
-			// 	$GLOBALS['post'] = $this->original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-			// }
-
-			// // Generate unique ID for this event content.
-			// $event_content_id = 'event-content-' . $post_id;
 
 			ob_start();
 			?>

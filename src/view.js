@@ -46,6 +46,11 @@ store('gatherpress/calendar', {
             const context = getContext();
             return context.triggerRef;
         },
+
+        get popoverTransform() {
+            const { top, left } = this.popoverPosition;
+            return `translate(${left}px, ${top}px)`;
+        },
     },
 
     actions: {

@@ -253,7 +253,7 @@
 		width: calc(100vw - 2rem);
 		opacity: 0;
 		pointer-events: none;
-		// transition: opacity 0.2s ease;
+		transition: opacity, transform 2s ease;
 
 		&.is-active {
 			opacity: 1;
