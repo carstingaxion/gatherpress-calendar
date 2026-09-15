@@ -102,7 +102,6 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						class="gatherpress-calendar__popover"
 						data-wp-class--is-active="state.popoverOpen"
 				
-						data-wp-style.transform="state.popoverTransform"
 						data-wp-watch="callbacks.updatePosition"
 						role="dialog"
 						aria-modal="true"
