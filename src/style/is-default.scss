@@ -238,20 +238,6 @@
 	}
 
 	/* ==================================================================
-	   Hidden Event Content Containers
-	   These hold the actual post content, hidden by default
-	   ================================================================== */
-
-	&__event-content {
-		display: none;
-
-		/* Ensure content is accessible to screen readers even when hidden */
-		&[hidden] {
-			display: none;
-		}
-	}
-
-	/* ==================================================================
 	   Popover (JavaScript-enhanced)
 	   ================================================================== */
 

@@ -57,6 +57,45 @@ store('gatherpress/calendar', {
          * 
          * @param {Event} event - The triggering event
          */
+        openPopoverById: (event) => {
+            event.preventDefault();
+            
+            const context = getContext();
+            const { state } = store('gatherpress/calendar');
+            const element = getElement();
+            
+            const eventId = element.ref.getAttribute('data-event-id');
+            
+            // Get custom styles from attribute
+            const customStyles = element.ref.getAttribute('data-popover-style');
+            const stylesObject = customStyles 
+            ? parseStyleString(customStyles) 
+            : {};
+            
+            // Update reactive state (triggers re-render)
+            state.popoverOpen = true;
+            // Get content from state instead of DOM
+            state.popoverContent = state.eventContents[eventId] || '';
+            state.popoverStyles  = stylesObject;
+            state.activeEventId  = element.ref.getAttribute('data-post-id');
+            
+            // Store trigger reference in context for positioning
+            context.triggerRef = element.ref;
+            
+            // Calculate position (will be used in callback)
+            state.popoverPosition = calculatePosition(
+            element.ref,
+            // Popover element will be available after render
+            );
+        },
+        /**
+         * Open popover for an event
+         * 
+         * Called when event dot is clicked or activated via keyboard.
+         * Replaces: handleEventClick() and showPopover() functions.
+         * 
+         * @param {Event} event - The triggering event
+         */
         openPopover: (event) => {
             event.preventDefault();
             

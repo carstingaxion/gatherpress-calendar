@@ -276,10 +276,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			}
 			setup_postdata( $post );
 
-			$post_type = get_post_type( $post );
-			if ( ! is_string( $post_type ) ) {
-				$post_type = 'post';
-			}
+			// $post_type = get_post_type( $post );
+			// if ( ! is_string( $post_type ) ) {
+			// 	$post_type = 'post';
+			// }
 
 			$post_url = get_permalink( $post_id );
 			if ( ! is_string( $post_url ) ) {
@@ -296,19 +296,19 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 				$post_title = '';
 			}
 
-			// Render inner blocks content.
-			$filter_block_context = static function ( array $context ) use ( $post_id, $post_type ): array {
-				$context['postType'] = $post_type;
-				$context['postId']   = $post_id;
-				return $context;
-			};
+			// // Render inner blocks content.
+			// $filter_block_context = static function ( array $context ) use ( $post_id, $post_type ): array {
+			// 	$context['postType'] = $post_type;
+			// 	$context['postId']   = $post_id;
+			// 	return $context;
+			// };
 
-			add_filter( 'render_block_context', $filter_block_context, 1 );
+			// add_filter( 'render_block_context', $filter_block_context, 1 );
 
-			$block_instance = $this->prepare_inner_blocks_instance( $block );
-			$inner_content  = ( new \WP_Block( $block_instance ) )->render( array( 'dynamic' => false ) );
+			// $block_instance = $this->prepare_inner_blocks_instance( $block );
+			// $inner_content  = ( new \WP_Block( $block_instance ) )->render( array( 'dynamic' => false ) );
 
-			remove_filter( 'render_block_context', $filter_block_context, 1 );
+			// remove_filter( 'render_block_context', $filter_block_context, 1 );
 
 			wp_reset_postdata();
 			if ( isset( $GLOBALS['post'] ) ) {
@@ -332,18 +332,12 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 				data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
 				<?php /* translators: %s Post title */ ?>
 				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
-				data-wp-on--click="actions.openPopover"
+				data-wp-on--click="actions.openPopoverById"
+				data-event-id="<?php echo esc_attr( (string) $post_id ); ?>"
 				data-wp-on--keydown="actions.handleKeydown"
 				role="button"
 				tabindex="0"
 				></a>
-			<div
-				id="<?php echo esc_attr( $event_content_id ); ?>"
-				class="gatherpress-calendar__event-content"
-				hidden
-			>
-				<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-			</div>
 			<?php
 			$output = ob_get_clean();
 			return is_string( $output ) ? $output : '';
