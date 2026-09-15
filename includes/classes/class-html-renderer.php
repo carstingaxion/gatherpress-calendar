@@ -299,7 +299,11 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 				data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
 				<?php /* translators: %s Post title */ ?>
 				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
-			></a>
+				data-wp-on--click="actions.openPopover"
+				data-wp-on--keydown="actions.handleKeydown"
+				role="button"
+				tabindex="0"
+				></a>
 			<div
 				id="<?php echo esc_attr( $event_content_id ); ?>"
 				class="gatherpress-calendar__event-content"
