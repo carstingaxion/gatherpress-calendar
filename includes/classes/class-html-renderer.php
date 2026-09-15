@@ -126,7 +126,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						data-wp-style--box-shadow="context.customStyles.boxShadow"
 					>
 						<!-- <div data-wp-html="state.popoverContent"></div> -->
-						 <div 
+						<div 
 							class="gatherpress-calendar__popover-content"
 							data-wp-watch="callbacks.renderPopoverContent"
 						></div>
@@ -259,13 +259,12 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @since 0.1.0
 		 *
-		 * @param int       $post_id        Post ID.
-		 * @param string    $popover_styles Popover styles.
-		 * @param \WP_Block $block          Block instance.
+		 * @param int    $post_id        Post ID.
+		 * @param string $popover_styles Popover styles.
 		 *
 		 * @return string Event dot HTML with hidden content.
 		 */
-		private function render_single_event_dot( int $post_id, string $popover_styles, \WP_Block $block ): string {
+		private function render_single_event_dot( int $post_id, string $popover_styles ): string {
 			$post = get_post( $post_id );
 			if ( ! $post instanceof \WP_Post ) {
 				return '';
@@ -291,10 +290,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			<a
 				href="<?php echo esc_url( $post_url ); ?>"
 				class="gatherpress-calendar__event"
+				<?php /* translators: %s Post title */ ?>
 				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
 				data-post-id="<?php echo esc_attr( (string) $post_id ); ?>"
 				data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
-				<?php /* translators: %s Post title */ ?>
 				data-wp-on--click="actions.openPopoverById"
 				data-wp-on--keydown="actions.handleKeydown"
 				role="button"

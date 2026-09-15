@@ -117,7 +117,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			$query_args     = Query_Builder::build_query_args( $block, $year, $month );
 			$posts_by_date  = Post_Organizer::organize_posts_by_date( $query_args );
 			$event_contents = array();
-			foreach ( $posts_by_date as $date => $post_ids ) {
+			foreach ( $posts_by_date as $post_ids ) {
 				foreach ( $post_ids as $post_id ) {
 					if ( ! isset( $event_contents[ $post_id ] ) ) {
 						$event_contents[ (int) $post_id ] = $this->render_inner_blocks( (int) $post_id, $block );
@@ -130,7 +130,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			// Prepare styles.
 			$popover_styles = Style_Processor::prepare_popover_styles( $attributes );
 
-			// Enable Interactivity API for this block
+			// Enable Interactivity API for this block.
 			wp_interactivity_state(
 				'gatherpress/calendar',
 				array(
@@ -142,7 +142,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 						'left' => 0,
 					),
 					'activeEventId'   => null,
-					'eventContents' => $event_contents,
+					'eventContents'   => $event_contents,
 				)
 			);
 
@@ -154,7 +154,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 		/**
 		 * Renders the block's inner blocks for a specific post.
 		 *
-		 * @param int      $post_id The post/event ID.
+		 * @param int       $post_id The post/event ID.
 		 * @param \WP_Block $block   The parent block instance (passed from render_callback).
 		 * @return string Rendered HTML content.
 		 */
@@ -164,15 +164,19 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 				return '';
 			}
 	
-			// Check if there are any inner blocks defined in the template
+			// Check if there are any inner blocks defined in the template.
 			if ( empty( $block->parsed_block['innerBlocks'] ) ) {
 				return '';
 			}
 	
 			// 1. Setup global post data for legacy/standard template tags
+			// "Overriding WordPress globals is prohibited."
+			//
+			// I know! But as found out a lot of times,
+			// the core/post-title block does not take care about the context postId, instead it uses hardcoded global $post.
 			global $post;
 			$previous_post = $post;
-			$post          = $target_post;
+			$post          = $target_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 			setup_postdata( $post );
 	
 			$rendered_content = '';
@@ -191,7 +195,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			}
 	
 			// 3. Restore the original global post data
-			$post = $previous_post;
+			$post = $previous_post;// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 			if ( $previous_post ) {
 				setup_postdata( $previous_post );
 			} else {
@@ -200,7 +204,6 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 
 			return $rendered_content;
 		}
-
 	}
 
 }
