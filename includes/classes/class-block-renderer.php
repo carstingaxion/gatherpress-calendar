@@ -148,7 +148,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 
 			// Generate HTML.
 			$renderer = new HTML_Renderer();
-			return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles, $block );
+			return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles );
 		}
 	
 		/**
@@ -165,7 +165,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			}
 	
 			// Check if there are any inner blocks defined in the template.
-			if ( empty( $block->parsed_block['innerBlocks'] ) ) {
+			if ( empty( $block->parsed_block['innerBlocks'] ) || ! is_array( $block->parsed_block['innerBlocks'] ) ) {
 				return '';
 			}
 	
@@ -183,7 +183,11 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 	
 			// 2. Render each inner block with the current post context
 			foreach ( $block->parsed_block['innerBlocks'] as $inner_block_data ) {
+				if ( ! is_array( $inner_block_data ) ) {
+					continue;
+				}
 				$inner_block = new \WP_Block(
+					// @phpstan-ignore-next-line
 					$inner_block_data,
 					array(
 						'postId'   => $post_id,
@@ -196,7 +200,7 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 	
 			// 3. Restore the original global post data
 			$post = $previous_post;// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-			if ( $previous_post ) {
+			if ( is_int($previous_post ) || $previous_post instanceof \WP_Post ) {
 				setup_postdata( $previous_post );
 			} else {
 				wp_reset_postdata();

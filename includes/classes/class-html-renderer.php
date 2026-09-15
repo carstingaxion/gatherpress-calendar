@@ -29,14 +29,6 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 	class HTML_Renderer {
 
 		/**
-		 * Original global post.
-		 *
-		 * @since 0.1.0
-		 * @var \WP_Post|null
-		 */
-		private ?\WP_Post $original_post = null;
-
-		/**
 		 * Today's date.
 		 *
 		 * @since 0.1.0
@@ -50,8 +42,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 * @since 0.1.0
 		 */
 		public function __construct() {
-			$this->original_post = ( isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof \WP_Post ) ? $GLOBALS['post'] : null;
-			$this->today         = Date_Calculator::get_today();
+			$this->today = Date_Calculator::get_today();
 		}
 
 		/**
@@ -62,11 +53,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 * @param array<string, mixed>                                                                      $attributes     Block attributes.
 		 * @param array{month_name: string,day_names: list<string>,weeks: list<list<array<string, mixed>>>} $calendar_data  Calendar structure.
 		 * @param string                                                                                    $popover_styles Popover styles.
-		 * @param \WP_Block                                                                                 $block          Block instance.
 		 *
 		 * @return string Calendar HTML.
 		 */
-		public function generate_calendar_html( array $attributes, array $calendar_data, string $popover_styles, \WP_Block $block ): string {
+		public function generate_calendar_html( array $attributes, array $calendar_data, string $popover_styles ): string {
 			$wrapper_attributes  = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
 			$show_month_heading  = isset( $attributes['showMonthHeading'] ) && is_bool( $attributes['showMonthHeading'] ) ? $attributes['showMonthHeading'] : true;
 			$month_heading_level = isset( $attributes['monthHeadingLevel'] ) && is_numeric( $attributes['monthHeadingLevel'] ) ? (int) $attributes['monthHeadingLevel'] : 2;
@@ -97,7 +87,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 							</tr>
 						</thead>
 						<tbody>
-							<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles, $block ) ); ?>
+							<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles ) ); ?>
 						</tbody>
 					</table>
 					<!-- Backdrop -->
@@ -150,17 +140,16 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @param list<list<array<string, mixed>>> $weeks          Weeks array.
 		 * @param string                           $popover_styles Popover styles.
-		 * @param \WP_Block                        $block          Block instance.
 		 *
 		 * @return string Weeks HTML.
 		 */
-		private function render_calendar_weeks( array $weeks, string $popover_styles, \WP_Block $block ): string {
+		private function render_calendar_weeks( array $weeks, string $popover_styles ): string {
 			ob_start();
 
 			foreach ( $weeks as $week ) {
 				echo '<tr>';
 				foreach ( $week as $day ) {
-					echo wp_kses_post( $this->render_day_cell( $day, $popover_styles, $block ) );
+					echo wp_kses_post( $this->render_day_cell( $day, $popover_styles ) );
 				}
 				echo '</tr>';
 			}
@@ -175,11 +164,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @param array<string, mixed> $day            Day data.
 		 * @param string               $popover_styles Popover styles.
-		 * @param \WP_Block            $block          Block instance.
 		 *
 		 * @return string Day cell HTML.
 		 */
-		private function render_day_cell( array $day, string $popover_styles, \WP_Block $block ): string {
+		private function render_day_cell( array $day, string $popover_styles ): string {
 			$classes = array( 'gatherpress-calendar__day' );
 			if ( ! empty( $day['isEmpty'] ) ) {
 				$classes[] = 'is-empty';
@@ -206,7 +194,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						if ( ! empty( $day_posts ) ) {
 							?>
 							<div class="gatherpress-calendar__events">
-								<?php echo wp_kses_post( $this->render_event_dots( $day_posts, $popover_styles, $block ) ); ?>
+								<?php echo wp_kses_post( $this->render_event_dots( $day_posts, $popover_styles ) ); ?>
 							</div>
 							<?php
 						}
@@ -229,16 +217,15 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @param array<mixed> $post_ids       Post IDs.
 		 * @param string       $popover_styles Popover styles.
-		 * @param \WP_Block    $block          Block instance.
 		 *
 		 * @return string Event dots and hidden content HTML.
 		 */
-		private function render_event_dots( array $post_ids, string $popover_styles, \WP_Block $block ): string {
+		private function render_event_dots( array $post_ids, string $popover_styles ): string {
 			ob_start();
 
 			foreach ( $post_ids as $post_id ) {
 				if ( is_int( $post_id ) ) {
-					echo wp_kses_post( $this->render_single_event_dot( $post_id, $popover_styles, $block ) );
+					echo wp_kses_post( $this->render_single_event_dot( $post_id, $popover_styles ) );
 				}
 			}
 
@@ -302,42 +289,6 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			<?php
 			$output = ob_get_clean();
 			return is_string( $output ) ? $output : '';
-		}
-
-		/**
-		 * Prepare inner blocks instance.
-		 *
-		 * @since 0.1.0
-		 *
-		 * @param \WP_Block $block Block instance.
-		 *
-		 * @return array{blockName?: string|null, attrs?: array{string?: mixed}, innerBlocks?: array{string?: mixed}, innerHTML?: string, innerContent?: array{string?: mixed}} Inner blocks instance.
-		 */
-		private function prepare_inner_blocks_instance( \WP_Block $block ): array {
-			$block_instance              = $block->parsed_block;
-			$block_instance['blockName'] = 'core/null';
-			$block_instance['innerHTML'] = '';
-			$inner_content               = isset( $block_instance['innerContent'] ) && is_array( $block_instance['innerContent'] )
-				? $block_instance['innerContent']
-				: array();
-
-			array_pop( $inner_content );
-			array_shift( $inner_content );
-
-			$block_instance['innerContent'] = array_values( $inner_content );
-
-			/**
-			 * Type safety first
-			 * 
-			 * @var array{
-			 *   blockName: string,
-			 *   attrs: array<string, mixed>,
-			 *   innerBlocks: array<int, array<string, mixed>>,
-			 *   innerHTML: string,
-			 *   innerContent: array<int, string|null>,
-			 * } $block_instance
-			 */
-			return $block_instance;
 		}
 	}
 }
