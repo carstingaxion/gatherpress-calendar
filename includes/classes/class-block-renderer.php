@@ -97,6 +97,21 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 		 */
 		public function render( array $attributes, string $content, \WP_Block $block ): string {
 
+			// Enable Interactivity API for this block
+			wp_interactivity_state(
+				'gatherpress/calendar',
+				array(
+					'popoverOpen'     => false,
+					'popoverContent'  => '',
+					'popoverStyles'   => array(),
+					'popoverPosition' => array(
+						'top'  => 0,
+						'left' => 0,
+					),
+					'activeEventId'   => null,
+				)
+			);
+
 			/**
 			 * Validate query context.
 			 *
