@@ -73,8 +73,14 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 
 			ob_start();
 			?>
-			<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
-				<div class="gatherpress-calendar">
+			<div data-wp-interactive="gatherpress/calendar" <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
+				<div 
+					class="gatherpress-calendar"
+					data-wp-context='{
+						"triggerRef": null,
+						"customStyles": <?php echo wp_json_encode( $popover_styles ); ?>
+					}'
+				>
 					<?php if ( $show_month_heading ) { ?>
 						<?php
 						$heading_level = max( 1, min( 6, $month_heading_level ) );
