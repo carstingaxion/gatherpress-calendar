@@ -150,56 +150,56 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			$renderer = new HTML_Renderer();
 			return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles, $block );
 		}
-	}
-
-	/**
-	 * Renders the block's inner blocks for a specific post.
-	 *
-	 * @param int      $post_id The post/event ID.
-	 * @param \WP_Block $block   The parent block instance (passed from render_callback).
-	 * @return string Rendered HTML content.
-	 */
-	protected function render_inner_blocks( int $post_id, \WP_Block $block ): string {
-		$target_post = get_post( $post_id );
-		if ( ! $target_post ) {
-			return '';
+	
+		/**
+		 * Renders the block's inner blocks for a specific post.
+		 *
+		 * @param int      $post_id The post/event ID.
+		 * @param \WP_Block $block   The parent block instance (passed from render_callback).
+		 * @return string Rendered HTML content.
+		 */
+		protected function render_inner_blocks( int $post_id, \WP_Block $block ): string {
+			$target_post = get_post( $post_id );
+			if ( ! $target_post ) {
+				return '';
+			}
+	
+			// Check if there are any inner blocks defined in the template
+			if ( empty( $block->parsed_block['innerBlocks'] ) ) {
+				return '';
+			}
+	
+			// 1. Setup global post data for legacy/standard template tags
+			global $post;
+			$previous_post = $post;
+			$post          = $target_post;
+			setup_postdata( $post );
+	
+			$rendered_content = '';
+	
+			// 2. Render each inner block with the current post context
+			foreach ( $block->parsed_block['innerBlocks'] as $inner_block_data ) {
+				$inner_block = new \WP_Block(
+					$inner_block_data,
+					array(
+						'postId'   => $post_id,
+						'postType' => get_post_type( $post_id ),
+					)
+				);
+	
+				$rendered_content .= $inner_block->render();
+			}
+	
+			// 3. Restore the original global post data
+			$post = $previous_post;
+			if ( $previous_post ) {
+				setup_postdata( $previous_post );
+			} else {
+				wp_reset_postdata();
+			}
+	
+			return $rendered_content;
 		}
-
-		// Check if there are any inner blocks defined in the template
-		if ( empty( $block->parsed_block['innerBlocks'] ) ) {
-			return '';
-		}
-
-		// 1. Setup global post data for legacy/standard template tags
-		global $post;
-		$previous_post = $post;
-		$post          = $target_post;
-		setup_postdata( $post );
-
-		$rendered_content = '';
-
-		// 2. Render each inner block with the current post context
-		foreach ( $block->parsed_block['innerBlocks'] as $inner_block_data ) {
-			$inner_block = new \WP_Block(
-				$inner_block_data,
-				array(
-					'postId'   => $post_id,
-					'postType' => get_post_type( $post_id ),
-				)
-			);
-
-			$rendered_content .= $inner_block->render();
-		}
-
-		// 3. Restore the original global post data
-		$post = $previous_post;
-		if ( $previous_post ) {
-			setup_postdata( $previous_post );
-		} else {
-			wp_reset_postdata();
-		}
-
-		return $rendered_content;
 	}
 
 }
