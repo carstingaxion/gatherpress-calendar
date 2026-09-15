@@ -138,8 +138,8 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			$popover_styles = Style_Processor::prepare_popover_styles( $attributes );
 
 			// Generate HTML.
-			$renderer = new HTML_Renderer();
-			return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles, $block );
+			$renderer = new HTML_Renderer( $block );
+			return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles );
 		}
 	}
 }

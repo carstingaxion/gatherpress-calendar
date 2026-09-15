@@ -37,6 +37,14 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		private ?\WP_Post $original_post = null;
 
 		/**
+		 * Surrounding parent block.
+		 *
+		 * @since 0.1.0
+		 * @var \WP_Block
+		 */
+		private \WP_Block $block;
+
+		/**
 		 * Today's date.
 		 *
 		 * @since 0.1.0
@@ -49,9 +57,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @since 0.1.0
 		 */
-		public function __construct() {
+		public function __construct( \WP_Block $block ) {
 			$this->original_post = ( isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof \WP_Post ) ? $GLOBALS['post'] : null;
 			$this->today         = Date_Calculator::get_today();
+			$this->block         = $block;
 		}
 
 		/**
@@ -62,11 +71,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 * @param array<string, mixed>                                                                      $attributes     Block attributes.
 		 * @param array{month_name: string,day_names: list<string>,weeks: list<list<array<string, mixed>>>} $calendar_data  Calendar structure.
 		 * @param string                                                                                    $popover_styles Popover styles.
-		 * @param \WP_Block                                                                                 $block          Block instance.
 		 *
 		 * @return string Calendar HTML.
 		 */
-		public function generate_calendar_html( array $attributes, array $calendar_data, string $popover_styles, \WP_Block $block ): string {
+		public function generate_calendar_html( array $attributes, array $calendar_data, string $popover_styles ): string {
 			$wrapper_attributes  = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
 			$show_month_heading  = isset( $attributes['showMonthHeading'] ) && is_bool( $attributes['showMonthHeading'] ) ? $attributes['showMonthHeading'] : true;
 			$month_heading_level = isset( $attributes['monthHeadingLevel'] ) && is_numeric( $attributes['monthHeadingLevel'] ) ? (int) $attributes['monthHeadingLevel'] : 2;
@@ -97,42 +105,15 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 							</tr>
 						</thead>
 						<tbody>
-							<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles, $block ) ); ?>
+							<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles ) ); ?>
 						</tbody>
 					</table>
-					<!-- Backdrop -->
+						<!-- Backdrop -->
 					<div 
 						class="gatherpress-calendar__backdrop"
-						data-wp-class--is-active="state.popoverOpen"
+						data-wp-class--is-active="state.activeEventId"
 						data-wp-on--click="actions.handleBackdropClick"
 					></div>
-
-					<!-- Popover -->
-					<div 
-						class="gatherpress-calendar__popover"
-						data-wp-class--is-active="state.popoverOpen"
-						data-wp-style--top="state.popoverPosition.top"
-						data-wp-style--left="state.popoverPosition.left"
-						data-wp-watch="callbacks.updatePosition"
-						role="dialog"
-						aria-modal="true"
-						tabindex="-1"
-						data-wp-style--background-color="context.customStyles.backgroundColor"
-						data-wp-style--padding="context.customStyles.padding"
-						data-wp-style--border-width="context.customStyles.borderWidth"
-						data-wp-style--border-style="context.customStyles.borderStyle"
-						data-wp-style--border-color="context.customStyles.borderColor"
-						data-wp-style--border-radius="context.customStyles.borderRadius"
-						data-wp-style--box-shadow="context.customStyles.boxShadow"
-					>
-						<div data-wp-html="state.popoverContent"></div>
-						
-						<button
-							class="gatherpress-calendar__popover-close"
-							data-wp-on--click="actions.closePopover"
-							aria-label="<?php echo esc_attr__( 'Close', 'gatherpress-calendar' ); ?>"
-						>&times;</button>
-					</div>
 				</div>
 			</div>
 			<?php
@@ -146,17 +127,16 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @param list<list<array<string, mixed>>> $weeks          Weeks array.
 		 * @param string                           $popover_styles Popover styles.
-		 * @param \WP_Block                        $block          Block instance.
 		 *
 		 * @return string Weeks HTML.
 		 */
-		private function render_calendar_weeks( array $weeks, string $popover_styles, \WP_Block $block ): string {
+		private function render_calendar_weeks( array $weeks, string $popover_styles ): string {
 			ob_start();
 
 			foreach ( $weeks as $week ) {
 				echo '<tr>';
 				foreach ( $week as $day ) {
-					echo wp_kses_post( $this->render_day_cell( $day, $popover_styles, $block ) );
+					echo wp_kses_post( $this->render_day_cell( $day, $popover_styles ) );
 				}
 				echo '</tr>';
 			}
@@ -171,11 +151,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @param array<string, mixed> $day            Day data.
 		 * @param string               $popover_styles Popover styles.
-		 * @param \WP_Block            $block          Block instance.
 		 *
 		 * @return string Day cell HTML.
 		 */
-		private function render_day_cell( array $day, string $popover_styles, \WP_Block $block ): string {
+		private function render_day_cell( array $day, string $popover_styles ): string {
 			$classes = array( 'gatherpress-calendar__day' );
 			if ( ! empty( $day['isEmpty'] ) ) {
 				$classes[] = 'is-empty';
@@ -202,7 +181,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						if ( ! empty( $day_posts ) ) {
 							?>
 							<div class="gatherpress-calendar__events">
-								<?php echo wp_kses_post( $this->render_event_dots( $day_posts, $popover_styles, $block ) ); ?>
+								<?php echo wp_kses_post( $this->render_event_dots( $day_posts, $popover_styles ) ); ?>
 							</div>
 							<?php
 						}
@@ -225,16 +204,15 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @param array<mixed> $post_ids       Post IDs.
 		 * @param string       $popover_styles Popover styles.
-		 * @param \WP_Block    $block          Block instance.
 		 *
 		 * @return string Event dots and hidden content HTML.
 		 */
-		private function render_event_dots( array $post_ids, string $popover_styles, \WP_Block $block ): string {
+		private function render_event_dots( array $post_ids, string $popover_styles ): string {
 			ob_start();
 
 			foreach ( $post_ids as $post_id ) {
 				if ( is_int( $post_id ) ) {
-					echo wp_kses_post( $this->render_single_event_dot( $post_id, $popover_styles, $block ) );
+					echo wp_kses_post( $this->render_single_event_dot( $post_id, $popover_styles ) );
 				}
 			}
 
@@ -257,11 +235,10 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 		 *
 		 * @param int       $post_id        Post ID.
 		 * @param string    $popover_styles Popover styles.
-		 * @param \WP_Block $block          Block instance.
 		 *
 		 * @return string Event dot HTML with hidden content.
 		 */
-		private function render_single_event_dot( int $post_id, string $popover_styles, \WP_Block $block ): string {
+		private function render_single_event_dot( int $post_id, string $popover_styles ): string {
 			$post = get_post( $post_id );
 			if ( ! $post instanceof \WP_Post ) {
 				return '';
@@ -305,7 +282,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 
 			add_filter( 'render_block_context', $filter_block_context, 1 );
 
-			$block_instance = $this->prepare_inner_blocks_instance( $block );
+			$block_instance = $this->prepare_inner_blocks_instance( $this->block );
 			$inner_content  = ( new \WP_Block( $block_instance ) )->render( array( 'dynamic' => false ) );
 
 			remove_filter( 'render_block_context', $filter_block_context, 1 );
@@ -324,25 +301,30 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 
 			ob_start();
 			?>
-			<a
-				href="<?php echo esc_url( $post_url ); ?>"
-				class="gatherpress-calendar__event"
-				data-post-id="<?php echo esc_attr( (string) $post_id ); ?>"
-				data-event-content="<?php echo esc_attr( $event_content_id ); ?>"
-				data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
-				<?php /* translators: %s Post title */ ?>
-				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
-				data-wp-on--click="actions.openPopover"
-				data-wp-on--keydown="actions.handleKeydown"
-				role="button"
-				tabindex="0"
-				></a>
-			<div
-				id="<?php echo esc_attr( $event_content_id ); ?>"
-				class="gatherpress-calendar__event-content"
-				hidden
-			>
-				<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			<div class="gatherpress-calendar__event-item" data-wp-context='{ "eventId": "<?php echo esc_attr( (string) $post_id ); ?>" }'>
+				<a
+					href="<?php echo esc_url( $post_url ); ?>"
+					class="gatherpress-calendar__event"
+					data-post-id="<?php echo esc_attr( (string) $post_id ); ?>"
+					data-event-content="<?php echo esc_attr( $event_content_id ); ?>"
+					data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
+					<?php /* translators: %s Post title */ ?>
+					aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
+					data-wp-on--click="actions.togglePopover"
+					data-wp-on--keydown="actions.handleKeydown"
+					role="button"
+					tabindex="0"
+					></a>
+				<div
+					id="<?php echo esc_attr( $event_content_id ); ?>"
+					class="gatherpress-calendar__popover"
+					data-wp-bind--hidden="!state.isCurrentEventOpen"
+					data-wp-class--is-active="state.isCurrentEventOpen"
+					data-wp-watch="callbacks.positionPopover"
+					hidden
+				>
+					<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				</div>
 			</div>
 			<?php
 			$output = ob_get_clean();
