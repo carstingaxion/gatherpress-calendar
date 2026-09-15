@@ -138,10 +138,46 @@ store('gatherpress/calendar', {
         },
     },
 
-  // Callbacks: Lifecycle hooks
-  callbacks: {
-    updatePosition: () => {
-      // Implementation
-    },
-  },
+    callbacks: {
+        /**
+         * Update popover position
+         * 
+         * Called after popover renders to position it near the trigger.
+         * Replaces: positionPopover() and createPositionUpdater() functions.
+         * 
+         * Uses data-wp-watch directive for reactive updates.
+         */
+        updatePosition: () => {
+            const { state } = store('gatherpress/calendar');
+            const context = getContext();
+            const element = getElement();
+            
+            // Only run if popover is open
+            if (!state.popoverOpen || !context.triggerRef) return;
+            
+            const popoverEl = element.ref;
+            const triggerEl = context.triggerRef;
+            
+            // Calculate optimal position
+            const position = calculatePosition(triggerEl, popoverEl);
+            
+            // Update position in state (reactive)
+            state.popoverPosition = position;
+            
+            // Apply directly to element for immediate effect
+            popoverEl.style.top = `${position.top}px`;
+            popoverEl.style.left = `${position.left}px`;
+        },
+        
+        /**
+         * Initialize event handlers
+         * 
+         * Replaces: IntersectionObserver setup.
+         * Note: Interactivity API handles visibility automatically.
+         */
+        onLoad: () => {
+            // Any initialization code
+            // Most of this is now handled by directives
+        },
+    }
 });
