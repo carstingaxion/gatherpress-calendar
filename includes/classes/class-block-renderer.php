@@ -97,6 +97,21 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 		 */
 		public function render( array $attributes, string $content, \WP_Block $block ): string {
 
+			// Enable Interactivity API for this block.
+			wp_interactivity_state(
+				'gatherpress/calendar',
+				array(
+					'popoverOpen'     => false,
+					'popoverContent'  => '',
+					'popoverStyles'   => array(),
+					'popoverPosition' => array(
+						'top'  => 0,
+						'left' => 0,
+					),
+					'activeEventId'   => null,
+				)
+			);
+
 			/**
 			 * Validate query context.
 			 *
@@ -123,8 +138,8 @@ if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
 			$popover_styles = Style_Processor::prepare_popover_styles( $attributes );
 
 			// Generate HTML.
-			$renderer = new HTML_Renderer();
-			return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles, $block );
+			$renderer = new HTML_Renderer( $block );
+			return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles );
 		}
 	}
 }
