@@ -1,5 +1,5 @@
 import { __ } from '@wordpress/i18n';
-/* eslint-disable @wordpress/no-unsafe-wp-apis */
+
 import { Button } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
 
