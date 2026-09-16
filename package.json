@@ -19,6 +19,17 @@
     },
     "main": "build/index.js",
     "devDependencies": {
+        "@wordpress/block-editor": "^17.1.0",
+        "@wordpress/blocks": "^16.0.0",
+        "@wordpress/components": "^40.1.0",
+        "@wordpress/compose": "^8.8.0",
+        "@wordpress/core-data": "^8.0.0",
+        "@wordpress/data": "^10.55.0",
+        "@wordpress/date": "^5.55.0",
+        "@wordpress/element": "^8.7.0",
+        "@wordpress/hooks": "^4.55.0",
+        "@wordpress/i18n": "^6.28.0",
+        "@wordpress/interactivity": "^6.55.0",
         "@wordpress/scripts": "^35.0.0"
     },
     "scripts": {

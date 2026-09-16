@@ -5,7 +5,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'name' => 'gatherpress/calendar',
-		'version' => '0.1.0',
+		'version' => '0.3.1',
 		'title' => 'GatherPress Calendar',
 		'category' => 'gatherpress',
 		'icon' => 'calendar-alt',
@@ -49,6 +49,7 @@ return array(
 			
 		),
 		'supports' => array(
+			'interactivity' => true,
 			'reusable' => false,
 			'html' => false,
 			'align' => true,

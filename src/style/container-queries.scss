@@ -25,4 +25,8 @@
 		min-width: clamp(8px, 2.5vw, 10px);
 		min-height: clamp(8px, 2.5vw, 10px);
 	}
+
+	.gatherpress-calendar__popover {
+		max-width: calc(100vw - 2rem);
+	}
 }
