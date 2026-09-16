@@ -9,6 +9,7 @@ import * as __WEBPACK_EXTERNAL_MODULE__wordpress_interactivity_8e89b257__ from "
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   applyCalculatedPosition: () => (/* binding */ applyCalculatedPosition),
 /* harmony export */   calculatePosition: () => (/* binding */ calculatePosition),
 /* harmony export */   parseStyleString: () => (/* binding */ parseStyleString)
 /* harmony export */ });
@@ -77,6 +78,52 @@ function parseStyleString(styleString) {
     }
   });
   return styles;
+}
+
+/**
+ * **This is your old, smart `positionPopover` logic, now a helper function.**
+ * It calculates optimal popover position and applies it directly.
+ *
+ * @param {HTMLElement} triggerEl - The event dot element
+ * @param {HTMLElement} popoverEl - The popover element
+ * @param {Object} POPOVER_CONFIG - The configuration arguments for popovers
+ */
+function applyCalculatedPosition(popover, eventLink, POPOVER_CONFIG) {
+  const linkRect = eventLink.getBoundingClientRect();
+  const popRect = popover.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const {
+    gap,
+    margin
+  } = POPOVER_CONFIG;
+
+  // Start with popover below the dot.
+  let top = linkRect.bottom + gap;
+  // Center horizontally on the dot.
+  let left = linkRect.left + linkRect.width / 2 - popRect.width / 2;
+
+  // Keep in viewport horizontally.
+  if (left < margin) {
+    left = margin;
+  }
+  if (left + popRect.width > vw - margin) {
+    left = vw - popRect.width - margin;
+  }
+
+  // Keep in viewport vertically.
+  // If popover would extend below viewport, show it above the dot instead.
+  if (top + popRect.height > vh - margin) {
+    top = linkRect.top - popRect.height - gap;
+  }
+  // If still not enough space, clamp to viewport top.
+  if (top < margin) {
+    top = margin;
+  }
+
+  // Apply calculated position directly.
+  popover.style.top = `${top}px`;
+  popover.style.left = `${left}px`;
 }
 
 /***/ },
@@ -172,6 +219,10 @@ __webpack_require__.r(__webpack_exports__);
 const OBSERVER_CONFIG = {
   threshold: 0.1,
   rootMargin: '50px'
+};
+const POPOVER_CONFIG = {
+  gap: 8,
+  margin: 12
 };
 (0,_wordpress_interactivity__WEBPACK_IMPORTED_MODULE_0__.store)('gatherpress/calendar', {
   state: {
@@ -312,12 +363,8 @@ const OBSERVER_CONFIG = {
         return;
       }
 
-      // Calculate coordinates
-      const pos = (0,_view_helpers__WEBPACK_IMPORTED_MODULE_1__.calculatePosition)(triggerEl, popoverEl);
-
-      // Apply directly to the element
-      popoverEl.style.top = `${pos.top}px`;
-      popoverEl.style.left = `${pos.left}px`;
+      // This calls the smart positioning logic from the old implementation
+      ;(0,_view_helpers__WEBPACK_IMPORTED_MODULE_1__.applyCalculatedPosition)(popoverEl, triggerEl, POPOVER_CONFIG);
     },
     /**
      * Repositions the popover on window resize / scroll.

@@ -255,6 +255,10 @@
      These hold the actual post content, hidden by default
      ================================================================== */
 }
+:root {
+  --gatherpress-calendar-popover-width: 400px;
+}
+
 .gatherpress-calendar__popover {
   position: fixed;
   z-index: 9999;
@@ -265,7 +269,7 @@
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   padding: var(--wp--preset--spacing--40, 1rem);
-  max-width: 500px;
+  max-width: var(--gatherpress-calendar-popover-width, 400px);
   width: calc(100vw - 2rem);
   opacity: 0;
   pointer-events: none;
@@ -628,11 +632,14 @@
     min-width: clamp(8px, 2.5vw, 10px);
     min-height: clamp(8px, 2.5vw, 10px);
   }
+  .gatherpress-calendar__popover {
+    max-width: calc(100vw - 2rem);
+  }
 }
 /* ======================================================================
    Traditional Responsive Fallback
    ====================================================================== */
-@media (max-width: 400px) {
+@media (max-width: var(--gatherpress-calendar-popover-width, 400px)) {
   @supports not (container-type: inline-size) {
     .gatherpress-calendar__table th {
       display: none;
@@ -645,6 +652,9 @@
       height: clamp(6px, 2vw, 8px);
       min-width: clamp(6px, 2vw, 8px);
       min-height: clamp(6px, 2vw, 8px);
+    }
+    .gatherpress-calendar__popover {
+      max-width: calc(100vw - 2rem);
     }
   }
 }
@@ -668,7 +678,7 @@
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 4px;
-    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .gatherpress-calendar__event-content > * {
     display: block !important;

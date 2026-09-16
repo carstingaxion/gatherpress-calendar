@@ -17,11 +17,16 @@ import {
 /**
  * Internal dependencies
  */
-import { calculatePosition } from './view/helpers';
+import { calculatePosition, applyCalculatedPosition } from './view/helpers';
 
 const OBSERVER_CONFIG = {
 	threshold: 0.1,
 	rootMargin: '50px',
+};
+
+const POPOVER_CONFIG = {
+  gap: 8,
+  margin: 12,
 };
 
 store( 'gatherpress/calendar', {
@@ -168,13 +173,9 @@ store( 'gatherpress/calendar', {
 				return;
 			}
 
-			// Calculate coordinates
-			const pos = calculatePosition( triggerEl, popoverEl );
-
-			// Apply directly to the element
-			popoverEl.style.top = `${ pos.top }px`;
-			popoverEl.style.left = `${ pos.left }px`;
-		},
+            // This calls the smart positioning logic from the old implementation
+            applyCalculatedPosition(popoverEl, triggerEl, POPOVER_CONFIG);
+        },
 
 		/**
 		 * Repositions the popover on window resize / scroll.
@@ -193,3 +194,5 @@ store( 'gatherpress/calendar', {
 		},
 	},
 } );
+
+
