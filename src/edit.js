@@ -259,10 +259,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 					) }
 
 					<ToggleControl
-						label={ __(
-							'Show Weekdays',
-							'gatherpress-calendar'
-						) }
+						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
 						checked={ showWeekdays }
 						onChange={ ( value ) =>
 							setAttributes( { showWeekdays: value } )
@@ -272,7 +269,6 @@ export default function Edit( { attributes, setAttributes, context } ) {
 							'gatherpress-calendar'
 						) }
 					/>
-
 				</PanelBody>
 
 				<PanelBody
@@ -363,7 +359,10 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			<div { ...blockProps }>
 				<div className="gatherpress-calendar">
 					{ MonthHeading }
-					<CalendarTable calendar={ calendar } showWeekdays={ showWeekdays } />
+					<CalendarTable
+						calendar={ calendar }
+						showWeekdays={ showWeekdays }
+					/>
 					<TemplateConfig
 						templateConfigStyles={ templateConfigStyles }
 						innerBlocksProps={ innerBlocksProps }
