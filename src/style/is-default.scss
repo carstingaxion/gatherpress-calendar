@@ -253,7 +253,9 @@
 	   Hidden Event Content Containers
 	   These hold the actual post content, hidden by default
 	   ================================================================== */
-	@at-root :root { --gatherpress-calendar-popover-width: 400px; }
+	@at-root :root {
+		--gatherpress-calendar-popover-width: 400px;
+	}
 
 	&__popover {
 		position: fixed;
@@ -270,7 +272,7 @@
 		// max-width: 500px;
 		// width: calc(100vw - 2rem);
 		// max-width: calc(100vw - 2rem);
-		max-width: var(--gatherpress-calendar-popover-width,400px);
+		max-width: var(--gatherpress-calendar-popover-width, 400px);
 		width: calc(100vw - 2rem);
 
 		opacity: 0;

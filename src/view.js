@@ -17,7 +17,7 @@ import {
 /**
  * Internal dependencies
  */
-import { calculatePosition, applyCalculatedPosition } from './view/helpers';
+import { applyCalculatedPosition } from './view/helpers';
 
 const OBSERVER_CONFIG = {
 	threshold: 0.1,
@@ -25,8 +25,8 @@ const OBSERVER_CONFIG = {
 };
 
 const POPOVER_CONFIG = {
-  gap: 8,
-  margin: 12,
+	gap: 8,
+	margin: 12,
 };
 
 store( 'gatherpress/calendar', {
@@ -173,9 +173,9 @@ store( 'gatherpress/calendar', {
 				return;
 			}
 
-            // This calls the smart positioning logic from the old implementation
-            applyCalculatedPosition(popoverEl, triggerEl, POPOVER_CONFIG);
-        },
+			// This calls the smart positioning logic from the old implementation
+			applyCalculatedPosition( popoverEl, triggerEl, POPOVER_CONFIG );
+		},
 
 		/**
 		 * Repositions the popover on window resize / scroll.
@@ -194,5 +194,3 @@ store( 'gatherpress/calendar', {
 		},
 	},
 } );
-
-
