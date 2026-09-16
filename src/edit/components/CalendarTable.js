@@ -9,19 +9,22 @@ import { DayCell } from './DayCell';
  *
  * @param {Object} props          - Component props.
  * @param {Object} props.calendar - Calendar data structure.
+ * @param {Object} props.showWeekdays - Bool wether to show the days of the week.
  *
  * @return {Element} Calendar table component.
  */
-export function CalendarTable( { calendar } ) {
+export function CalendarTable( { calendar, showWeekdays } ) {
 	return (
 		<table className="gatherpress-calendar__table">
-			<thead>
-				<tr>
-					{ calendar.dayNames.map( ( dayName, index ) => (
-						<th key={ index }>{ dayName }</th>
-					) ) }
-				</tr>
-			</thead>
+			{ showWeekdays && (
+				<thead>
+						<tr>
+							{ calendar.dayNames.map( ( dayName, index ) => (
+								<th key={ index }>{ dayName }</th>
+							) ) }
+						</tr>
+				</thead>
+			) }
 			<tbody>
 				{ calendar.weeks.map( ( week, weekIndex ) => (
 					<tr key={ weekIndex }>

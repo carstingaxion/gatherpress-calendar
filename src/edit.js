@@ -82,6 +82,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		templateConfigStyle = {},
 		showMonthHeading = true,
 		monthHeadingLevel = 2,
+		showWeekdays = true,
 	} = attributes;
 	const { query } = context;
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
@@ -256,6 +257,22 @@ export default function Edit( { attributes, setAttributes, context } ) {
 							) }
 						/>
 					) }
+
+					<ToggleControl
+						label={ __(
+							'Show Weekdays',
+							'gatherpress-calendar'
+						) }
+						checked={ showWeekdays }
+						onChange={ ( value ) =>
+							setAttributes( { showWeekdays: value } )
+						}
+						help={ __(
+							'Display the days of the week inside the calendars header.',
+							'gatherpress-calendar'
+						) }
+					/>
+
 				</PanelBody>
 
 				<PanelBody
@@ -346,7 +363,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			<div { ...blockProps }>
 				<div className="gatherpress-calendar">
 					{ MonthHeading }
-					<CalendarTable calendar={ calendar } />
+					<CalendarTable calendar={ calendar } showWeekdays={ showWeekdays } />
 					<TemplateConfig
 						templateConfigStyles={ templateConfigStyles }
 						innerBlocksProps={ innerBlocksProps }

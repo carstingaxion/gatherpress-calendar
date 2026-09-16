@@ -43,6 +43,10 @@ return array(
 			'monthHeadingLevel' => array(
 				'type' => 'number',
 				'default' => 2
+			),
+			'showWeekdays' => array(
+				'type' => 'boolean',
+				'default' => true
 			)
 		),
 		'example' => array(

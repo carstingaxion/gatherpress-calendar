@@ -29,6 +29,10 @@
 		"monthHeadingLevel": {
 			"type": "number",
 			"default": 2
+		},
+		"showWeekdays": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"example": {},

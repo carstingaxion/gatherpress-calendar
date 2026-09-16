@@ -40,6 +40,7 @@ require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-block-ren
  *   templateConfigStyle: array<string, mixed>,
  *   showMonthHeading: bool,
  *   monthHeadingLevel: int,
+ *   showWeekdays: bool,
  * } $attributes
  * @var string $content
  * @var \WP_Block $block
