@@ -79,6 +79,7 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 			$wrapper_attributes  = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
 			$show_month_heading  = isset( $attributes['showMonthHeading'] ) && is_bool( $attributes['showMonthHeading'] ) ? $attributes['showMonthHeading'] : true;
 			$month_heading_level = isset( $attributes['monthHeadingLevel'] ) && is_numeric( $attributes['monthHeadingLevel'] ) ? (int) $attributes['monthHeadingLevel'] : 2;
+			$show_weekdays       = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 			ob_start();
 			?>
@@ -99,13 +100,15 @@ if ( ! class_exists( '\GatherPress\Calendar\HTML_Renderer' ) ) {
 						<<?php echo esc_attr( $heading_tag ); ?> class="gatherpress-calendar__month wp-block-heading"><?php echo esc_html( $calendar_data['month_name'] ); ?></<?php echo esc_attr( $heading_tag ); ?>>
 					<?php } ?>
 					<table class="gatherpress-calendar__table">
-						<thead>
-							<tr>
-								<?php foreach ( $calendar_data['day_names'] as $day_name ) { ?>
-									<th><?php echo esc_html( $day_name ); ?></th>
-								<?php } ?>
-							</tr>
-						</thead>
+						<?php if ( $show_weekdays ) { ?>
+							<thead>
+								<tr>
+									<?php foreach ( $calendar_data['day_names'] as $day_name ) { ?>
+										<th><?php echo esc_html( $day_name ); ?></th>
+									<?php } ?>
+								</tr>
+							</thead>
+						<?php } ?>
 						<tbody>
 							<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles ) ); ?>
 						</tbody>
