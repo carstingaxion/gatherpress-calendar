@@ -3,6 +3,15 @@
  *
  * This file defines the reactive state and actions for the calendar block
  * using the WordPress Interactivity API.
+ *
+ * Progressive enhancement for the GatherPress Calendar block.
+ * This script adds interactive popover functionality to event dots,
+ * but the calendar remains fully functional without JavaScript.
+ *
+ * - Event dots are simple <a> links
+ * - Content (innerBlocks) for each event is in a hidden container
+ * - JavaScript reads from hidden container and shows in popover
+ * - Creates valid HTML
  */
 
 /**
