@@ -219,3 +219,96 @@ function posts_where( string $where, WP_Query $query ): string {
 	return $where;
 }
 add_filter( 'posts_where', __NAMESPACE__ . '\\posts_where', 10, 2 );
+
+
+/**
+ * Recursively search inner blocks for a specific block name.
+ *
+ * @param string $block_name The block name to search for (e.g. 'gatherpress/calendar').
+ * @param array  $inner_blocks Array of parsed inner blocks.
+ * @return bool
+ */
+function gatherpress_has_inner_block( string $block_name, array $inner_blocks ): bool {
+    foreach ( $inner_blocks as $block ) {
+        if ( ( $block['blockName'] ?? '' ) === $block_name ) {
+            return true;
+        }
+        if ( ! empty( $block['innerBlocks'] ) && gatherpress_has_inner_block( $block_name, $block['innerBlocks'] ) ) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+add_filter( 'render_block_data', __NAMESPACE__ . '\\allow_core_pagination', 10, 3 );
+/**
+ * Dynamically set `selectedMonth` on `gatherpress/calendar` based on core pagination query vars.
+ *
+ * @param array         $parsed_block The parsed block data.
+ * @param array         $source_block The original block data.
+ * @param \WP_Block|null $parent_block The parent block instance (if any).
+ * @return array The (maybe updated) parsed block data.
+ */
+function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_Block $parent_block ): array {
+    $block_name = $parsed_block['blockName'] ?? '';
+
+    // -------------------------------------------------------------
+    // 1. Target parent `core/query`: Set `pages` if calendar is inside
+    // -------------------------------------------------------------
+    if ( $block_name === 'core/query' ) {
+        $has_calendar = gatherpress_has_inner_block( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? [] );
+
+        if ( $has_calendar ) {
+            if ( ! isset( $parsed_block['attrs']['query'] ) || ! is_array( $parsed_block['attrs']['query'] ) ) {
+                $parsed_block['attrs']['query'] = [];
+            }
+            // Overwrite pages on the query block so core pagination allows next pages
+            $parsed_block['attrs']['query']['pages'] = 9999;
+// error_log('$parsed_block[attrs]: ' . var_export( $parsed_block['attrs'],true));
+
+		}
+
+        return $parsed_block;
+    }
+
+    // -------------------------------------------------------------
+    // 2. Target child `gatherpress/calendar`: Compute `selectedMonth`
+    // -------------------------------------------------------------
+    if ( $block_name === 'gatherpress/calendar' ) {
+        // Read queryId from context (supports any nesting level, e.g. Query -> Group -> Calendar)
+        $query_id = 0;
+        if ( $parent_block instanceof \WP_Block ) {
+            $query_id = $parent_block->context['queryId'] ?? ( $parent_block->parsed_block['attrs']['queryId'] ?? 0 );
+        }
+
+        // Only paginate if inside a Query Loop
+        if ( $query_id === 0 && ! isset( $parent_block->context['queryId'] ) ) {
+            return $parsed_block;
+        }
+
+        $page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
+        $page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1;
+
+        // Determine baseline starting month (defaults to current site month)
+        $initial_month = ! empty( $parsed_block['attrs']['selectedMonth'] )
+            ? $parsed_block['attrs']['selectedMonth']
+            : current_datetime()->format( 'Y-m' );
+
+        $base_date = \DateTimeImmutable::createFromFormat( '!Y-m', $initial_month, wp_timezone() );
+        if ( ! $base_date ) {
+            $base_date = current_datetime();
+        }
+
+        // Page 1 = offset 0, Page 2 = +1 month, Page 3 = +2 months, etc.
+        $offset      = $page - 1;
+        $target_date = $base_date->modify( "{$offset} month" );
+
+        // Assign calculated month back to attributes
+        $parsed_block['attrs']['selectedMonth'] = $target_date->format( 'Y-m' );
+
+        return $parsed_block;
+    }
+
+    return $parsed_block;
+}
