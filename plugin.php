@@ -263,9 +263,13 @@ function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_B
             if ( ! isset( $parsed_block['attrs']['query'] ) || ! is_array( $parsed_block['attrs']['query'] ) ) {
                 $parsed_block['attrs']['query'] = [];
             }
-            // Overwrite pages on the query block so core pagination allows next pages
-            $parsed_block['attrs']['query']['pages'] = 9999;
-// error_log('$parsed_block[attrs]: ' . var_export( $parsed_block['attrs'],true));
+
+			// This line alone makes the query-pagination-numbers silently disapear,
+			// without interferencing with the other blocks.
+			// Looks ugly, but works.
+            $parsed_block['attrs']['query']['perPage'] = 0;
+
+            // $parsed_block['attrs']['query']['gatherpress_calendar_query'] = true;
 
 		}
 
@@ -302,6 +306,10 @@ function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_B
 
         // Page 1 = offset 0, Page 2 = +1 month, Page 3 = +2 months, etc.
         $offset      = $page - 1;
+		// $forward     = '+' . $offset;
+		// $backward    = '-' . $offset;
+        // $offset_      = ( $page >= 1 ) ? $forward : $backward;
+
         $target_date = $base_date->modify( "{$offset} month" );
 
         // Assign calculated month back to attributes
@@ -310,5 +318,27 @@ function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_B
         return $parsed_block;
     }
 
-    return $parsed_block;
+    // -------------------------------------------------------------
+    // 3. Target `query-pagination-next` and `query-pagination-previous`
+    // -------------------------------------------------------------
+	if ( in_array( $block_name, array('core/query-pagination-next', 'core/query-pagination-previous'), true ) ) {
+        // Attach the hook right before new WP_Query() is executed inside core
+        add_filter( 'the_posts', __NAMESPACE__ . '\\gatherpress_force_pagination_max_pages', 10, 2 );
+    }
+
+	return $parsed_block;
+}
+
+
+/**
+ * 2. Force max_num_pages on the WP_Query instance created by the next block.
+ */
+function gatherpress_force_pagination_max_pages( $posts, \WP_Query $query ) {
+    // Ensure max_num_pages > $page so `$custom_query_max_pages !== $page` evaluates to true
+    $query->max_num_pages = 200;
+
+    // Immediately remove the filter so it only affects this single block query
+    remove_filter( 'the_posts', __NAMESPACE__ . '\\gatherpress_force_pagination_max_pages', 10 );
+
+    return $posts;
 }
