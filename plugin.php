@@ -235,7 +235,7 @@ add_filter( 'posts_where', __NAMESPACE__ . '\\posts_where', 10, 2 );
  * Recursively search inner blocks for a specific block name.
  *
  * @param string $block_name The block name to search for (e.g. 'gatherpress/calendar').
- * @param array  $inner_blocks Array of parsed inner blocks.
+ * @param array<int, array<string, string|int|bool>>  $inner_blocks Array of parsed inner blocks.
  * @return bool
  */
 function gatherpress_has_inner_block( string $block_name, array $inner_blocks ): bool {
@@ -255,10 +255,10 @@ add_filter( 'render_block_data', __NAMESPACE__ . '\\allow_core_pagination', 10, 
 /**
  * Dynamically set `selectedMonth` on `gatherpress/calendar` based on core pagination query vars.
  *
- * @param array          $parsed_block The parsed block data.
- * @param array          $source_block The original block data.
- * @param \WP_Block|null $parent_block The parent block instance (if any).
- * @return array The (maybe updated) parsed block data.
+ * @param array<string, mixed> $parsed_block The parsed block data.
+ * @param array<string, mixed> $source_block The original block data.
+ * @param \WP_Block|null       $parent_block The parent block instance (if any).
+ * @return array<string, mixed> The (maybe updated) parsed block data.
  */
 function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_Block $parent_block ): array {
 	$block_name = $parsed_block['blockName'] ?? '';
@@ -270,9 +270,6 @@ function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_B
 		$has_calendar = gatherpress_has_inner_block( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? [] );
 
 		if ( $has_calendar ) {
-			if ( ! isset( $parsed_block['attrs']['query'] ) || ! is_array( $parsed_block['attrs']['query'] ) ) {
-				$parsed_block['attrs']['query'] = [];
-			}
 
 			// This could also be sset in JS, but it works here, too.
 			$parsed_block['attrs']['query']['gatherpress_calendar_query'] = true;
@@ -372,7 +369,7 @@ add_filter( 'render_block_context', __NAMESPACE__ . '\\disable_query_pagination_
  *
  * @see https://developer.wordpress.org/reference/hooks/render_block_context/
  *
- * @param array $context      Default context.
+ * @param array<string, mixed> $context      Default context.
  * @param array $parsed_block {
  *     An associative array of the block being rendered. See WP_Block_Parser_Block.
  *
@@ -385,10 +382,10 @@ add_filter( 'render_block_context', __NAMESPACE__ . '\\disable_query_pagination_
  *                                     inner blocks were found.
  * }
  *
- * @return array Updated block context.
+ * @return array<string, mixed> Updated block context.
  */
 function disable_query_pagination_numbers( array $context, array $parsed_block ) {
-	if ( ! isset( $context['query']['gatherpress_calendar_query'] ) ) {
+	if ( ! isset( $context['query'] ) || ! is_array( $context['query'] ) || ! isset( $context['query']['gatherpress_calendar_query'] ) ) {
 		return $context;
 	}
 
@@ -407,9 +404,9 @@ add_filter( 'query_vars', __NAMESPACE__ . '\\query_vars' );
 /**
  * Allow a new calendar specific query variable.
  *
- * @param  array $query_vars The array of allowed query variable names.
+ * @param  string[] $query_vars The array of allowed query variable names.
  *
- * @return array
+ * @return string[]
  */
 function query_vars( array $query_vars ): array {
 	$query_vars[] = 'gatherpress_calendar_query';
@@ -432,7 +429,7 @@ add_filter( 'query_loop_block_query_vars', __NAMESPACE__ . '\\query_loop_block_q
  * @return array<string, mixed> Array containing parameters for <code>WP_Query</code> as parsed by the block
  *                              context.
  */
-function query_loop_block_query_vars( array $query, WP_Block $block ): array {
+function query_loop_block_query_vars( array $query, WP_Block $block ) :array {
 	// Retrieve the query from the passed block context.
 	$block_query = $block->context['query'];
 
@@ -460,6 +457,8 @@ function query_loop_block_query_vars( array $query, WP_Block $block ): array {
 		$block_query,
 		false
 	);
+
+	$filtered_query_args = is_array( $filtered_query_args ) ? $filtered_query_args : $query_args;
 
 	// Return the merged query.
 	return array_merge(
