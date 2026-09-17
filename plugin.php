@@ -294,6 +294,12 @@ function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_B
         $page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
         $page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1;
 
+		// An existing "?query-1-page=4" does not match our queryId
+		// or it is indeed page 1.
+		if ( $page === 1 ) {
+            return $parsed_block;
+        }
+
         // Determine baseline starting month (defaults to current site month)
         $initial_month = ! empty( $parsed_block['attrs']['selectedMonth'] )
             ? $parsed_block['attrs']['selectedMonth']
