@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace GatherPress\Calendar;
 
+use WP_Block;
 use WP_REST_Request;
 use WP_Query;
 use wpdb;
@@ -238,15 +239,15 @@ add_filter( 'posts_where', __NAMESPACE__ . '\\posts_where', 10, 2 );
  * @return bool
  */
 function gatherpress_has_inner_block( string $block_name, array $inner_blocks ): bool {
-    foreach ( $inner_blocks as $block ) {
-        if ( ( $block['blockName'] ?? '' ) === $block_name ) {
-            return true;
-        }
-        if ( ! empty( $block['innerBlocks'] ) && gatherpress_has_inner_block( $block_name, $block['innerBlocks'] ) ) {
-            return true;
-        }
-    }
-    return false;
+	foreach ( $inner_blocks as $block ) {
+		if ( ( $block['blockName'] ?? '' ) === $block_name ) {
+			return true;
+		}
+		if ( ! empty( $block['innerBlocks'] ) && gatherpress_has_inner_block( $block_name, $block['innerBlocks'] ) ) {
+			return true;
+		}
+	}
+	return false;
 }
 
 
@@ -254,106 +255,212 @@ add_filter( 'render_block_data', __NAMESPACE__ . '\\allow_core_pagination', 10, 
 /**
  * Dynamically set `selectedMonth` on `gatherpress/calendar` based on core pagination query vars.
  *
- * @param array         $parsed_block The parsed block data.
- * @param array         $source_block The original block data.
+ * @param array          $parsed_block The parsed block data.
+ * @param array          $source_block The original block data.
  * @param \WP_Block|null $parent_block The parent block instance (if any).
  * @return array The (maybe updated) parsed block data.
  */
 function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_Block $parent_block ): array {
-    $block_name = $parsed_block['blockName'] ?? '';
+	$block_name = $parsed_block['blockName'] ?? '';
 
-    // -------------------------------------------------------------
-    // 1. Target parent `core/query`: Set `pages` if calendar is inside
-    // -------------------------------------------------------------
-    if ( $block_name === 'core/query' ) {
-        $has_calendar = gatherpress_has_inner_block( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? [] );
+	// -------------------------------------------------------------
+	// 1. Target parent `core/query`: Set `pages` if calendar is inside
+	// -------------------------------------------------------------
+	if ( $block_name === 'core/query' ) {
+		$has_calendar = gatherpress_has_inner_block( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? [] );
 
-        if ( $has_calendar ) {
-            if ( ! isset( $parsed_block['attrs']['query'] ) || ! is_array( $parsed_block['attrs']['query'] ) ) {
-                $parsed_block['attrs']['query'] = [];
-            }
+		if ( $has_calendar ) {
+			if ( ! isset( $parsed_block['attrs']['query'] ) || ! is_array( $parsed_block['attrs']['query'] ) ) {
+				$parsed_block['attrs']['query'] = [];
+			}
 
-			// This line alone makes the query-pagination-numbers silently disapear,
-			// without interferencing with the other blocks.
-			// Looks ugly, but works.
-            $parsed_block['attrs']['query']['perPage'] = 0;
-
-            // $parsed_block['attrs']['query']['gatherpress_calendar_query'] = true;
+			// This could also be sset in JS, but it works here, too! ;)
+			$parsed_block['attrs']['query']['gatherpress_calendar_query'] = true;
 
 		}
 
-        return $parsed_block;
-    }
+		return $parsed_block;
+	}
 
-    // -------------------------------------------------------------
-    // 2. Target child `gatherpress/calendar`: Compute `selectedMonth`
-    // -------------------------------------------------------------
-    if ( $block_name === 'gatherpress/calendar' ) {
-        // Read queryId from context (supports any nesting level, e.g. Query -> Group -> Calendar)
-        $query_id = 0;
-        if ( $parent_block instanceof \WP_Block ) {
-            $query_id = $parent_block->context['queryId'] ?? ( $parent_block->parsed_block['attrs']['queryId'] ?? 0 );
-        }
+	// -------------------------------------------------------------
+	// 2. Target child `gatherpress/calendar`: Compute `selectedMonth`
+	// -------------------------------------------------------------
+	if ( $block_name === 'gatherpress/calendar' ) {
+		// Read queryId from context (supports any nesting level, e.g. Query -> Group -> Calendar).
+		$query_id = 0;
+		if ( $parent_block instanceof \WP_Block ) {
+			$query_id = $parent_block->context['queryId'] ?? ( $parent_block->parsed_block['attrs']['queryId'] ?? 0 );
+		}
 
-        // Only paginate if inside a Query Loop
-        if ( $query_id === 0 && ! isset( $parent_block->context['queryId'] ) ) {
-            return $parsed_block;
-        }
+		// Only paginate if inside a Query Loop.
+		if ( $query_id === 0 && ! isset( $parent_block->context['queryId'] ) ) {
+			return $parsed_block;
+		}
 
-        $page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
-        $page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1;
+		$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
+		$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		// An existing "?query-1-page=4" does not match our queryId
 		// or it is indeed page 1.
 		if ( $page === 1 ) {
-            return $parsed_block;
-        }
+			return $parsed_block;
+		}
 
-        // Determine baseline starting month (defaults to current site month)
-        $initial_month = ! empty( $parsed_block['attrs']['selectedMonth'] )
-            ? $parsed_block['attrs']['selectedMonth']
-            : current_datetime()->format( 'Y-m' );
+		// Determine baseline starting month (defaults to current site month).
+		$initial_month = ! empty( $parsed_block['attrs']['selectedMonth'] )
+			? $parsed_block['attrs']['selectedMonth']
+			: current_datetime()->format( 'Y-m' );
 
-        $base_date = \DateTimeImmutable::createFromFormat( '!Y-m', $initial_month, wp_timezone() );
-        if ( ! $base_date ) {
-            $base_date = current_datetime();
-        }
+		$base_date = \DateTimeImmutable::createFromFormat( '!Y-m', $initial_month, wp_timezone() );
+		if ( ! $base_date ) {
+			$base_date = current_datetime();
+		}
 
-        // Page 1 = offset 0, Page 2 = +1 month, Page 3 = +2 months, etc.
-        $offset      = $page - 1;
+		// Page 1 = offset 0, Page 2 = +1 month, Page 3 = +2 months, etc.
+		$offset = $page - 1;
+		// Keep for later re-enabling, maybe!
 		// $forward     = '+' . $offset;
 		// $backward    = '-' . $offset;
-        // $offset_      = ( $page >= 1 ) ? $forward : $backward;
+		// $offset_      = ( $page >= 1 ) ? $forward : $backward; // !
 
-        $target_date = $base_date->modify( "{$offset} month" );
+		$target_date = $base_date->modify( "{$offset} month" );
 
-        // Assign calculated month back to attributes
-        $parsed_block['attrs']['selectedMonth'] = $target_date->format( 'Y-m' );
+		// Assign calculated month back to attributes.
+		$parsed_block['attrs']['selectedMonth'] = $target_date->format( 'Y-m' );
 
-        return $parsed_block;
-    }
+		return $parsed_block;
+	}
 
-    // -------------------------------------------------------------
-    // 3. Target `query-pagination-next` and `query-pagination-previous`
-    // -------------------------------------------------------------
-	if ( in_array( $block_name, array('core/query-pagination-next', 'core/query-pagination-previous'), true ) ) {
-        // Attach the hook right before new WP_Query() is executed inside core
-        add_filter( 'the_posts', __NAMESPACE__ . '\\gatherpress_force_pagination_max_pages', 10, 2 );
-    }
+	// -------------------------------------------------------------
+	// 3. Target `query-pagination-next` and `query-pagination-previous`
+	// -------------------------------------------------------------
+	if ( in_array( $block_name, array( 'core/query-pagination-next', 'core/query-pagination-previous' ), true ) ) {
+		// Attach the hook right before new WP_Query() is executed inside core.
+		add_filter( 'the_posts', __NAMESPACE__ . '\\gatherpress_force_pagination_max_pages', 10, 2 );
+	}
 
 	return $parsed_block;
 }
 
 
 /**
- * 2. Force max_num_pages on the WP_Query instance created by the next block.
+ * Force max_num_pages on the WP_Query instance created by the next block.
+ * 
+ * @param WP_Post[] $posts Array of post objects.
+ * @param WP_Query  $query The WP_Query instance (passed by reference).
+ *
+ * @return WP_Post[] Array of post objects.
  */
-function gatherpress_force_pagination_max_pages( $posts, \WP_Query $query ) {
-    // Ensure max_num_pages > $page so `$custom_query_max_pages !== $page` evaluates to true
-    $query->max_num_pages = 200;
+function gatherpress_force_pagination_max_pages( array $posts, WP_Query $query ) {
 
-    // Immediately remove the filter so it only affects this single block query
-    remove_filter( 'the_posts', __NAMESPACE__ . '\\gatherpress_force_pagination_max_pages', 10 );
+// error_log(var_export($query,true));
 
-    return $posts;
+	if ( isset( $query->query['gatherpress_calendar_query'] ) ) {
+		// Ensure max_num_pages > $page so `$custom_query_max_pages !== $page` evaluates to true.
+		$query->max_num_pages = 200;
+	}
+
+	// Immediately remove the filter so it only affects this single block query.
+	remove_filter( 'the_posts', __NAMESPACE__ . '\\gatherpress_force_pagination_max_pages', 10 );
+
+	return $posts;
+}
+
+
+
+
+/**
+ * Change query variable in context to disable `core/query-pagination-numbers` rendering.
+ *
+ * @see https://developer.wordpress.org/reference/hooks/render_block_context/
+ *
+ * @param array         $context      Default context.
+ * @param array         $parsed_block {
+ *     An associative array of the block being rendered. See WP_Block_Parser_Block.
+ *
+ *     @type string|null $blockName    Name of block.
+ *     @type array       $attrs        Attributes from block comment delimiters.
+ *     @type array[]     $innerBlocks  List of inner blocks. An array of arrays that
+ *                                     have the same structure as this one.
+ *     @type string      $innerHTML    HTML from inside block comment delimiters.
+ *     @type array       $innerContent List of string fragments and null markers where
+ *                                     inner blocks were found.
+ * }
+ *
+ * @return array Updated block context.
+ */
+add_filter( 'render_block_context', __NAMESPACE__ . '\\disable_query_pagination_numbers', 10, 2 );
+function disable_query_pagination_numbers( array $context, array $parsed_block ) {
+	if ( ! isset( $context['query']['gatherpress_calendar_query'] ) ) {
+		return $context;
+	}
+
+	if ( $parsed_block['blockName'] === 'core/query-pagination-numbers' ) {
+		// This line alone makes the query-pagination-numbers silently disapear,
+		// without interferencing with the other blocks.
+		// Looks ugly, but works.
+		$context['query']['perPage'] = 0;
+    }
+
+    return $context;
+}
+
+
+
+
+function query_vars( array $qvars ) :array {
+	$qvars[] = 'gatherpress_calendar_query';
+return $qvars;
+}
+add_filter( 'query_vars', __NAMESPACE__ . '\\query_vars' );
+
+
+
+add_filter( 'query_loop_block_query_vars', __NAMESPACE__ . '\\query_loop_block_query_vars', 10, 2 );
+/**
+ * Filters the arguments which will be passed to `WP_Query` for the Query Loop Block.
+ *
+ * @since 0.33.0
+ *
+ * @param array<string, mixed> $query Array containing parameters for <code>WP_Query</code> as parsed by the
+ *                                    block context.
+ * @param WP_Block             $block Block instance.
+ *
+ * @return array<string, mixed> Array containing parameters for <code>WP_Query</code> as parsed by the block
+ *                              context.
+ */
+function query_loop_block_query_vars( array $query, WP_Block $block ): array {
+	// Retrieve the query from the passed block context.
+	$block_query = $block->context['query'];
+
+	if ( ! is_array( $block_query ) ) {
+		return $query;
+	}
+
+	if ( isset( $block_query['gatherpress_calendar_query'] ) ) {
+		$calendar_query_type = $block_query['gatherpress_calendar_query'];
+	} else {
+		return $query;
+	}
+
+	// Generate a new custom query with all potential query vars.
+	$query_args = array();
+
+	// Type of event list: 'upcoming', 'past', or 'all',
+	// @see wp-content/plugins/gatherpress/includes/core/classes/class-event-query.php.
+	$query_args['gatherpress_calendar_query'] = $calendar_query_type;
+
+	/** This filter is documented in includes/query-loop.php */
+	$filtered_query_args = apply_filters(
+		'gatherpress_query_vars',
+		$query_args,
+		$block_query,
+		false
+	);
+
+	// Return the merged query.
+	return array_merge(
+		$query,
+		$filtered_query_args
+	);
 }
