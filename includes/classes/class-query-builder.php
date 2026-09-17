@@ -38,7 +38,6 @@ if ( ! class_exists( '\GatherPress\Calendar\Query_Builder' ) ) {
 			$query_id   = isset( $block->context['queryId'] ) && is_int( $block->context['queryId'] ) ? $block->context['queryId'] : 0;
 			$page_param = 'query-' . $query_id . '-page';
 			$page       = isset( $_GET[ $page_param ] ) && is_numeric( $_GET[ $page_param ] ) ? max( 1, (int) $_GET[ $page_param ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-// error_log('build_query_args() $page: ' . var_export( $page,true));
 
 			/**
 			 * Type safety.
@@ -58,15 +57,12 @@ if ( ! class_exists( '\GatherPress\Calendar\Query_Builder' ) ) {
 			$query_args['posts_per_page']             = 99;
 
 			// Remove conflicting parameters.
-			// unset( $query_args['paged'] );
 			if ( $page !== 1 ) {
 				unset( $query_args['offset'] );
 			}
 			unset( $query_args['orderby'] );
-			// unset( $query_args['gatherpress_event_query'] );
-			$query_args['gatherpress_event_query'] = 'all';
+			$query_args['gatherpress_event_query'] = 'all'; // Was formerly just unset, but this seems more reliable.
 			unset( $query_args['include_unfinished'] );
-// error_log('$query_args[]: ' . var_export( $query_args,true));
 			return $query_args;
 		}
 	}
