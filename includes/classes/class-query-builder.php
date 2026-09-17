@@ -57,11 +57,12 @@ if ( ! class_exists( '\GatherPress\Calendar\Query_Builder' ) ) {
 			$query_args['posts_per_page']             = 99;
 
 			// Remove conflicting parameters.
-			unset( $query_args['paged'] );
+			if ( $page !== 1 ) {
+				unset( $query_args['offset'] );
+			}
 			unset( $query_args['orderby'] );
-			unset( $query_args['gatherpress_event_query'] );
+			$query_args['gatherpress_event_query'] = 'all'; // Was formerly just unset, but this seems more reliable.
 			unset( $query_args['include_unfinished'] );
-
 			return $query_args;
 		}
 	}
