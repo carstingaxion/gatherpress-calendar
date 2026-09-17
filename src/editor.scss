@@ -92,7 +92,36 @@
 		 */
 		&__event {
 			cursor: default;
-			pointer-events: none;
+		}
+
+
+		/* ==================================================================
+		Event Dots Wrapper
+		================================================================== */
+		&__events > div {
+
+			background: var(--wp--preset--color--primary, #007cba);
+			
+			/* Color variations for multiple events */
+			&:nth-child(2) {
+				background: var(--wp--preset--color--secondary, #e65054);
+			}
+
+			&:nth-child(3) {
+				background: var(--wp--preset--color--tertiary, #4ab866);
+			}
+
+			&:nth-child(4) {
+				background: var(--wp--preset--color--vivid-purple, #9b51e0);
+			}
+
+			&:nth-child(5) {
+				background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
+			}
+
+			&:nth-child(n+6) {
+				background: var(--wp--preset--color--contrast, #666);
+			}
 		}
 	}
 }
