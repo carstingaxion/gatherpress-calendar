@@ -274,7 +274,7 @@ function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_B
 				$parsed_block['attrs']['query'] = [];
 			}
 
-			// This could also be sset in JS, but it works here, too! ;)
+			// This could also be sset in JS, but it works here, too.
 			$parsed_block['attrs']['query']['gatherpress_calendar_query'] = true;
 
 		}
@@ -353,8 +353,6 @@ function allow_core_pagination( array $parsed_block, array $source_block, ?\WP_B
  */
 function gatherpress_force_pagination_max_pages( array $posts, WP_Query $query ) {
 
-// error_log(var_export($query,true));
-
 	if ( isset( $query->query['gatherpress_calendar_query'] ) ) {
 		// Ensure max_num_pages > $page so `$custom_query_max_pages !== $page` evaluates to true.
 		$query->max_num_pages = 200;
@@ -368,14 +366,14 @@ function gatherpress_force_pagination_max_pages( array $posts, WP_Query $query )
 
 
 
-
+add_filter( 'render_block_context', __NAMESPACE__ . '\\disable_query_pagination_numbers', 10, 2 );
 /**
  * Change query variable in context to disable `core/query-pagination-numbers` rendering.
  *
  * @see https://developer.wordpress.org/reference/hooks/render_block_context/
  *
- * @param array         $context      Default context.
- * @param array         $parsed_block {
+ * @param array $context      Default context.
+ * @param array $parsed_block {
  *     An associative array of the block being rendered. See WP_Block_Parser_Block.
  *
  *     @type string|null $blockName    Name of block.
@@ -389,7 +387,6 @@ function gatherpress_force_pagination_max_pages( array $posts, WP_Query $query )
  *
  * @return array Updated block context.
  */
-add_filter( 'render_block_context', __NAMESPACE__ . '\\disable_query_pagination_numbers', 10, 2 );
 function disable_query_pagination_numbers( array $context, array $parsed_block ) {
 	if ( ! isset( $context['query']['gatherpress_calendar_query'] ) ) {
 		return $context;
@@ -400,19 +397,25 @@ function disable_query_pagination_numbers( array $context, array $parsed_block )
 		// without interferencing with the other blocks.
 		// Looks ugly, but works.
 		$context['query']['perPage'] = 0;
-    }
+	}
 
-    return $context;
+	return $context;
 }
 
 
-
-
-function query_vars( array $qvars ) :array {
-	$qvars[] = 'gatherpress_calendar_query';
-return $qvars;
-}
 add_filter( 'query_vars', __NAMESPACE__ . '\\query_vars' );
+/**
+ * Allow a new calendar specific query variable.
+ *
+ * @param  array $query_vars The array of allowed query variable names.
+ *
+ * @return array
+ */
+function query_vars( array $query_vars ): array {
+	$query_vars[] = 'gatherpress_calendar_query';
+	return $query_vars;
+}
+
 
 
 
