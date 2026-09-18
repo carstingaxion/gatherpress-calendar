@@ -13,6 +13,8 @@ namespace GatherPress_Calendar;
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
+use GatherPress\Core\Event;
+use GatherPress_Calendar\Setup;
 use WP_Block;
 
 /**
@@ -49,7 +51,7 @@ class Query_Builder {
 		$query_args = build_query_vars_from_query_block( $block, $page );
 
 		// Add calendar query marker and date filtering.
-		$query_args['gatherpress_calendar_query'] = true;
+		$query_args[Setup::CALENDAR_QUERY_PARAM] = true;
 		$query_args['date_query']                 = array(
 			array(
 				'year'  => $year,
@@ -63,7 +65,7 @@ class Query_Builder {
 			unset( $query_args['offset'] );
 		}
 		unset( $query_args['orderby'] );
-		$query_args['gatherpress_event_query'] = 'all'; // Was formerly just unset, but this seems more reliable.
+		$query_args[Event::EVENT_QUERY_PARAM] = 'all'; // Was formerly just unset, but this seems more reliable.
 		unset( $query_args['include_unfinished'] );
 		return $query_args;
 	}

@@ -14,6 +14,7 @@ namespace GatherPress_Calendar;
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
 use DateTimeImmutable;
+use GatherPress\Core\Event;
 use GatherPress\Core\Traits\Singleton;
 use WP_Block;
 use WP_Post;
@@ -31,6 +32,14 @@ class Setup {
 	 * Enforces a single instance of this class.
 	 */
 	use Singleton;
+
+	/**
+	 * Query parameter name for queries containing calendars.
+	 *
+	 * @since 0.34.0
+	 * @var string
+	 */
+	const CALENDAR_QUERY_PARAM = 'gatherpress_calendar_query';
 
 	/**
 	 * Constructor for the Setup class.
@@ -153,7 +162,7 @@ class Setup {
 			
 		// Only proceed if this is a calendar query (identified by our marker)
 		// AND it has year/month parameters for date filtering.
-		if ( ! isset( $parameters['gatherpress_calendar_query'] )
+		if ( ! isset( $parameters[self::CALENDAR_QUERY_PARAM] )
 			|| ! isset( $parameters['year'] ) 
 			|| empty( $parameters['year'] )
 		) {
@@ -161,7 +170,7 @@ class Setup {
 		}
 
 		// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering.
-		unset( $args['gatherpress_event_query'] );
+		unset( $args[Event::EVENT_QUERY_PARAM] );
 
 		// Initialize date_query if it doesn't exist.
 		if ( ! isset( $args['date_query'] ) || ! is_array( $args['date_query'] ) ) {
@@ -293,8 +302,8 @@ class Setup {
 
 			if ( $has_calendar ) {
 
-				// This could also be sset in JS, but it works here, too.
-				$parsed_block['attrs']['query']['gatherpress_calendar_query'] = true;
+				// This could also be set in JS, but it works here, too.
+				$parsed_block['attrs']['query'][self::CALENDAR_QUERY_PARAM] = true;
 
 			}
 
@@ -371,7 +380,7 @@ class Setup {
 	 */
 	public function gatherpress_force_pagination_max_pages( array $posts, WP_Query $query ) {
 
-		if ( isset( $query->query['gatherpress_calendar_query'] ) ) {
+		if ( isset( $query->query[self::CALENDAR_QUERY_PARAM] ) ) {
 			// Ensure max_num_pages > $page so `$custom_query_max_pages !== $page` evaluates to true.
 			$query->max_num_pages = 200;
 		}
@@ -405,7 +414,7 @@ class Setup {
 	 * @return array<string, mixed> Updated block context.
 	 */
 	public function disable_query_pagination_numbers( array $context, array $parsed_block ) {
-		if ( ! isset( $context['query'] ) || ! is_array( $context['query'] ) || ! isset( $context['query']['gatherpress_calendar_query'] ) ) {
+		if ( ! isset( $context['query'] ) || ! is_array( $context['query'] ) || ! isset( $context['query'][self::CALENDAR_QUERY_PARAM] ) ) {
 			return $context;
 		}
 
@@ -429,7 +438,7 @@ class Setup {
 	 * @return string[]
 	 */
 	public function query_vars( array $query_vars ): array {
-		$query_vars[] = 'gatherpress_calendar_query';
+		$query_vars[] = self::CALENDAR_QUERY_PARAM;
 		return $query_vars;
 	}
 
@@ -453,8 +462,8 @@ class Setup {
 			return $query;
 		}
 
-		if ( isset( $block_query['gatherpress_calendar_query'] ) ) {
-			$calendar_query_type = $block_query['gatherpress_calendar_query'];
+		if ( isset( $block_query[self::CALENDAR_QUERY_PARAM] ) ) {
+			$calendar_query_type = $block_query[self::CALENDAR_QUERY_PARAM];
 		} else {
 			return $query;
 		}
@@ -464,7 +473,7 @@ class Setup {
 
 		// Type of event list: 'upcoming', 'past', or 'all',
 		// @see wp-content/plugins/gatherpress/includes/core/classes/class-event-query.php.
-		$query_args['gatherpress_calendar_query'] = $calendar_query_type;
+		$query_args[self::CALENDAR_QUERY_PARAM] = $calendar_query_type;
 
 		/** This filter is documented in includes/query-loop.php */
 		$filtered_query_args = apply_filters(
