@@ -51,22 +51,24 @@ class Query_Builder {
 		$query_args = build_query_vars_from_query_block( $block, $page );
 
 		// Add calendar query marker and date filtering.
-		$query_args[Setup::CALENDAR_QUERY_PARAM] = true;
-		$query_args['date_query']                 = array(
+		$query_args[Event\Query::EVENT_QUERY_PARAM] = 'all'; // Was formerly just unset, but this seems more reliable.
+		$query_args[Setup::CALENDAR_QUERY_PARAM]    = true;
+		$query_args['posts_per_page']               = 99;
+		$query_args['date_query']                   = array(
 			array(
 				'year'  => $year,
 				'month' => $month,
 			),
 		);
-		$query_args['posts_per_page']             = 99;
 
 		// Remove conflicting parameters.
 		if ( $page !== 1 ) {
 			unset( $query_args['offset'] );
 		}
+
 		unset( $query_args['orderby'] );
-		$query_args[Event\Query::EVENT_QUERY_PARAM] = 'all'; // Was formerly just unset, but this seems more reliable.
 		unset( $query_args['include_unfinished'] );
+
 		return $query_args;
 	}
 }
