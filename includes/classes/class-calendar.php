@@ -22,7 +22,7 @@ use WP_Block;
  *
  * @since 0.4.0
  */
-final class Calendar {
+class Calendar {
 
 	/**
 	 * Enforces a single instance of this class.

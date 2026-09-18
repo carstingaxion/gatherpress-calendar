@@ -14,7 +14,6 @@ namespace GatherPress_Calendar;
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
 use GatherPress\Core\Event;
-use GatherPress_Calendar\Setup;
 use WP_Block;
 
 /**
@@ -33,8 +32,8 @@ class Query_Builder {
 	 * @since 0.1.0
 	 *
 	 * @param WP_Block $block Block instance.
-	 * @param int       $year  Target year.
-	 * @param int       $month Target month.
+	 * @param int      $year  Target year.
+	 * @param int      $month Target month.
 	 *
 	 * @return array<string, mixed> WP_Query arguments.
 	 */
@@ -51,10 +50,10 @@ class Query_Builder {
 		$query_args = build_query_vars_from_query_block( $block, $page );
 
 		// Add calendar query marker and date filtering.
-		$query_args[Event\Query::EVENT_QUERY_PARAM] = 'all'; // Was formerly just unset, but this seems more reliable.
-		$query_args[Setup::CALENDAR_QUERY_PARAM]    = true;
-		$query_args['posts_per_page']               = 99;
-		$query_args['date_query']                   = array(
+		$query_args[ Event\Query::EVENT_QUERY_PARAM ] = 'all'; // Was formerly just unset, but this seems more reliable.
+		$query_args[ Setup::CALENDAR_QUERY_PARAM ]    = true;
+		$query_args['posts_per_page']                 = 99;
+		$query_args['date_query']                     = array(
 			array(
 				'year'  => $year,
 				'month' => $month,
@@ -72,4 +71,3 @@ class Query_Builder {
 		return $query_args;
 	}
 }
-

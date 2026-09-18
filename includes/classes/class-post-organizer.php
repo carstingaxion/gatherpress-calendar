@@ -83,4 +83,3 @@ class Post_Organizer {
 		return is_string( $post_date ) ? $post_date : '';
 	}
 }
-

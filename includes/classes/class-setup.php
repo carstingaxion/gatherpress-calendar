@@ -162,7 +162,7 @@ class Setup {
 			
 		// Only proceed if this is a calendar query (identified by our marker)
 		// AND it has year/month parameters for date filtering.
-		if ( ! isset( $parameters[self::CALENDAR_QUERY_PARAM] )
+		if ( ! isset( $parameters[ self::CALENDAR_QUERY_PARAM ] )
 			|| ! isset( $parameters['year'] ) 
 			|| empty( $parameters['year'] )
 		) {
@@ -170,7 +170,7 @@ class Setup {
 		}
 
 		// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering.
-		unset( $args[Event\Query::EVENT_QUERY_PARAM] );
+		unset( $args[ Event\Query::EVENT_QUERY_PARAM ] );
 
 		// Initialize date_query if it doesn't exist.
 		if ( ! isset( $args['date_query'] ) || ! is_array( $args['date_query'] ) ) {
@@ -265,8 +265,8 @@ class Setup {
 	 *
 	 * @since 0.4.0
 	 *
-	 * @param string $block_name The block name to search for (e.g. 'gatherpress/calendar').
-	 * @param array<int, array<string, string|int|bool>>  $inner_blocks Array of parsed inner blocks.
+	 * @param string                                     $block_name The block name to search for (e.g. 'gatherpress/calendar').
+	 * @param array<int, array<string, string|int|bool>> $inner_blocks Array of parsed inner blocks.
 	 * @return bool
 	 */
 	public static function gatherpress_has_inner_block( string $block_name, array $inner_blocks ): bool {
@@ -288,7 +288,7 @@ class Setup {
 	 *
 	 * @param array<string, mixed> $parsed_block The parsed block data.
 	 * @param array<string, mixed> $source_block The original block data.
-	 * @param WP_Block|null       $parent_block The parent block instance (if any).
+	 * @param WP_Block|null        $parent_block The parent block instance (if any).
 	 * @return array<string, mixed> The (maybe updated) parsed block data.
 	 */
 	public function allow_core_pagination( array $parsed_block, array $source_block, ?WP_Block $parent_block ): array {
@@ -303,7 +303,7 @@ class Setup {
 			if ( $has_calendar ) {
 
 				// This could also be set in JS, but it works here, too.
-				$parsed_block['attrs']['query'][self::CALENDAR_QUERY_PARAM] = true;
+				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_PARAM ] = true;
 
 			}
 
@@ -380,7 +380,7 @@ class Setup {
 	 */
 	public function gatherpress_force_pagination_max_pages( array $posts, WP_Query $query ) {
 
-		if ( isset( $query->query[self::CALENDAR_QUERY_PARAM] ) ) {
+		if ( isset( $query->query[ self::CALENDAR_QUERY_PARAM ] ) ) {
 			// Ensure max_num_pages > $page so `$custom_query_max_pages !== $page` evaluates to true.
 			$query->max_num_pages = 200;
 		}
@@ -399,8 +399,8 @@ class Setup {
 	 * @since 0.4.0
 	 *
 	 * @param array<string, mixed> $context      Default context.
-	 * @param array $parsed_block {
-	 *     An associative array of the block being rendered. See WP_Block_Parser_Block.
+	 * @param array                $parsed_block {
+	 *                    An associative array of the block being rendered. See WP_Block_Parser_Block.
 	 *
 	 *     @type string|null $blockName    Name of block.
 	 *     @type array       $attrs        Attributes from block comment delimiters.
@@ -414,7 +414,7 @@ class Setup {
 	 * @return array<string, mixed> Updated block context.
 	 */
 	public function disable_query_pagination_numbers( array $context, array $parsed_block ) {
-		if ( ! isset( $context['query'] ) || ! is_array( $context['query'] ) || ! isset( $context['query'][self::CALENDAR_QUERY_PARAM] ) ) {
+		if ( ! isset( $context['query'] ) || ! is_array( $context['query'] ) || ! isset( $context['query'][ self::CALENDAR_QUERY_PARAM ] ) ) {
 			return $context;
 		}
 
@@ -454,7 +454,7 @@ class Setup {
 	 * @return array<string, mixed> Array containing parameters for <code>WP_Query</code> as parsed by the block
 	 *                              context.
 	 */
-	public function query_loop_block_query_vars( array $query, WP_Block $block ) :array {
+	public function query_loop_block_query_vars( array $query, WP_Block $block ): array {
 		// Retrieve the query from the passed block context.
 		$block_query = $block->context['query'];
 
@@ -462,8 +462,8 @@ class Setup {
 			return $query;
 		}
 
-		if ( isset( $block_query[self::CALENDAR_QUERY_PARAM] ) ) {
-			$calendar_query_type = $block_query[self::CALENDAR_QUERY_PARAM];
+		if ( isset( $block_query[ self::CALENDAR_QUERY_PARAM ] ) ) {
+			$calendar_query_type = $block_query[ self::CALENDAR_QUERY_PARAM ];
 		} else {
 			return $query;
 		}
@@ -473,7 +473,7 @@ class Setup {
 
 		// Type of event list: 'upcoming', 'past', or 'all',
 		// @see wp-content/plugins/gatherpress/includes/core/classes/class-event-query.php.
-		$query_args[self::CALENDAR_QUERY_PARAM] = $calendar_query_type;
+		$query_args[ self::CALENDAR_QUERY_PARAM ] = $calendar_query_type;
 
 		/** This filter is documented in includes/query-loop.php */
 		$filtered_query_args = apply_filters(

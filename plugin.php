@@ -30,13 +30,13 @@ define( 'GATHERPRESS_CALENDAR_CORE_PATH', __DIR__ );
  * This function hooks into the 'gatherpress_autoloader' filter and adds the
  * GatherPress_Calendar namespace to the list of namespaces with its core path.
  *
- * @param array $namespace An associative array of namespaces and their paths.
+ * @param array $namespaces An associative array of namespaces and their paths.
  * @return array Modified array of namespaces and their paths.
  */
-function gatherpress_calendar_autoloader( array $namespace ): array {
-	$namespace['GatherPress_Calendar'] = GATHERPRESS_CALENDAR_CORE_PATH;
+function gatherpress_calendar_autoloader( array $namespaces ): array {
+	$namespaces['GatherPress_Calendar'] = GATHERPRESS_CALENDAR_CORE_PATH;
 
-	return $namespace;
+	return $namespaces;
 }
 add_filter( 'gatherpress_autoloader', 'gatherpress_calendar_autoloader' );
 
@@ -53,4 +53,3 @@ function gatherpress_calendar_setup(): void {
 	GatherPress_Calendar\Calendar::get_instance();
 }
 add_action( 'gatherpress_loaded', 'gatherpress_calendar_setup' );
-
