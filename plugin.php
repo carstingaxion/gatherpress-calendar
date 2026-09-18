@@ -16,13 +16,6 @@
 
 declare(strict_types=1);
 
-namespace GatherPress_Calendar;
-
-use WP_Block;
-use WP_REST_Request;
-use WP_Query;
-use wpdb;
-
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
@@ -39,12 +32,12 @@ define( 'GATHERPRESS_CALENDAR_CORE_PATH', __DIR__ );
  * @param array $namespace An associative array of namespaces and their paths.
  * @return array Modified array of namespaces and their paths.
  */
-function gatherpress_awesome_autoloader( array $namespace ): array {
+function gatherpress_calendar_autoloader( array $namespace ): array {
 	$namespace['GatherPress_Calendar'] = GATHERPRESS_CALENDAR_CORE_PATH;
 
 	return $namespace;
 }
-add_filter( 'gatherpress_autoloader', __NAMESPACE__ . '\\gatherpress_awesome_autoloader' );
+add_filter( 'gatherpress_autoloader', 'gatherpress_calendar_autoloader' );
 
 /**
  * Registers the GatherPress Calendar block.
