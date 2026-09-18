@@ -38,14 +38,6 @@ final class Calendar {
 	const BLOCK_NAME = 'gatherpress/calendar';
 
 	/**
-	 * Start of week setting.
-	 *
-	 * @since 0.1.0
-	 * @var int
-	 */
-	private int $start_of_week = 0;
-
-	/**
 	 * Class constructor.
 	 *
 	 * This method initializes the object and sets up necessary hooks.
@@ -53,9 +45,6 @@ final class Calendar {
 	 * @since 0.4.0
 	 */
 	protected function __construct() {
-		$start_of_week_option = get_option( 'start_of_week', 0 );
-		$this->start_of_week  = is_numeric( $start_of_week_option ) ? (int) $start_of_week_option : 0;
-
 		$this->setup_hooks();
 	}
 
@@ -135,7 +124,8 @@ final class Calendar {
 		$posts_by_date = Post_Organizer::organize_posts_by_date( $query_args );
 
 		// Build calendar structure.
-		$calendar_data = Calendar_Structure_Builder::build_structure( $year, $month, $this->start_of_week, $posts_by_date );
+		$start_of_week = get_option( 'start_of_week', 0 );
+		$calendar_data = Calendar_Structure_Builder::build_structure( $year, $month, $start_of_week, $posts_by_date );
 
 		// Prepare styles.
 		$popover_styles = Style_Processor::prepare_popover_styles( $attributes );
