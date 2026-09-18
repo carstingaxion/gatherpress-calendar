@@ -2,12 +2,10 @@
 
 **Contributors:** carstenbach & WordPress Telex  
 **Tags:** block, calendar, gatherpress, events, query-loop  
-**Tested up to:** 6.8  
+**Tested up to:** 7.1  
 **Stable tag:** 0.3.1  
 **License:** GPLv2 or later  
 **License URI:** <https://www.gnu.org/licenses/gpl-2.0.html>  
-**Requires at least:** 6.0  
-**Requires PHP:** 7.4  
 
 A calendar block that displays Query Loop results in a monthly calendar format. Works with any post type, with specialized support for GatherPress events.
 
