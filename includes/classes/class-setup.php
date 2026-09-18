@@ -170,7 +170,7 @@ class Setup {
 		}
 
 		// Remove GatherPress's past/upcoming filter since we're doing month-specific filtering.
-		unset( $args[Event::EVENT_QUERY_PARAM] );
+		unset( $args[Event\Query::EVENT_QUERY_PARAM] );
 
 		// Initialize date_query if it doesn't exist.
 		if ( ! isset( $args['date_query'] ) || ! is_array( $args['date_query'] ) ) {

@@ -65,7 +65,7 @@ class Query_Builder {
 			unset( $query_args['offset'] );
 		}
 		unset( $query_args['orderby'] );
-		$query_args[Event::EVENT_QUERY_PARAM] = 'all'; // Was formerly just unset, but this seems more reliable.
+		$query_args[Event\Query::EVENT_QUERY_PARAM] = 'all'; // Was formerly just unset, but this seems more reliable.
 		unset( $query_args['include_unfinished'] );
 		return $query_args;
 	}
