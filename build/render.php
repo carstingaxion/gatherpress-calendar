@@ -18,18 +18,12 @@
 
 declare(strict_types=1);
 
-namespace GatherPress\Calendar;
+namespace GatherPress_Calendar;
 
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
-require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-date-calculator.php';
-require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-query-builder.php';
-require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-post-organizer.php';
-require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-calendar-structure-builder.php';
-require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-style-processor.php';
-require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-html-renderer.php';
-require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-block-renderer.php';
+use WP_Block;
 
 /**
  * Extract and sanitize block attributes and render the block.
@@ -43,6 +37,6 @@ require_once GATHERPRESS_CALENDAR_CORE_PATH . '/includes/classes/class-block-ren
  *   showWeekdays: bool,
  * } $attributes
  * @var string $content
- * @var \WP_Block $block
+ * @var WP_Block $block
  */
 echo Block_Renderer::get_instance()->render( $attributes, $content, $block ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
