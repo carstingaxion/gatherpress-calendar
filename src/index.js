@@ -117,7 +117,7 @@ const withCalendarNotice = createHigherOrderComponent( ( BlockEdit ) => {
 				}
 
 				const hasCalendar = block.innerBlocks.some(
-					( innerBlock ) => innerBlock.name === 'gatherpress/calendar'
+					( innerBlock ) => innerBlock.name === metadata.name
 				);
 
 				// Check if the query is for gatherpress_event post type
