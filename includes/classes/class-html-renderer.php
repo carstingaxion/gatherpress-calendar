@@ -85,7 +85,7 @@ class HTML_Renderer {
 
 		ob_start();
 		?>
-		<div data-wp-interactive="gatherpress/calendar" <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
+		<div data-wp-interactive="<?php echo esc_attr( Calendar::STORE_NAME ); ?>" <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
 			<div 
 				class="gatherpress-calendar"
 				data-wp-init="callbacks.initCalendarObserver"

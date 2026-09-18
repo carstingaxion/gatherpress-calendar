@@ -38,6 +38,17 @@ class Calendar {
 	const BLOCK_NAME = 'gatherpress/calendar';
 
 	/**
+	 * Constant representing the name of the Interactivity API store.
+	 *
+	 * Identical assignment as in src/view.js
+	 * for the calls to store().
+	 *
+	 * @since 0.4.0
+	 * @var string
+	 */
+	const STORE_NAME = 'gatherpress/calendar';
+
+	/**
 	 * Class constructor.
 	 *
 	 * This method initializes the object and sets up necessary hooks.
@@ -91,7 +102,7 @@ class Calendar {
 
 		// Enable Interactivity API for this block.
 		wp_interactivity_state(
-			'gatherpress/calendar',
+			self::STORE_NAME,
 			array(
 				'popoverOpen'     => false,
 				'popoverContent'  => '',

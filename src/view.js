@@ -26,7 +26,16 @@ import {
 /**
  * Internal dependencies
  */
+import metadata from './block.json';
 import { applyCalculatedPosition } from './view/helpers';
+
+/**
+ * Use the block name as store name.
+ *
+ * Identical assignment as in class-setup.php
+ * for the call of wp_interactivity_state().
+ */
+const CALENDAR_STORE = metadata.name;
 
 const OBSERVER_CONFIG = {
 	threshold: 0.1,
@@ -38,7 +47,7 @@ const POPOVER_CONFIG = {
 	margin: 12,
 };
 
-store( 'gatherpress/calendar', {
+store( CALENDAR_STORE, {
 	state: {
 		// Inline styles object for popover customization
 		// Replaces: data-popover-style attribute parsing
@@ -58,7 +67,7 @@ store( 'gatherpress/calendar', {
 		// Derived getter: evaluates true if this item's context matches activeEventId
 		get isCurrentEventOpen() {
 			const context = getContext();
-			const { state } = store( 'gatherpress/calendar' );
+			const { state } = store( CALENDAR_STORE );
 			return state.activeEventId === context.eventId;
 		},
 
@@ -77,7 +86,7 @@ store( 'gatherpress/calendar', {
 		togglePopover: withSyncEvent( ( event ) => {
 			event.preventDefault();
 			const context = getContext();
-			const { state } = store( 'gatherpress/calendar' );
+			const { state } = store( CALENDAR_STORE );
 
 			// If already open, close it; otherwise open this event
 			state.activeEventId =
@@ -90,7 +99,7 @@ store( 'gatherpress/calendar', {
 		 * Closes any open popover
 		 */
 		closePopover: () => {
-			const { state } = store( 'gatherpress/calendar' );
+			const { state } = store( CALENDAR_STORE );
 			state.activeEventId = null;
 		},
 
@@ -101,7 +110,7 @@ store( 'gatherpress/calendar', {
 		 * Enter/Space trigger popover, Escape closes it.
 		 */
 		handleKeydown: withSyncEvent( ( event ) => {
-			const { actions } = store( 'gatherpress/calendar' );
+			const { actions } = store( CALENDAR_STORE );
 
 			if ( event.key === 'Enter' || event.key === ' ' ) {
 				event.preventDefault();
@@ -120,7 +129,7 @@ store( 'gatherpress/calendar', {
 		 * Clicking backdrop closes popover.
 		 */
 		handleBackdropClick: () => {
-			const { actions } = store( 'gatherpress/calendar' );
+			const { actions } = store( CALENDAR_STORE );
 			actions.closePopover();
 		},
 	},
@@ -132,7 +141,7 @@ store( 'gatherpress/calendar', {
 		 */
 		initCalendarObserver: () => {
 			const context = getContext();
-			const { state, actions } = store( 'gatherpress/calendar' );
+			const { state, actions } = store( CALENDAR_STORE );
 
 			if ( ! ( 'IntersectionObserver' in window ) ) {
 				context.isCalendarVisible = true;
@@ -163,7 +172,7 @@ store( 'gatherpress/calendar', {
 		 * Reactively recalculates position whenever isCurrentEventOpen becomes true
 		 */
 		positionPopover: () => {
-			const { state } = store( 'gatherpress/calendar' );
+			const { state } = store( CALENDAR_STORE );
 
 			// Only calculate if this specific event is open
 			if ( ! state.isCurrentEventOpen ) {
@@ -190,7 +199,7 @@ store( 'gatherpress/calendar', {
 		 * Repositions the popover on window resize / scroll.
 		 */
 		onWindowChange: () => {
-			const { state, callbacks } = store( 'gatherpress/calendar' );
+			const { state, callbacks } = store( CALENDAR_STORE );
 			const context = getContext();
 
 			// Only calculate if this popover is open AND the calendar is visible
