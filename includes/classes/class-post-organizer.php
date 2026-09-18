@@ -74,7 +74,7 @@ class Post_Organizer {
 		$post_type = get_post_type( $post_id );
 
 		if ( 'gatherpress_event' === $post_type ) {
-			$event     = new Event( $post_id );
+			$event     = new Event\Event( $post_id );
 			$post_date = $event->get_datetime_start( Date_Calculator::DATE_FORMAT );
 		} else {
 			$post_date = get_the_date( Date_Calculator::DATE_FORMAT, $post_id );

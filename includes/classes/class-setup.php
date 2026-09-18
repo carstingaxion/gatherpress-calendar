@@ -300,7 +300,7 @@ class Setup {
 		if ( $block_name === 'core/query' ) {
 			$has_calendar = self::gatherpress_has_inner_block( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? [] );
 
-			if ( $has_calendar ) {
+			if ( $has_calendar && is_array( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs']['query'] ) ) {
 
 				// This could also be set in JS, but it works here, too.
 				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_PARAM ] = true;
@@ -314,6 +314,7 @@ class Setup {
 		// 2. Target child `gatherpress/calendar`: Compute `selectedMonth`
 		// -------------------------------------------------------------
 		if ( $block_name === 'gatherpress/calendar' ) {
+			
 			// Read queryId from context (supports any nesting level, e.g. Query -> Group -> Calendar).
 			$query_id = 0;
 			if ( $parent_block instanceof WP_Block ) {

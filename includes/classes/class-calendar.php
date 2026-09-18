@@ -125,6 +125,7 @@ class Calendar {
 
 		// Build calendar structure.
 		$start_of_week = get_option( 'start_of_week', 0 );
+		$start_of_week = is_int( $start_of_week ) ? $start_of_week : 0;
 		$calendar_data = Calendar_Structure_Builder::build_structure( $year, $month, $start_of_week, $posts_by_date );
 
 		// Prepare styles.
