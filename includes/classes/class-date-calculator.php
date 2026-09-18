@@ -8,12 +8,12 @@
 
 declare(strict_types=1);
 
-namespace GatherPress\Calendar;
+namespace GatherPress_Calendar;
 
 defined( 'ABSPATH' ) || exit; // Exit if accessed directly.
 
 
-if ( ! class_exists( '\GatherPress\Calendar\Date_Calculator' ) ) {
+if ( ! class_exists( '\GatherPress_Calendar\Date_Calculator' ) ) {
 	/**
 	 * Date_Calculator Class
 	 *

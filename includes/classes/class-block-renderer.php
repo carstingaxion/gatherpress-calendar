@@ -8,11 +8,11 @@
 
 declare(strict_types=1);
 
-namespace GatherPress\Calendar;
+namespace GatherPress_Calendar;
 
 defined( 'ABSPATH' ) || exit; // Exit if accessed directly.
 
-if ( ! class_exists( '\GatherPress\Calendar\Block_Renderer' ) ) {
+if ( ! class_exists( '\GatherPress_Calendar\Block_Renderer' ) ) {
 	/**
 	 * Block_Renderer Class
 	 *

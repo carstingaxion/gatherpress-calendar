@@ -18,7 +18,7 @@
 
 declare(strict_types=1);
 
-namespace GatherPress\Calendar;
+namespace GatherPress_Calendar;
 
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore

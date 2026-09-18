@@ -8,12 +8,12 @@
 
 declare(strict_types=1);
 
-namespace GatherPress\Calendar;
+namespace GatherPress_Calendar;
 
 defined( 'ABSPATH' ) || exit; // Exit if accessed directly.
 
 
-if ( ! class_exists( '\GatherPress\Calendar\Style_Processor' ) ) {
+if ( ! class_exists( '\GatherPress_Calendar\Style_Processor' ) ) {
 	/**
 	 * Style_Processor Class
 	 *

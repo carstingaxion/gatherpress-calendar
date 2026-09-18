@@ -16,7 +16,7 @@
 
 declare(strict_types=1);
 
-namespace GatherPress\Calendar;
+namespace GatherPress_Calendar;
 
 use WP_Block;
 use WP_REST_Request;
@@ -29,6 +29,22 @@ defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 // Constants.
 define( 'GATHERPRESS_CALENDAR_VERSION', current( get_file_data( __FILE__, array( 'Version' ), 'plugin' ) ) );
 define( 'GATHERPRESS_CALENDAR_CORE_PATH', __DIR__ );
+
+/**
+ * Adds the GatherPress_Awesome namespace to the autoloader.
+ *
+ * This function hooks into the 'gatherpress_autoloader' filter and adds the
+ * GatherPress_Awesome namespace to the list of namespaces with its core path.
+ *
+ * @param array $namespace An associative array of namespaces and their paths.
+ * @return array Modified array of namespaces and their paths.
+ */
+function gatherpress_awesome_autoloader( array $namespace ): array {
+	$namespace['GatherPress_Calendar'] = GATHERPRESS_CALENDAR_CORE_PATH;
+
+	return $namespace;
+}
+add_filter( 'gatherpress_autoloader', __NAMESPACE__ . '\\gatherpress_awesome_autoloader' );
 
 /**
  * Registers the GatherPress Calendar block.

@@ -8,11 +8,11 @@
 
 declare(strict_types=1);
 
-namespace GatherPress\Calendar;
+namespace GatherPress_Calendar;
 
 defined( 'ABSPATH' ) || exit; // Exit if accessed directly.
 
-if ( ! class_exists( '\GatherPress\Calendar\Query_Builder' ) ) {
+if ( ! class_exists( '\GatherPress_Calendar\Query_Builder' ) ) {
 	/**
 	 * Query_Builder Class
 	 *

@@ -8,11 +8,11 @@
 
 declare(strict_types=1);
 
-namespace GatherPress\Calendar;
+namespace GatherPress_Calendar;
 
 defined( 'ABSPATH' ) || exit; // Exit if accessed directly.
 
-if ( ! class_exists( '\GatherPress\Calendar\Post_Organizer' ) ) {
+if ( ! class_exists( '\GatherPress_Calendar\Post_Organizer' ) ) {
 	/**
 	 * Post_Organizer Class
 	 *
