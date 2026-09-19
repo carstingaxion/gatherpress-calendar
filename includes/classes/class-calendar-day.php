@@ -116,14 +116,27 @@ class Calendar_Day {
 
 		$events_html = $has_posts ? $this->render_event_dots( $day_posts, $popover_styles, $block ) : '';
 
+		$day_number_block = null;
+		if ( ! empty( $block->parsed_block['innerBlocks'] ) ) {
+			foreach ( $block->parsed_block['innerBlocks'] as $inner ) {
+				if ( ( $inner['attrs']['metadata']['bindings']['content']['source'] ?? '' ) === 'gatherpress/calendar-day' ) {
+					$day_number_block = $inner;
+					break;
+				}
+			}
+		}
+
+		// Render the bound paragraph block with this day's context
+		$day_number_html = $day_number_block 
+			? ( new \WP_Block( $day_number_block, $block->context ) )->render() 
+			: sprintf( '<p class="gatherpress-calendar__day-number">%s</p>', esc_html( (string) $day_number ) );
+
 		ob_start();
 		?>
 		<td <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 			<?php if ( ! $is_empty && $day_number > 0 ) { ?>
 				<div class="gatherpress-calendar__day-content">
-					<div class="gatherpress-calendar__day-number">
-						<?php echo esc_html( (string) $day_number ); ?>
-					</div>
+					<?php echo $day_number_html; ?>
 					<?php if ( ! empty( $events_html ) ) { ?>
 						<div class="gatherpress-calendar__events">
 							<?php echo $events_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>

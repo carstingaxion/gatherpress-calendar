@@ -126,6 +126,18 @@ class Setup {
 				'viewportWidth' => 1400,
 			)
 		);
+
+		register_block_bindings_source(
+			'gatherpress/calendar-day',
+			array(
+				'label'              => _x( 'Calendar Day Number', 'Block Bindings Source', 'gatherpress-calendar' ),
+				'get_value_callback' => array( $this, 'get_day_number_binding_value' ),
+				'uses_context'       => array(
+					'gatherpress/dayNumber',
+					'gatherpress/isEmpty',
+				),
+			)
+		);
 	}
 
 	/**
@@ -500,5 +512,28 @@ class Setup {
 			$query,
 			$filtered_query_args
 		);
+	}
+
+	/**
+	 * Callback to retrieve the bound day number value.
+	 *
+	 * @param array<string, mixed> $source_args      Source arguments.
+	 * @param \WP_Block             $block_instance   The bound block instance (e.g. core/paragraph).
+	 * @param string                $attribute_name   Bound attribute name ('content').
+	 *
+	 * @return string|null Day number string or null.
+	 */
+	public function get_day_number_binding_value( array $source_args, \WP_Block $block_instance, string $attribute_name ): ?string {
+		if ( 'content' !== $attribute_name ) {
+			return null;
+		}
+
+		if ( ! empty( $block_instance->context['gatherpress/isEmpty'] ) ) {
+			return '';
+		}
+
+		$day_number = $block_instance->context['gatherpress/dayNumber'] ?? null;
+
+		return null !== $day_number ? (string) $day_number : null;
 	}
 }
