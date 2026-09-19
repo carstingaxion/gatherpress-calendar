@@ -37,10 +37,18 @@
     "customClassName": true,
     "color": {
       "background": true,
-      "text": true
+      "text": true,
+      "gradients": true
     },
     "spacing": {
-      "padding": true
+      "padding": true,
+      "margin": true
+    },
+    "border": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true
     }
   },
   "textdomain": "gatherpress-calendar",

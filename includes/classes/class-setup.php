@@ -84,7 +84,7 @@ class Setup {
 	 */
 	public function block_init(): void {
 	// Standard registration (GatherPress core does this in a loop)
-	register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/' );
+	register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar' );
 
 	if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' ) ) {
 		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' );

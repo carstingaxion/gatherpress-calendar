@@ -11,8 +11,7 @@
     "core/query"
   ],
   "allowedBlocks": [
-    "gatherpress/calendar-week",
-    "gatherpress/calendar-day"
+    "gatherpress/calendar-week"
   ],
   "usesContext": [
     "queryId",
@@ -22,9 +21,6 @@
     "templateSlug",
     "previewPostType"
   ],
-  "providesContext": {
-    "gatherpress/templateConfigStyle": "templateConfigStyle"
-  },
   "attributes": {
     "selectedMonth": {
       "type": "string",
@@ -51,7 +47,6 @@
       "default": true
     }
   },
-  "example": {},
   "supports": {
     "interactivity": true,
     "reusable": false,
@@ -59,55 +54,29 @@
     "align": true,
     "alignWide": true,
     "customClassName": true,
-    "typography": {
-      "fontSize": true,
-      "lineHeight": true,
-      "__experimentalFontFamily": true,
-      "__experimentalFontWeight": true,
-      "__experimentalFontStyle": true,
-      "__experimentalTextTransform": true,
-      "__experimentalTextDecoration": true,
-      "__experimentalLetterSpacing": true,
-      "__experimentalDefaultControls": {
-        "fontSize": true
-      }
-    },
     "color": {
-      "gradients": true,
-      "link": true,
+      "gradients": false,
+      "link": false,
+      "text": false,
       "__experimentalDefaultControls": {
-        "background": true,
-        "text": true
+        "background": true
       }
     },
     "spacing": {
       "margin": true,
-      "padding": true
+      "padding": true,
+      "blockGap": true
+    },
+    "border": {
+      "color": true,
+      "radius": true,
+      "style": true,
+      "width": true
+    },
+    "layout": {
+      "allowEditing": false
     }
   },
-  "styles": [
-    {
-      "name": "default",
-      "label": "Classic",
-      "isDefault": true
-    },
-    {
-      "name": "minimal",
-      "label": "Minimal"
-    },
-    {
-      "name": "bold",
-      "label": "Bold"
-    },
-    {
-      "name": "circular",
-      "label": "Circular"
-    },
-    {
-      "name": "gradient",
-      "label": "Gradient"
-    }
-  ],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
