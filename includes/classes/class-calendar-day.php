@@ -54,9 +54,6 @@ class Calendar_Day {
 	 * @return void
 	 */
 	protected function setup_hooks(): void {
-		$render_block_hook = sprintf( 'render_block_%s', self::BLOCK_NAME );
-		
-		// add_filter( $render_block_hook, array( $this, 'render_filter' ), 10, 3 );
 		add_filter( 'register_block_type_args', array( $this, 'filter_block_type_args' ), 10, 2 );
 	}
 
@@ -140,55 +137,6 @@ class Calendar_Day {
 	}
 
 	/**
-	 * Render the calendar day cell.
-	 *
-	 * @param string               $block_content The block content (inner event dots/popovers).
-	 * @param array<string, mixed> $block         The parsed block.
-	 * @param WP_Block             $instance      The block instance.
-	 *
-	 * @return string Rendered HTML.
-	 */
-	public function render_filter( string $block_content, array $block, WP_Block $instance ): string {
-		$day_number = isset( $instance->context['gatherpress/dayNumber'] ) ? (int) $instance->context['gatherpress/dayNumber'] : 0;
-		$is_empty   = ! empty( $instance->context['gatherpress/isEmpty'] );
-		$is_today   = ! empty( $instance->context['gatherpress/isToday'] );
-		$has_posts  = ! empty( $instance->context['gatherpress/dayPosts'] );
-
-		$classes = array( 'gatherpress-calendar__day' );
-		if ( $is_empty ) {
-			$classes[] = 'is-empty';
-		}
-		if ( $has_posts ) {
-			$classes[] = 'has-posts';
-		}
-		if ( $is_today ) {
-			$classes[] = 'is-today';
-		}
-
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
-// return 'ololol';
-wp_die('lololo');
-		ob_start();
-		?>
-		<td <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-			<?php if ( ! $is_empty && $day_number > 0 ) { ?>
-				<div class="gatherpress-calendar__day-content">
-					<div class="gatherpress-calendar__day-number">
-						<?php echo esc_html( (string) $day_number ); ?>
-					</div>
-					<?php if ( ! empty( $block_content ) ) { ?>
-						<div class="gatherpress-calendar__events">
-							<?php echo $block_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-						</div>
-					<?php } ?>
-				</div>
-			<?php } ?>
-		</td>
-		<?php
-		return (string) ob_get_clean();
-	}
-
-/**
 	 * Render event dots and hidden content containers for a day.
 	 *
 	 * @param array<mixed> $post_ids       Post IDs.

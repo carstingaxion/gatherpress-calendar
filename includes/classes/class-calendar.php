@@ -69,37 +69,35 @@ class Calendar {
 	 * @return void
 	 */
 	protected function setup_hooks(): void {
-		$render_block_hook = sprintf( 'render_block_%s', self::BLOCK_NAME );
-
-		add_filter( $render_block_hook, array( $this, 'render' ), 10, 3 );
+		add_filter( 'register_block_type_args', array( $this, 'filter_block_type_args' ), 10, 2 );
 	}
 
 	/**
-	 * Render the calendar block.
+	 * Inject render_callback into block registration arguments.
 	 *
-	 * @since 0.1.0
+	 * @param array<string, mixed> $args       Block registration arguments.
+	 * @param string               $block_type Block type name (e.g. 'gatherpress/calendar-day').
 	 *
-	 * @param string               $block_content The block content.
-	 * @param array<string, mixed> $block         The full block, including name and attributes.
-	 * @param WP_Block             $instance      The block instance.
-	 *
-	 * @return string Rendered HTML, empty string in case of problems.
+	 * @return array<string, mixed> Filtered arguments.
 	 */
-	public function render( string $block_content, array $block, WP_Block $instance ): string {
-		/**
-		 * Extract and sanitize block attributes.
-		 *
-		 * @var array{
-		 *   selectedMonth: string,
-		 *   monthModifier: int,
-		 *   templateConfigStyle: array<string, mixed>,
-		 *   showMonthHeading: bool,
-		 *   monthHeadingLevel: int,
-		 *   showWeekdays: bool,
-		 * } $attributes
-		 */
-		$attributes = $block['attrs'];
+	public function filter_block_type_args( array $args, string $block_type ): array {
+		if ( self::BLOCK_NAME === $block_type ) {
+			$args['render_callback'] = array( $this, 'render_callback' );
+		}
 
+		return $args;
+	}
+
+	/**
+	 * Render callback for the calendar day cell.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param string               $content    Block inner content (event dots & popovers).
+	 * @param WP_Block             $block      Block instance.
+	 *
+	 * @return string Rendered HTML.
+	 */
+	public function render_callback( array $attributes, string $content, WP_Block $block ): string {
 		// Enable Interactivity API for this block.
 		wp_interactivity_state(
 			self::STORE_NAME,
@@ -120,7 +118,7 @@ class Calendar {
 		 *
 		 * @var array<string, mixed>|null $query
 		 */
-		$query = $instance->context['query'] ?? null;
+		$query = $block->context['query'] ?? null;
 		if ( ! is_array( $query ) || empty( $query ) ) {
 			return '';
 		}
@@ -130,12 +128,12 @@ class Calendar {
 		$year        = $target_date['year'];
 		$month       = $target_date['month'];
 
-// Pass year/month into context tree for calendar-day consumers:
-$instance->context['gatherpress/year']  = $year;
-$instance->context['gatherpress/month'] = $month;
+		// Pass year/month into context tree for calendar-day consumers:
+		$block->context['gatherpress/year']  = $year;
+		$block->context['gatherpress/month'] = $month;
 
 		// Build query and fetch posts.
-		$query_args    = Query_Builder::build_query_args( $instance, $year, $month );
+		$query_args    = Query_Builder::build_query_args( $block, $year, $month );
 		$posts_by_date = Post_Organizer::organize_posts_by_date( $query_args );
 
 		// Build calendar structure.
@@ -147,7 +145,8 @@ $instance->context['gatherpress/month'] = $month;
 		$popover_styles = Style_Processor::prepare_popover_styles( $attributes );
 
 		// Generate HTML.
-		$renderer = new HTML_Renderer( $instance );
+		$renderer = new HTML_Renderer( $block );
 		return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles );
 	}
+
 }
