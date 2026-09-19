@@ -13,9 +13,9 @@ import { DayCell } from './DayCell';
  *
  * @return {Element} Calendar table component.
  */
-export function CalendarTable( { calendar, showWeekdays } ) {
+export function CalendarTable( { calendar, showWeekdays, style } ) {
 	return (
-		<table className="gatherpress-calendar__table">
+		<table className="gatherpress-calendar__table" style={ style }>
 			{ showWeekdays && (
 				<thead>
 					<tr>

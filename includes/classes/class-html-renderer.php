@@ -91,7 +91,11 @@ class HTML_Renderer {
 					?>
 					<<?php echo esc_attr( $heading_tag ); ?> class="gatherpress-calendar__month wp-block-heading"><?php echo esc_html( $calendar_data['month_name'] ); ?></<?php echo esc_attr( $heading_tag ); ?>>
 				<?php } ?>
-				<table class="gatherpress-calendar__table">
+				<?php
+				$grid_gap    = Style_Processor::get_block_gap_value( $attributes );
+				$table_style = ! empty( $grid_gap ) ? sprintf( 'style="gap: %s;"', esc_attr( $grid_gap ) ) : '';
+				?>
+				<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 					<?php if ( $show_weekdays ) { ?>
 						<thead>
 							<tr>

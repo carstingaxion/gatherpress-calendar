@@ -38,7 +38,7 @@ import { TEMPLATE } from './edit/constants';
 
 import { calculateDateQuery } from './edit/utils/date-utils';
 import { generateCalendar } from './edit/utils/calendar-utils';
-import { boxControlToCSS, borderControlToCSS } from './edit/utils/style-utils';
+import { boxControlToCSS, borderControlToCSS, resolveBlockGapCSS } from './edit/utils/style-utils';
 
 import { useCalendarData } from './edit/hooks/useCalendarData';
 
@@ -136,6 +136,10 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			templateLock: false,
 		}
 	);
+
+	const tableStyle = {
+		gap: resolveBlockGapCSS( attributes.style?.spacing?.blockGap ),
+	};
 
 	// Show placeholder if block is not inside a Query Loop.
 	if ( ! query ) {
@@ -362,6 +366,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 					<CalendarTable
 						calendar={ calendar }
 						showWeekdays={ showWeekdays }
+						style={ tableStyle }
 					/>
 					<TemplateConfig
 						templateConfigStyles={ templateConfigStyles }
