@@ -83,7 +83,16 @@ class Setup {
 	 * @return void
 	 */
 	public function block_init(): void {
-		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/' );
+	// Standard registration (GatherPress core does this in a loop)
+	register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/' );
+
+	if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' ) ) {
+		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' );
+	}
+
+	if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' ) ) {
+		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' );
+	}
 
 		$pattern = '<!-- wp:query {"queryId":null,"query":{"perPage":5,"pages":0,"offset":0,"postType":"gatherpress_event","order":"asc","orderBy":"datetime","inherit":false,"excludeCurrent":null,"parents":[],"sticky":"","format":[],"gatherpress_event_query":"upcoming","include_unfinished":1},"namespace":"gatherpress-event-query","enhancedPagination":true,"metadata":{"name":"Upcoming Events"},"className":"gatherpress-event-query"} -->
 <div class="wp-block-query gatherpress-event-query"><!-- wp:query-pagination {"paginationArrow":"chevron","layout":{"type":"flex","justifyContent":"space-between"}} -->

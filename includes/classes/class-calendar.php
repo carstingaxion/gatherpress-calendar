@@ -130,6 +130,10 @@ class Calendar {
 		$year        = $target_date['year'];
 		$month       = $target_date['month'];
 
+// Pass year/month into context tree for calendar-day consumers:
+$instance->context['gatherpress/year']  = $year;
+$instance->context['gatherpress/month'] = $month;
+
 		// Build query and fetch posts.
 		$query_args    = Query_Builder::build_query_args( $instance, $year, $month );
 		$posts_by_date = Post_Organizer::organize_posts_by_date( $query_args );

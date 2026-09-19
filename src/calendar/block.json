@@ -2,13 +2,29 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "gatherpress/calendar",
-	"version": "0.3.1",
+	"version": "0.4.0",
 	"title": "GatherPress Calendar",
 	"category": "gatherpress",
 	"icon": "calendar-alt",
 	"description": "Display query loop posts in a monthly calendar format.",
-	"ancestor": ["core/query"],
-	"usesContext": [ "queryId", "query", "queryContext", "displayLayout", "templateSlug", "previewPostType" ],
+	"ancestor": [
+		"core/query"
+	],
+	"allowedBlocks": [
+		"gatherpress/calendar-week",
+		"gatherpress/calendar-day"
+	],
+	"usesContext": [
+		"queryId",
+		"query",
+		"queryContext",
+		"displayLayout",
+		"templateSlug",
+		"previewPostType"
+	],
+	"providesContext": {
+		"gatherpress/templateConfigStyle": "templateConfigStyle"
+	},
 	"attributes": {
 		"selectedMonth": {
 			"type": "string",
@@ -53,23 +69,23 @@
 			"__experimentalTextDecoration": true,
 			"__experimentalLetterSpacing": true,
 			"__experimentalDefaultControls": {
-				"fontSize": true
+			"fontSize": true
 			}
 		},
 		"color": {
 			"gradients": true,
 			"link": true,
 			"__experimentalDefaultControls": {
-				"background": true,
-				"text": true
+			"background": true,
+			"text": true
 			}
 		},
 		"spacing": {
 			"margin": true,
 			"padding": true
 		}
-	},
-	"styles": [
+		},
+		"styles": [
 		{
 			"name": "default",
 			"label": "Classic",

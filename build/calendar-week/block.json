@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "gatherpress/calendar-week",
+  "version": "0.4.0",
+  "title": "Calendar Week",
+  "category": "gatherpress",
+  "icon": "table-row-after",
+  "description": "A week row container in the GatherPress Calendar grid.",
+  "parent": [
+    "gatherpress/calendar"
+  ],
+  "allowedBlocks": [
+    "gatherpress/calendar-day"
+  ],
+  "usesContext": [
+    "queryId",
+    "gatherpress/year",
+    "gatherpress/month",
+    "gatherpress/weekIndex",
+    "gatherpress/weekDays",
+    "gatherpress/popoverStyles"
+  ],
+  "providesContext": {
+    "gatherpress/weekIndex": "weekIndex"
+  },
+  "attributes": {
+    "weekIndex": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "interactivity": true,
+    "html": false,
+    "reusable": false,
+    "customClassName": true,
+    "color": {
+      "background": true,
+      "text": true
+    },
+    "spacing": {
+      "padding": true
+    }
+  },
+  "textdomain": "gatherpress-calendar",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}

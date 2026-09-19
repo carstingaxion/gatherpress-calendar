@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "gatherpress/calendar-day",
+  "version": "0.4.0",
+  "title": "Calendar Day",
+  "category": "gatherpress",
+  "icon": "calendar",
+  "description": "An individual day cell inside the GatherPress Calendar grid.",
+  "parent": [
+    "gatherpress/calendar-week"
+  ],
+  "usesContext": [
+    "queryId",
+    "gatherpress/year",
+    "gatherpress/month",
+    "gatherpress/dayDate",
+    "gatherpress/dayNumber",
+    "gatherpress/dayPosts",
+    "gatherpress/isEmpty",
+    "gatherpress/isToday",
+    "gatherpress/popoverStyles",
+    "gatherpress/templateConfigStyle"
+  ],
+  "providesContext": {
+    "gatherpress/dayDate": "date",
+    "gatherpress/dayNumber": "day",
+    "gatherpress/dayPosts": "posts",
+    "gatherpress/isEmpty": "isEmpty",
+    "gatherpress/isToday": "isToday"
+  },
+  "attributes": {
+    "date": {
+      "type": "string",
+      "default": ""
+    },
+    "day": {
+      "type": "number",
+      "default": 0
+    },
+    "isEmpty": {
+      "type": "boolean",
+      "default": false
+    },
+    "isToday": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "supports": {
+    "interactivity": true,
+    "html": false,
+    "reusable": false,
+    "customClassName": true,
+    "color": {
+      "background": true,
+      "text": true,
+      "__experimentalDefaultControls": {
+        "background": true,
+        "text": true
+      }
+    },
+    "spacing": {
+      "padding": true,
+      "margin": false
+    },
+    "typography": {
+      "fontSize": true,
+      "lineHeight": true
+    }
+  },
+  "textdomain": "gatherpress-calendar",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "viewScriptModule": "file:./view.js"
+}

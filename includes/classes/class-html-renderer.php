@@ -31,14 +31,6 @@ use WP_Post;
 class HTML_Renderer {
 
 	/**
-	 * Original global post.
-	 *
-	 * @since 0.1.0
-	 * @var WP_Post|null
-	 */
-	private ?WP_Post $original_post = null;
-
-	/**
 	 * Surrounding parent block.
 	 *
 	 * @since 0.1.0
@@ -61,7 +53,6 @@ class HTML_Renderer {
 	 * @param WP_Block $block The parent gatherpress/calendar block instance.
 	 */
 	public function __construct( WP_Block $block ) {
-		$this->original_post = ( isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof WP_Post ) ? $GLOBALS['post'] : null;
 		$this->today         = Date_Calculator::get_today();
 		$this->block         = $block;
 	}
@@ -112,7 +103,11 @@ class HTML_Renderer {
 						</thead>
 					<?php } ?>
 					<tbody>
-						<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles ) ); ?>
+						<?php 
+						// error_log('$calendar_data[weeks] ' . var_export($calendar_data['weeks'],true));
+
+						
+						echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles ) ); ?>
 					</tbody>
 				</table>
 				<div 
@@ -127,7 +122,7 @@ class HTML_Renderer {
 	}
 
 	/**
-	 * Render calendar weeks.
+	 * Render calendar weeks by delegating to gatherpress/calendar-day block instances.
 	 *
 	 * @since 0.1.0
 	 *
@@ -136,18 +131,186 @@ class HTML_Renderer {
 	 *
 	 * @return string Weeks HTML.
 	 */
-	private function render_calendar_weeks( array $weeks, string $popover_styles ): string {
+	private function render_calendar_weeks__OLD( array $weeks, string $popover_styles ): string {
 		ob_start();
 
 		foreach ( $weeks as $week ) {
 			echo '<tr>';
 			foreach ( $week as $day ) {
-				echo wp_kses_post( $this->render_day_cell( $day, $popover_styles ) );
+
+			error_log('$day ' . var_export($day,true));
+				echo $this->render_day_block( $day, $popover_styles ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 			echo '</tr>';
 		}
 
 		return (string) ob_get_clean();
+	}
+/**
+ * Render calendar weeks by delegating to gatherpress/calendar-week blocks.
+ *
+ * @param list<list<array<string, mixed>>> $weeks          Weeks array.
+ * @param string                           $popover_styles Popover styles.
+ *
+ * @return string Weeks HTML.
+ */
+private function render_calendar_weeks( array $weeks, string $popover_styles ): string {
+	ob_start();
+
+	$week_template = $this->get_week_template_block();
+
+	foreach ( $weeks as $week_index => $week_days ) {
+		$week_context = array_merge(
+			$this->block->context,
+			array(
+				'gatherpress/weekIndex'     => $week_index,
+				'gatherpress/weekDays'      => $week_days,
+				'gatherpress/popoverStyles' => $popover_styles,
+			)
+		);
+			
+		$week_block = new WP_Block( $week_template, $week_context );
+		echo $week_block->render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	}
+
+	return (string) ob_get_clean();
+}
+
+/**
+ * Locate the gatherpress/calendar-week template block from innerBlocks.
+ *
+ * @return array<string, mixed> Parsed week template block.
+ */
+private function get_week_template_block(): array {
+	if ( ! empty( $this->block->parsed_block['innerBlocks'] ) ) {
+		foreach ( $this->block->parsed_block['innerBlocks'] as $inner_block ) {
+			if ( ( $inner_block['blockName'] ?? '' ) === Calendar_Week::BLOCK_NAME ) {
+				return $inner_block;
+			}
+		}
+	}
+
+	// Fallback structure
+	return array(
+		'blockName'    => Calendar_Week::BLOCK_NAME,
+		'attrs'        => array(),
+		'innerBlocks'  => $this->block->parsed_block['innerBlocks'] ?? array(),
+		'innerHTML'    => $this->block->parsed_block['innerHTML'] ?? '',
+		'innerContent' => $this->block->parsed_block['innerContent'] ?? array(),
+	);
+}
+	/**
+	 * Locate the gatherpress/calendar-day template block from innerBlocks.
+	 *
+	 * @return array<string, mixed> Parsed day template block.
+	 */
+	private function get_day_template_block(): array {
+		if ( ! empty( $this->block->parsed_block['innerBlocks'] ) ) {
+			foreach ( $this->block->parsed_block['innerBlocks'] as $inner_block ) {
+				if ( ( $inner_block['blockName'] ?? '' ) === Calendar_Day::BLOCK_NAME ) {
+					return $inner_block;
+				}
+			}
+		}
+
+		// Fallback if the user removed the day block or uses legacy markup.
+		return array(
+			'blockName'    => Calendar_Day::BLOCK_NAME,
+			'attrs'        => array(),
+			'innerBlocks'  => $this->block->parsed_block['innerBlocks'] ?? array(),
+			'innerHTML'    => $this->block->parsed_block['innerHTML'] ?? '',
+			'innerContent' => $this->block->parsed_block['innerContent'] ?? array(),
+		);
+	}
+
+	/**
+	 * Render a single calendar day using the real template block.
+	 *
+	 * @param array<string, mixed> $day            Day data from Calendar_Structure_Builder.
+	 * @param string               $popover_styles Popover styles.
+	 *
+	 * @return string Day block HTML.
+	 */
+	private function render_day_block( array $day, string $popover_styles ): string {
+		$day_posts = isset( $day['posts'] ) && is_array( $day['posts'] ) ? $day['posts'] : array();
+		$is_today  = isset( $day['date'] ) && is_string( $day['date'] ) && $day['date'] === $this->today;
+
+		// Build Day context merged with parent Query & Calendar context.
+		$day_context = array_merge(
+			$this->block->context,
+			array(
+				'gatherpress/dayDate'       => $day['date'] ?? '',
+				'gatherpress/dayNumber'     => $day['day'] ?? 0,
+				'gatherpress/dayPosts'      => $day_posts,
+				'gatherpress/isEmpty'       => ! empty( $day['isEmpty'] ),
+				'gatherpress/isToday'       => $is_today,
+				'gatherpress/popoverStyles' => $popover_styles,
+			)
+		);
+
+		// Retrieve the real day template block configured by the user in the editor.
+		$day_template = $this->get_day_template_block();
+
+		// Render the day template with this specific day's context.
+		$day_block = new WP_Block( $day_template, $day_context );
+
+		return $day_block->render();
+	}
+
+	/**
+	 * Render a single gatherpress/calendar-day block instance with injected day context.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @param array<string, mixed> $day            Day data from Calendar_Structure_Builder.
+	 * @param string               $popover_styles Popover styles.
+	 *
+	 * @return string Day block HTML.
+	 */
+	private function render_day_block___OOOOLD( array $day, string $popover_styles ): string {
+		$day_posts = isset( $day['posts'] ) && is_array( $day['posts'] ) ? $day['posts'] : array();
+		$is_today  = isset( $day['date'] ) && is_string( $day['date'] ) && $day['date'] === $this->today;
+
+		ob_start();
+
+		// 1. Render event dots & popovers as inner content for this day block
+		$inner_events_html = ! empty( $day_posts ) ? $this->render_event_dots( $day_posts, $popover_styles ) : '';
+		// $inner_events_html = 'some event dot';
+
+		// 2. Build Day context merged with parent Query & Calendar context
+		$day_context = array_merge(
+			$this->block->context,
+			array(
+				'gatherpress/dayDate'   => $day['date'] ?? '',
+				'gatherpress/dayNumber' => $day['day'] ?? 0,
+				'gatherpress/dayPosts'  => $day_posts,
+				'gatherpress/isEmpty'   => ! empty( $day['isEmpty'] ),
+				'gatherpress/isToday'   => $is_today,
+			)
+		);
+
+		// 3. Construct the virtual parsed block instance
+		$day_parsed_block = array(
+			'blockName'    => Calendar_Day::BLOCK_NAME,
+			'attrs'        => array(),
+			'innerBlocks'  => array(),
+			'innerHTML'    => $inner_events_html,
+			'innerContent' => array( $inner_events_html ),
+		);
+// error_log('$day_context: ' . var_export($day_context, true));
+// 4. Render through the standard WP_Block pipeline (executing filters/render callbacks)
+$day_block = new WP_Block( $day_parsed_block, $day_context );
+// error_log('$day_block: ' . var_export($day_block, true));
+
+$render = $day_block->render( array( 'dynamic' => true ) );
+// $render = $day_block->render( array( 'dynamic' => false ) );
+
+// $render = $day_block->render();
+$render .= ob_get_clean();
+// error_log('$render: ' . var_export($render, true));
+// echo $render;
+		// return (string) ob_get_clean();
+		return  $render;
 	}
 
 	/**

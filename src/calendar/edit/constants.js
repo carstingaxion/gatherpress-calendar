@@ -8,8 +8,20 @@
  * @since 0.1.0
  */
 export const TEMPLATE = [
-	[ 'core/post-title', { level: 3 } ],
-	[ 'core/post-date' ],
+    [
+        'gatherpress/calendar-week',
+        {},
+        [
+            [
+                'gatherpress/calendar-day',
+                {},
+                [
+                    [ 'core/post-title', { level: 3 } ],
+                    [ 'gatherpress/event-date' ],
+                ],
+            ],
+        ],
+    ],
 ];
 
 /**
