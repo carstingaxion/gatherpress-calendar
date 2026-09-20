@@ -73,9 +73,9 @@
       "style": true,
       "width": true
     },
-	"layout": {
-		"allowEditing": false
-	}
+    "layout": {
+      "allowEditing": false
+    }
   },
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",

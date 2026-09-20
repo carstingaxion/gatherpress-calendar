@@ -61,9 +61,12 @@
         "text": true
       }
     },
+    "shadow": true,
+    "listView": true,
+    "contentRole": true,
     "spacing": {
-      "padding": false,
-      "margin": true
+      "padding": true,
+      "margin": false
     },
     "border": {
       "color": true,

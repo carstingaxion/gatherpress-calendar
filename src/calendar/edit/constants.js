@@ -7,15 +7,43 @@
  * @type {Array<Array>}
  * @since 0.1.0
  */
+/**
+ * Template for each event's popover content, rendered by
+ * gatherpress/calendar-entries once per event on the frontend.
+ *
+ * @type {Array<Array>}
+ * @since 0.5.0
+ */
+export const ENTRIES_TEMPLATE = [
+    [ 'core/post-title', { level: 3 } ],
+    [ 'gatherpress/event-date' ],
+];
+
 export const DAY_TEMPLATE = [
-    [
-        'gatherpress/calendar-day',
-        {},
-        [
-            [ 'core/post-title', { level: 3 } ],
-            [ 'gatherpress/event-date' ],
-        ],
-    ],
+	[
+		'gatherpress/calendar-day',
+		{},
+		[
+			[
+				'core/paragraph',
+				{
+					metadata: {
+						bindings: {
+							content: {
+								source: 'gatherpress/calendar-day',
+							},
+						},
+						name: 'Day Number',
+					},
+					textAlign: 'center',
+					fontSize: 'small',
+					placeholder: 'DD',
+					content: 'DD',
+				},
+			],
+			[ 'gatherpress/calendar-entries', {}, ENTRIES_TEMPLATE ],
+		],
+	],
 ];
 
 export const TEMPLATE = [ [ 'gatherpress/calendar-week', {}, DAY_TEMPLATE ] ];

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "gatherpress/calendar-entries",
+  "version": "0.1.0",
+  "title": "Calendar Entries",
+  "category": "gatherpress",
+  "icon": "list-view",
+  "description": "Lists a calendar day's events, one per event. Works like the Post Template block: its inner blocks are the template used to render each event - for now, that template is only used for the event's popover content.",
+  "parent": [ "gatherpress/calendar-day" ],
+  "usesContext": [
+    "gatherpress/dayDate",
+    "gatherpress/dayPosts",
+    "gatherpress/isEmpty",
+    "gatherpress/popoverStyles"
+  ],
+  "attributes": {
+    "layout": {
+      "type": "object",
+      "default": { "type": "default" }
+    }
+  },
+  "supports": {
+    "interactivity": true,
+    "html": false,
+    "reusable": false,
+    "layout": {
+      "allowSwitching": true,
+      "allowInheriting": false,
+      "allowSizingOnChildren": false,
+      "default": { "type": "default" }
+    },
+    "listView": true,
+    "contentRole": true
+  },
+  "textdomain": "gatherpress-calendar",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}
