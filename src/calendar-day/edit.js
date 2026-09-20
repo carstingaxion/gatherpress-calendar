@@ -6,9 +6,19 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { useBlockProps, useInnerBlocksProps } from '@wordpress/block-editor';
+import {
+	useBlockProps,
+	useInnerBlocksProps,
+	store as blockEditorStore,
+} from '@wordpress/block-editor';
+import { useSelect } from '@wordpress/data';
 
 import './editor.scss';
+
+import {
+	findDayNumberBlock,
+	getDayNumberJustifyContent,
+} from '../utils/day-number';
 
 /**
  * Edit Component for Calendar Day
@@ -20,11 +30,26 @@ import './editor.scss';
  *
  * @return {Element} Day cell preview element.
  */
-export default function Edit( { context } ) {
+export default function Edit( { context, clientId } ) {
 	const dayNumber = context?.[ 'gatherpress/dayNumber' ] ?? 1;
 	const isToday = context?.[ 'gatherpress/isToday' ] ?? false;
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
 	const posts = context?.[ 'gatherpress/dayPosts' ] ?? [];
+
+	// If a real Day Number block (a paragraph bound to the calendar-day
+	// binding source) already exists among this day's own inner blocks,
+	// it renders the day number itself - skip the plain fallback below to
+	// avoid showing the number twice, and mirror its own text alignment.
+	const { hasDayNumberBlock, justifyContent } = useSelect(
+		( select ) => {
+			const blocks = select( blockEditorStore ).getBlocks( clientId );
+			return {
+				hasDayNumberBlock: !! findDayNumberBlock( blocks ),
+				justifyContent: getDayNumberJustifyContent( blocks ),
+			};
+		},
+		[ clientId ]
+	);
 
 	const classNames = [
 		'gatherpress-calendar__day',
@@ -42,6 +67,7 @@ export default function Edit( { context } ) {
 	const innerBlocksProps = useInnerBlocksProps(
 		{
 			className: 'gatherpress-calendar__events',
+			style: justifyContent ? { justifyContent } : undefined,
 		},
 		{
 			templateLock: false,
@@ -55,9 +81,11 @@ export default function Edit( { context } ) {
 	return (
 		<td { ...blockProps }>
 			<div className="gatherpress-calendar__day-content">
-				<div className="gatherpress-calendar__day-number">
-					{ dayNumber }
-				</div>
+				{ ! hasDayNumberBlock && (
+					<div className="gatherpress-calendar__day-number">
+						{ dayNumber }
+					</div>
+				) }
 				<div { ...innerBlocksProps } />
 			</div>
 		</td>

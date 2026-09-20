@@ -6,22 +6,10 @@ import {
 	__experimentalUseBlockPreview as useBlockPreview,
 } from '@wordpress/block-editor';
 
-const DAY_NUMBER_BINDING_SOURCE = 'gatherpress/calendar-day';
-
-/**
- * Returns true when a block's `content` attribute is bound to the
- * gatherpress/calendar-day "Day Number" binding source.
- *
- * @param {Object} block Block object.
- *
- * @return {boolean} Whether the block is the Day Number bound block.
- */
-function isDayNumberBinding( block ) {
-	return (
-		block?.attributes?.metadata?.bindings?.content?.source ===
-		DAY_NUMBER_BINDING_SOURCE
-	);
-}
+import {
+	isDayNumberBindingBlock,
+	getDayNumberJustifyContent,
+} from '../../../utils/day-number';
 
 /**
  * Clones inner blocks, resolving the Day Number bound block's content to
@@ -37,7 +25,7 @@ function isDayNumberBinding( block ) {
  */
 function withResolvedDayNumber( blocks, day ) {
 	return ( blocks ?? [] ).map( ( block ) => {
-		if ( ! isDayNumberBinding( block ) ) {
+		if ( ! isDayNumberBindingBlock( block ) ) {
 			return block;
 		}
 
@@ -100,7 +88,7 @@ export function DayPreviewCell( {
 	);
 
 	const hasDayNumberBlock = useMemo(
-		() => ( innerBlocks ?? [] ).some( isDayNumberBinding ),
+		() => ( innerBlocks ?? [] ).some( isDayNumberBindingBlock ),
 		[ innerBlocks ]
 	);
 
@@ -109,9 +97,20 @@ export function DayPreviewCell( {
 		[ innerBlocks, day ]
 	);
 
+	// The events row is a flex container; a block's own text-align has no
+	// visible effect on its shrink-wrapped position within that row, so
+	// mirror the Day Number block's alignment via justify-content instead.
+	const justifyContent = useMemo(
+		() => getDayNumberJustifyContent( innerBlocks ),
+		[ innerBlocks ]
+	);
+
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
-		props: { className: 'gatherpress-calendar__events' },
+		props: {
+			className: 'gatherpress-calendar__events',
+			style: justifyContent ? { justifyContent } : undefined,
+		},
 	} );
 
 	// Mirror the real calendar-day block's own color/border styling (e.g. a
