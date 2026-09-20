@@ -42,6 +42,28 @@ class Setup {
 	const CALENDAR_QUERY_PARAM = 'gatherpress_calendar_query';
 
 	/**
+	 * Query context key carrying the calendar's resolved target year.
+	 *
+	 * Injected onto the enclosing Query block's `query` attribute (and so
+	 * available via `query` context to every block inside it, e.g. a Month
+	 * Heading placed beside the calendar) so anything needing "whichever
+	 * month the calendar is currently showing" reads the same value instead
+	 * of separately recalculating it.
+	 *
+	 * @since 0.6.0
+	 * @var string
+	 */
+	const CALENDAR_QUERY_YEAR = 'gatherpress_calendar_year';
+
+	/**
+	 * Query context key carrying the calendar's resolved target month.
+	 *
+	 * @since 0.6.0
+	 * @var string
+	 */
+	const CALENDAR_QUERY_MONTH = 'gatherpress_calendar_month';
+
+	/**
 	 * Constructor for the Setup class.
 	 *
 	 * Initializes and sets up various components of the plugin.
@@ -152,7 +174,7 @@ class Setup {
 			array(
 				'label'              => _x( 'Calendar Month Heading', 'Block Bindings Source', 'gatherpress-calendar' ),
 				'get_value_callback' => array( $this, 'get_month_heading_binding_value' ),
-				'uses_context'       => array( 'queryId' ),
+				'uses_context'       => array( 'query' ),
 			)
 		);
 	}
@@ -320,6 +342,77 @@ class Setup {
 	}
 
 	/**
+	 * Recursively find the attrs of the first inner block matching a name.
+	 *
+	 * @since 0.6.0
+	 *
+	 * @param string                           $block_name   The block name to search for (e.g. 'gatherpress/calendar').
+	 * @param array<int, array<string, mixed>> $inner_blocks Array of parsed inner blocks.
+	 *
+	 * @return array<string, mixed>|null The matching block's attrs (possibly empty), or null if not found.
+	 */
+	public static function gatherpress_find_inner_block_attrs( string $block_name, array $inner_blocks ): ?array {
+		foreach ( $inner_blocks as $block ) {
+			if ( ( $block['blockName'] ?? '' ) === $block_name ) {
+				return is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
+			}
+			if ( ! empty( $block['innerBlocks'] ) ) {
+				$found = self::gatherpress_find_inner_block_attrs( $block_name, $block['innerBlocks'] );
+				if ( null !== $found ) {
+					return $found;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Resolve the calendar's target year/month, combining its own
+	 * `selectedMonth`/`monthModifier` attributes with core Query pagination.
+	 *
+	 * On page 1 (no pagination in play) this mirrors
+	 * `Date_Calculator::calculate_target_date()` exactly, so the result
+	 * matches what `Calendar::render_callback()` would compute on its own.
+	 * On later pages, pagination overrides the baseline: page 2 = the
+	 * `selectedMonth` (or current site month, if unset) + 1 month, etc.
+	 *
+	 * @since 0.6.0
+	 *
+	 * @param array<string, mixed> $calendar_attrs The `gatherpress/calendar` block's own attrs.
+	 * @param int                  $query_id       The enclosing Query block's `queryId` attribute (0 if unset).
+	 *
+	 * @return array{year: int, month: int} Target year and month.
+	 */
+	private function calculate_calendar_target_date( array $calendar_attrs, int $query_id ): array {
+		$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
+		$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		// The baseline is always the calendar's own resolved starting month -
+		// whether that comes from `selectedMonth` or `monthModifier` - so
+		// pagination offsets from the month the calendar was actually
+		// configured to start on, not from "now".
+		$base = Date_Calculator::calculate_target_date( $calendar_attrs );
+
+		if ( $page <= 1 ) {
+			return $base;
+		}
+
+		$base_date = DateTimeImmutable::createFromFormat( '!Y-n', sprintf( '%d-%d', $base['year'], $base['month'] ), wp_timezone() );
+		if ( ! $base_date ) {
+			return $base;
+		}
+
+		// Page 1 = offset 0, Page 2 = +1 month, Page 3 = +2 months, etc.
+		$offset      = $page - 1;
+		$target_date = $base_date->modify( "{$offset} month" );
+
+		return array(
+			'year'  => (int) $target_date->format( 'Y' ),
+			'month' => (int) $target_date->format( 'n' ),
+		);
+	}
+
+	/**
 	 * Dynamically set `selectedMonth` on `gatherpress/calendar` based on core pagination query vars.
 	 *
 	 * @since 0.4.0
@@ -333,67 +426,53 @@ class Setup {
 		$block_name = $parsed_block['blockName'] ?? '';
 
 		// -------------------------------------------------------------
-		// 1. Target parent `core/query`: Set `pages` if calendar is inside
+		// 1. Target parent `core/query`: Set `pages` if calendar is inside,
+		// and resolve the calendar's target year/month *once* here so it
+		// can be shared - via `query` context - with every block inside
+		// this Query, including a Month Heading placed beside the calendar.
 		// -------------------------------------------------------------
 		if ( $block_name === 'core/query' ) {
-			$has_calendar = self::gatherpress_has_inner_block( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? [] );
+			$calendar_attrs = self::gatherpress_find_inner_block_attrs( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? [] );
 
-			if ( $has_calendar && is_array( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs']['query'] ) ) {
+			if ( null !== $calendar_attrs && is_array( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs']['query'] ) ) {
 
 				// This could also be set in JS, but it works here, too.
 				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_PARAM ] = true;
 
+				$query_id    = is_numeric( $parsed_block['attrs']['queryId'] ?? null ) ? (int) $parsed_block['attrs']['queryId'] : 0;
+				$target_date = $this->calculate_calendar_target_date( $calendar_attrs, $query_id );
+
+				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_YEAR ]  = $target_date['year'];
+				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_MONTH ] = $target_date['month'];
 			}
 
 			return $parsed_block;
 		}
 
 		// -------------------------------------------------------------
-		// 2. Target child `gatherpress/calendar`: Compute `selectedMonth`
+		// 2. Target child `gatherpress/calendar`: Adopt the `selectedMonth`
+		// already resolved for it in step 1 (read back via the parent's
+		// `query` context), instead of recalculating it independently.
 		// -------------------------------------------------------------
 		if ( $block_name === 'gatherpress/calendar' ) {
-			
-			// Read queryId from context (supports any nesting level, e.g. Query -> Group -> Calendar).
-			$query_id = 0;
-			if ( $parent_block instanceof WP_Block ) {
-				$query_id = $parent_block->context['queryId'] ?? ( $parent_block->parsed_block['attrs']['queryId'] ?? 0 );
+			// Read the resolved year/month back from the parent Query block's
+			// own *attributes* (not `->context['query']`): `core/query` doesn't
+			// declare `query` in its own `usesContext` (it only *provides* that
+			// context to children), so `$parent_block->context['query']` is
+			// always empty for the Query block instance itself.
+			$query = ( $parent_block instanceof WP_Block ) ? ( $parent_block->attributes['query'] ?? null ) : null;
+
+			if (
+				is_array( $query )
+				&& isset( $query[ self::CALENDAR_QUERY_YEAR ] )
+				&& isset( $query[ self::CALENDAR_QUERY_MONTH ] )
+			) {
+				$parsed_block['attrs']['selectedMonth'] = sprintf(
+					'%04d-%02d',
+					(int) $query[ self::CALENDAR_QUERY_YEAR ],
+					(int) $query[ self::CALENDAR_QUERY_MONTH ]
+				);
 			}
-
-			// Only paginate if inside a Query Loop.
-			if ( $query_id === 0 && ! isset( $parent_block->context['queryId'] ) ) {
-				return $parsed_block;
-			}
-
-			$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
-			$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-			// An existing "?query-1-page=4" does not match our queryId
-			// or it is indeed page 1.
-			if ( $page === 1 ) {
-				return $parsed_block;
-			}
-
-			// Determine baseline starting month (defaults to current site month).
-			$initial_month = ! empty( $parsed_block['attrs']['selectedMonth'] )
-				? $parsed_block['attrs']['selectedMonth']
-				: current_datetime()->format( 'Y-m' );
-
-			$base_date = DateTimeImmutable::createFromFormat( '!Y-m', $initial_month, wp_timezone() );
-			if ( ! $base_date ) {
-				$base_date = current_datetime();
-			}
-
-			// Page 1 = offset 0, Page 2 = +1 month, Page 3 = +2 months, etc.
-			$offset = $page - 1;
-			// Keep for later re-enabling, maybe!
-			// $forward     = '+' . $offset;
-			// $backward    = '-' . $offset;
-			// $offset_      = ( $page >= 1 ) ? $forward : $backward; // !
-
-			$target_date = $base_date->modify( "{$offset} month" );
-
-			// Assign calculated month back to attributes.
-			$parsed_block['attrs']['selectedMonth'] = $target_date->format( 'Y-m' );
 
 			return $parsed_block;
 		}
@@ -573,8 +652,20 @@ class Setup {
 			return null;
 		}
 
-		$target_date = Date_Calculator::calculate_paginated_target_date( $block_instance );
-		$timestamp   = mktime( 0, 0, 0, $target_date['month'], 1, $target_date['year'] );
+		$query = $block_instance->context['query'] ?? null;
+
+		if ( is_array( $query ) && isset( $query[ self::CALENDAR_QUERY_YEAR ] ) && isset( $query[ self::CALENDAR_QUERY_MONTH ] ) ) {
+			$year  = (int) $query[ self::CALENDAR_QUERY_YEAR ];
+			$month = (int) $query[ self::CALENDAR_QUERY_MONTH ];
+		} else {
+			// Fallback for standalone use outside a Query block augmented by
+			// `allow_core_pagination()` (e.g. no `gatherpress/calendar` sibling).
+			$now   = current_datetime();
+			$year  = (int) $now->format( 'Y' );
+			$month = (int) $now->format( 'n' );
+		}
+
+		$timestamp = mktime( 0, 0, 0, $month, 1, $year );
 
 		if ( false === $timestamp ) {
 			return null;
