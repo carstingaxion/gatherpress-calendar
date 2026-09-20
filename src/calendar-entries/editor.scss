@@ -1,3 +1,28 @@
 .editor-styles-wrapper .gatherpress-calendar__events {
 	cursor: default;
+	position: relative;
+
+	.gatherpress-calendar__template-preview {
+		display: none;
+	}
+
+	/* Show as floating popover overlay only when active */
+	&.is-selected .gatherpress-calendar__template-preview,
+	&.has-child-selected .gatherpress-calendar__template-preview {
+		display: block !important;
+		position: absolute;
+		top: calc(100% + 6px);
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 10000;
+		background: var(--wp--preset--color--base, #fff);
+		border: 1px solid var(--wp--preset--color--contrast, #ddd);
+		border-radius: 8px;
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+		padding: var(--wp--preset--spacing--30, 0.75rem);
+		min-width: 240px;
+		max-width: 320px;
+		width: max-content;
+		text-align: left;
+	}
 }

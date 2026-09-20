@@ -1,1 +1,1 @@
-.editor-styles-wrapper .gatherpress-calendar__week{display:contents}
+.editor-styles-wrapper .gatherpress-calendar__week{display:grid;grid-column:1/-1;grid-template-columns:repeat(7,1fr);position:relative;width:100%}

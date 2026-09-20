@@ -9,7 +9,8 @@ export default function Edit() {
 	const innerBlocksProps = useInnerBlocksProps( blockProps, {
 		allowedBlocks: [ 'gatherpress/calendar-day' ],
 		templateLock: false,
+		orientation: 'horizontal',
 	} );
 
-	return <tr { ...innerBlocksProps } />;
+	return <div { ...innerBlocksProps } />;
 }

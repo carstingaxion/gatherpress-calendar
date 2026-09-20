@@ -1,9 +1,7 @@
 /**
  * GatherPress Calendar Block Editor Component
  *
- * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
- *
- * @package
+ * @package GatherPressCalendar
  * @since 0.1.0
  */
 
@@ -12,74 +10,108 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 	InspectorControls,
-	PanelColorSettings,
 } from '@wordpress/block-editor';
 import {
 	Placeholder,
 	PanelBody,
 	RangeControl,
-	BoxControl,
-	BorderControl,
 	ToggleControl,
 } from '@wordpress/components';
 import { useState, createElement, useMemo } from '@wordpress/element';
+import { useSelect, useDispatch } from '@wordpress/data';
 
-/**
- * Editor-specific styles
- *
- * Styles defined here are only applied within the block editor context.
- * They help distinguish the editor view from the frontend display.
- *
- * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
- */
 import './editor.scss';
-
-import { TEMPLATE } from './edit/constants';
 
 import { calculateDateQuery } from './edit/utils/date-utils';
 import { generateCalendar } from './edit/utils/calendar-utils';
-import { boxControlToCSS, borderControlToCSS, resolveBlockGapCSS } from './edit/utils/style-utils';
-
+import { resolveBlockGapCSS } from './edit/utils/style-utils';
 import { useCalendarData } from './edit/hooks/useCalendarData';
-
 import { MonthPicker } from './edit/components/MonthPicker';
 import { MonthControls } from './edit/components/MonthControls';
-import { CalendarTable } from './edit/components/CalendarTable';
-import { TemplateConfig } from './edit/components/TemplateConfig';
+
+const CALENDAR_TEMPLATE = [
+	[
+		'gatherpress/calendar-week',
+		{},
+		[
+			[
+				'gatherpress/calendar-day',
+				{},
+				[
+					[
+						'core/paragraph',
+						{
+							metadata: {
+								bindings: {
+									content: {
+										source: 'gatherpress/calendar-day',
+									},
+								},
+							},
+							placeholder: '1',
+							className: 'gatherpress-calendar__day-number',
+						},
+					],
+					[
+						'gatherpress/calendar-entries',
+						{
+							layout: {
+								type: 'default',
+								columns: 3,
+							},
+						},
+						[
+							[ 'core/post-title', { level: 3, isLink: true } ],
+							[ 'core/post-excerpt', {} ],
+						],
+					],
+				],
+			],
+		],
+	],
+];
 
 /**
- * Edit Component
- *
- * Main editor component for the GatherPress Calendar block.
- * Handles:
- * - Rendering the calendar preview with posts
- * - Month selection and month modifier controls
- * - Month heading visibility and level controls
- * - Template configuration interface
- * - Popover styling controls
- * - Query context validation
- *
- * Component Lifecycle:
- * 1. Receives attributes and context from WordPress
- * 2. Uses useSelect to fetch posts based on query context
- * 3. Generates calendar structure from posts
- * 4. Renders calendar preview and controls
- * 5. Updates attributes when user interacts with controls
- *
- * @since 0.1.0
- *
- * @param {Object}   props               - Component props.
- * @param {Object}   props.attributes    - Block attributes.
- * @param {Function} props.setAttributes - Function to update block attributes.
- * @param {Object}   props.context       - Context from parent blocks.
- *
- * @return {Element} React element rendered in the editor.
+ * Convert block style attributes into inline CSS object.
  */
-export default function Edit( { attributes, setAttributes, context } ) {
+function extractInlineStyles( attributes = {} ) {
+	const styles = {};
+	const style = attributes.style || {};
+
+	if ( style.color?.background ) {
+		styles.backgroundColor = style.color.background;
+	}
+	if ( style.color?.text ) {
+		styles.color = style.color.text;
+	}
+	if ( style.spacing?.padding ) {
+		const pad = style.spacing.padding;
+		if ( typeof pad === 'string' ) {
+			styles.padding = pad;
+		} else if ( typeof pad === 'object' ) {
+			styles.paddingTop = pad.top;
+			styles.paddingRight = pad.right;
+			styles.paddingBottom = pad.bottom;
+			styles.paddingLeft = pad.left;
+		}
+	}
+	if ( style.typography?.fontSize ) {
+		styles.fontSize = style.typography.fontSize;
+	}
+	if ( style.typography?.fontWeight ) {
+		styles.fontWeight = style.typography.fontWeight;
+	}
+	if ( style.typography?.lineHeight ) {
+		styles.lineHeight = style.typography.lineHeight;
+	}
+
+	return styles;
+}
+
+export default function Edit( { attributes, setAttributes, context, clientId } ) {
 	const {
 		selectedMonth,
 		monthModifier = 0,
-		templateConfigStyle = {},
 		showMonthHeading = true,
 		monthHeadingLevel = 2,
 		showWeekdays = true,
@@ -87,16 +119,13 @@ export default function Edit( { attributes, setAttributes, context } ) {
 	const { query } = context;
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 
-	// Calculate date query based on selectedMonth and monthModifier.
 	const dateQuery = useMemo(
 		() => calculateDateQuery( selectedMonth, monthModifier ),
 		[ selectedMonth, monthModifier ]
 	);
 
-	// Fetch posts and site settings.
 	const { posts, startOfWeek } = useCalendarData( query, dateQuery );
 
-	// Generate calendar structure.
 	const calendar = useMemo(
 		() =>
 			generateCalendar(
@@ -108,7 +137,32 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		[ posts, startOfWeek, selectedMonth, monthModifier ]
 	);
 
-	// Render month heading with dynamic tag level.
+	// Retrieve template block client IDs and styles so all days reflect changes
+	const {
+		dayClientId,
+		dayAttributes,
+		dayNumberAttributes,
+	} = useSelect(
+		( select ) => {
+			const { getBlock } = select( 'core/block-editor' );
+			const calendarBlock = getBlock( clientId );
+			const weekBlock = calendarBlock?.innerBlocks?.[ 0 ];
+			const dayBlock = weekBlock?.innerBlocks?.[ 0 ];
+			const dayNumberBlock = dayBlock?.innerBlocks?.find(
+				( b ) => b.name === 'core/paragraph'
+			);
+
+			return {
+				dayClientId: dayBlock?.clientId,
+				dayAttributes: dayBlock?.attributes || {},
+				dayNumberAttributes: dayNumberBlock?.attributes || {},
+			};
+		},
+		[ clientId ]
+	);
+
+	const { selectBlock } = useDispatch( 'core/block-editor' );
+
 	const MonthHeading = useMemo( () => {
 		if ( ! showMonthHeading ) {
 			return null;
@@ -129,10 +183,11 @@ export default function Edit( { attributes, setAttributes, context } ) {
 
 	const innerBlocksProps = useInnerBlocksProps(
 		{
-			className: 'gatherpress-calendar-template',
+			className: 'gatherpress-calendar__template-host',
 		},
 		{
-			template: TEMPLATE,
+			allowedBlocks: [ 'gatherpress/calendar-week' ],
+			template: CALENDAR_TEMPLATE,
 			templateLock: false,
 		}
 	);
@@ -141,16 +196,12 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		gap: resolveBlockGapCSS( attributes.style?.spacing?.blockGap ),
 	};
 
-	// Show placeholder if block is not inside a Query Loop.
 	if ( ! query ) {
 		return (
 			<div { ...blockProps }>
 				<Placeholder
 					icon="calendar-alt"
-					label={ __(
-						'GatherPress Calendar',
-						'gatherpress-calendar'
-					) }
+					label={ __( 'GatherPress Calendar', 'gatherpress-calendar' ) }
 					instructions={ __(
 						'This block must be used inside a Query Loop block.',
 						'gatherpress-calendar'
@@ -160,20 +211,6 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		);
 	}
 
-	// Build inline styles for template config preview.
-	const templateConfigStyles = {
-		backgroundColor: templateConfigStyle.backgroundColor || undefined,
-		padding: boxControlToCSS( templateConfigStyle.padding ) || undefined,
-		...borderControlToCSS( {
-			width: templateConfigStyle.borderWidth,
-			style: templateConfigStyle.borderStyle,
-			color: templateConfigStyle.borderColor,
-			radius: templateConfigStyle.borderRadius,
-		} ),
-		boxShadow: templateConfigStyle.boxShadow || undefined,
-	};
-
-	// Handlers
 	const handleMonthSelect = ( value ) => {
 		setAttributes( { selectedMonth: value } );
 		setShowMonthPicker( false );
@@ -190,12 +227,16 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		} );
 	};
 
+	// Shared styles extracted from the template blocks
+	const dayStyles = extractInlineStyles( dayAttributes );
+	const dayNumberStyles = extractInlineStyles( dayNumberAttributes );
+
+	let templateMounted = false;
+
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody
-					title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }
-				>
+				<PanelBody title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }>
 					<p>
 						{ __(
 							'Select a specific month to display, or leave empty to show the current month.',
@@ -218,22 +259,12 @@ export default function Edit( { attributes, setAttributes, context } ) {
 						/>
 					) }
 
-					<hr
-						style={ {
-							margin: '16px 0',
-							borderTop: '1px solid #ddd',
-						} }
-					/>
+					<hr style={ { margin: '16px 0', borderTop: '1px solid #ddd' } } />
 
 					<ToggleControl
-						label={ __(
-							'Show Month Heading',
-							'gatherpress-calendar'
-						) }
+						label={ __( 'Show Month Heading', 'gatherpress-calendar' ) }
 						checked={ showMonthHeading }
-						onChange={ ( value ) =>
-							setAttributes( { showMonthHeading: value } )
-						}
+						onChange={ ( value ) => setAttributes( { showMonthHeading: value } ) }
 						help={ __(
 							'Display the month name and year above the calendar.',
 							'gatherpress-calendar'
@@ -242,15 +273,10 @@ export default function Edit( { attributes, setAttributes, context } ) {
 
 					{ showMonthHeading && (
 						<RangeControl
-							label={ __(
-								'Heading Level',
-								'gatherpress-calendar'
-							) }
+							label={ __( 'Heading Level', 'gatherpress-calendar' ) }
 							value={ monthHeadingLevel }
 							onChange={ ( value ) =>
-								setAttributes( {
-									monthHeadingLevel: value || 2,
-								} )
+								setAttributes( { monthHeadingLevel: value || 2 } )
 							}
 							min={ 1 }
 							max={ 6 }
@@ -265,113 +291,93 @@ export default function Edit( { attributes, setAttributes, context } ) {
 					<ToggleControl
 						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
 						checked={ showWeekdays }
-						onChange={ ( value ) =>
-							setAttributes( { showWeekdays: value } )
-						}
+						onChange={ ( value ) => setAttributes( { showWeekdays: value } ) }
 						help={ __(
-							'Display the days of the week inside the calendars header.',
+							'Display the days of the week inside the calendar header.',
 							'gatherpress-calendar'
 						) }
-					/>
-				</PanelBody>
-
-				<PanelBody
-					title={ __( 'Template Style', 'gatherpress-calendar' ) }
-					initialOpen={ false }
-				>
-					<PanelColorSettings
-						title={ __( 'Background', 'gatherpress-calendar' ) }
-						colorSettings={ [
-							{
-								value: templateConfigStyle.backgroundColor,
-								onChange: ( backgroundColor ) => {
-									setAttributes( {
-										templateConfigStyle: {
-											...templateConfigStyle,
-											backgroundColor,
-										},
-									} );
-								},
-								label: __(
-									'Background Color',
-									'gatherpress-calendar'
-								),
-							},
-						] }
-					/>
-
-					<BoxControl
-						label={ __( 'Padding', 'gatherpress-calendar' ) }
-						values={ templateConfigStyle.padding }
-						onChange={ ( padding ) => {
-							setAttributes( {
-								templateConfigStyle: {
-									...templateConfigStyle,
-									padding,
-								},
-							} );
-						} }
-					/>
-
-					<BorderControl
-						label={ __( 'Border', 'gatherpress-calendar' ) }
-						value={ {
-							width: templateConfigStyle.borderWidth,
-							style: templateConfigStyle.borderStyle,
-							color: templateConfigStyle.borderColor,
-							radius: templateConfigStyle.borderRadius,
-						} }
-						onChange={ ( border ) => {
-							setAttributes( {
-								templateConfigStyle: {
-									...templateConfigStyle,
-									borderWidth: border.width,
-									borderStyle: border.style,
-									borderColor: border.color,
-									borderRadius: border.radius,
-								},
-							} );
-						} }
-					/>
-
-					<RangeControl
-						label={ __(
-							'Box Shadow Blur',
-							'gatherpress-calendar'
-						) }
-						value={ parseInt(
-							templateConfigStyle.boxShadow?.match(
-								/\d+/
-							)?.[ 0 ] || 0
-						) }
-						onChange={ ( blur ) => {
-							setAttributes( {
-								templateConfigStyle: {
-									...templateConfigStyle,
-									boxShadow:
-										blur > 0
-											? `0 8px ${ blur }px rgba(0, 0, 0, 0.15)`
-											: undefined,
-								},
-							} );
-						} }
-						min={ 0 }
-						max={ 50 }
 					/>
 				</PanelBody>
 			</InspectorControls>
+
 			<div { ...blockProps }>
 				<div className="gatherpress-calendar">
 					{ MonthHeading }
-					<CalendarTable
-						calendar={ calendar }
-						showWeekdays={ showWeekdays }
-						style={ tableStyle }
-					/>
-					<TemplateConfig
-						templateConfigStyles={ templateConfigStyles }
-						innerBlocksProps={ innerBlocksProps }
-					/>
+					<div className="gatherpress-calendar__table" style={ tableStyle }>
+						{ showWeekdays && (
+							<div className="gatherpress-calendar__table-head">
+								{ calendar.dayNames.map( ( dayName, index ) => (
+									<div key={ index } className="gatherpress-calendar__th">
+										{ dayName }
+									</div>
+								) ) }
+							</div>
+						) }
+
+						{ calendar.weeks.map( ( week, weekIdx ) => (
+							<div key={ weekIdx } className="gatherpress-calendar__week">
+								{ week.map( ( day, dayIdx ) => {
+									// The first day of the month hosts the editable template block
+									if ( ! day.isEmpty && ! templateMounted ) {
+										templateMounted = true;
+										return (
+											<div
+												key={ dayIdx }
+												className="gatherpress-calendar__day-template-slot"
+											>
+												<div { ...innerBlocksProps } />
+											</div>
+										);
+									}
+
+									// All other days route click events to select the Calendar Day template block
+									return (
+										<div
+											key={ dayIdx }
+											className={ `gatherpress-calendar__day ${
+												day.isEmpty ? 'is-empty' : ''
+											} ${ day.posts?.length > 0 ? 'has-posts' : '' }` }
+											style={ ! day.isEmpty ? dayStyles : undefined }
+											onClick={
+												dayClientId && ! day.isEmpty
+													? ( e ) => {
+															e.stopPropagation();
+															selectBlock( dayClientId );
+													  }
+													: undefined
+											}
+										>
+											{ ! day.isEmpty && (
+												<div className="gatherpress-calendar__day-content">
+													<p
+														className="gatherpress-calendar__day-number"
+														style={ dayNumberStyles }
+													>
+														{ day.day }
+													</p>
+													{ day.posts?.length > 0 && (
+														<div className="gatherpress-calendar__events">
+															{ day.posts.map( ( post ) => (
+																<div
+																	key={ post.id }
+																	className="gatherpress-calendar__event-item"
+																>
+																	<span
+																		className="gatherpress-calendar__event"
+																		aria-hidden="true"
+																	/>
+																</div>
+															) ) }
+														</div>
+													)}
+												</div>
+											)}
+										</div>
+									);
+								} ) }
+							</div>
+						) ) }
+					</div>
 				</div>
 			</div>
 		</>

@@ -4,7 +4,7 @@
  * @package GatherPressCalendar
  * @since 0.4.0
  */
-
+import domReady from '@wordpress/dom-ready';
 import { registerBlockType, registerBlockBindingsSource } from '@wordpress/blocks';
 
 /**
@@ -20,17 +20,20 @@ registerBlockType( metadata.name, {
 	save,
 } );
 
-registerBlockBindingsSource( {
-	name: 'gatherpress/calendar-day',
-	label: __( 'Calendar Day Number', 'gatherpress-calendar' ),
-	usesContext: [ 'gatherpress/dayNumber', 'gatherpress/isEmpty' ],
-	getValues( { context } ) {
-		if ( context?.[ 'gatherpress/isEmpty' ] ) {
-			return { content: '' };
-		}
-		const dayNumber = context?.[ 'gatherpress/dayNumber' ];
-		return {
-			content: dayNumber ? String( dayNumber ) : '1',
-		};
-	},
+
+domReady( () => {
+	registerBlockBindingsSource( {
+		name: 'gatherpress/calendar-day',
+		label: __( 'Calendar Day Number', 'gatherpress-calendar' ),
+		usesContext: [ 'gatherpress/dayNumber', 'gatherpress/isEmpty' ],
+		getValues( { context } ) {
+			if ( context?.[ 'gatherpress/isEmpty' ] ) {
+				return { content: '' };
+			}
+			const dayNumber = context?.[ 'gatherpress/dayNumber' ];
+			return {
+				content: dayNumber ? String( dayNumber ) : '1',
+			};
+		},
+	} );
 } );

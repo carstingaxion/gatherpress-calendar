@@ -1,216 +1,32 @@
-/**
- * GatherPress Calendar Block Editor Styles
- *
- * Styles defined in this file are applied exclusively within the
- * WordPress block editor. These styles help distinguish the editor
- * view from the frontend display and provide enhanced styling for
- * the template configuration area.
- *
- * CSS Strategy:
- * - Inherits all base styles from style.scss (already loaded)
- * - Only adds/overrides what's different in the editor
- * - Uses cascade properly to avoid duplication
- *
- * @package GatherPressCalendar
- * @since 0.1.0
- */
-
-/**
- * Editor-specific enhancements
- * Extends base calendar styles for editor context
- */
 .editor-styles-wrapper {
-
 	.gatherpress-calendar {
-
-		/**
-		 * Calendar table
-		 * Match frontend appearance in editor preview
-		 */
 		&__table {
+			display: grid;
+			grid-template-columns: repeat(7, 1fr);
+			width: 100%;
 
-			th {
+			.gatherpress-calendar__table-head,
+			.gatherpress-calendar__week,
+			.gatherpress-calendar__day-template-slot,
+			.gatherpress-calendar__template-host,
+			.gatherpress-calendar__template-host > .block-editor-block-list__layout {
+				display: contents !important;
+			}
 
-				/* More visible in editor for better editing feedback */
+			.gatherpress-calendar__th {
 				background: var(--wp--preset--color--base-2, #f0f0f1);
 				color: var(--wp--preset--color--contrast, #495057);
+				font-weight: 600;
+				text-align: center;
+				padding: clamp(0.5rem, 2vw, 0.75rem);
+				font-size: clamp(0.625rem, 2vw, 0.875rem);
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+				aspect-ratio: 1;
+				display: flex;
+				align-items: center;
+				justify-content: center;
 			}
-
-			td {
-
-				/* Match frontend today highlight */
-				&.is-today {
-					background: rgba(0, 124, 186, 0.05);
-
-					.gatherpress-calendar__day-number {
-						color: var(--wp--preset--color--primary, #007cba);
-						font-weight: 700;
-
-						&::after {
-							content: "";
-							position: absolute;
-							bottom: -4px;
-							left: 50%;
-							transform: translateX(-50%);
-							width: 20px;
-							height: 2px;
-							background: var(--wp--preset--color--primary, #007cba);
-							border-radius: 1px;
-						}
-					}
-				}
-
-				/* Match frontend has-posts highlight */
-				&.has-posts {
-					background: rgba(0, 124, 186, 0.03);
-
-					.gatherpress-calendar__day-number {
-						color: var(--wp--preset--color--primary, #007cba);
-						font-weight: 600;
-						position: relative;
-
-						&::after {
-							content: "";
-							position: absolute;
-							bottom: -4px;
-							left: 50%;
-							transform: translateX(-50%);
-							width: 16px;
-							height: 2px;
-							background: var(--wp--preset--color--primary, #007cba);
-							border-radius: 1px;
-							opacity: 0.6;
-						}
-					}
-				}
-			}
-		}
-
-		/**
-		 * Event dots - disable interaction in editor
-		 * (Popover only works on frontend)
-		 */
-		&__event {
-			cursor: default;
-		}
-
-
-		/* ==================================================================
-		Event Dots Wrapper
-		================================================================== */
-		&__events > div {
-
-			background: var(--wp--preset--color--primary, #007cba);
-
-			/* Color variations for multiple events */
-			&:nth-child(2) {
-				background: var(--wp--preset--color--secondary, #e65054);
-			}
-
-			&:nth-child(3) {
-				background: var(--wp--preset--color--tertiary, #4ab866);
-			}
-
-			&:nth-child(4) {
-				background: var(--wp--preset--color--vivid-purple, #9b51e0);
-			}
-
-			&:nth-child(5) {
-				background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
-			}
-
-			&:nth-child(n+6) {
-				background: var(--wp--preset--color--contrast, #666);
-			}
-		}
-	}
-}
-
-/**
- * Template configuration area - visible in editor only
- * This section has no frontend equivalent, so all styles are new
- */
-.gatherpress-calendar {
-
-	&__template-config {
-
-		/* Override display:none from base styles */
-		display: block;
-		margin-block-start: var(--wp--preset--spacing--50, 2rem);
-
-		/* Popover-style appearance - defaults that can be overridden by attributes */
-		position: relative;
-		background: var(--wp--preset--color--base, #fff);
-		border: 1px solid var(--wp--preset--color--contrast, #ddd);
-		border-radius: var(--wp--custom--border-radius--medium, 8px);
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-		padding: var(--wp--preset--spacing--50, 1.5rem);
-
-		/* Subtle hover effect */
-		transition: box-shadow 0.3s ease, border-color 0.3s ease;
-
-		&:hover {
-			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-			border-color: var(--wp--preset--color--primary, #007cba);
-		}
-	}
-
-	/**
-	 * Template configuration label
-	 */
-	&__template-label {
-		margin-block: 0 var(--wp--preset--spacing--40, 1rem);
-		font-weight: 600;
-		font-size: var(--wp--preset--font-size--small, 0.875rem);
-		color: var(--wp--preset--color--contrast, #1e1e1e);
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		padding-block-end: var(--wp--preset--spacing--30, 0.75rem);
-		border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
-	}
-
-	/**
-	 * Inner blocks container within template config
-	 */
-	&__template-config &-template {
-		display: block;
-
-		/* Style the blocks to look like they're part of a card */
-		.wp-block {
-			padding: var(--wp--preset--spacing--20, 0.5rem);
-			border-radius: var(--wp--custom--border-radius--small, 4px);
-			transition: background 0.2s ease;
-
-			&:hover {
-				background: var(--wp--preset--color--base-2, #f8f9fa);
-			}
-		}
-
-		/* Add spacing between blocks */
-		> .block-editor-block-list__layout > .wp-block {
-			margin-block-end: var(--wp--preset--spacing--30, 0.75rem);
-
-			&:last-child {
-				margin-block-end: 0;
-			}
-		}
-	}
-}
-
-/**
- * Responsive adjustments for template config in editor
- */
-@media (max-width: 768px) {
-
-	.gatherpress-calendar {
-
-		&__template-config {
-			padding: var(--wp--preset--spacing--40, 1rem);
-			margin-block-start: var(--wp--preset--spacing--40, 1rem);
-		}
-
-		&__template-label {
-			font-size: var(--wp--preset--font-size--small, 0.8125rem);
 		}
 	}
 }

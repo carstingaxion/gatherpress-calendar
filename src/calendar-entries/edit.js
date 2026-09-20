@@ -16,7 +16,7 @@ import {
 } from '@wordpress/components';
 import { list, grid } from '@wordpress/icons';
 
-const TEMPLATE = [
+const ENTRY_TEMPLATE = [
 	[ 'core/post-title', { level: 3, isLink: true } ],
 	[ 'core/post-excerpt', {} ],
 ];
@@ -65,16 +65,16 @@ export default function Edit( { attributes, setAttributes, context, isSelected }
 			className: 'gatherpress-calendar__template-preview',
 		},
 		{
-			template: TEMPLATE,
-			templateInsertUpdatesSelection: true,
+			template: ENTRY_TEMPLATE,
+			templateLock: false,
 		}
 	);
 
-	// Preview dots based on dayPosts context or fallback 2 preview dots.
-	const postCount = Array.isArray( context?.['gatherpress/dayPosts'] )
-		? context['gatherpress/dayPosts'].length
-		: 2;
-	const previewDots = Array.from( { length: Math.max( 1, postCount ) } );
+	// Determine how many preview dots to show in the editor
+	const postCount = Array.isArray( context?.[ 'gatherpress/dayPosts' ] )
+		? context[ 'gatherpress/dayPosts' ].length
+		: 1;
+	const extraDots = Array.from( { length: Math.max( 0, postCount - 1 ) } );
 
 	return (
 		<>
@@ -110,23 +110,18 @@ export default function Edit( { attributes, setAttributes, context, isSelected }
 			</InspectorControls>
 
 			<div { ...blockProps }>
-				{ previewDots.map( ( _, index ) => (
-					<div
-						key={ index }
-						className="gatherpress-calendar__event-item"
-					>
-						<span
-							className="gatherpress-calendar__event"
-							aria-hidden="true"
-						/>
-					</div>
-				) }
+				{ /* First event item houses the editable InnerBlocks */ }
+				<div className="gatherpress-calendar__event-item">
+					<span className="gatherpress-calendar__event" aria-hidden="true" />
+					<div { ...innerBlocksProps } />
+				</div>
 
-				{ isSelected && (
-					<div className="gatherpress-calendar__innerblocks-editor-wrapper">
-						<div { ...innerBlocksProps } />
+				{ /* Additional preview dots on multi-post days are also direct children */ }
+				{ extraDots.map( ( _, idx ) => (
+					<div key={ idx } className="gatherpress-calendar__event-item">
+						<span className="gatherpress-calendar__event" aria-hidden="true" />
 					</div>
-				) }
+				) ) }
 			</div>
 		</>
 	);

@@ -7,6 +7,12 @@
 	align-content: start;
 	flex: 1;
 	min-height: 0;
+	position: relative;
+
+	/* Hide template preview in the normal flow */
+	.gatherpress-calendar__template-preview {
+		display: none;
+	}
 
 	&.is-layout-list {
 		display: flex;

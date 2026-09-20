@@ -29,13 +29,9 @@ export default function Edit( { context } ) {
 		}
 	);
 
-	if ( isEmpty ) {
-		return <td { ...blockProps } />;
-	}
-
 	return (
-		<td { ...blockProps }>
+		<div { ...blockProps }>
 			<div { ...innerBlocksProps } />
-		</td>
+		</div>
 	);
 }

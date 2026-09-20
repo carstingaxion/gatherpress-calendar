@@ -111,7 +111,6 @@ class Calendar_Day {
 			}
 		}
 
-		// Fallback day number if no bound core/paragraph is present in innerBlocks.
 		$fallback_day_number = ! $has_day_number_block
 			? sprintf( '<p class="gatherpress-calendar__day-number">%s</p>', esc_html( (string) $day_number ) )
 			: '';
