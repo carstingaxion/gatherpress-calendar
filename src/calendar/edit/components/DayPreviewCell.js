@@ -3,6 +3,8 @@ import {
 	BlockContextProvider,
 	__experimentalUseColorProps as useColorProps,
 	__experimentalUseBorderProps as useBorderProps,
+	__experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
+	__experimentalGetShadowClassesAndStyles as getShadowClassesAndStyles,
 	__experimentalUseBlockPreview as useBlockPreview,
 } from '@wordpress/block-editor';
 
@@ -117,10 +119,13 @@ function DayPreviewCellComponent( {
 		},
 	} );
 
-	// Mirror the real calendar-day block's own color/border styling (e.g. a
-	// custom background) so every previewed day looks like the live one.
+	// Mirror the real calendar-day block's own color/border/spacing/shadow
+	// styling (e.g. a custom background, padding, or drop-shadow) so every
+	// previewed day looks like the live one.
 	const colorProps = useColorProps( dayBlockAttributes ?? {} );
 	const borderProps = useBorderProps( dayBlockAttributes ?? {} );
+	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
+	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
 
 	const classNames = [
 		'gatherpress-calendar__day',
@@ -133,7 +138,12 @@ function DayPreviewCellComponent( {
 		.filter( Boolean )
 		.join( ' ' );
 
-	const style = { ...colorProps.style, ...borderProps.style };
+	const style = {
+		...colorProps.style,
+		...borderProps.style,
+		...spacingProps.style,
+		...shadowProps.style,
+	};
 
 	if ( day.isEmpty ) {
 		return <td className={ classNames } style={ style } />;

@@ -30,7 +30,11 @@
       "allowSizingOnChildren": false,
       "default": { "type": "default" }
     },
-    "listView": true,
+    "color": {
+      "background": true,
+      "text": true,
+      "gradients": true
+    },
     "contentRole": true
   },
   "textdomain": "gatherpress-calendar",

@@ -1,5 +1,9 @@
 import { memo } from '@wordpress/element';
-import { __experimentalUseColorProps as useColorProps } from '@wordpress/block-editor';
+import {
+	__experimentalUseColorProps as useColorProps,
+	__experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
+	__experimentalGetShadowClassesAndStyles as getShadowClassesAndStyles,
+} from '@wordpress/block-editor';
 
 import { DayPreviewCell } from './DayPreviewCell';
 
@@ -30,9 +34,11 @@ function WeekPreviewRowComponent( {
 	dayBlockAttributes,
 	onActivateDay,
 } ) {
-	// Mirror the real calendar-week block's own color styling so every
-	// previewed week row looks like the live one.
+	// Mirror the real calendar-week block's own color/spacing/shadow
+	// styling so every previewed week row looks like the live one.
 	const colorProps = useColorProps( weekBlockAttributes ?? {} );
+	const spacingProps = getSpacingClassesAndStyles( weekBlockAttributes ?? {} );
+	const shadowProps = getShadowClassesAndStyles( weekBlockAttributes ?? {} );
 
 	const classNames = [
 		'gatherpress-calendar__week',
@@ -41,8 +47,14 @@ function WeekPreviewRowComponent( {
 		.filter( Boolean )
 		.join( ' ' );
 
+	const style = {
+		...colorProps.style,
+		...spacingProps.style,
+		...shadowProps.style,
+	};
+
 	return (
-		<tr className={ classNames } style={ colorProps.style }>
+		<tr className={ classNames } style={ style }>
 			{ week.map( ( day, dayIndex ) => (
 				<DayPreviewCell
 					key={ day.date ?? `empty-${ dayIndex }` }

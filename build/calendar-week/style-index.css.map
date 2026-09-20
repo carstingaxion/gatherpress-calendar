@@ -1,0 +1,1 @@
+{"version":3,"file":"calendar-week/style-index.css","mappings":";;;AAAA;AACA;EACC;AACD,C","sources":["webpack://gatherpress-calendar/./src/calendar-week/style.scss"],"sourcesContent":["/* Keep week rows flowing cleanly in CSS Grid layout */\n.gatherpress-calendar__week {\n\tdisplay: contents;\n}"],"names":[],"sourceRoot":""}

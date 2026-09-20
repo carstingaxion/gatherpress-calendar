@@ -48,8 +48,11 @@ export default function Edit( { context } ) {
 
 	return (
 		<div { ...blockProps }>
-			{ dayPosts.map( ( postId ) => (
-				<div key={ postId } className="gatherpress-calendar__event-item" />
+			{ dayPosts.map( ( post, index ) => (
+				<div
+					key={ post?.id ?? index }
+					className="gatherpress-calendar__event-item"
+				/>
 			) ) }
 			<div { ...innerBlocksProps } />
 		</div>
