@@ -41,11 +41,13 @@
     "style": {
       "type": "object",
       "default": {
-        "padding": {
-          "top": 0,
-          "right": 0,
-          "bottom": 0,
-          "left": 0
+        "spacing": {
+          "padding": {
+            "top": "0",
+            "bottom": "0",
+            "left": "0",
+            "right": "0"
+          }
         }
       }
     }
@@ -68,7 +70,10 @@
     "spacing": {
       "margin": true,
       "padding": true,
-      "blockGap": true
+      "blockGap": true,
+      "__experimentalDefaultControls": {
+        "padding": true
+      }
     },
     "__experimentalBorder": {
       "color": true,
