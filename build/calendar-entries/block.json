@@ -41,7 +41,7 @@
       "text": true,
       "gradients": true
     },
-    "contentRole": true
+    "listView": true
   },
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",

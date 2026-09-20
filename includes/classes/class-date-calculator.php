@@ -13,6 +13,8 @@ namespace GatherPress_Calendar;
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
+use WP_Block;
+
 /**
  * Date_Calculator Class
  *
@@ -81,6 +83,47 @@ class Date_Calculator {
 		return array(
 			'year'  => (int) gmdate( 'Y', $now ),
 			'month' => (int) gmdate( 'n', $now ),
+		);
+	}
+
+	/**
+	 * Calculate the target year/month from core Query pagination alone.
+	 *
+	 * Used by contexts that have no `selectedMonth`/`monthModifier` attributes
+	 * of their own (e.g. a Month Heading bound to a `core/heading` sitting
+	 * beside the calendar inside the same Query block), but still need to
+	 * reflect whichever month the pagination controls navigated to.
+	 *
+	 * Mirrors the page-to-month-offset math in
+	 * `Setup::allow_core_pagination()`, always using the current site month
+	 * as the page-1 baseline.
+	 *
+	 * @since 0.6.0
+	 *
+	 * @param WP_Block $block Block instance providing `queryId` context.
+	 *
+	 * @return array{year: int, month: int} Target year and month.
+	 */
+	public static function calculate_paginated_target_date( WP_Block $block ): array {
+		$now = current_datetime();
+
+		$query_id = is_numeric( $block->context['queryId'] ?? null ) ? (int) $block->context['queryId'] : 0;
+		$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
+		$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( $page <= 1 ) {
+			return array(
+				'year'  => (int) $now->format( 'Y' ),
+				'month' => (int) $now->format( 'n' ),
+			);
+		}
+
+		$offset      = $page - 1;
+		$target_date = $now->modify( "{$offset} month" );
+
+		return array(
+			'year'  => (int) $target_date->format( 'Y' ),
+			'month' => (int) $target_date->format( 'n' ),
 		);
 	}
 

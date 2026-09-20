@@ -34,14 +34,6 @@
       "type": "object",
       "default": {}
     },
-    "showMonthHeading": {
-      "type": "boolean",
-      "default": true
-    },
-    "monthHeadingLevel": {
-      "type": "number",
-      "default": 2
-    },
     "showWeekdays": {
       "type": "boolean",
       "default": true

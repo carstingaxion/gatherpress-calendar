@@ -10,12 +10,13 @@
  * @since 0.1.0
  */
 
-import { registerBlockType } from '@wordpress/blocks';
+import { registerBlockType, registerBlockBindingsSource } from '@wordpress/blocks';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { addFilter } from '@wordpress/hooks';
 import { Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
+import { dateI18n } from '@wordpress/date';
 import {
 	store as blockEditorStore,
 	InspectorControls,
@@ -63,6 +64,29 @@ registerBlockType( metadata.name, {
 	 * @see ./save.js
 	 */
 	save,
+} );
+
+/**
+ * Register the Month Heading block binding source.
+ *
+ * Lets a `core/heading` bound to this source (see the "Event Calendar"
+ * pattern, placed inside the Query block before the calendar) display the
+ * month/year currently shown by the calendar. The PHP-side source
+ * (`Setup::get_month_heading_binding_value()`) is the source of truth on
+ * the frontend, reading core Query's pagination; the editor canvas has no
+ * URL-based pagination to read, so this preview simply shows the current
+ * site month.
+ *
+ * @since 0.6.0
+ */
+registerBlockBindingsSource( {
+	name: 'gatherpress/calendar-month-heading',
+	label: __( 'Calendar Month Heading', 'gatherpress-calendar' ),
+	getValues() {
+		return {
+			content: dateI18n( 'F Y', new Date() ),
+		};
+	},
 } );
 
 /**

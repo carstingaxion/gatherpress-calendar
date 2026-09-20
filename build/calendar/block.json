@@ -34,17 +34,20 @@
       "type": "object",
       "default": {}
     },
-    "showMonthHeading": {
-      "type": "boolean",
-      "default": true
-    },
-    "monthHeadingLevel": {
-      "type": "number",
-      "default": 2
-    },
     "showWeekdays": {
       "type": "boolean",
       "default": true
+    },
+    "style": {
+      "type": "object",
+      "default": {
+        "padding": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      }
     }
   },
   "supports": {

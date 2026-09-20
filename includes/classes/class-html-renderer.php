@@ -68,10 +68,8 @@ class HTML_Renderer {
 	 * @return string Calendar HTML.
 	 */
 	public function generate_calendar_html( array $attributes, array $calendar_data, string $popover_styles ): string {
-		$wrapper_attributes  = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
-		$show_month_heading  = isset( $attributes['showMonthHeading'] ) && is_bool( $attributes['showMonthHeading'] ) ? $attributes['showMonthHeading'] : true;
-		$month_heading_level = isset( $attributes['monthHeadingLevel'] ) && is_numeric( $attributes['monthHeadingLevel'] ) ? (int) $attributes['monthHeadingLevel'] : 2;
-		$show_weekdays       = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
+		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
+		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 		ob_start();
 		?>
@@ -84,13 +82,6 @@ class HTML_Renderer {
 					"customStyles": <?php echo wp_json_encode( $popover_styles ); ?>
 				}'
 			>
-				<?php if ( $show_month_heading ) { ?>
-					<?php
-					$heading_level = max( 1, min( 6, $month_heading_level ) );
-					$heading_tag   = 'h' . $heading_level;
-					?>
-					<<?php echo esc_attr( $heading_tag ); ?> class="gatherpress-calendar__month wp-block-heading"><?php echo esc_html( $calendar_data['month_name'] ); ?></<?php echo esc_attr( $heading_tag ); ?>>
-				<?php } ?>
 				<?php
 				$grid_gap    = Style_Processor::get_block_gap_value( $attributes );
 				$table_style = ! empty( $grid_gap ) ? sprintf( 'style="gap: %s;"', esc_attr( $grid_gap ) ) : '';

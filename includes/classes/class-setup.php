@@ -99,7 +99,11 @@ class Setup {
 	}
 
 		$pattern = '<!-- wp:query {"queryId":null,"query":{"perPage":5,"pages":0,"offset":0,"postType":"gatherpress_event","order":"asc","orderBy":"datetime","inherit":false,"excludeCurrent":null,"parents":[],"sticky":"","format":[],"gatherpress_event_query":"upcoming","include_unfinished":1},"namespace":"gatherpress-event-query","enhancedPagination":true,"metadata":{"name":"Upcoming Events"},"className":"gatherpress-event-query"} -->
-<div class="wp-block-query gatherpress-event-query"><!-- wp:query-pagination {"paginationArrow":"chevron","layout":{"type":"flex","justifyContent":"space-between"}} -->
+<div class="wp-block-query gatherpress-event-query"><!-- wp:heading {"level":2,"metadata":{"bindings":{"content":{"source":"gatherpress/calendar-month-heading"}}},"className":"gatherpress-calendar__month"} -->
+<h2 class="wp-block-heading gatherpress-calendar__month">' . esc_html( wp_date( 'F Y' ) ) . '</h2>
+<!-- /wp:heading -->
+
+<!-- wp:query-pagination {"paginationArrow":"chevron","layout":{"type":"flex","justifyContent":"space-between"}} -->
 <!-- wp:query-pagination-previous {"label":"Previous Month"} /-->
 
 <!-- wp:query-pagination-next {"label":"Next Month"} /-->
@@ -140,6 +144,15 @@ class Setup {
 					'gatherpress/dayNumber',
 					'gatherpress/isEmpty',
 				),
+			)
+		);
+
+		register_block_bindings_source(
+			'gatherpress/calendar-month-heading',
+			array(
+				'label'              => _x( 'Calendar Month Heading', 'Block Bindings Source', 'gatherpress-calendar' ),
+				'get_value_callback' => array( $this, 'get_month_heading_binding_value' ),
+				'uses_context'       => array( 'queryId' ),
 			)
 		);
 	}
@@ -539,5 +552,36 @@ class Setup {
 		$day_number = $block_instance->context['gatherpress/dayNumber'] ?? null;
 
 		return null !== $day_number ? (string) $day_number : null;
+	}
+
+	/**
+	 * Callback to retrieve the bound month heading value.
+	 *
+	 * Reads the same core Query pagination that `allow_core_pagination()`
+	 * uses to paginate the `gatherpress/calendar` block, so a heading bound
+	 * to this source (placed anywhere inside the same Query block) always
+	 * shows the month currently displayed by the calendar.
+	 *
+	 * @param array<string, mixed> $source_args    Source arguments.
+	 * @param \WP_Block             $block_instance The bound block instance (e.g. core/heading).
+	 * @param string                $attribute_name Bound attribute name ('content').
+	 *
+	 * @return string|null Localized "Month Year" string, or null.
+	 */
+	public function get_month_heading_binding_value( array $source_args, \WP_Block $block_instance, string $attribute_name ): ?string {
+		if ( 'content' !== $attribute_name ) {
+			return null;
+		}
+
+		$target_date = Date_Calculator::calculate_paginated_target_date( $block_instance );
+		$timestamp   = mktime( 0, 0, 0, $target_date['month'], 1, $target_date['year'] );
+
+		if ( false === $timestamp ) {
+			return null;
+		}
+
+		$month_heading = wp_date( 'F Y', $timestamp );
+
+		return is_string( $month_heading ) ? $month_heading : null;
 	}
 }

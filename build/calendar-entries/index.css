@@ -1,1 +1,1 @@
-.gatherpress-calendar__entry-template{display:none}
+.XXXgatherpress-calendar__entry-template,.editor-styles-wrapper .wp-block-gatherpress-calendar-entries{display:none}.gatherpress-calendar__events.has-child-selected .gatherpress-calendar__entry-template,.gatherpress-calendar__events.is-selected .gatherpress-calendar__entry-template{background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.15);display:block;left:50%;min-width:240px;padding:1rem;position:absolute;top:100%;transform:translateX(-50%);z-index:999}

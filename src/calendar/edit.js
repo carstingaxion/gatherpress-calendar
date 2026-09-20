@@ -23,7 +23,7 @@ import {
 	BorderControl,
 	ToggleControl,
 } from '@wordpress/components';
-import { useState, createElement, useMemo } from '@wordpress/element';
+import { useState, useMemo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 
 /**
@@ -69,8 +69,6 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 		selectedMonth,
 		monthModifier = 0,
 		templateConfigStyle = {},
-		showMonthHeading = true,
-		monthHeadingLevel = 2,
 		showWeekdays = true,
 	} = attributes;
 	const { query } = context;
@@ -132,21 +130,6 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 				[ clientId ]
 			)
 		);
-
-	// Render month heading with dynamic tag level.
-	const MonthHeading = useMemo( () => {
-		if ( ! showMonthHeading ) {
-			return null;
-		}
-
-		const level = Math.max( 1, Math.min( 6, monthHeadingLevel ) );
-
-		return createElement(
-			`h${ level }`,
-			{ className: 'gatherpress-calendar__month' },
-			calendar.monthName
-		);
-	}, [ showMonthHeading, monthHeadingLevel, calendar.monthName ] );
 
 	const blockProps = useBlockProps( {
 		className: 'gatherpress-calendar-block',
@@ -257,43 +240,6 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 					/>
 
 					<ToggleControl
-						label={ __(
-							'Show Month Heading',
-							'gatherpress-calendar'
-						) }
-						checked={ showMonthHeading }
-						onChange={ ( value ) =>
-							setAttributes( { showMonthHeading: value } )
-						}
-						help={ __(
-							'Display the month name and year above the calendar.',
-							'gatherpress-calendar'
-						) }
-					/>
-
-					{ showMonthHeading && (
-						<RangeControl
-							label={ __(
-								'Heading Level',
-								'gatherpress-calendar'
-							) }
-							value={ monthHeadingLevel }
-							onChange={ ( value ) =>
-								setAttributes( {
-									monthHeadingLevel: value || 2,
-								} )
-							}
-							min={ 1 }
-							max={ 6 }
-							step={ 1 }
-							help={ __(
-								'Select the HTML heading level (h1-h6) for the month name.',
-								'gatherpress-calendar'
-							) }
-						/>
-					) }
-
-					<ToggleControl
 						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
 						checked={ showWeekdays }
 						onChange={ ( value ) =>
@@ -393,7 +339,6 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 			</InspectorControls>
 			<div { ...blockProps }>
 				<div className="gatherpress-calendar">
-					{ MonthHeading }
 					<CalendarTable
 						calendar={ calendar }
 						showWeekdays={ showWeekdays }

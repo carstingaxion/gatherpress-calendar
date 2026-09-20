@@ -5,31 +5,15 @@
  * @since 0.5.0
  */
 
-import { useBlockProps, useInnerBlocksProps } from '@wordpress/block-editor';
+import {
+	useBlockProps,
+	useInnerBlocksProps,
+	InnerBlocks,
+} from '@wordpress/block-editor';
 
 import './editor.scss';
 
-/**
- * Edit Component for Calendar Entries
- *
- * Works like core/post-template: this block's own inner blocks are the
- * *template* used to render each of this day's events - for now, only
- * for the event's hidden popover content (see class-calendar-entries.php
- * on the PHP side).
- *
- * There isn't a real "current event" to render the template against in
- * the editor canvas, so for now this doesn't build a per-event preview:
- * it shows one placeholder dot per event (matching the frontend's dots
- * before a dot is clicked), and renders the template inner blocks in a
- * hidden container that's only reachable through the List View - editing
- * an event's popover content live in the canvas is a later step.
- *
- * @param {Object} props         Component props.
- * @param {Object} props.context Context provided by the Calendar Day block.
- *
- * @return {Element|null} Calendar Entries editor element.
- */
-export default function Edit( { context } ) {
+export default function Edit( { context, isSelected } ) {
 	const dayPosts = context?.[ 'gatherpress/dayPosts' ] ?? [];
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
 
@@ -39,21 +23,32 @@ export default function Edit( { context } ) {
 
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'gatherpress-calendar__entry-template' },
-		{ renderAppender: false }
+		{
+			// Ensures the (+) block inserter button appears when empty
+			renderAppender: InnerBlocks.ButtonBlockAppender,
+		}
 	);
 
-	if ( isEmpty || ! dayPosts.length ) {
+	// In the editor, only skip rendering if the cell is explicitly an empty padding day
+	if ( isEmpty ) {
 		return null;
 	}
 
+	// Show at least one placeholder dot so the block is visible and clickable
+	const displayDots = dayPosts.length > 0 ? dayPosts : [ { id: 'placeholder' } ];
+
 	return (
 		<div { ...blockProps }>
-			{ dayPosts.map( ( post, index ) => (
+			{ displayDots.map( ( post, index ) => (
 				<div
 					key={ post?.id ?? index }
 					className="gatherpress-calendar__event-item"
-				/>
+				>
+					<span className="gatherpress-calendar__event" aria-hidden="true" />
+				</div>
 			) ) }
+
+			{ /* The template container where inner blocks are inserted */ }
 			<div { ...innerBlocksProps } />
 		</div>
 	);
