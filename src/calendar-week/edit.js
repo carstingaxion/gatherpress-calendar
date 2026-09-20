@@ -10,6 +10,7 @@ import './editor.scss';
 
 import { DAY_TEMPLATE } from '../calendar/edit/constants';
 import { DayPreviewCell } from '../calendar/edit/components/DayPreviewCell';
+import { useStableValue } from '../utils/use-stable-value';
 
 /**
  * Edit Component for Calendar Week
@@ -35,16 +36,20 @@ export default function Edit( { context, clientId } ) {
 	// The real day template's inner blocks (Day Number, Post Title, Event
 	// Date, etc.) and the real day block's own attributes (for color/border
 	// style parity), used to render the non-active days as previews.
-	const { dayInnerBlocks, dayBlockAttributes } = useSelect(
-		( select ) => {
-			const { getBlocks } = select( blockEditorStore );
-			const dayBlock = getBlocks( clientId )[ 0 ];
-			return {
-				dayInnerBlocks: dayBlock ? getBlocks( dayBlock.clientId ) : [],
-				dayBlockAttributes: dayBlock?.attributes ?? {},
-			};
-		},
-		[ clientId ]
+	const { dayInnerBlocks, dayBlockAttributes } = useStableValue(
+		useSelect(
+			( select ) => {
+				const { getBlocks } = select( blockEditorStore );
+				const dayBlock = getBlocks( clientId )[ 0 ];
+				return {
+					dayInnerBlocks: dayBlock
+						? getBlocks( dayBlock.clientId )
+						: [],
+					dayBlockAttributes: dayBlock?.attributes ?? {},
+				};
+			},
+			[ clientId ]
+		)
 	);
 
 	const blockProps = useBlockProps( {
@@ -100,7 +105,7 @@ export default function Edit( { context, clientId } ) {
 						day={ day }
 						innerBlocks={ dayInnerBlocks }
 						dayBlockAttributes={ dayBlockAttributes }
-						onActivate={ () => setActiveDate( day.date ) }
+						onActivateDay={ setActiveDate }
 					/>
 				)
 			) }

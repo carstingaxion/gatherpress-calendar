@@ -1,4 +1,4 @@
-import { useMemo } from '@wordpress/element';
+import { memo, useCallback, useMemo } from '@wordpress/element';
 import {
 	BlockContextProvider,
 	__experimentalUseColorProps as useColorProps,
@@ -66,16 +66,20 @@ function withResolvedDayNumber( blocks, day ) {
  * @param {Object}   props.day              - Day data (day, date, posts, isEmpty, isToday).
  * @param {Array}    props.innerBlocks      - The real calendar-day block's inner blocks to preview.
  * @param {Object}   props.dayBlockAttributes - The real calendar-day block's own attributes, for style parity.
- * @param {Function} props.onActivate       - Called when the cell is clicked.
+ * @param {Function} props.onActivateDay    - Called with this day's date when the cell is clicked.
  *
  * @return {Element} Day cell preview element.
  */
-export function DayPreviewCell( {
+function DayPreviewCellComponent( {
 	day,
 	innerBlocks,
 	dayBlockAttributes,
-	onActivate,
+	onActivateDay,
 } ) {
+	const onActivate = useCallback(
+		() => onActivateDay( day.date ),
+		[ onActivateDay, day.date ]
+	);
 	const dayContext = useMemo(
 		() => ( {
 			'gatherpress/dayDate': day.date ?? '',
@@ -157,3 +161,9 @@ export function DayPreviewCell( {
 		</BlockContextProvider>
 	);
 }
+
+// Memoized: each instance mounts a real, isolated block-editor preview
+// (useBlockPreview). Without memoization, every unrelated re-render
+// higher up (e.g. selecting any block) would re-render every one of
+// these across the whole grid, which is visibly expensive.
+export const DayPreviewCell = memo( DayPreviewCellComponent );

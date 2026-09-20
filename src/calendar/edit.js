@@ -41,6 +41,7 @@ import { TEMPLATE } from './edit/constants';
 import { calculateDateQuery } from './edit/utils/date-utils';
 import { generateCalendar, getDefaultActiveDate } from './edit/utils/calendar-utils';
 import { resolveBlockGapCSS } from './edit/utils/style-utils';
+import { useStableValue } from '../utils/use-stable-value';
 
 import { useCalendarData } from './edit/hooks/useCalendarData';
 
@@ -112,22 +113,24 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 	// actual inner content (Day Number, Post Title, Event Date, etc.) and
 	// mirror their own color/border styling (e.g. a custom background).
 	const { dayInnerBlocks, dayBlockAttributes, weekBlockAttributes } =
-		useSelect(
-			( select ) => {
-				const { getBlocks } = select( blockEditorStore );
-				const weekBlock = getBlocks( clientId )[ 0 ];
-				const dayBlock = weekBlock
-					? getBlocks( weekBlock.clientId )[ 0 ]
-					: null;
-				return {
-					dayInnerBlocks: dayBlock
-						? getBlocks( dayBlock.clientId )
-						: [],
-					dayBlockAttributes: dayBlock?.attributes ?? {},
-					weekBlockAttributes: weekBlock?.attributes ?? {},
-				};
-			},
-			[ clientId ]
+		useStableValue(
+			useSelect(
+				( select ) => {
+					const { getBlocks } = select( blockEditorStore );
+					const weekBlock = getBlocks( clientId )[ 0 ];
+					const dayBlock = weekBlock
+						? getBlocks( weekBlock.clientId )[ 0 ]
+						: null;
+					return {
+						dayInnerBlocks: dayBlock
+							? getBlocks( dayBlock.clientId )
+							: [],
+						dayBlockAttributes: dayBlock?.attributes ?? {},
+						weekBlockAttributes: weekBlock?.attributes ?? {},
+					};
+				},
+				[ clientId ]
+			)
 		);
 
 	// Render month heading with dynamic tag level.
@@ -167,6 +170,20 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 	const tableStyle = {
 		gap: resolveBlockGapCSS( attributes.style?.spacing?.blockGap ),
 	};
+
+	// Stable reference: every week's BlockContextProvider value is built on
+	// top of this, and an unstable base object here would force a fresh
+	// context (and a cascading re-render of every preview cell) on every
+	// render, even ones unrelated to the calendar's own data (e.g. simply
+	// selecting a block).
+	const weekContext = useMemo(
+		() => ( {
+			'gatherpress/year': dateQuery.year,
+			'gatherpress/month': dateQuery.month,
+			'gatherpress/popoverStyles': '',
+		} ),
+		[ dateQuery ]
+	);
 
 	// Show placeholder if block is not inside a Query Loop.
 	if ( ! query ) {
@@ -383,11 +400,7 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 						style={ tableStyle }
 						activeDate={ resolvedActiveDate }
 						setActiveDate={ setActiveDate }
-						weekContext={ {
-							'gatherpress/year': dateQuery.year,
-							'gatherpress/month': dateQuery.month,
-							'gatherpress/popoverStyles': '',
-						} }
+						weekContext={ weekContext }
 						liveWeekChildren={ liveWeekChildren }
 						dayInnerBlocks={ dayInnerBlocks }
 						weekBlockAttributes={ weekBlockAttributes }

@@ -7,11 +7,13 @@
 
 import { __ } from '@wordpress/i18n';
 import {
+	BlockContextProvider,
 	useBlockProps,
 	useInnerBlocksProps,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
+import { useMemo } from '@wordpress/element';
 
 import './editor.scss';
 
@@ -31,10 +33,29 @@ import {
  * @return {Element} Day cell preview element.
  */
 export default function Edit( { context, clientId } ) {
+	const dayDate = context?.[ 'gatherpress/dayDate' ] ?? '';
 	const dayNumber = context?.[ 'gatherpress/dayNumber' ] ?? 1;
 	const isToday = context?.[ 'gatherpress/isToday' ] ?? false;
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
 	const posts = context?.[ 'gatherpress/dayPosts' ] ?? [];
+
+	// block.json's own providesContext only re-exposes values stored in
+	// this block's *attributes*, which we never set (day number etc. are
+	// purely derived from context, not persisted). That means descendants
+	// - like a Day Number block bound to our binding source, which reads
+	// this same context to resolve its value - would only ever see stale
+	// attribute defaults. Re-provide the real, current values explicitly
+	// so bindings and any other context-aware child resolve correctly.
+	const dayContext = useMemo(
+		() => ( {
+			'gatherpress/dayDate': dayDate,
+			'gatherpress/dayNumber': dayNumber,
+			'gatherpress/dayPosts': posts,
+			'gatherpress/isEmpty': isEmpty,
+			'gatherpress/isToday': isToday,
+		} ),
+		[ dayDate, dayNumber, posts, isEmpty, isToday ]
+	);
 
 	// If a real Day Number block (a paragraph bound to the calendar-day
 	// binding source) already exists among this day's own inner blocks,
@@ -64,7 +85,7 @@ export default function Edit( { context, clientId } ) {
 		className: classNames,
 	} );
 
-	const innerBlocksProps = useInnerBlocksProps(
+	const { children, ...innerBlocksWrapperProps } = useInnerBlocksProps(
 		{
 			className: 'gatherpress-calendar__events',
 			style: justifyContent ? { justifyContent } : undefined,
@@ -86,7 +107,11 @@ export default function Edit( { context, clientId } ) {
 						{ dayNumber }
 					</div>
 				) }
-				<div { ...innerBlocksProps } />
+				<div { ...innerBlocksWrapperProps }>
+					<BlockContextProvider value={ dayContext }>
+						{ children }
+					</BlockContextProvider>
+				</div>
 			</div>
 		</td>
 	);

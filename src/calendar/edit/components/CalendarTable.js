@@ -1,3 +1,4 @@
+import { useMemo } from '@wordpress/element';
 import { BlockContextProvider } from '@wordpress/block-editor';
 
 import { WeekPreviewRow } from './WeekPreviewRow';
@@ -42,6 +43,22 @@ export function CalendarTable( {
 	dayBlockAttributes,
 	tbodyProps,
 } ) {
+	// Memoized so each week's context object keeps its reference across
+	// renders that don't actually change the calendar/active day - an
+	// unstable BlockContextProvider value would otherwise re-render every
+	// descendant (live and previewed) on every unrelated render.
+	const weekContexts = useMemo(
+		() =>
+			calendar.weeks.map( ( week, weekIndex ) => ( {
+				...weekContext,
+				'gatherpress/weekIndex': weekIndex,
+				'gatherpress/weekDays': week,
+				'gatherpress/activeDate': activeDate,
+				'gatherpress/setActiveDate': setActiveDate,
+			} ) ),
+		[ calendar, weekContext, activeDate, setActiveDate ]
+	);
+
 	return (
 		<table className="gatherpress-calendar__table" style={ style }>
 			{ showWeekdays && (
@@ -59,16 +76,11 @@ export function CalendarTable( {
 						( day ) => day.date === activeDate
 					);
 
-					const context = {
-						...weekContext,
-						'gatherpress/weekIndex': weekIndex,
-						'gatherpress/weekDays': week,
-						'gatherpress/activeDate': activeDate,
-						'gatherpress/setActiveDate': setActiveDate,
-					};
-
 					return (
-						<BlockContextProvider key={ weekIndex } value={ context }>
+						<BlockContextProvider
+							key={ weekIndex }
+							value={ weekContexts[ weekIndex ] }
+						>
 							{ isActiveWeek ? (
 								liveWeekChildren
 							) : (

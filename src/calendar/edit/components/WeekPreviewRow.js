@@ -1,3 +1,4 @@
+import { memo } from '@wordpress/element';
 import { __experimentalUseColorProps as useColorProps } from '@wordpress/block-editor';
 
 import { DayPreviewCell } from './DayPreviewCell';
@@ -22,7 +23,7 @@ import { DayPreviewCell } from './DayPreviewCell';
  *
  * @return {Element} Week row preview element.
  */
-export function WeekPreviewRow( {
+function WeekPreviewRowComponent( {
 	week,
 	dayInnerBlocks,
 	weekBlockAttributes,
@@ -48,9 +49,15 @@ export function WeekPreviewRow( {
 					day={ day }
 					innerBlocks={ dayInnerBlocks }
 					dayBlockAttributes={ dayBlockAttributes }
-					onActivate={ () => onActivateDay( day.date ) }
+					onActivateDay={ onActivateDay }
 				/>
 			) ) }
 		</tr>
 	);
 }
+
+// Memoized: this (and each DayPreviewCell inside it) mounts a real,
+// isolated block-editor preview instance. Without memoization, every
+// unrelated re-render higher up (e.g. selecting any block) would
+// re-render every non-active week/day preview in the whole grid.
+export const WeekPreviewRow = memo( WeekPreviewRowComponent );
