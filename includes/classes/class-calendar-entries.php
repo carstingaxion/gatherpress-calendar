@@ -56,7 +56,32 @@ class Calendar_Entries {
 			? $block->context['gatherpress/popoverStyles']
 			: '';
 
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar__events' ) );
+		$layout      = isset( $attributes['layout'] ) && is_array( $attributes['layout'] ) ? $attributes['layout'] : array();
+		$layout_type = $layout['type'] ?? 'default';
+		$columns     = isset( $layout['columns'] ) ? max( 2, min( 6, (int) $layout['columns'] ) ) : 3;
+
+		$classes = array( 'gatherpress-calendar__events' );
+		$styles  = array();
+
+		if ( 'grid' === $layout_type ) {
+			$classes[] = 'is-layout-grid';
+			$classes[] = 'columns-' . $columns;
+			$styles[]  = '--gatherpress--columns: ' . $columns;
+		} elseif ( 'list' === $layout_type ) {
+			$classes[] = 'is-layout-list';
+		} else {
+			$classes[] = 'is-layout-flex';
+		}
+
+		$wrapper_args = array(
+			'class' => implode( ' ', $classes ),
+		);
+
+		if ( ! empty( $styles ) ) {
+			$wrapper_args['style'] = implode( '; ', $styles );
+		}
+
+		$wrapper_attributes = get_block_wrapper_attributes( $wrapper_args );
 		$events_html        = $this->render_event_dots( $day_posts, $popover_styles, $block );
 
 		return sprintf( '<div %1$s>%2$s</div>', $wrapper_attributes, $events_html );
@@ -98,7 +123,7 @@ class Calendar_Entries {
 
 		add_filter( 'render_block_context', $filter_block_context, 1 );
 
-		// Render the popover using the innerBlocks of gatherpress/calendar-entries
+		// Render popover using the innerBlocks of gatherpress/calendar-entries.
 		$block_instance = $this->prepare_inner_blocks_instance( $block );
 		$inner_content  = ( new WP_Block( $block_instance ) )->render( array( 'dynamic' => false ) );
 
