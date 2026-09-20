@@ -10,6 +10,15 @@
   "parent": [
     "gatherpress/calendar-day"
   ],
+  "attributes": {
+    "layout": {
+      "type": "object",
+      "default": {
+        "type": "default",
+        "columns": 3
+      }
+    }
+  },
   "usesContext": [
     "queryId",
     "gatherpress/year",
