@@ -43,8 +43,8 @@
       "gradients": true
     },
     "spacing": {
-      "padding": true,
-      "margin": true
+      "padding": [ "top", "bottom" ],
+      "margin": [ "top", "bottom" ]
     },
     "border": {
       "color": true,
