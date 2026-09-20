@@ -32,13 +32,17 @@ export default function Edit( { context, clientId } ) {
 	const activeDate = context?.[ 'gatherpress/activeDate' ] ?? '';
 	const setActiveDate = context?.[ 'gatherpress/setActiveDate' ] ?? ( () => {} );
 
-	// The real day template's inner blocks (Post Title, Event Date, etc.),
-	// used to render the non-active days as previews.
-	const dayInnerBlocks = useSelect(
+	// The real day template's inner blocks (Day Number, Post Title, Event
+	// Date, etc.) and the real day block's own attributes (for color/border
+	// style parity), used to render the non-active days as previews.
+	const { dayInnerBlocks, dayBlockAttributes } = useSelect(
 		( select ) => {
 			const { getBlocks } = select( blockEditorStore );
 			const dayBlock = getBlocks( clientId )[ 0 ];
-			return dayBlock ? getBlocks( dayBlock.clientId ) : [];
+			return {
+				dayInnerBlocks: dayBlock ? getBlocks( dayBlock.clientId ) : [],
+				dayBlockAttributes: dayBlock?.attributes ?? {},
+			};
 		},
 		[ clientId ]
 	);
@@ -95,6 +99,7 @@ export default function Edit( { context, clientId } ) {
 						key={ day.date ?? `empty-${ dayIndex }` }
 						day={ day }
 						innerBlocks={ dayInnerBlocks }
+						dayBlockAttributes={ dayBlockAttributes }
 						onActivate={ () => setActiveDate( day.date ) }
 					/>
 				)

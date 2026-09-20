@@ -109,18 +109,26 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 	}, [ calendar, activeDate ] );
 
 	// Locate the real week/day template blocks so previews can clone their
-	// actual inner content (Post Title, Event Date, etc.).
-	const dayInnerBlocks = useSelect(
-		( select ) => {
-			const { getBlocks } = select( blockEditorStore );
-			const weekBlock = getBlocks( clientId )[ 0 ];
-			const dayBlock = weekBlock
-				? getBlocks( weekBlock.clientId )[ 0 ]
-				: null;
-			return dayBlock ? getBlocks( dayBlock.clientId ) : [];
-		},
-		[ clientId ]
-	);
+	// actual inner content (Day Number, Post Title, Event Date, etc.) and
+	// mirror their own color/border styling (e.g. a custom background).
+	const { dayInnerBlocks, dayBlockAttributes, weekBlockAttributes } =
+		useSelect(
+			( select ) => {
+				const { getBlocks } = select( blockEditorStore );
+				const weekBlock = getBlocks( clientId )[ 0 ];
+				const dayBlock = weekBlock
+					? getBlocks( weekBlock.clientId )[ 0 ]
+					: null;
+				return {
+					dayInnerBlocks: dayBlock
+						? getBlocks( dayBlock.clientId )
+						: [],
+					dayBlockAttributes: dayBlock?.attributes ?? {},
+					weekBlockAttributes: weekBlock?.attributes ?? {},
+				};
+			},
+			[ clientId ]
+		);
 
 	// Render month heading with dynamic tag level.
 	const MonthHeading = useMemo( () => {
@@ -382,6 +390,8 @@ export default function Edit( { attributes, setAttributes, context, clientId } )
 						} }
 						liveWeekChildren={ liveWeekChildren }
 						dayInnerBlocks={ dayInnerBlocks }
+						weekBlockAttributes={ weekBlockAttributes }
+						dayBlockAttributes={ dayBlockAttributes }
 						tbodyProps={ tbodyProps }
 					/>
 				</div>

@@ -23,6 +23,8 @@ import { WeekPreviewRow } from './WeekPreviewRow';
  * @param {Object}   props.weekContext        - Base context shared by every week (year, month, popoverStyles).
  * @param {Element}  props.liveWeekChildren   - The real, live-rendered week InnerBlocks content.
  * @param {Array}    props.dayInnerBlocks     - The real day template's inner blocks, for previews.
+ * @param {Object}   props.weekBlockAttributes - The real calendar-week block's own attributes, for style parity.
+ * @param {Object}   props.dayBlockAttributes - The real calendar-day block's own attributes, for style parity.
  * @param {Object}   props.tbodyProps         - Props (ref/className) tying <tbody> to the live week's InnerBlocks.
  *
  * @return {Element} Calendar table component.
@@ -36,6 +38,8 @@ export function CalendarTable( {
 	weekContext,
 	liveWeekChildren,
 	dayInnerBlocks,
+	weekBlockAttributes,
+	dayBlockAttributes,
 	tbodyProps,
 } ) {
 	return (
@@ -71,6 +75,8 @@ export function CalendarTable( {
 								<WeekPreviewRow
 									week={ week }
 									dayInnerBlocks={ dayInnerBlocks }
+									weekBlockAttributes={ weekBlockAttributes }
+									dayBlockAttributes={ dayBlockAttributes }
 									onActivateDay={ setActiveDate }
 								/>
 							) }
