@@ -73,8 +73,6 @@
       "style": true,
       "width": true
     },
-    "listView": true,
-    "contentRole": true,
     "layout": {
       "allowEditing": false
     }

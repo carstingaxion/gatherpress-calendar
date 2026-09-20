@@ -66,9 +66,9 @@
     "contentRole": true,
     "spacing": {
       "padding": true,
-      "margin": false
+      "margin": true
     },
-    "border": {
+    "__experimentalBorder": {
       "color": true,
       "radius": true,
       "style": true,
