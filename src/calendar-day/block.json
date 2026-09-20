@@ -8,8 +8,11 @@
   "icon": "calendar",
   "description": "An individual day cell inside the GatherPress Calendar grid.",
   "parent": [
-    "gatherpress/calendar-week",
-    "gatherpress/calendar"
+    "gatherpress/calendar-week"
+  ],
+  "allowedBlocks": [
+    "core/paragraph",
+    "gatherpress/calendar-entries"
   ],
   "usesContext": [
     "queryId",
@@ -55,32 +58,17 @@
     "color": {
       "background": true,
       "text": true,
-      "gradients": true,
-      "__experimentalDefaultControls": {
-        "background": true,
-        "text": true
-      }
+      "gradients": true
     },
     "spacing": {
-      "padding": false,
-      "margin": true
+      "padding": true,
+      "margin": false
     },
     "border": {
       "color": true,
       "radius": true,
       "style": true,
-      "width": true,
-      "__experimentalDefaultControls": {
-        "color": true,
-        "radius": true,
-        "width": true
-      }
-    },
-    "typography": {
-      "fontSize": true,
-      "lineHeight": true,
-      "__experimentalFontFamily": true,
-      "__experimentalFontWeight": true
+      "width": true
     }
   },
   "textdomain": "gatherpress-calendar",

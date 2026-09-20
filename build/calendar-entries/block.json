@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "gatherpress/calendar-entries",
+  "version": "0.4.0",
+  "title": "Calendar Entries",
+  "category": "gatherpress",
+  "icon": "marker",
+  "description": "Displays event indicator dots and popover contents for a calendar day.",
+  "parent": [
+    "gatherpress/calendar-day"
+  ],
+  "usesContext": [
+    "queryId",
+    "gatherpress/year",
+    "gatherpress/month",
+    "gatherpress/dayDate",
+    "gatherpress/dayNumber",
+    "gatherpress/dayPosts",
+    "gatherpress/isEmpty",
+    "gatherpress/isToday",
+    "gatherpress/popoverStyles"
+  ],
+  "supports": {
+    "interactivity": true,
+    "html": false,
+    "reusable": false,
+    "customClassName": true,
+    "color": {
+      "background": true,
+      "text": true
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true
+    }
+  },
+  "textdomain": "gatherpress-calendar",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}

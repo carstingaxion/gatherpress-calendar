@@ -114,7 +114,7 @@ class Calendar_Day {
 			? $block->context['gatherpress/popoverStyles']
 			: '';
 
-		$events_html = $has_posts ? $this->render_event_dots( $day_posts, $popover_styles, $block ) : '';
+		// $events_html = $has_posts ? $this->render_event_dots( $day_posts, $popover_styles, $block ) : '';
 
 		$day_number_block = null;
 		if ( ! empty( $block->parsed_block['innerBlocks'] ) ) {
@@ -137,9 +137,9 @@ class Calendar_Day {
 			<?php if ( ! $is_empty && $day_number > 0 ) { ?>
 				<div class="gatherpress-calendar__day-content">
 					<?php echo $day_number_html; ?>
-					<?php if ( ! empty( $events_html ) ) { ?>
+					<?php if ( ! empty( $content ) ) { ?>
 						<div class="gatherpress-calendar__events">
-							<?php echo $events_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							<?php echo $content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</div>
 					<?php } ?>
 				</div>
