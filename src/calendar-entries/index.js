@@ -6,5 +6,5 @@ import './style.scss';
 
 registerBlockType( metadata.name, {
 	edit: Edit,
-	save,
+	save: () => null, // Dynamic block rendered server-side via PHP.
 } );

@@ -7,30 +7,56 @@
 	align-content: start;
 	flex: 1;
 	min-height: 0;
+
+	&.is-layout-list {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+	}
+
+	&.is-layout-grid {
+		display: grid;
+		grid-template-columns: repeat(var(--gatherpress--columns, 3), minmax(0, 1fr));
+		justify-items: center;
+		align-items: center;
+
+		@for $i from 2 through 6 {
+			&.columns-#{$i} {
+				grid-template-columns: repeat(#{$i}, minmax(0, 1fr));
+			}
+		}
+	}
 }
 
 .gatherpress-calendar__event-item {
-	> a {
+	> a,
+	> span.gatherpress-calendar__event {
 		background: var(--wp--preset--color--primary, #007cba);
 	}
 
-	&:nth-child(2) > a {
+	&:nth-child(2) > a,
+	&:nth-child(2) > span.gatherpress-calendar__event {
 		background: var(--wp--preset--color--secondary, #e65054);
 	}
 
-	&:nth-child(3) > a {
+	&:nth-child(3) > a,
+	&:nth-child(3) > span.gatherpress-calendar__event {
 		background: var(--wp--preset--color--tertiary, #4ab866);
 	}
 
-	&:nth-child(4) > a {
+	&:nth-child(4) > a,
+	&:nth-child(4) > span.gatherpress-calendar__event {
 		background: var(--wp--preset--color--vivid-purple, #9b51e0);
 	}
 
-	&:nth-child(5) > a {
+	&:nth-child(5) > a,
+	&:nth-child(5) > span.gatherpress-calendar__event {
 		background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
 	}
 
-	&:nth-child(n+6) > a {
+	&:nth-child(n+6) > a,
+	&:nth-child(n+6) > span.gatherpress-calendar__event {
 		background: var(--wp--preset--color--contrast, #666);
 	}
 }
