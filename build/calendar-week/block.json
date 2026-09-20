@@ -19,7 +19,9 @@
     "gatherpress/month",
     "gatherpress/weekIndex",
     "gatherpress/weekDays",
-    "gatherpress/popoverStyles"
+    "gatherpress/popoverStyles",
+    "gatherpress/activeDate",
+    "gatherpress/setActiveDate"
   ],
   "providesContext": {
     "gatherpress/weekIndex": "weekIndex"

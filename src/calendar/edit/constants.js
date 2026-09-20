@@ -7,22 +7,18 @@
  * @type {Array<Array>}
  * @since 0.1.0
  */
-export const TEMPLATE = [
+export const DAY_TEMPLATE = [
     [
-        'gatherpress/calendar-week',
+        'gatherpress/calendar-day',
         {},
         [
-            [
-                'gatherpress/calendar-day',
-                {},
-                [
-                    [ 'core/post-title', { level: 3 } ],
-                    [ 'gatherpress/event-date' ],
-                ],
-            ],
+            [ 'core/post-title', { level: 3 } ],
+            [ 'gatherpress/event-date' ],
         ],
     ],
 ];
+
+export const TEMPLATE = [ [ 'gatherpress/calendar-week', {}, DAY_TEMPLATE ] ];
 
 /**
  * The date format used throughout the component.

@@ -175,6 +175,9 @@ export function generateCalendar(
 		} );
 	}
 
+	// Today's date string, used to flag the current day in the grid.
+	const today = dateI18n( DATE_FORMAT, new Date() );
+
 	// Calculate calendar dimensions.
 	const firstDay = new Date( year, month, 1 );
 	const lastDay = new Date( year, month + 1, 0 );
@@ -207,6 +210,7 @@ export function generateCalendar(
 			date: dateStr,
 			posts: dayPosts,
 			isEmpty: false,
+			isToday: dateStr === today,
 		} );
 
 		// When week is complete (7 days), start a new week.
@@ -230,4 +234,28 @@ export function generateCalendar(
 		weeks,
 		dayNames: getDayNames( startOfWeek ),
 	};
+}
+
+/**
+ * Pick a sensible default "active" (live-editable) day for the calendar
+ * preview: today's date when it falls inside the displayed month,
+ * otherwise the first non-empty day of the month.
+ *
+ * @since 0.5.0
+ *
+ * @param {Object} calendar - Calendar data structure from generateCalendar().
+ *
+ * @return {string} Date string (Y-m-d) to treat as the active/live day.
+ */
+export function getDefaultActiveDate( calendar ) {
+	const days = calendar.weeks.flat();
+	const todayEntry = days.find( ( day ) => ! day.isEmpty && day.isToday );
+
+	if ( todayEntry ) {
+		return todayEntry.date;
+	}
+
+	const firstDay = days.find( ( day ) => ! day.isEmpty );
+
+	return firstDay ? firstDay.date : '';
 }

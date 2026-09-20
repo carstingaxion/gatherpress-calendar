@@ -13,6 +13,7 @@ import {
 	useInnerBlocksProps,
 	InspectorControls,
 	PanelColorSettings,
+	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import {
 	Placeholder,
@@ -23,6 +24,7 @@ import {
 	ToggleControl,
 } from '@wordpress/components';
 import { useState, createElement, useMemo } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 
 /**
  * Editor-specific styles
@@ -37,34 +39,19 @@ import './editor.scss';
 import { TEMPLATE } from './edit/constants';
 
 import { calculateDateQuery } from './edit/utils/date-utils';
-import { generateCalendar } from './edit/utils/calendar-utils';
-import { boxControlToCSS, borderControlToCSS, resolveBlockGapCSS } from './edit/utils/style-utils';
+import { generateCalendar, getDefaultActiveDate } from './edit/utils/calendar-utils';
+import { resolveBlockGapCSS } from './edit/utils/style-utils';
 
 import { useCalendarData } from './edit/hooks/useCalendarData';
 
 import { MonthPicker } from './edit/components/MonthPicker';
 import { MonthControls } from './edit/components/MonthControls';
 import { CalendarTable } from './edit/components/CalendarTable';
-import { TemplateConfig } from './edit/components/TemplateConfig';
 
 /**
  * Edit Component
  *
  * Main editor component for the GatherPress Calendar block.
- * Handles:
- * - Rendering the calendar preview with posts
- * - Month selection and month modifier controls
- * - Month heading visibility and level controls
- * - Template configuration interface
- * - Popover styling controls
- * - Query context validation
- *
- * Component Lifecycle:
- * 1. Receives attributes and context from WordPress
- * 2. Uses useSelect to fetch posts based on query context
- * 3. Generates calendar structure from posts
- * 4. Renders calendar preview and controls
- * 5. Updates attributes when user interacts with controls
  *
  * @since 0.1.0
  *
@@ -72,10 +59,11 @@ import { TemplateConfig } from './edit/components/TemplateConfig';
  * @param {Object}   props.attributes    - Block attributes.
  * @param {Function} props.setAttributes - Function to update block attributes.
  * @param {Object}   props.context       - Context from parent blocks.
+ * @param {string}   props.clientId      - This block's client ID.
  *
  * @return {Element} React element rendered in the editor.
  */
-export default function Edit( { attributes, setAttributes, context } ) {
+export default function Edit( { attributes, setAttributes, context, clientId } ) {
 	const {
 		selectedMonth,
 		monthModifier = 0,
@@ -86,6 +74,7 @@ export default function Edit( { attributes, setAttributes, context } ) {
 	} = attributes;
 	const { query } = context;
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
+	const [ activeDate, setActiveDate ] = useState( '' );
 
 	// Calculate date query based on selectedMonth and monthModifier.
 	const dateQuery = useMemo(
@@ -108,6 +97,31 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		[ posts, startOfWeek, selectedMonth, monthModifier ]
 	);
 
+	// Resolve which day is currently "live"/editable: keep the previously
+	// active date if it still exists in this month, otherwise fall back to
+	// today (or the 1st) so the preview always has a live cell to show.
+	const resolvedActiveDate = useMemo( () => {
+		const days = calendar.weeks.flat();
+		if ( days.some( ( day ) => day.date === activeDate ) ) {
+			return activeDate;
+		}
+		return getDefaultActiveDate( calendar );
+	}, [ calendar, activeDate ] );
+
+	// Locate the real week/day template blocks so previews can clone their
+	// actual inner content (Post Title, Event Date, etc.).
+	const dayInnerBlocks = useSelect(
+		( select ) => {
+			const { getBlocks } = select( blockEditorStore );
+			const weekBlock = getBlocks( clientId )[ 0 ];
+			const dayBlock = weekBlock
+				? getBlocks( weekBlock.clientId )[ 0 ]
+				: null;
+			return dayBlock ? getBlocks( dayBlock.clientId ) : [];
+		},
+		[ clientId ]
+	);
+
 	// Render month heading with dynamic tag level.
 	const MonthHeading = useMemo( () => {
 		if ( ! showMonthHeading ) {
@@ -127,13 +141,18 @@ export default function Edit( { attributes, setAttributes, context } ) {
 		className: 'gatherpress-calendar-block',
 	} );
 
-	const innerBlocksProps = useInnerBlocksProps(
+	// The real, live-editable week+day+content InnerBlocks tree. Rendered
+	// inside <tbody> at whichever week row contains resolvedActiveDate;
+	// every other week is a read-only preview (see CalendarTable).
+	const { children: liveWeekChildren, ...tbodyProps } = useInnerBlocksProps(
 		{
-			className: 'gatherpress-calendar-template',
+			className: 'gatherpress-calendar__weeks',
 		},
 		{
+			allowedBlocks: [ 'gatherpress/calendar-week' ],
 			template: TEMPLATE,
 			templateLock: false,
+			renderAppender: false,
 		}
 	);
 
@@ -159,19 +178,6 @@ export default function Edit( { attributes, setAttributes, context } ) {
 			</div>
 		);
 	}
-
-	// Build inline styles for template config preview.
-	const templateConfigStyles = {
-		backgroundColor: templateConfigStyle.backgroundColor || undefined,
-		padding: boxControlToCSS( templateConfigStyle.padding ) || undefined,
-		...borderControlToCSS( {
-			width: templateConfigStyle.borderWidth,
-			style: templateConfigStyle.borderStyle,
-			color: templateConfigStyle.borderColor,
-			radius: templateConfigStyle.borderRadius,
-		} ),
-		boxShadow: templateConfigStyle.boxShadow || undefined,
-	};
 
 	// Handlers
 	const handleMonthSelect = ( value ) => {
@@ -367,10 +373,16 @@ export default function Edit( { attributes, setAttributes, context } ) {
 						calendar={ calendar }
 						showWeekdays={ showWeekdays }
 						style={ tableStyle }
-					/>
-					<TemplateConfig
-						templateConfigStyles={ templateConfigStyles }
-						innerBlocksProps={ innerBlocksProps }
+						activeDate={ resolvedActiveDate }
+						setActiveDate={ setActiveDate }
+						weekContext={ {
+							'gatherpress/year': dateQuery.year,
+							'gatherpress/month': dateQuery.month,
+							'gatherpress/popoverStyles': '',
+						} }
+						liveWeekChildren={ liveWeekChildren }
+						dayInnerBlocks={ dayInnerBlocks }
+						tbodyProps={ tbodyProps }
 					/>
 				</div>
 			</div>
