@@ -2,8 +2,8 @@
    Block Container
    ========================================================================== */
 .wp-block-gatherpress-calendar {
-	/* Default decent background that fills the grid lines.
-	   When the user selects a background color in the editor UI, Gutenberg overrides this. */
+
+	/* Default decent background that fills the grid lines. */
 	background: var(--wp--preset--color--base, #fff);
 	padding: var(--wp--preset--spacing--50, 1rem);
 	margin-block: var(--wp--preset--spacing--50, 1rem);
@@ -28,8 +28,9 @@
 		width: 100%;
 		display: grid;
 		grid-template-columns: repeat(7, 1fr);
-		gap: 2px; /* Default thin grid line when no spacing is configured in the UI */
-		/* Inherits the calendar block's background color to fill the gaps between cells */
+		gap: 2px; /* Default thin grid line when no spacing is set */
+
+		/* Inherits the calendar block's background to fill the gaps between cells */
 		background: inherit;
 		container-type: inline-size;
 		container-name: calendar;
