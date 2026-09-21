@@ -24,19 +24,6 @@
 
 		.gatherpress-calendar__day-number {
 			font-weight: 700;
-
-			&::after {
-				content: "";
-				position: absolute;
-				bottom: -4px;
-				left: 50%;
-				transform: translateX(-50%);
-				width: 14px;
-				height: 2px;
-				background: var(--wp--preset--color--primary, #007cba);
-				border-radius: 1px;
-				opacity: 0.7;
-			}
 		}
 	}
 
@@ -46,30 +33,9 @@
 		outline-offset: -2px;
 		z-index: 1;
 
-		&::before {
-			content: "";
-			position: absolute;
-			inset: 0;
-			background: var(--wp--preset--color--primary, #007cba);
-			opacity: 0.12;
-			pointer-events: none;
-		}
-
 		.gatherpress-calendar__day-number {
 			color: var(--wp--preset--color--primary, #007cba);
 			font-weight: 800;
-
-			&::after {
-				content: "";
-				position: absolute;
-				bottom: -4px;
-				left: 50%;
-				transform: translateX(-50%);
-				width: 20px;
-				height: 2px;
-				background: var(--wp--preset--color--primary, #007cba);
-				border-radius: 2px;
-			}
 		}
 	}
 }

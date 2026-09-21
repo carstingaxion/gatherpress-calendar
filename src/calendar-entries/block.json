@@ -17,7 +17,11 @@
   "attributes": {
     "layout": {
       "type": "object",
-      "default": { "type": "default" }
+      "default": {
+        "type": "flex",
+        "orientation": "vertical",
+        "justifyContent": "right"
+      }
     }
   },
   "supports": {
@@ -28,7 +32,11 @@
       "allowSwitching": true,
       "allowInheriting": false,
       "allowSizingOnChildren": false,
-      "default": { "type": "default" }
+      "default": {
+        "type": "flex",
+        "orientation": "vertical",
+        "justifyContent": "right"
+      }
     },
     "spacing": {
       "margin": true,

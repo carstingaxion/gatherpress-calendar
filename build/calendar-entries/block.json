@@ -20,7 +20,9 @@
     "layout": {
       "type": "object",
       "default": {
-        "type": "default"
+        "type": "flex",
+        "orientation": "vertical",
+        "justifyContent": "right"
       }
     }
   },
@@ -33,7 +35,9 @@
       "allowInheriting": false,
       "allowSizingOnChildren": false,
       "default": {
-        "type": "default"
+        "type": "flex",
+        "orientation": "vertical",
+        "justifyContent": "right"
       }
     },
     "spacing": {

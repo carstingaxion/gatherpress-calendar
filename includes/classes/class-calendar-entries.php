@@ -181,32 +181,8 @@ class Calendar_Entries {
 
 		ob_start();
 		?>
-		<div class="gatherpress-calendar__event-item" data-wp-context='{ "eventId": "<?php echo esc_attr( (string) $post_id ); ?>" }'>
-			<a
-				href="<?php echo esc_url( $post_url ); ?>"
-				class="gatherpress-calendar__event"
-				data-post-id="<?php echo esc_attr( (string) $post_id ); ?>"
-				data-event-content="<?php echo esc_attr( $event_content_id ); ?>"
-				data-popover-style="<?php echo esc_attr( $popover_styles ); ?>"
-				<?php /* translators: %s Post title */ ?>
-				aria-label="<?php echo esc_attr( sprintf( __( 'View event: %s', 'gatherpress-calendar' ), $post_title ) ); ?>"
-				data-wp-on--click="actions.togglePopover"
-				data-wp-on--keydown="actions.handleKeydown"
-				role="button"
-				tabindex="0"
-			></a>
-			<div
-				id="<?php echo esc_attr( $event_content_id ); ?>"
-				class="gatherpress-calendar__popover"
-				data-wp-bind--hidden="!state.isCurrentEventOpen"
-				data-wp-class--is-active="state.isCurrentEventOpen"
-				data-wp-watch="callbacks.positionPopover"
-				data-wp-on-window--resize="callbacks.onWindowChange"
-				data-wp-on-window--scroll="callbacks.onWindowChange"
-				hidden
-			>
-				<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-			</div>
+		<div class="gatherpress-calendar__event-item">
+			<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</div>
 		<?php
 		$output = ob_get_clean();
