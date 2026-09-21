@@ -8,7 +8,7 @@
  * the event's hidden popover content.
  *
  * @package GatherPressCalendar
- * @since 0.5.0
+ * @since 0.4.0
  */
 
 declare(strict_types=1);

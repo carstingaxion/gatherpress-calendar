@@ -1,7 +1,7 @@
 /**
  * GatherPress Calendar Day Block Editor Component
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.4.0
  */
 
@@ -27,9 +27,10 @@ import {
  *
  * Renders an individual calendar cell with date information and event dots/content.
  *
- * @param {Object} props         Component props.
- * @param {Object} props.context Context provided by parent Calendar / query.
+ * @param {Object} props          Component props.
+ * @param {Object} props.context  Context provided by parent Calendar / query.
  *
+ * @param          props.clientId
  * @return {Element} Day cell preview element.
  */
 export default function Edit( { context, clientId } ) {

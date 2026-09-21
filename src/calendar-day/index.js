@@ -1,11 +1,14 @@
 /**
  * GatherPress Calendar Day Block Registration
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.4.0
  */
 
-import { registerBlockType, registerBlockBindingsSource } from '@wordpress/blocks';
+import {
+	registerBlockType,
+	registerBlockBindingsSource,
+} from '@wordpress/blocks';
 import { __ } from '@wordpress/i18n';
 
 /**

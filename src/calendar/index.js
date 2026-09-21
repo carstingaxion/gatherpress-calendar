@@ -10,7 +10,10 @@
  * @since 0.1.0
  */
 
-import { registerBlockType, registerBlockBindingsSource } from '@wordpress/blocks';
+import {
+	registerBlockType,
+	registerBlockBindingsSource,
+} from '@wordpress/blocks';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { addFilter } from '@wordpress/hooks';
 import { Notice } from '@wordpress/components';

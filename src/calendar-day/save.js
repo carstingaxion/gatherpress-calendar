@@ -4,7 +4,7 @@
  * Server-side rendering generates the <td> container and injects context;
  * this save component preserves the InnerBlocks template structure.
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.4.0
  */
 

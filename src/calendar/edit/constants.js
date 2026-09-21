@@ -12,11 +12,11 @@
  * gatherpress/calendar-entries once per event on the frontend.
  *
  * @type {Array<Array>}
- * @since 0.5.0
+ * @since 0.4.0
  */
 export const ENTRIES_TEMPLATE = [
-    [ 'core/post-title', { level: 3 } ],
-    [ 'gatherpress/event-date' ],
+	[ 'core/post-title', { level: 3 } ],
+	[ 'gatherpress/event-date' ],
 ];
 
 export const DAY_TEMPLATE = [

@@ -16,14 +16,14 @@ import { DayPreviewCell } from './DayPreviewCell';
  * template inner blocks. Clicking any day activates it, making that week
  * (and that day) the live/editable one.
  *
- * @since 0.5.0
+ * @since 0.4.0
  *
  * @param {Object}   props                     - Component props.
  * @param {Array}    props.week                - This week's day data entries.
- * @param {Array}    props.dayInnerBlocks       - The real day template's inner blocks, for previews.
- * @param {Object}   props.weekBlockAttributes  - The real calendar-week block's own attributes, for style parity.
- * @param {Object}   props.dayBlockAttributes   - The real calendar-day block's own attributes, for style parity.
- * @param {Function} props.onActivateDay        - Called with a day's date when that day is clicked.
+ * @param {Array}    props.dayInnerBlocks      - The real day template's inner blocks, for previews.
+ * @param {Object}   props.weekBlockAttributes - The real calendar-week block's own attributes, for style parity.
+ * @param {Object}   props.dayBlockAttributes  - The real calendar-day block's own attributes, for style parity.
+ * @param {Function} props.onActivateDay       - Called with a day's date when that day is clicked.
  *
  * @return {Element} Week row preview element.
  */
@@ -37,13 +37,12 @@ function WeekPreviewRowComponent( {
 	// Mirror the real calendar-week block's own color/spacing/shadow
 	// styling so every previewed week row looks like the live one.
 	const colorProps = useColorProps( weekBlockAttributes ?? {} );
-	const spacingProps = getSpacingClassesAndStyles( weekBlockAttributes ?? {} );
+	const spacingProps = getSpacingClassesAndStyles(
+		weekBlockAttributes ?? {}
+	);
 	const shadowProps = getShadowClassesAndStyles( weekBlockAttributes ?? {} );
 
-	const classNames = [
-		'gatherpress-calendar__week',
-		colorProps.className,
-	]
+	const classNames = [ 'gatherpress-calendar__week', colorProps.className ]
 		.filter( Boolean )
 		.join( ' ' );
 

@@ -1,8 +1,8 @@
 /**
  * GatherPress Calendar Entries Block Editor Component
  *
- * @package GatherPressCalendar
- * @since 0.5.0
+ * @package
+ * @since 0.4.0
  */
 
 import {
@@ -35,7 +35,8 @@ export default function Edit( { context, isSelected } ) {
 	}
 
 	// Show at least one placeholder dot so the block is visible and clickable
-	const displayDots = dayPosts.length > 0 ? dayPosts : [ { id: 'placeholder' } ];
+	const displayDots =
+		dayPosts.length > 0 ? dayPosts : [ { id: 'placeholder' } ];
 
 	return (
 		<div { ...blockProps }>
@@ -44,7 +45,10 @@ export default function Edit( { context, isSelected } ) {
 					key={ post?.id ?? index }
 					className="gatherpress-calendar__event-item"
 				>
-					<span className="gatherpress-calendar__event" aria-hidden="true" />
+					<span
+						className="gatherpress-calendar__event"
+						aria-hidden="true"
+					/>
 				</div>
 			) ) }
 

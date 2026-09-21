@@ -4,8 +4,8 @@
  * day's real inner blocks, and reading its own visual settings so both the
  * live day and the read-only day previews can stay in sync with it.
  *
- * @package GatherPressCalendar
- * @since 0.5.0
+ * @package
+ * @since 0.4.0
  */
 
 const DAY_NUMBER_BINDING_SOURCE = 'gatherpress/calendar-day';
@@ -52,8 +52,8 @@ const JUSTIFY_CONTENT_BY_TEXT_ALIGN = {
  * @return {string|undefined} A justify-content value, or undefined to keep the CSS default.
  */
 export function getDayNumberJustifyContent( blocks ) {
-	const textAlign = findDayNumberBlock( blocks )?.attributes?.style
-		?.typography?.textAlign;
+	const textAlign =
+		findDayNumberBlock( blocks )?.attributes?.style?.typography?.textAlign;
 
 	return JUSTIFY_CONTENT_BY_TEXT_ALIGN[ textAlign ];
 }

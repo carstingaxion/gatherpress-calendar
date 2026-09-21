@@ -62,13 +62,13 @@ function withResolvedDayNumber( blocks, day ) {
  *
  * Clicking the cell activates it, making it the live/editable day.
  *
- * @since 0.5.0
+ * @since 0.4.0
  *
- * @param {Object}   props                  - Component props.
- * @param {Object}   props.day              - Day data (day, date, posts, isEmpty, isToday).
- * @param {Array}    props.innerBlocks      - The real calendar-day block's inner blocks to preview.
+ * @param {Object}   props                    - Component props.
+ * @param {Object}   props.day                - Day data (day, date, posts, isEmpty, isToday).
+ * @param {Array}    props.innerBlocks        - The real calendar-day block's inner blocks to preview.
  * @param {Object}   props.dayBlockAttributes - The real calendar-day block's own attributes, for style parity.
- * @param {Function} props.onActivateDay    - Called with this day's date when the cell is clicked.
+ * @param {Function} props.onActivateDay      - Called with this day's date when the cell is clicked.
  *
  * @return {Element} Day cell preview element.
  */

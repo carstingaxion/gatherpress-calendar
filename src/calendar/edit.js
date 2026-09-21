@@ -39,7 +39,10 @@ import './editor.scss';
 import { TEMPLATE } from './edit/constants';
 
 import { calculateDateQuery } from './edit/utils/date-utils';
-import { generateCalendar, getDefaultActiveDate } from './edit/utils/calendar-utils';
+import {
+	generateCalendar,
+	getDefaultActiveDate,
+} from './edit/utils/calendar-utils';
 import { resolveBlockGapCSS } from './edit/utils/style-utils';
 import { useStableValue } from '../utils/use-stable-value';
 
@@ -64,7 +67,12 @@ import { CalendarTable } from './edit/components/CalendarTable';
  *
  * @return {Element} React element rendered in the editor.
  */
-export default function Edit( { attributes, setAttributes, context, clientId } ) {
+export default function Edit( {
+	attributes,
+	setAttributes,
+	context,
+	clientId,
+} ) {
 	const {
 		selectedMonth,
 		monthModifier = 0,

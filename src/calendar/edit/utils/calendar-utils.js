@@ -241,7 +241,7 @@ export function generateCalendar(
  * preview: today's date when it falls inside the displayed month,
  * otherwise the first non-empty day of the month.
  *
- * @since 0.5.0
+ * @since 0.4.0
  *
  * @param {Object} calendar - Calendar data structure from generateCalendar().
  *

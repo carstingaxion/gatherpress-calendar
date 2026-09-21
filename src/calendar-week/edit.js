@@ -22,8 +22,8 @@ import { useStableValue } from '../utils/use-stable-value';
  * with their own date/day-number/posts context - mirroring what
  * Calendar_Week::render() does on the frontend.
  *
- * @param {Object} props         Component props.
- * @param {Object} props.context Context provided by the Calendar block.
+ * @param {Object} props          Component props.
+ * @param {Object} props.context  Context provided by the Calendar block.
  * @param {string} props.clientId This week block's client ID.
  *
  * @return {Element} Week row element.
@@ -31,7 +31,8 @@ import { useStableValue } from '../utils/use-stable-value';
 export default function Edit( { context, clientId } ) {
 	const weekDays = context?.[ 'gatherpress/weekDays' ] ?? [];
 	const activeDate = context?.[ 'gatherpress/activeDate' ] ?? '';
-	const setActiveDate = context?.[ 'gatherpress/setActiveDate' ] ?? ( () => {} );
+	const setActiveDate =
+		context?.[ 'gatherpress/setActiveDate' ] ?? ( () => {} );
 
 	// The real day template's inner blocks (Day Number, Post Title, Event
 	// Date, etc.) and the real day block's own attributes (for color/border
