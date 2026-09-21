@@ -1,7 +1,10 @@
 import { memo } from '@wordpress/element';
 import {
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseColorProps as useColorProps,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetShadowClassesAndStyles as getShadowClassesAndStyles,
 } from '@wordpress/block-editor';
 

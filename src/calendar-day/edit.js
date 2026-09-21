@@ -40,10 +40,7 @@ export default function Edit( { context, clientId } ) {
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
 
 	const rawPosts = context?.[ 'gatherpress/dayPosts' ];
-	const posts = useMemo(
-		() => rawPosts ?? EMPTY_ARRAY,
-		[ rawPosts ]
-	);
+	const posts = useMemo( () => rawPosts ?? EMPTY_ARRAY, [ rawPosts ] );
 
 	// block.json's own providesContext only re-exposes values stored in
 	// this block's *attributes*, which we never set (day number etc. are

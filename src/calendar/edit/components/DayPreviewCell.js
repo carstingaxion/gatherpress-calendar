@@ -1,10 +1,15 @@
 import { memo, useCallback, useMemo } from '@wordpress/element';
 import {
 	BlockContextProvider,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseColorProps as useColorProps,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseBorderProps as useBorderProps,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetShadowClassesAndStyles as getShadowClassesAndStyles,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseBlockPreview as useBlockPreview,
 } from '@wordpress/block-editor';
 
