@@ -137,5 +137,4 @@ class Calendar_Day {
 		<?php
 		return (string) ob_get_clean();
 	}
-
 }

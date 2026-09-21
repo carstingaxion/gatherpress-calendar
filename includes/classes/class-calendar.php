@@ -128,7 +128,7 @@ class Calendar {
 		$year        = $target_date['year'];
 		$month       = $target_date['month'];
 
-		// Pass year/month into context tree for calendar-day consumers:
+		// Pass year/month into context tree for calendar-day consumers.
 		$block->context['gatherpress/year']  = $year;
 		$block->context['gatherpress/month'] = $month;
 
@@ -148,5 +148,4 @@ class Calendar {
 		$renderer = new HTML_Renderer( $block );
 		return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles );
 	}
-
 }

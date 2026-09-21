@@ -105,20 +105,20 @@ class Setup {
 	 * @return void
 	 */
 	public function block_init(): void {
-	// Standard registration (GatherPress core does this in a loop)
-	register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar' );
+		// Standard registration (GatherPress core does this in a loop).
+		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar' );
 
-	if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' ) ) {
-		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' );
-	}
+		if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' ) ) {
+			register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' );
+		}
 
-	if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' ) ) {
-		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' );
-	}
+		if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' ) ) {
+			register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' );
+		}
 
-	if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-entries/' ) ) {
-		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-entries/' );
-	}
+		if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-entries/' ) ) {
+			register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-entries/' );
+		}
 
 		$pattern = '<!-- wp:query {"queryId":null,"query":{"perPage":5,"pages":0,"offset":0,"postType":"gatherpress_event","order":"asc","orderBy":"datetime","inherit":false,"excludeCurrent":null,"parents":[],"sticky":"","format":[],"gatherpress_event_query":"upcoming","include_unfinished":1},"namespace":"gatherpress-event-query","enhancedPagination":true,"metadata":{"name":"Upcoming Events"},"className":"gatherpress-event-query"} -->
 <div class="wp-block-query gatherpress-event-query"><!-- wp:heading {"level":2,"metadata":{"bindings":{"content":{"source":"gatherpress/calendar-month-heading"}}},"className":"gatherpress-calendar__month"} -->
@@ -614,8 +614,8 @@ class Setup {
 	 * Callback to retrieve the bound day number value.
 	 *
 	 * @param array<string, mixed> $source_args      Source arguments.
-	 * @param \WP_Block             $block_instance   The bound block instance (e.g. core/paragraph).
-	 * @param string                $attribute_name   Bound attribute name ('content').
+	 * @param \WP_Block            $block_instance   The bound block instance (e.g. core/paragraph).
+	 * @param string               $attribute_name   Bound attribute name ('content').
 	 *
 	 * @return string|null Day number string or null.
 	 */
@@ -642,8 +642,8 @@ class Setup {
 	 * shows the month currently displayed by the calendar.
 	 *
 	 * @param array<string, mixed> $source_args    Source arguments.
-	 * @param \WP_Block             $block_instance The bound block instance (e.g. core/heading).
-	 * @param string                $attribute_name Bound attribute name ('content').
+	 * @param \WP_Block            $block_instance The bound block instance (e.g. core/heading).
+	 * @param string               $attribute_name Bound attribute name ('content').
 	 *
 	 * @return string|null Localized "Month Year" string, or null.
 	 */

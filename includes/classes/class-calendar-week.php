@@ -67,8 +67,7 @@ class Calendar_Week {
 	 * @return string Rendered HTML <tr> row.
 	 */
 	public function render( array $attributes, string $content, WP_Block $block ): string {
-// wp_die('hello weeek?');
-	$week_days = isset( $block->context['gatherpress/weekDays'] ) && is_array( $block->context['gatherpress/weekDays'] )
+		$week_days = isset( $block->context['gatherpress/weekDays'] ) && is_array( $block->context['gatherpress/weekDays'] )
 			? $block->context['gatherpress/weekDays']
 			: array();
 
@@ -76,7 +75,7 @@ class Calendar_Week {
 			? $block->context['gatherpress/popoverStyles']
 			: '';
 
-		$today = Date_Calculator::get_today();
+		$today        = Date_Calculator::get_today();
 		$day_template = $this->get_day_template_block( $block );
 
 		ob_start();
@@ -104,7 +103,7 @@ class Calendar_Week {
 
 		$days_html = ob_get_clean();
 
-		$classes = array( 'gatherpress-calendar__week' );
+		$classes            = array( 'gatherpress-calendar__week' );
 		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
 
 		return sprintf(

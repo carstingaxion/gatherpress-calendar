@@ -52,8 +52,8 @@ class HTML_Renderer {
 	 * @param WP_Block $block The parent gatherpress/calendar block instance.
 	 */
 	public function __construct( WP_Block $block ) {
-		$this->today         = Date_Calculator::get_today();
-		$this->block         = $block;
+		$this->today = Date_Calculator::get_today();
+		$this->block = $block;
 	}
 
 	/**
@@ -156,7 +156,7 @@ class HTML_Renderer {
 			}
 		}
 
-		// Fallback structure
+		// Fallback structure.
 		return array(
 			'blockName'    => Calendar_Week::BLOCK_NAME,
 			'attrs'        => array(),
@@ -165,5 +165,4 @@ class HTML_Renderer {
 			'innerContent' => $this->block->parsed_block['innerContent'] ?? array(),
 		);
 	}
-
 }

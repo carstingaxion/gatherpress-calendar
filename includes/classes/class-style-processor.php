@@ -181,7 +181,7 @@ class Style_Processor {
 			return self::resolve_preset_value( $block_gap );
 		}
 
-		// Handle axial/split (vertical and horizontal) gap objects
+		// Handle axial/split (vertical and horizontal) gap objects.
 		if ( is_array( $block_gap ) ) {
 			$top  = isset( $block_gap['top'] ) ? self::resolve_preset_value( (string) $block_gap['top'] ) : '1px';
 			$left = isset( $block_gap['left'] ) ? self::resolve_preset_value( (string) $block_gap['left'] ) : '1px';
