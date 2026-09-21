@@ -164,14 +164,12 @@ function DayPreviewCellComponent( {
 				onClick={ onActivate }
 				onKeyPress={ onActivate }
 			>
-				<div className="gatherpress-calendar__day-content">
-					{ ! hasDayNumberBlock && (
-						<div className="gatherpress-calendar__day-number">
-							{ day.day }
-						</div>
-					) }
-					<div { ...blockPreviewProps } />
-				</div>
+				{ ! hasDayNumberBlock && (
+					<div className="gatherpress-calendar__day-number">
+						{ day.day }
+					</div>
+				) }
+				<div { ...blockPreviewProps } />
 			</td>
 		</BlockContextProvider>
 	);

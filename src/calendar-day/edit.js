@@ -104,17 +104,15 @@ export default function Edit( { context, clientId } ) {
 
 	return (
 		<td { ...blockProps }>
-			<div className="gatherpress-calendar__day-content">
-				{ ! hasDayNumberBlock && (
-					<div className="gatherpress-calendar__day-number">
-						{ dayNumber }
-					</div>
-				) }
-				<div { ...innerBlocksWrapperProps }>
-					<BlockContextProvider value={ dayContext }>
-						{ children }
-					</BlockContextProvider>
+			{ ! hasDayNumberBlock && (
+				<div className="gatherpress-calendar__day-number">
+					{ dayNumber }
 				</div>
+			) }
+			<div { ...innerBlocksWrapperProps }>
+				<BlockContextProvider value={ dayContext }>
+					{ children }
+				</BlockContextProvider>
 			</div>
 		</td>
 	);

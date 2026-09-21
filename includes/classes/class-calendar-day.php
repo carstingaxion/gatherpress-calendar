@@ -128,10 +128,8 @@ class Calendar_Day {
 		?>
 		<td <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 			<?php if ( ! $is_empty && $day_number > 0 ) { ?>
-				<div class="gatherpress-calendar__day-content">
-					<?php echo $day_number_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-					<?php echo $entries_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-				</div>
+				<?php echo $day_number_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<?php echo $entries_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			<?php } ?>
 		</td>
 		<?php
