@@ -36,6 +36,14 @@
         "type": "default"
       }
     },
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "blockGap": true,
+      "__experimentalDefaultControls": {
+        "blockGap": true
+      }
+    },
     "color": {
       "background": true,
       "text": true,
