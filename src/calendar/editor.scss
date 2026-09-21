@@ -45,18 +45,6 @@
 					.gatherpress-calendar__day-number {
 						color: var(--wp--preset--color--primary, #007cba);
 						font-weight: 700;
-
-						&::after {
-							content: "";
-							position: absolute;
-							bottom: -4px;
-							left: 50%;
-							transform: translateX(-50%);
-							width: 20px;
-							height: 2px;
-							background: var(--wp--preset--color--primary, #007cba);
-							border-radius: 1px;
-						}
 					}
 				}
 
@@ -68,19 +56,6 @@
 						color: var(--wp--preset--color--primary, #007cba);
 						font-weight: 600;
 						position: relative;
-
-						&::after {
-							content: "";
-							position: absolute;
-							bottom: -4px;
-							left: 50%;
-							transform: translateX(-50%);
-							width: 16px;
-							height: 2px;
-							background: var(--wp--preset--color--primary, #007cba);
-							border-radius: 1px;
-							opacity: 0.6;
-						}
 					}
 				}
 			}
@@ -126,91 +101,3 @@
 	}
 }
 
-/**
- * Template configuration area - visible in editor only
- * This section has no frontend equivalent, so all styles are new
- */
-.gatherpress-calendar {
-
-	&__template-config {
-
-		/* Override display:none from base styles */
-		display: block;
-		margin-block-start: var(--wp--preset--spacing--50, 2rem);
-
-		/* Popover-style appearance - defaults that can be overridden by attributes */
-		position: relative;
-		background: var(--wp--preset--color--base, #fff);
-		border: 1px solid var(--wp--preset--color--contrast, #ddd);
-		border-radius: var(--wp--custom--border-radius--medium, 8px);
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-		padding: var(--wp--preset--spacing--50, 1.5rem);
-
-		/* Subtle hover effect */
-		transition: box-shadow 0.3s ease, border-color 0.3s ease;
-
-		&:hover {
-			box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-			border-color: var(--wp--preset--color--primary, #007cba);
-		}
-	}
-
-	/**
-	 * Template configuration label
-	 */
-	&__template-label {
-		margin-block: 0 var(--wp--preset--spacing--40, 1rem);
-		font-weight: 600;
-		font-size: var(--wp--preset--font-size--small, 0.875rem);
-		color: var(--wp--preset--color--contrast, #1e1e1e);
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		padding-block-end: var(--wp--preset--spacing--30, 0.75rem);
-		border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
-	}
-
-	/**
-	 * Inner blocks container within template config
-	 */
-	&__template-config &-template {
-		display: block;
-
-		/* Style the blocks to look like they're part of a card */
-		.wp-block {
-			padding: var(--wp--preset--spacing--20, 0.5rem);
-			border-radius: var(--wp--custom--border-radius--small, 4px);
-			transition: background 0.2s ease;
-
-			&:hover {
-				background: var(--wp--preset--color--base-2, #f8f9fa);
-			}
-		}
-
-		/* Add spacing between blocks */
-		> .block-editor-block-list__layout > .wp-block {
-			margin-block-end: var(--wp--preset--spacing--30, 0.75rem);
-
-			&:last-child {
-				margin-block-end: 0;
-			}
-		}
-	}
-}
-
-/**
- * Responsive adjustments for template config in editor
- */
-@media (max-width: 768px) {
-
-	.gatherpress-calendar {
-
-		&__template-config {
-			padding: var(--wp--preset--spacing--40, 1rem);
-			margin-block-start: var(--wp--preset--spacing--40, 1rem);
-		}
-
-		&__template-label {
-			font-size: var(--wp--preset--font-size--small, 0.8125rem);
-		}
-	}
-}

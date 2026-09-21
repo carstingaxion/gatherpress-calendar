@@ -40,20 +40,11 @@
 					border-radius: 50%;
 					margin-inline: auto;
 					font-weight: 300;
-
-					&::after {
-						display: none;
-					}
 				}
 			}
 
 			&.has-posts {
 				background: transparent;
-
-				.gatherpress-calendar__day-number::after {
-					background: var(--wp--preset--color--contrast, #999);
-					opacity: 0.5;
-				}
 			}
 		}
 	}

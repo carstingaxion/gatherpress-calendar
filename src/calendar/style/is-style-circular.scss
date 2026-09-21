@@ -38,10 +38,6 @@
 				background: var(--wp--preset--color--base, #fff);
 				border-color: var(--wp--preset--color--contrast, #d0dae5);
 				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-				.gatherpress-calendar__day-number::after {
-					background: var(--wp--preset--color--primary, #007cba);
-				}
 			}
 
 			&.is-today {
@@ -52,10 +48,6 @@
 				.gatherpress-calendar__day-number {
 					color: #fff;
 					font-weight: 700;
-
-					&::after {
-						display: none;
-					}
 				}
 			}
 		}

@@ -29,15 +29,7 @@
 				.gatherpress-calendar__day-number {
 					color: #fff;
 					font-weight: 900;
-
-					&::after {
-						display: none;
-					}
 				}
-			}
-
-			&.has-posts .gatherpress-calendar__day-number::after {
-				background: var(--wp--preset--color--primary, #007cba);
 			}
 		}
 	}

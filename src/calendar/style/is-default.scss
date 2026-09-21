@@ -14,14 +14,8 @@
    ========================================================================== */
 .gatherpress-calendar {
 	width: 100%;
-	max-width: var(--wp--style--global--wide-size, 1200px);
+	// max-width: var(--wp--style--global--wide-size, 1200px);
 	margin-inline: auto;
-
-	/* Month Header */
-	&__month {
-		text-align: center;
-		color: var(--wp--preset--color--contrast, inherit);
-	}
 
 	/* 7-column Calendar Grid */
 	&__table {
@@ -60,53 +54,4 @@
 		}
 	}
 
-	/* Popovers & Backdrop */
-	@at-root :root {
-		--gatherpress-calendar-popover-width: 400px;
-	}
-
-	&__popover {
-		position: fixed;
-		z-index: 9999;
-		margin: 0;
-		background: var(--wp--preset--color--base, #fff);
-		border: 1px solid var(--wp--preset--color--contrast, #ddd);
-		border-radius: 8px;
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-		padding: var(--wp--preset--spacing--40, 1rem);
-		max-width: var(--gatherpress-calendar-popover-width, 400px);
-		width: calc(100vw - 2rem);
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity 0.2s ease;
-
-		&.is-active {
-			opacity: 1;
-			pointer-events: auto;
-		}
-
-		> * {
-			margin-block: 0 var(--wp--preset--spacing--30, 0.75rem);
-			color: var(--wp--preset--color--contrast, #1e1e1e);
-
-			&:last-child {
-				margin-block-end: 0;
-			}
-		}
-	}
-
-	&__backdrop {
-		position: fixed;
-		inset: 0;
-		z-index: 999;
-		background: rgba(0, 0, 0, 0.3);
-		opacity: 0;
-		pointer-events: none;
-		transition: opacity 0.2s ease;
-
-		&.is-active {
-			opacity: 1;
-			pointer-events: auto;
-		}
-	}
 }
