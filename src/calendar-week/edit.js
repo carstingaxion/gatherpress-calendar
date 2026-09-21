@@ -12,6 +12,9 @@ import { DAY_TEMPLATE } from '../calendar/edit/constants';
 import { DayPreviewCell } from '../calendar/edit/components/DayPreviewCell';
 import { useStableValue } from '../utils/use-stable-value';
 
+const EMPTY_ARRAY = [];
+const NOOP = () => {};
+
 /**
  * Edit Component for Calendar Week
  *
@@ -29,10 +32,14 @@ import { useStableValue } from '../utils/use-stable-value';
  * @return {Element} Week row element.
  */
 export default function Edit( { context, clientId } ) {
-	const weekDays = context?.[ 'gatherpress/weekDays' ] ?? [];
+	const rawWeekDays = context?.[ 'gatherpress/weekDays' ];
+	const weekDays = useMemo(
+		() => rawWeekDays ?? EMPTY_ARRAY,
+		[ rawWeekDays ]
+	);
+
 	const activeDate = context?.[ 'gatherpress/activeDate' ] ?? '';
-	const setActiveDate =
-		context?.[ 'gatherpress/setActiveDate' ] ?? ( () => {} );
+	const setActiveDate = context?.[ 'gatherpress/setActiveDate' ] ?? NOOP;
 
 	// The real day template's inner blocks (Day Number, Post Title, Event
 	// Date, etc.) and the real day block's own attributes (for color/border

@@ -5,7 +5,6 @@
  * @since 0.4.0
  */
 
-import { __ } from '@wordpress/i18n';
 import {
 	BlockContextProvider,
 	useBlockProps,
@@ -22,6 +21,8 @@ import {
 	getDayNumberJustifyContent,
 } from '../utils/day-number';
 
+const EMPTY_ARRAY = [];
+
 /**
  * Edit Component for Calendar Day
  *
@@ -29,8 +30,7 @@ import {
  *
  * @param {Object} props          Component props.
  * @param {Object} props.context  Context provided by parent Calendar / query.
- *
- * @param          props.clientId
+ * @param {string} props.clientId This block's client ID.
  * @return {Element} Day cell preview element.
  */
 export default function Edit( { context, clientId } ) {
@@ -38,7 +38,12 @@ export default function Edit( { context, clientId } ) {
 	const dayNumber = context?.[ 'gatherpress/dayNumber' ] ?? 1;
 	const isToday = context?.[ 'gatherpress/isToday' ] ?? false;
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
-	const posts = context?.[ 'gatherpress/dayPosts' ] ?? [];
+
+	const rawPosts = context?.[ 'gatherpress/dayPosts' ];
+	const posts = useMemo(
+		() => rawPosts ?? EMPTY_ARRAY,
+		[ rawPosts ]
+	);
 
 	// block.json's own providesContext only re-exposes values stored in
 	// this block's *attributes*, which we never set (day number etc. are
