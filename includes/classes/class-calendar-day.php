@@ -69,7 +69,7 @@ class Calendar_Day {
 	 * Render callback for the calendar day cell.
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
-	 * @param string               $content    Block inner content (event dots & popovers).
+	 * @param string               $content    Block inner content.
 	 * @param WP_Block             $block      Block instance.
 	 *
 	 * @return string Rendered HTML.

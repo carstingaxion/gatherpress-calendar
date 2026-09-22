@@ -30,10 +30,6 @@
       "type": "number",
       "default": 0
     },
-    "templateConfigStyle": {
-      "type": "object",
-      "default": {}
-    },
     "showWeekdays": {
       "type": "boolean",
       "default": true
@@ -57,14 +53,11 @@
     "spacing": {
       "margin": true,
       "padding": true,
-      "blockGap": true,
-      "__experimentalDefaultControls": {
-        "padding": true
-      }
+      "blockGap": true
     },
     "__experimentalBorder": {
       "color": true,
-      "radius": true,
+      "radius": false,
       "style": true,
       "width": true
     },
@@ -75,6 +68,5 @@
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
-  "style": "file:./style-index.css",
-  "viewScriptModule": "file:./view.js"
+  "style": "file:./style-index.css"
 }

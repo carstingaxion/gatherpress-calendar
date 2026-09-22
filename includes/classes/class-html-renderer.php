@@ -20,11 +20,6 @@ use WP_Block;
  *
  * Generates HTML output for the calendar.
  *
- * - Event dots are now simple links
- * - InnerBlocks content renders in hidden containers
- * - JavaScript shows content in popover on click
- * - This creates valid HTML
- *
  * @since 0.1.0
  */
 class HTML_Renderer {
@@ -63,24 +58,18 @@ class HTML_Renderer {
 	 *
 	 * @param array<string, mixed>                                                                      $attributes     Block attributes.
 	 * @param array{month_name: string,day_names: list<string>,weeks: list<list<array<string, mixed>>>} $calendar_data  Calendar structure.
-	 * @param string                                                                                    $popover_styles Popover styles.
 	 *
 	 * @return string Calendar HTML.
 	 */
-	public function generate_calendar_html( array $attributes, array $calendar_data, string $popover_styles ): string {
+	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
 		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 		ob_start();
 		?>
-		<div data-wp-interactive="<?php echo esc_attr( Calendar::STORE_NAME ); ?>" <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
+		<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
 			<div 
 				class="gatherpress-calendar"
-				data-wp-init="callbacks.initCalendarObserver"
-				data-wp-context='{
-					"triggerRef": null,
-					"customStyles": <?php echo wp_json_encode( $popover_styles ); ?>
-				}'
 			>
 				<?php
 				$grid_gap    = Style_Processor::get_block_gap_value( $attributes );
@@ -97,14 +86,9 @@ class HTML_Renderer {
 						</thead>
 					<?php } ?>
 					<tbody>
-						<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'], $popover_styles ) ); ?>
+						<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'] ) ); ?>
 					</tbody>
 				</table>
-				<div 
-					class="gatherpress-calendar__backdrop"
-					data-wp-class--is-active="state.activeEventId"
-					data-wp-on--click="actions.handleBackdropClick"
-				></div>
 			</div>
 		</div>
 		<?php
@@ -116,11 +100,10 @@ class HTML_Renderer {
 	 * Render calendar weeks by delegating to gatherpress/calendar-week blocks.
 	 *
 	 * @param list<list<array<string, mixed>>> $weeks          Weeks array.
-	 * @param string                           $popover_styles Popover styles.
 	 *
 	 * @return string Weeks HTML.
 	 */
-	private function render_calendar_weeks( array $weeks, string $popover_styles ): string {
+	private function render_calendar_weeks( array $weeks ): string {
 		ob_start();
 
 		$week_template = $this->get_week_template_block();
@@ -131,7 +114,6 @@ class HTML_Renderer {
 				array(
 					'gatherpress/weekIndex'     => $week_index,
 					'gatherpress/weekDays'      => $week_days,
-					'gatherpress/popoverStyles' => $popover_styles,
 				)
 			);
 				

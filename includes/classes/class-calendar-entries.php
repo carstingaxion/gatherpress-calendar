@@ -4,8 +4,7 @@
  *
  * Works like core/post-template: renders one entry per event in the day
  * (from the `gatherpress/dayPosts` context), using this block's own inner
- * blocks as the template for each event - currently only used to render
- * the event's hidden popover content.
+ * blocks as the template for each event.
  *
  * @package GatherPressCalendar
  * @since 0.4.0
@@ -96,10 +95,6 @@ class Calendar_Entries {
 			return '';
 		}
 
-		$popover_styles = isset( $block->context['gatherpress/popoverStyles'] ) && is_string( $block->context['gatherpress/popoverStyles'] )
-			? $block->context['gatherpress/popoverStyles']
-			: '';
-
 		$classes = array( 'gatherpress-calendar__events' );
 		if ( 'grid' === ( $attributes['layout']['type'] ?? 'default' ) ) {
 			$classes[] = 'is-layout-grid';
@@ -110,7 +105,7 @@ class Calendar_Entries {
 		$items_html = '';
 		foreach ( $day_posts as $post_id ) {
 			if ( is_int( $post_id ) ) {
-				$items_html .= $this->render_event_item( $post_id, $popover_styles, $block );
+				$items_html .= $this->render_event_item( $post_id, $block );
 			}
 		}
 
@@ -118,15 +113,14 @@ class Calendar_Entries {
 	}
 
 	/**
-	 * Render a single event dot with its hidden popover content.
+	 * Render a single event entry with its innerBlocks content.
 	 *
 	 * @param int      $post_id        Post ID.
-	 * @param string   $popover_styles Popover styles.
 	 * @param WP_Block $block          The Calendar Entries block instance.
 	 *
-	 * @return string Event dot HTML with hidden popover content.
+	 * @return string Event HTML with innerBlocks rendered.
 	 */
-	private function render_event_item( int $post_id, string $popover_styles, WP_Block $block ): string {
+	private function render_event_item( int $post_id, WP_Block $block ): string {
 		$post = get_post( $post_id );
 		if ( ! $post instanceof WP_Post ) {
 			return '';
@@ -192,7 +186,7 @@ class Calendar_Entries {
 	/**
 	 * Renders a set of parsed blocks (this block's own template) with
 	 * whatever `render_block_context` filters are currently active - used
-	 * to render the popover template once per event, with that event's
+	 * to render the calendar-entries template once per event, with that event's
 	 * postId/postType injected via the filter set up by the caller.
 	 *
 	 * @param array<int, array<string, mixed>> $parsed_blocks Parsed inner blocks (the template).

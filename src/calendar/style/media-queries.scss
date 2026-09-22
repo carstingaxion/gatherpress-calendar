@@ -1,7 +1,7 @@
 /* ======================================================================
    Traditional Responsive Fallback
    ====================================================================== */
-@media (max-width: var(--gatherpress-calendar-popover-width, 400px)) {
+@media (max-width: 400px) {
 
 	@supports not (container-type: inline-size) {
 

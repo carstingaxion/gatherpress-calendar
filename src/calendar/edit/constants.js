@@ -8,7 +8,7 @@
  * @since 0.1.0
  */
 /**
- * Template for each event's popover content, rendered by
+ * Template for each event's content, rendered by
  * gatherpress/calendar-entries once per event on the frontend.
  *
  * @type {Array<Array>}
@@ -35,8 +35,13 @@ export const DAY_TEMPLATE = [
 						},
 						name: 'Day Number',
 					},
-					customClassname: 'gatherpress-calendar__day-number',
-					textAlign: 'left',
+					classname: 'gatherpress-calendar__day-number',
+					// textAlign: 'left',
+					style:{
+						typography: {
+							textAlign: 'left',
+						}
+					},
 					fontSize: 'small',
 					placeholder: 'DD',
 					content: 'DD',

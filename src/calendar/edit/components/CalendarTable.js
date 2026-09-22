@@ -21,7 +21,7 @@ import { WeekPreviewRow } from './WeekPreviewRow';
  * @param {Object}   props.style               - Inline style for the <table> (e.g. gap).
  * @param {string}   props.activeDate          - The currently live/editable day's date.
  * @param {Function} props.setActiveDate       - Setter to change the active day.
- * @param {Object}   props.weekContext         - Base context shared by every week (year, month, popoverStyles).
+ * @param {Object}   props.weekContext         - Base context shared by every week (year, month).
  * @param {Element}  props.liveWeekChildren    - The real, live-rendered week InnerBlocks content.
  * @param {Array}    props.dayInnerBlocks      - The real day template's inner blocks, for previews.
  * @param {Object}   props.weekBlockAttributes - The real calendar-week block's own attributes, for style parity.

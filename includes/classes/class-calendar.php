@@ -38,17 +38,6 @@ class Calendar {
 	const BLOCK_NAME = 'gatherpress/calendar';
 
 	/**
-	 * Constant representing the name of the Interactivity API store.
-	 *
-	 * Identical assignment as in src/view.js
-	 * for the calls to store().
-	 *
-	 * @since 0.4.0
-	 * @var string
-	 */
-	const STORE_NAME = 'gatherpress/calendar';
-
-	/**
 	 * Class constructor.
 	 *
 	 * This method initializes the object and sets up necessary hooks.
@@ -92,27 +81,12 @@ class Calendar {
 	 * Render callback for the calendar day cell.
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
-	 * @param string               $content    Block inner content (event dots & popovers).
+	 * @param string               $content    Block inner content.
 	 * @param WP_Block             $block      Block instance.
 	 *
 	 * @return string Rendered HTML.
 	 */
 	public function render_callback( array $attributes, string $content, WP_Block $block ): string {
-		// Enable Interactivity API for this block.
-		wp_interactivity_state(
-			self::STORE_NAME,
-			array(
-				'popoverOpen'     => false,
-				'popoverContent'  => '',
-				'popoverStyles'   => array(),
-				'popoverPosition' => array(
-					'top'  => 0,
-					'left' => 0,
-				),
-				'activeEventId'   => null,
-			)
-		);
-
 		/**
 		 * Validate query context.
 		 *
@@ -141,11 +115,8 @@ class Calendar {
 		$start_of_week = is_numeric( $start_of_week ) ? $start_of_week : 0;
 		$calendar_data = Calendar_Structure_Builder::build_structure( $year, $month, $start_of_week, $posts_by_date );
 
-		// Prepare styles.
-		$popover_styles = Style_Processor::prepare_popover_styles( $attributes );
-
 		// Generate HTML.
 		$renderer = new HTML_Renderer( $block );
-		return $renderer->generate_calendar_html( $attributes, $calendar_data, $popover_styles );
+		return $renderer->generate_calendar_html( $attributes, $calendar_data );
 	}
 }

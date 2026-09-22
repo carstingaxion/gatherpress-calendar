@@ -51,7 +51,7 @@ class Calendar_Week {
 	 */
 	public function filter_block_type_args( array $args, string $block_type ): array {
 		if ( self::BLOCK_NAME === $block_type ) {
-			$args['render_callback'] = array( $this, 'render' );
+			$args['render_callback'] = array( $this, 'render_callback' );
 		}
 
 		return $args;
@@ -66,14 +66,10 @@ class Calendar_Week {
 	 *
 	 * @return string Rendered HTML <tr> row.
 	 */
-	public function render( array $attributes, string $content, WP_Block $block ): string {
+	public function render_callback( array $attributes, string $content, WP_Block $block ): string {
 		$week_days = isset( $block->context['gatherpress/weekDays'] ) && is_array( $block->context['gatherpress/weekDays'] )
 			? $block->context['gatherpress/weekDays']
 			: array();
-
-		$popover_styles = isset( $block->context['gatherpress/popoverStyles'] ) && is_string( $block->context['gatherpress/popoverStyles'] )
-			? $block->context['gatherpress/popoverStyles']
-			: '';
 
 		$today        = Date_Calculator::get_today();
 		$day_template = $this->get_day_template_block( $block );
@@ -93,7 +89,6 @@ class Calendar_Week {
 					'gatherpress/dayPosts'      => $day_posts,
 					'gatherpress/isEmpty'       => ! empty( $day['isEmpty'] ),
 					'gatherpress/isToday'       => $is_today,
-					'gatherpress/popoverStyles' => $popover_styles,
 				)
 			);
 

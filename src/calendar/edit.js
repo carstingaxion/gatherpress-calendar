@@ -76,7 +76,6 @@ export default function Edit( {
 	const {
 		selectedMonth,
 		monthModifier = 0,
-		templateConfigStyle = {},
 		showWeekdays = true,
 	} = attributes;
 	const { query } = context;
@@ -171,7 +170,6 @@ export default function Edit( {
 		() => ( {
 			'gatherpress/year': dateQuery.year,
 			'gatherpress/month': dateQuery.month,
-			'gatherpress/popoverStyles': '',
 		} ),
 		[ dateQuery ]
 	);
@@ -257,91 +255,6 @@ export default function Edit( {
 							'Display the days of the week inside the calendars header.',
 							'gatherpress-calendar'
 						) }
-					/>
-				</PanelBody>
-
-				<PanelBody
-					title={ __( 'Template Style', 'gatherpress-calendar' ) }
-					initialOpen={ false }
-				>
-					<PanelColorSettings
-						title={ __( 'Background', 'gatherpress-calendar' ) }
-						colorSettings={ [
-							{
-								value: templateConfigStyle.backgroundColor,
-								onChange: ( backgroundColor ) => {
-									setAttributes( {
-										templateConfigStyle: {
-											...templateConfigStyle,
-											backgroundColor,
-										},
-									} );
-								},
-								label: __(
-									'Background Color',
-									'gatherpress-calendar'
-								),
-							},
-						] }
-					/>
-
-					<BoxControl
-						label={ __( 'Padding', 'gatherpress-calendar' ) }
-						values={ templateConfigStyle.padding }
-						onChange={ ( padding ) => {
-							setAttributes( {
-								templateConfigStyle: {
-									...templateConfigStyle,
-									padding,
-								},
-							} );
-						} }
-					/>
-
-					<BorderControl
-						label={ __( 'Border', 'gatherpress-calendar' ) }
-						value={ {
-							width: templateConfigStyle.borderWidth,
-							style: templateConfigStyle.borderStyle,
-							color: templateConfigStyle.borderColor,
-							radius: templateConfigStyle.borderRadius,
-						} }
-						onChange={ ( border ) => {
-							setAttributes( {
-								templateConfigStyle: {
-									...templateConfigStyle,
-									borderWidth: border.width,
-									borderStyle: border.style,
-									borderColor: border.color,
-									borderRadius: border.radius,
-								},
-							} );
-						} }
-					/>
-
-					<RangeControl
-						label={ __(
-							'Box Shadow Blur',
-							'gatherpress-calendar'
-						) }
-						value={ parseInt(
-							templateConfigStyle.boxShadow?.match(
-								/\d+/
-							)?.[ 0 ] || 0
-						) }
-						onChange={ ( blur ) => {
-							setAttributes( {
-								templateConfigStyle: {
-									...templateConfigStyle,
-									boxShadow:
-										blur > 0
-											? `0 8px ${ blur }px rgba(0, 0, 0, 0.15)`
-											: undefined,
-								},
-							} );
-						} }
-						min={ 0 }
-						max={ 50 }
 					/>
 				</PanelBody>
 			</InspectorControls>
