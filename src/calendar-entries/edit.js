@@ -24,8 +24,7 @@ export default function Edit( { context, isSelected } ) {
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'gatherpress-calendar__entry-template' },
 		{
-			// Ensures the (+) block inserter button appears when empty
-			renderAppender: InnerBlocks.ButtonBlockAppender,
+			renderAppender: false
 		}
 	);
 

@@ -16,6 +16,7 @@ import {
 import {
 	isDayNumberBindingBlock,
 	getDayNumberJustifyContent,
+	getLayoutProps,
 } from '../../../utils/day-number';
 
 /**
@@ -120,7 +121,7 @@ function DayPreviewCellComponent( {
 		blocks: resolvedBlocks,
 		props: {
 			className: 'gatherpress-calendar__events',
-			style: justifyContent ? { justifyContent } : undefined,
+			// style: justifyContent ? { justifyContent } : undefined,
 		},
 	} );
 
@@ -131,6 +132,7 @@ function DayPreviewCellComponent( {
 	const borderProps = useBorderProps( dayBlockAttributes ?? {} );
 	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
+	const layoutProps = getLayoutProps( dayBlockAttributes?.layout );
 // console.log(layoutProps);
 	const classNames = [
 		'gatherpress-calendar__day',
@@ -141,6 +143,7 @@ function DayPreviewCellComponent( {
 		day.weekday ? `is-${ day.weekday }` : '',
 		colorProps.className,
 		borderProps.className,
+		layoutProps.className,
 	]
 		.filter( Boolean )
 		.join( ' ' );
@@ -150,6 +153,7 @@ function DayPreviewCellComponent( {
 		...borderProps.style,
 		...spacingProps.style,
 		...shadowProps.style,
+		...layoutProps.style,
 	};
 
 	if ( day.isEmpty ) {

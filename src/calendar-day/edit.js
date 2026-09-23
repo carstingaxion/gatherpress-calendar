@@ -18,7 +18,6 @@ import './editor.scss';
 
 import {
 	findDayNumberBlock,
-	getDayNumberJustifyContent,
 } from '../utils/day-number';
 
 const EMPTY_ARRAY = [];
@@ -73,7 +72,6 @@ export default function Edit( { context, clientId } ) {
 			const blocks = select( blockEditorStore ).getBlocks( clientId );
 			return {
 				hasDayNumberBlock: !! findDayNumberBlock( blocks ),
-				justifyContent: getDayNumberJustifyContent( blocks ),
 			};
 		},
 		[ clientId ]
@@ -96,11 +94,10 @@ export default function Edit( { context, clientId } ) {
 
 	const { children, ...innerBlocksWrapperProps } = useInnerBlocksProps(
 		{
-			className: 'gatherpress-calendar__events',
-			style: justifyContent ? { justifyContent } : undefined,
 		},
 		{
 			templateLock: false,
+			renderAppender: false
 		}
 	);
 
