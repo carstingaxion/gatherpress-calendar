@@ -51,5 +51,8 @@ add_filter( 'gatherpress_autoloader', 'gatherpress_calendar_autoloader' );
 function gatherpress_calendar_setup(): void {
 	GatherPress_Calendar\Setup::get_instance();
 	GatherPress_Calendar\Calendar::get_instance();
+	GatherPress_Calendar\Calendar_Week::get_instance();
+	GatherPress_Calendar\Calendar_Day::get_instance();
+	GatherPress_Calendar\Calendar_Entries::get_instance();
 }
 add_action( 'gatherpress_loaded', 'gatherpress_calendar_setup' );

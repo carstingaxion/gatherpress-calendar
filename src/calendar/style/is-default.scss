@@ -1,0 +1,62 @@
+/* ==========================================================================
+   Block Container
+   ========================================================================== */
+.wp-block-gatherpress-calendar {
+
+	/* Default decent background that fills the grid lines. */
+	background: var(--wp--preset--color--base, #fff);
+	padding: 0;
+	margin-block: var(--wp--preset--spacing--50, 1rem);
+}
+
+/* ==========================================================================
+   Calendar Wrapper
+   ========================================================================== */
+.gatherpress-calendar {
+	width: 100%;
+	// max-width: var(--wp--style--global--wide-size, 1200px);
+	margin-inline: auto;
+
+	/* 7-column Calendar Grid */
+	&__table {
+
+		/* Inherits the calendar block's background to fill the gaps between cells */
+		background: inherit;
+		container-type: inline-size;
+		container-name: calendar;
+		border-collapse: collapse;
+		width: 100%;
+		display: grid;
+		grid-template-columns: repeat(var(--gatherpress-calendar-columns, 7), 1fr);
+		gap: 2px; /* Default thin grid line when no spacing is set */
+
+		&.is-hidden-weekends {
+			--gatherpress-calendar-columns: 5;
+			grid-template-columns: repeat(var(--gatherpress-calendar-columns, 5), 1fr);
+		}
+
+		thead,
+		tbody,
+		tr {
+			display: contents;
+		}
+
+		/* Weekday Column Headers (Sun, Mon, Tue...) */
+		th {
+			background: var(--wp--preset--color--base-2, #f8f9fa);
+			color: var(--wp--preset--color--contrast, #495057);
+			font-weight: 600;
+			text-align: center;
+			padding: clamp(0.5rem, 2vw, 0.75rem);
+			font-size: clamp(0.625rem, 2vw, 0.875rem);
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			border: none;
+			aspect-ratio: 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+	}
+
+}

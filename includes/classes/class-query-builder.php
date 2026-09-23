@@ -65,7 +65,6 @@ class Query_Builder {
 			unset( $query_args['offset'] );
 		}
 
-		unset( $query_args['orderby'] );
 		unset( $query_args['include_unfinished'] );
 
 		return $query_args;

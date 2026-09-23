@@ -1,0 +1,74 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "gatherpress/calendar-entries",
+  "version": "0.1.0",
+  "title": "Calendar Entries",
+  "category": "gatherpress",
+  "icon": "list-view",
+  "description": "Lists a calendar day's events, one per event. Works like the Post Template block: its inner blocks are the template used to render each event - for now, that template is only used for the event's popover content.",
+  "parent": [ "gatherpress/calendar-day" ],
+  "usesContext": [
+    "gatherpress/dayDate",
+    "gatherpress/dayPosts",
+    "gatherpress/isEmpty",
+    "gatherpress/popoverStyles"
+  ],
+  "attributes": {
+    "layout": {
+      "type": "object",
+      "default": {
+        "type": "flex",
+        "orientation": "vertical",
+        "justifyContent": "right"
+      }
+    }
+  },
+  "supports": {
+    "interactivity": {
+      "clientNavigation": true
+    },
+    "html": false,
+    "reusable": false,
+    "layout": {
+      "allowSwitching": true,
+      "allowInheriting": false,
+      "allowSizingOnChildren": false,
+      "default": {
+        "type": "flex",
+        "orientation": "vertical",
+        "justifyContent": "right"
+      }
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "blockGap": true,
+      "__experimentalDefaultControls": {
+        "blockGap": true
+      }
+    },
+    "color": {
+      "background": true,
+      "text": true,
+      "gradients": true
+    },
+    "listView": true,
+    "contentRole": true
+  },
+  "styles": [
+		{
+			"name": "default",
+			"label": "Classic",
+			"isDefault": true
+		},
+		{
+			"name": "dots",
+			"label": "Colored Dots"
+		}
+	],
+  "textdomain": "gatherpress-calendar",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}

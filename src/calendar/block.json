@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "gatherpress/calendar",
+  "version": "0.4.0",
+  "title": "GatherPress Calendar",
+  "category": "gatherpress",
+  "icon": "calendar-alt",
+  "description": "Display query loop posts in a monthly calendar format.",
+  "ancestor": [
+    "core/query"
+  ],
+  "allowedBlocks": [
+    "gatherpress/calendar-week"
+  ],
+  "usesContext": [
+    "queryId",
+    "query",
+    "queryContext",
+    "displayLayout",
+    "templateSlug",
+    "previewPostType"
+  ],
+  "providesContext": {
+    "gatherpress/showWeekends": "showWeekends"
+  },
+  "attributes": {
+    "selectedMonth": {
+      "type": "string",
+      "default": ""
+    },
+    "monthModifier": {
+      "type": "number",
+      "default": 0
+    },
+    "showWeekdays": {
+      "type": "boolean",
+      "default": true
+    },
+    "showWeekends": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "supports": {
+    "interactivity": {
+      "clientNavigation": true
+    },
+    "reusable": false,
+    "html": false,
+    "align": true,
+    "alignWide": true,
+    "customClassName": true,
+    "color": {
+      "gradients": true,
+      "link": false,
+      "text": false,
+      "__experimentalDefaultControls": {
+        "background": true
+      }
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true,
+      "blockGap": [ "horizontal", "vertical" ]
+    },
+    "__experimentalBorder": {
+      "color": true,
+      "radius": false,
+      "style": true,
+      "width": true
+    },
+    "layout": {
+      "allowEditing": false
+    }
+  },
+	"styles": [
+		{
+			"name": "default",
+			"label": "Classic",
+			"isDefault": true
+		},
+		{
+			"name": "minimal",
+			"label": "Minimal"
+		},
+		{
+			"name": "bold",
+			"label": "Bold"
+		},
+		{
+			"name": "circular",
+			"label": "Circular"
+		},
+		{
+			"name": "gradient",
+			"label": "Gradient"
+		}
+	],
+  "textdomain": "gatherpress-calendar",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css"
+}

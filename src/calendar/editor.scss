@@ -1,0 +1,26 @@
+/**
+ * GatherPress Calendar Block Editor Styles
+ *
+ * Styles defined in this file are applied exclusively within the
+ * WordPress block editor. These styles help distinguish the editor
+ * view from the frontend display and provide enhanced styling for
+ * the template configuration area.
+ *
+ * @package GatherPressCalendar
+ * @since 0.1.0
+ */
+
+.editor-styles-wrapper {
+
+	.gatherpress-calendar {
+
+		&__table {
+
+
+			td {
+			}
+		}
+
+	}
+}
+
