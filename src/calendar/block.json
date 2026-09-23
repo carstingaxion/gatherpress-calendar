@@ -43,7 +43,9 @@
     }
   },
   "supports": {
-    "interactivity": true,
+    "interactivity": {
+      "clientNavigation": true
+    },
     "reusable": false,
     "html": false,
     "align": true,
@@ -60,7 +62,7 @@
     "spacing": {
       "margin": true,
       "padding": true,
-      "blockGap": true
+      "blockGap": [ "horizontal", "vertical" ]
     },
     "__experimentalBorder": {
       "color": true,
