@@ -97,14 +97,25 @@ class Calendar {
 			return '';
 		}
 
-		// Calculate target date.
-		$target_date = Date_Calculator::calculate_target_date( $attributes );
-		$year        = $target_date['year'];
-		$month       = $target_date['month'];
+		// Prioritize paginated year/month from query context, fallback to attributes.
+		if ( isset( $query[ Setup::CALENDAR_QUERY_YEAR ], $query[ Setup::CALENDAR_QUERY_MONTH ] ) ) {
+			$year  = (int) $query[ Setup::CALENDAR_QUERY_YEAR ];
+			$month = (int) $query[ Setup::CALENDAR_QUERY_MONTH ];
+		} else {
+			$target_date = Date_Calculator::calculate_target_date( $attributes );
+			$year        = $target_date['year'];
+			$month       = $target_date['month'];
+		}
 
 		// Pass year/month into context tree for calendar-day consumers.
 		$block->context['gatherpress/year']  = $year;
 		$block->context['gatherpress/month'] = $month;
+
+		$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] )
+			? $attributes['showWeekends']
+			: true;
+
+		$block->context['gatherpress/showWeekends'] = $show_weekends;
 
 		// Build query and fetch posts.
 		$query_args    = Query_Builder::build_query_args( $block, $year, $month );
@@ -113,7 +124,7 @@ class Calendar {
 		// Build calendar structure.
 		$start_of_week = get_option( 'start_of_week', 0 );
 		$start_of_week = is_numeric( $start_of_week ) ? $start_of_week : 0;
-		$calendar_data = Calendar_Structure_Builder::build_structure( $year, $month, $start_of_week, $posts_by_date );
+		$calendar_data = Calendar_Structure_Builder::build_structure( $year, $month, $start_of_week, $posts_by_date, $show_weekends );
 
 		// Generate HTML.
 		$renderer = new HTML_Renderer( $block );

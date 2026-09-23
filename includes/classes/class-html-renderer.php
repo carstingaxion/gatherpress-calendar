@@ -62,20 +62,37 @@ class HTML_Renderer {
 	 * @return string Calendar HTML.
 	 */
 	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => 'gatherpress-calendar-block' ) );
+		$show_weekends   = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
+		$columns_count   = $show_weekends ? 7 : 5;
+		$wrapper_classes = array( 'gatherpress-calendar-block' );
+
+		if ( ! $show_weekends ) {
+			$wrapper_classes[] = 'is-hidden-weekends';
+		}
+
+		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $wrapper_classes ) ) );
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 		ob_start();
 		?>
-		<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped --- get_block_wrapper_attributes() runs esc_attr() on every return ?>>
-			<div 
-				class="gatherpress-calendar"
-			>
+		<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+			<div class="gatherpress-calendar">
 				<?php
-				$grid_gap    = Style_Processor::get_block_gap_value( $attributes );
-				$table_style = ! empty( $grid_gap ) ? sprintf( 'style="gap: %s;"', esc_attr( $grid_gap ) ) : '';
+				$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
+				$table_styles = array(
+					sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
+				);
+				if ( ! empty( $grid_gap ) ) {
+					$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
+				}
+
+				$table_style   = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
+				$table_classes = array( 'gatherpress-calendar__table' );
+				if ( ! $show_weekends ) {
+					$table_classes[] = 'is-hidden-weekends';
+				}
 				?>
-				<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+				<table class="<?php echo esc_attr( implode( ' ', $table_classes ) ); ?>" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 					<?php if ( $show_weekdays ) { ?>
 						<thead>
 							<tr>

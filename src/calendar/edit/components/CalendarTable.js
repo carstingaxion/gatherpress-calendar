@@ -34,6 +34,7 @@ export function CalendarTable( {
 	calendar,
 	showWeekdays,
 	style,
+	tableClasses,
 	activeDate,
 	setActiveDate,
 	weekContext,
@@ -60,7 +61,7 @@ export function CalendarTable( {
 	);
 
 	return (
-		<table className="gatherpress-calendar__table" style={ style }>
+		<table className={ tableClasses } style={ style }>
 			{ showWeekdays && (
 				<thead>
 					<tr>

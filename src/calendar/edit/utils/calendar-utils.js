@@ -17,7 +17,8 @@ import { DATE_FORMAT } from '../constants';
  *
  * @since 0.1.0
  *
- * @param {number} startOfWeek - The start of week (0=Sunday, 1=Monday, 2=Tuesday, etc.).
+ * @param {number}  startOfWeek - The start of week (0=Sunday, 1=Monday, 2=Tuesday, etc.).
+ * @param {boolean} showWeekends - Whether to include weekend days.
  *
  * @return {Array<string>} Array of day name labels in the correct order.
  *
@@ -29,7 +30,7 @@ import { DATE_FORMAT } from '../constants';
  * // Monday-first week (European style)
  * getDayNames(1) // Returns ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
  */
-function getDayNames( startOfWeek = 0 ) {
+function getDayNames( startOfWeek = 0, showWeekends ) {
 	const days = [];
 
 	// Base date: 2024-01-07 is a Sunday (day 0).
@@ -40,6 +41,10 @@ function getDayNames( startOfWeek = 0 ) {
 		// Calculate the day of week (0=Sunday, 6=Saturday).
 		// The modulo ensures we wrap around (e.g., day 7 becomes day 0).
 		const dayOfWeek = ( startOfWeek + i ) % 7;
+
+		if ( ! showWeekends && ( dayOfWeek === 0 || dayOfWeek === 6 ) ) {
+			continue;
+		}
 
 		// Create a date for this day of week by adding days to base Sunday.
 		const dayDate = new Date( baseSunday );
@@ -116,6 +121,7 @@ export function generateMonthOptions() {
  * @param {number}        startOfWeek   - The start of week (0=Sunday, 1=Monday, etc.).
  * @param {string}        selectedMonth - The selected month in format "YYYY-MM".
  * @param {number}        monthModifier - The month offset from current month.
+ * @param {boolean}       showWeekends - Whether to include weekend days.
  *
  * @return {Object} Calendar data structure containing:
  *   - {string} monthName - Formatted month and year (e.g., "January 2025")
@@ -138,104 +144,242 @@ export function generateMonthOptions() {
  * //   dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
  * // }
  */
-export function generateCalendar(
-	posts,
-	startOfWeek = 0,
-	selectedMonth = '',
-	monthModifier = 0
-) {
-	// Use the single source of truth for date calculation.
-	const targetDate = calculateTargetDate( selectedMonth, monthModifier );
-	const year = targetDate.getFullYear();
-	const month = targetDate.getMonth();
+// export function generateCalendar(
+// 	posts,
+// 	startOfWeek = 0,
+// 	selectedMonth = '',
+// 	monthModifier = 0,
+// 	showWeekends = true
+// ) {
+// 	// Use the single source of truth for date calculation.
+// 	const targetDate = calculateTargetDate( selectedMonth, monthModifier );
+// 	const year = targetDate.getFullYear();
+// 	const month = targetDate.getMonth();
 
-	// Organize posts by date for quick lookup.
-	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
-	const postsByDate = {};
-	if ( posts && posts.length > 0 ) {
-		posts.forEach( ( post ) => {
-			let postDate;
-			// For GatherPress events, use event start date.
-			if ( post.type === 'gatherpress_event' ) {
-				postDate = post.meta.gatherpress_datetime_start;
-			} else {
-				// For other post types, use publication date.
-				postDate = post.date;
-			}
-			if ( ! postDate ) {
-				return;
-			}
+// 	// Organize posts by date for quick lookup.
+// 	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
+// 	const postsByDate = {};
+// 	if ( posts && posts.length > 0 ) {
+// 		posts.forEach( ( post ) => {
+// 			let postDate;
+// 			// For GatherPress events, use event start date.
+// 			if ( post.type === 'gatherpress_event' ) {
+// 				postDate = post.meta.gatherpress_datetime_start;
+// 			} else {
+// 				// For other post types, use publication date.
+// 				postDate = post.date;
+// 			}
+// 			if ( ! postDate ) {
+// 				return;
+// 			}
 
-			const dateObj = new Date( postDate );
-			const dateStr = dateI18n( DATE_FORMAT, dateObj );
-			if ( ! postsByDate[ dateStr ] ) {
-				postsByDate[ dateStr ] = [];
-			}
-			postsByDate[ dateStr ].push( post );
-		} );
+// 			const dateObj = new Date( postDate );
+// 			const dateStr = dateI18n( DATE_FORMAT, dateObj );
+// 			if ( ! postsByDate[ dateStr ] ) {
+// 				postsByDate[ dateStr ] = [];
+// 			}
+// 			postsByDate[ dateStr ].push( post );
+// 		} );
+// 	}
+
+// 	// Today's date string, used to flag the current day in the grid.
+// 	const today = dateI18n( DATE_FORMAT, new Date() );
+
+// 	// Calculate calendar dimensions.
+// 	const firstDay = new Date( year, month, 1 );
+// 	const lastDay = new Date( year, month + 1, 0 );
+// 	const daysInMonth = lastDay.getDate();
+// 	let startDayOfWeek = firstDay.getDay();
+
+// 	// Adjust start day based on start_of_week setting.
+// 	// This shifts the calendar so it starts on the configured day.
+// 	startDayOfWeek = ( startDayOfWeek - startOfWeek + 7 ) % 7;
+
+// 	// Build the weeks array.
+// 	const weeks = [];
+// 	let currentWeek = [];
+
+// 	// Fill initial empty days before the month starts.
+// 	for ( let i = 0; i < startDayOfWeek; i++ ) {
+// 		currentWeek.push( { isEmpty: true } );
+// 	}
+
+// 	// Fill days with posts.
+// 	for ( let day = 1; day <= daysInMonth; day++ ) {
+// 		const dateStr = `${ year }-${ String( month + 1 ).padStart(
+// 			2,
+// 			'0'
+// 		) }-${ String( day ).padStart( 2, '0' ) }`;
+// 		const dayPosts = postsByDate[ dateStr ] || [];
+
+// 		currentWeek.push( {
+// 			day,
+// 			date: dateStr,
+// 			posts: dayPosts,
+// 			isEmpty: false,
+// 			isToday: dateStr === today,
+// 		} );
+
+// 		// When week is complete (7 days), start a new week.
+// 		if ( currentWeek.length === 7 ) {
+// 			weeks.push( currentWeek );
+// 			currentWeek = [];
+// 		}
+// 	}
+
+// 	// Fill remaining empty days after the month ends.
+// 	while ( currentWeek.length > 0 && currentWeek.length < 7 ) {
+// 		currentWeek.push( { isEmpty: true } );
+// 	}
+
+// 	if ( currentWeek.length > 0 ) {
+// 		weeks.push( currentWeek );
+// 	}
+
+// 	return {
+// 		monthName: dateI18n( 'F Y', firstDay ),
+// 		weeks,
+// 		dayNames: getDayNames( startOfWeek, showWeekends ),
+// 	};
+// }
+
+/**
+ * Build the weeks array for the requested month.
+ *
+ * @param {number}  year          Target year.
+ * @param {number}  month         Target month (1-12).
+ * @param {number}  startOfWeek   Start of week (0-6).
+ * @param {number}  daysInMonth   Number of days in month (28-31).
+ * @param {Object}  postsByDate   Posts grouped by 'YYYY-MM-DD'.
+ * @param {boolean} showWeekends  Whether to include weekend days.
+ * @return {Array[]} Array of week arrays containing day objects.
+ */
+export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate = {}, showWeekends = true ) {
+	// Determine the ordered active columns (5 or 7 columns)
+	const activeDaysOfWeek = [];
+	for ( let i = 0; i < 7; i++ ) {
+		const dow = ( startOfWeek + i ) % 7;
+		if ( ! showWeekends && ( dow === 0 || dow === 6 ) ) {
+			continue;
+		}
+		activeDaysOfWeek.push( dow );
 	}
 
-	// Today's date string, used to flag the current day in the grid.
-	const today = dateI18n( DATE_FORMAT, new Date() );
-
-	// Calculate calendar dimensions.
-	const firstDay = new Date( year, month, 1 );
-	const lastDay = new Date( year, month + 1, 0 );
-	const daysInMonth = lastDay.getDate();
-	let startDayOfWeek = firstDay.getDay();
-
-	// Adjust start day based on start_of_week setting.
-	// This shifts the calendar so it starts on the configured day.
-	startDayOfWeek = ( startDayOfWeek - startOfWeek + 7 ) % 7;
-
-	// Build the weeks array.
+	const daysPerWeek = activeDaysOfWeek.length; // 5 or 7
 	const weeks = [];
 	let currentWeek = [];
+	let firstDayPlaced = false;
 
-	// Fill initial empty days before the month starts.
-	for ( let i = 0; i < startDayOfWeek; i++ ) {
-		currentWeek.push( { isEmpty: true } );
-	}
-
-	// Fill days with posts.
 	for ( let day = 1; day <= daysInMonth; day++ ) {
-		const dateStr = `${ year }-${ String( month + 1 ).padStart(
-			2,
-			'0'
-		) }-${ String( day ).padStart( 2, '0' ) }`;
-		const dayPosts = postsByDate[ dateStr ] || [];
+		const dateObj = new Date( year, month - 1, day );
+		const dayOfWeek = dateObj.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+
+		// Skip weekends if hidden
+		if ( ! showWeekends && ( dayOfWeek === 0 || dayOfWeek === 6 ) ) {
+			continue;
+		}
+
+		// Pre-pad leading empty days before the first visible day of the month
+		if ( ! firstDayPlaced ) {
+			firstDayPlaced = true;
+			const startCol = activeDaysOfWeek.indexOf( dayOfWeek );
+			const emptyDays = startCol !== -1 ? startCol : 0;
+
+			// Fill initial empty days before the month starts.
+			for ( let i = 0; i < emptyDays; i++ ) {
+				currentWeek.push( {
+					isEmpty: true,
+					posts: [],
+				} );
+			}
+		}
+
+		const monthStr = String( month ).padStart( 2, '0' );
+		const dayStr = String( day ).padStart( 2, '0' );
+		const dateStr = `${ year }-${ monthStr }-${ dayStr }`;
+		const dayPosts = postsByDate?.[ dateStr ] ?? [];
 
 		currentWeek.push( {
 			day,
 			date: dateStr,
 			posts: dayPosts,
 			isEmpty: false,
-			isToday: dateStr === today,
 		} );
 
-		// When week is complete (7 days), start a new week.
-		if ( currentWeek.length === 7 ) {
+		// When week is complete (5 or 7 days), start a new week.
+		if ( currentWeek.length === daysPerWeek ) {
 			weeks.push( currentWeek );
 			currentWeek = [];
 		}
 	}
 
 	// Fill remaining empty days after the month ends.
-	while ( currentWeek.length > 0 && currentWeek.length < 7 ) {
-		currentWeek.push( { isEmpty: true } );
+	while ( currentWeek.length > 0 && currentWeek.length < daysPerWeek ) {
+		currentWeek.push( {
+			isEmpty: true,
+			posts: [],
+		} );
 	}
 
 	if ( currentWeek.length > 0 ) {
 		weeks.push( currentWeek );
 	}
 
-	return {
-		monthName: dateI18n( 'F Y', firstDay ),
-		weeks,
-		dayNames: getDayNames( startOfWeek ),
-	};
+	return weeks;
 }
 
+/**
+ * Main generateCalendar function.
+ */
+export function generateCalendar(
+	posts = [],
+	startOfWeek = 0,
+	selectedMonth = '',
+	monthModifier = 0,
+	showWeekends = true
+) {
+	// 1. Resolve Target Date
+	let year, month;
+	if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
+		const [ y, m ] = selectedMonth.split( '-' ).map( Number );
+		year = y;
+		month = m;
+	} else {
+		const now = new Date();
+		if ( monthModifier !== 0 ) {
+			now.setMonth( now.getMonth() + monthModifier );
+		}
+		year = now.getFullYear();
+		month = now.getMonth() + 1;
+	}
+
+	// 2. Format Month Title
+	const firstDay = new Date( year, month - 1, 1 );
+	const monthName = firstDay.toLocaleDateString( undefined, {
+		month: 'long',
+		year: 'numeric',
+	} );
+
+	// 3. Group Posts by Date (YYYY-MM-DD)
+	const postsByDate = {};
+	posts.forEach( ( post ) => {
+		const dateKey = post.date?.split( 'T' )?.[ 0 ];
+		if ( dateKey ) {
+			if ( ! postsByDate[ dateKey ] ) {
+				postsByDate[ dateKey ] = [];
+			}
+			postsByDate[ dateKey ].push( post );
+		}
+	} );
+
+	const daysInMonth = new Date( year, month, 0 ).getDate();
+
+	return {
+		monthName,
+		dayNames: getDayNames( startOfWeek, showWeekends ),
+		weeks: buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate, showWeekends ),
+	};
+}
 /**
  * Pick a sensible default "active" (live-editable) day for the calendar
  * preview: today's date when it falls inside the displayed month,

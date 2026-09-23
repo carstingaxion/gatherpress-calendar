@@ -19,16 +19,20 @@
 
 	/* 7-column Calendar Grid */
 	&__table {
-		width: 100%;
-		display: grid;
-		grid-template-columns: repeat(7, 1fr);
-		gap: 2px; /* Default thin grid line when no spacing is set */
-
 		/* Inherits the calendar block's background to fill the gaps between cells */
 		background: inherit;
 		container-type: inline-size;
 		container-name: calendar;
 		border-collapse: collapse;
+		width: 100%;
+		display: grid;
+		grid-template-columns: repeat(var(--gatherpress-calendar-columns, 7), 1fr);
+		gap: 2px; /* Default thin grid line when no spacing is set */
+
+		&.is-hidden-weekends {
+			--gatherpress-calendar-columns: 5;
+			grid-template-columns: repeat(var(--gatherpress-calendar-columns,5), 1fr);
+		}
 
 		thead,
 		tbody,

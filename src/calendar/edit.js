@@ -77,6 +77,7 @@ export default function Edit( {
 		selectedMonth,
 		monthModifier = 0,
 		showWeekdays = true,
+		showWeekends = true,
 	} = attributes;
 	const { query } = context;
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
@@ -98,9 +99,10 @@ export default function Edit( {
 				posts,
 				startOfWeek,
 				selectedMonth,
-				monthModifier
+				monthModifier,
+				showWeekends
 			),
-		[ posts, startOfWeek, selectedMonth, monthModifier ]
+		[ posts, startOfWeek, selectedMonth, monthModifier, showWeekends ]
 	);
 
 	// Resolve which day is currently "live"/editable: keep the previously
@@ -157,8 +159,15 @@ export default function Edit( {
 		}
 	);
 
+	// Dynamic grid columns style and modifier class
+	const tableClasses = [
+		'gatherpress-calendar__table',
+		! showWeekends ? 'is-hidden-weekends' : '',
+	].filter( Boolean ).join( ' ' );
+
 	const tableStyle = {
 		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
+		'--gatherpress-calendar-columns': showWeekends ? 7 : 5,
 	};
 
 	// Stable reference: every week's BlockContextProvider value is built on
@@ -256,6 +265,15 @@ export default function Edit( {
 							'gatherpress-calendar'
 						) }
 					/>
+					<ToggleControl
+						label={ __( 'Show Weekends', 'gatherpress-calendar' ) }
+						checked={ showWeekends }
+						onChange={ ( value ) => setAttributes( { showWeekends: value } ) }
+						help={ __(
+							'Display weekend days in the calendar grid.',
+							'gatherpress-calendar'
+						) }
+					/>
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
@@ -264,6 +282,7 @@ export default function Edit( {
 						calendar={ calendar }
 						showWeekdays={ showWeekdays }
 						style={ tableStyle }
+						tableClasses={ tableClasses }
 						activeDate={ resolvedActiveDate }
 						setActiveDate={ setActiveDate }
 						weekContext={ weekContext }

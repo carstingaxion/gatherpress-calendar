@@ -21,6 +21,9 @@
     "templateSlug",
     "previewPostType"
   ],
+  "providesContext": {
+    "gatherpress/showWeekends": "showWeekends"
+  },
   "attributes": {
     "selectedMonth": {
       "type": "string",
@@ -31,6 +34,10 @@
       "default": 0
     },
     "showWeekdays": {
+      "type": "boolean",
+      "default": true
+    },
+    "showWeekends": {
       "type": "boolean",
       "default": true
     }

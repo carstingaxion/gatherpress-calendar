@@ -84,20 +84,26 @@ class Date_Calculator {
 		);
 	}
 
-	/**
-	 * Get translated day names based on start_of_week setting.
+/**
+	 * Get translated day names based on start_of_week setting and weekend visibility.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param int $start_of_week Start of week (0=Sunday, 1=Monday, etc.).
+	 * @param int  $start_of_week Start of week (0=Sunday, 1=Monday, etc.).
+	 * @param bool $show_weekends Whether to include weekend days (Saturday and Sunday).
 	 *
 	 * @return list<string> Array of translated day names.
 	 */
-	public static function get_day_names( int $start_of_week ): array {
+	public static function get_day_names( int $start_of_week, bool $show_weekends = true ): array {
 		$day_names = array();
 
 		for ( $i = 0; $i < 7; $i++ ) {
 			$day_of_week = ( $start_of_week + $i ) % 7;
+
+			if ( ! $show_weekends && ( 0 === $day_of_week || 6 === $day_of_week ) ) {
+				continue;
+			}
+
 			$base_sunday = strtotime( '2024-01-07' );
 			// @phpstan-ignore-next-line
 			if ( false === $base_sunday ) {

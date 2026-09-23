@@ -21,7 +21,8 @@
     "gatherpress/weekDays",
     "gatherpress/popoverStyles",
     "gatherpress/activeDate",
-    "gatherpress/setActiveDate"
+    "gatherpress/setActiveDate",
+    "gatherpress/showWeekends"
   ],
   "providesContext": {
     "gatherpress/weekIndex": "weekIndex"
