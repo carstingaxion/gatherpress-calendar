@@ -6,89 +6,21 @@
  * view from the frontend display and provide enhanced styling for
  * the template configuration area.
  *
- * CSS Strategy:
- * - Inherits all base styles from style.scss (already loaded)
- * - Only adds/overrides what's different in the editor
- * - Uses cascade properly to avoid duplication
- *
  * @package GatherPressCalendar
  * @since 0.1.0
  */
 
-/**
- * Editor-specific enhancements
- * Extends base calendar styles for editor context
- */
 .editor-styles-wrapper {
 
 	.gatherpress-calendar {
 
-		/**
-		 * Calendar table
-		 * Match frontend appearance in editor preview
-		 */
 		&__table {
 
-			th {
-
-				/* More visible in editor for better editing feedback */
-				background: var(--wp--preset--color--base-2, #f0f0f1);
-				color: var(--wp--preset--color--contrast, #495057);
-			}
 
 			td {
-
-				/* Match frontend today highlight */
-				&.is-today {
-					background: rgba(0, 124, 186, 0.05);
-
-					.gatherpress-calendar__day-number {
-						color: var(--wp--preset--color--primary, #007cba);
-						font-weight: 700;
-					}
-				}
-
-				/* Match frontend has-posts highlight */
-				&.has-posts {
-					background: rgba(0, 124, 186, 0.03);
-
-					.gatherpress-calendar__day-number {
-						color: var(--wp--preset--color--primary, #007cba);
-						font-weight: 600;
-						position: relative;
-					}
-				}
 			}
 		}
 
-		/* ==================================================================
-		Event Dots Wrapper
-		================================================================== */
-		&__events > div {
-
-			background: var(--wp--preset--color--primary, #007cba);
-
-			/* Color variations for multiple events */
-			&:nth-child(2) {
-				background: var(--wp--preset--color--secondary, #e65054);
-			}
-
-			&:nth-child(3) {
-				background: var(--wp--preset--color--tertiary, #4ab866);
-			}
-
-			&:nth-child(4) {
-				background: var(--wp--preset--color--vivid-purple, #9b51e0);
-			}
-
-			&:nth-child(5) {
-				background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
-			}
-
-			&:nth-child(n+6) {
-				background: var(--wp--preset--color--contrast, #666);
-			}
-		}
 	}
 }
 

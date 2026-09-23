@@ -43,32 +43,32 @@
 
 	.gatherpress-calendar__event-item {
 
-		.gatherpress-modal--trigger-open > a {
+		.gatherpress-modal--trigger-open > * {
 			background: var(--wp--preset--color--primary, #007cba);
 		}
 
-		&:nth-child(2) .gatherpress-modal--trigger-open > a {
+		&:nth-child(2) .gatherpress-modal--trigger-open > * {
 			background: var(--wp--preset--color--secondary, #e65054);
 		}
 
-		&:nth-child(3) .gatherpress-modal--trigger-open > a {
+		&:nth-child(3) .gatherpress-modal--trigger-open > * {
 			background: var(--wp--preset--color--tertiary, #4ab866);
 		}
 
-		&:nth-child(4) .gatherpress-modal--trigger-open > a {
+		&:nth-child(4) .gatherpress-modal--trigger-open > * {
 			background: var(--wp--preset--color--vivid-purple, #9b51e0);
 		}
 
-		&:nth-child(5) .gatherpress-modal--trigger-open > a {
+		&:nth-child(5) .gatherpress-modal--trigger-open > * {
 			background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
 		}
 
-		&:nth-child(n+6) .gatherpress-modal--trigger-open > a {
+		&:nth-child(n+6) .gatherpress-modal--trigger-open > * {
 			background: var(--wp--preset--color--contrast, #666);
 		}
 	}
 
-	.gatherpress-modal--trigger-open > a {
+	.gatherpress-modal--trigger-open > * {
 		width: clamp(8px, 2.5vw, 12px);
 		height: clamp(8px, 2.5vw, 12px);
 		min-width: clamp(8px, 2.5vw, 12px);

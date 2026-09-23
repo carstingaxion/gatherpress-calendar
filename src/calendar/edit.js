@@ -14,6 +14,7 @@ import {
 	InspectorControls,
 	PanelColorSettings,
 	store as blockEditorStore,
+	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import {
 	Placeholder,
@@ -43,7 +44,6 @@ import {
 	generateCalendar,
 	getDefaultActiveDate,
 } from './edit/utils/calendar-utils';
-import { resolveBlockGapCSS } from './edit/utils/style-utils';
 import { useStableValue } from '../utils/use-stable-value';
 
 import { useCalendarData } from './edit/hooks/useCalendarData';
@@ -158,7 +158,7 @@ export default function Edit( {
 	);
 
 	const tableStyle = {
-		gap: resolveBlockGapCSS( attributes.style?.spacing?.blockGap ),
+		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
 	};
 
 	// Stable reference: every week's BlockContextProvider value is built on

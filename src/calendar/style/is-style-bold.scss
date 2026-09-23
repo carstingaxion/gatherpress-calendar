@@ -40,17 +40,23 @@
 		color: var(--wp--preset--color--contrast, #1e1e1e);
 	}
 
-	/* stylelint-disable-next-line no-descending-specificity */
-	.gatherpress-calendar__event {
-		width: clamp(14px, 3vw, 18px);
-		height: clamp(14px, 3vw, 18px);
-		min-width: clamp(14px, 3vw, 18px);
-		min-height: clamp(14px, 3vw, 18px);
-		border: clamp(2px, 0.5vw, 3px) solid #fff;
-		box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+	/* ======================================================================
+		BLOCK STYLE: Dots (style-variation of calendar-entries block)
+		====================================================================== */
+	.wp-block-gatherpress-calendar-entries.is-style-dots {
 
-		&:hover {
-			transform: scale(1.2) rotate(45deg);
+		/* stylelint-disable-next-line no-descending-specificity */
+		.gatherpress-modal--trigger-open > * {
+			width: clamp(14px, 3vw, 18px);
+			height: clamp(14px, 3vw, 18px);
+			min-width: clamp(14px, 3vw, 18px);
+			min-height: clamp(14px, 3vw, 18px);
+			border: clamp(2px, 0.5vw, 3px) solid #fff;
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+
+			&:hover {
+				transform: scale(1.2) rotate(45deg);
+			}
 		}
 	}
 }

@@ -62,11 +62,20 @@
       }
     },
     "shadow": true,
-    "listView": true,
     "contentRole": true,
     "spacing": {
       "padding": true,
       "margin": true
+    },
+    "layout": {
+      "allowSwitching": true,
+      "allowInheriting": false,
+      "allowSizingOnChildren": true,
+      "default": {
+        "type": "flex",
+        "orientation": "horizontal",
+        "justifyContent": "left"
+      }
     },
     "__experimentalBorder": {
       "color": true,
