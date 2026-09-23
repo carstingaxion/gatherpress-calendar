@@ -1,7 +1,41 @@
 import { dateI18n } from '@wordpress/date';
+import { applyFilters } from '@wordpress/hooks';
 
 import { calculateTargetDate } from './date-utils';
 import { DATE_FORMAT } from '../constants';
+
+
+export const WEEKDAY_SLUGS = [
+	'sunday',
+	'monday',
+	'tuesday',
+	'wednesday',
+	'thursday',
+	'friday',
+	'saturday',
+];
+
+/**
+ * Retrieves the days of the week considered weekend days in the editor.
+ * Defaults to [ 0, 6 ] (Sunday and Saturday).
+ *
+ * Cultural Context:
+ * - Western standard: Saturday (6) and Sunday (0).
+ * - Middle East & North Africa (e.g. Egypt, Saudi Arabia): Friday (5) and Saturday (6).
+ * - Israel: Friday (5) and Saturday (6).
+ * - Iran: Friday (5) only.
+ * - Nepal: Saturday (6) only.
+ *
+ * @return {number[]} Array of weekend day integers (0 = Sunday, 6 = Saturday).
+ */
+export function getWeekendDays() {
+	const defaultWeekends = [ 0, 6 ];
+	return applyFilters( 'gatherpress.calendar.weekendDays', defaultWeekends );
+}
+
+export function isWeekendDay( dayOfWeek ) {
+	return getWeekendDays().includes( dayOfWeek );
+}
 
 /**
  * Get day names based on start of week setting.
@@ -298,12 +332,17 @@ export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate =
 		const dayStr = String( day ).padStart( 2, '0' );
 		const dateStr = `${ year }-${ monthStr }-${ dayStr }`;
 		const dayPosts = postsByDate?.[ dateStr ] ?? [];
+		const isWeekend = isWeekendDay( dayOfWeek );
+		const weekday = WEEKDAY_SLUGS[ dayOfWeek ];
 
 		currentWeek.push( {
 			day,
 			date: dateStr,
 			posts: dayPosts,
 			isEmpty: false,
+			dayOfWeek,
+			weekday,
+			isWeekend,
 		} );
 
 		// When week is complete (5 or 7 days), start a new week.

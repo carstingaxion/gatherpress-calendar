@@ -73,17 +73,16 @@ class Calendar_Structure_Builder {
 	 * @return list<list<array<string, mixed>>> Weeks array.
 	 */
 	private static function build_weeks( int $year, int $month, int $start_of_week, int $days_in_month, array $posts_by_date, bool $show_weekends = true ): array {
-		// Determine the active column days in order based on start_of_week.
 		$active_days_of_week = array();
 		for ( $i = 0; $i < 7; $i++ ) {
 			$dow = ( $start_of_week + $i ) % 7;
-			if ( ! $show_weekends && ( 0 === $dow || 6 === $dow ) ) {
+			if ( ! $show_weekends && Date_Calculator::is_weekend_day( $dow ) ) {
 				continue;
 			}
 			$active_days_of_week[] = $dow;
 		}
 
-		$days_per_week    = count( $active_days_of_week ); // 5 or 7.
+		$days_per_week    = count( $active_days_of_week );
 		$weeks            = array();
 		$current_week     = array();
 		$first_day_placed = false;
@@ -91,9 +90,11 @@ class Calendar_Structure_Builder {
 		for ( $day = 1; $day <= $days_in_month; $day++ ) {
 			$day_timestamp = mktime( 0, 0, 0, $month, $day, $year );
 			$day_of_week   = (int) gmdate( 'w', false !== $day_timestamp ? $day_timestamp : time() );
+			$is_weekend    = Date_Calculator::is_weekend_day( $day_of_week );
+			$weekday_slug  = Date_Calculator::get_weekday_slug( $day_of_week );
 
 			// Skip Saturdays and Sundays when weekends are hidden.
-			if ( ! $show_weekends && ( 0 === $day_of_week || 6 === $day_of_week ) ) {
+			if ( ! $show_weekends && $is_weekend ) {
 				continue;
 			}
 
@@ -104,9 +105,13 @@ class Calendar_Structure_Builder {
 				$empty_days       = false !== $start_col ? (int) $start_col : 0;
 
 				for ( $i = 0; $i < $empty_days; $i++ ) {
+					$empty_dow = $active_days_of_week[ $i ];
 					$current_week[] = array(
-						'isEmpty' => true,
-						'posts'   => array(),
+						'isEmpty'   => true,
+						'posts'     => array(),
+						'dayOfWeek' => $empty_dow,
+						'weekday'   => Date_Calculator::get_weekday_slug( $empty_dow ),
+						'isWeekend' => Date_Calculator::is_weekend_day( $empty_dow ),
 					);
 				}
 			}
@@ -117,10 +122,13 @@ class Calendar_Structure_Builder {
 			$day_posts = $posts_by_date[ $date_str ] ?? array();
 
 			$current_week[] = array(
-				'day'     => $day,
-				'date'    => $date_str,
-				'posts'   => $day_posts,
-				'isEmpty' => false,
+				'day'       => $day,
+				'date'      => $date_str,
+				'posts'     => $day_posts,
+				'isEmpty'   => false,
+				'dayOfWeek' => $day_of_week,
+				'weekday'   => $weekday_slug,
+				'isWeekend' => $is_weekend,
 			);
 
 			if ( count( $current_week ) === $days_per_week ) {
@@ -132,9 +140,13 @@ class Calendar_Structure_Builder {
 		// Trailing empty days after the end of the month.
 		$week_count = count( $current_week );
 		while ( $week_count > 0 && $week_count < $days_per_week ) {
+			$trailing_dow   = $active_days_of_week[ $week_count ];
 			$current_week[] = array(
-				'isEmpty' => true,
-				'posts'   => array(),
+				'isEmpty'   => true,
+				'posts'     => array(),
+				'dayOfWeek' => $trailing_dow,
+				'weekday'   => Date_Calculator::get_weekday_slug( $trailing_dow ),
+				'isWeekend' => Date_Calculator::is_weekend_day( $trailing_dow ),
 			);
 			++$week_count;
 		}

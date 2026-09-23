@@ -88,6 +88,17 @@ class Calendar_Day {
 			: array();
 		$has_posts  = ! empty( $day_posts );
 
+		// Resolve weekend and weekday from context (with fallback if dayDate is present).
+		$weekday = $block->context['gatherpress/weekday'] ?? '';
+		if ( empty( $weekday ) && ! empty( $block->context['gatherpress/dayDate'] ) ) {
+			$ts           = strtotime( (string) $block->context['gatherpress/dayDate'] );
+			$dow          = false !== $ts ? (int) gmdate( 'w', $ts ) : 0;
+			$weekday      = Date_Calculator::get_weekday_slug( $dow );
+			$is_weekend   = Date_Calculator::is_weekend_day( $dow );
+		} else {
+			$is_weekend   = ! empty( $block->context['gatherpress/isWeekend'] );
+		}
+
 		$classes = array( 'gatherpress-calendar__day' );
 		if ( $is_empty ) {
 			$classes[] = 'is-empty';
@@ -97,6 +108,12 @@ class Calendar_Day {
 		}
 		if ( $is_today ) {
 			$classes[] = 'is-today';
+		}
+		if ( $is_weekend ) {
+			$classes[] = 'is-weekend';
+		}
+		if ( ! empty( $weekday ) ) {
+			$classes[] = 'is-' . sanitize_html_class( strtolower( (string) $weekday ) );
 		}
 
 		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );

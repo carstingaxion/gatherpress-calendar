@@ -38,6 +38,8 @@ export default function Edit( { context, clientId } ) {
 	const dayNumber = context?.[ 'gatherpress/dayNumber' ] ?? 1;
 	const isToday = context?.[ 'gatherpress/isToday' ] ?? false;
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
+	const weekday = context?.[ 'gatherpress/weekday' ] ?? '';
+	const isWeekend = context?.[ 'gatherpress/isWeekend' ] ?? false;
 
 	const rawPosts = context?.[ 'gatherpress/dayPosts' ];
 	const posts = useMemo( () => rawPosts ?? EMPTY_ARRAY, [ rawPosts ] );
@@ -80,6 +82,8 @@ export default function Edit( { context, clientId } ) {
 		isEmpty ? 'is-empty' : '',
 		isToday ? 'is-today' : '',
 		posts.length > 0 ? 'has-posts' : '',
+		isWeekend ? 'is-weekend' : '',
+		weekday ? `is-${ weekday }` : '',
 	]
 		.filter( Boolean )
 		.join( ' ' );

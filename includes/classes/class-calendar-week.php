@@ -76,7 +76,7 @@ class Calendar_Week {
 
 		ob_start();
 
-		// Render the 7 days of this week using the Day template block.
+		// Render the days of this week using the Day template block.
 		foreach ( $week_days as $day ) {
 			$day_posts = isset( $day['posts'] ) && is_array( $day['posts'] ) ? $day['posts'] : array();
 			$is_today  = isset( $day['date'] ) && is_string( $day['date'] ) && $day['date'] === $today;
@@ -84,11 +84,13 @@ class Calendar_Week {
 			$day_context = array_merge(
 				$block->context,
 				array(
-					'gatherpress/dayDate'       => $day['date'] ?? '',
-					'gatherpress/dayNumber'     => $day['day'] ?? 0,
-					'gatherpress/dayPosts'      => $day_posts,
-					'gatherpress/isEmpty'       => ! empty( $day['isEmpty'] ),
-					'gatherpress/isToday'       => $is_today,
+					'gatherpress/dayDate'   => $day['date'] ?? '',
+					'gatherpress/dayNumber' => $day['day'] ?? 0,
+					'gatherpress/dayPosts'  => $day_posts,
+					'gatherpress/isEmpty'   => ! empty( $day['isEmpty'] ),
+					'gatherpress/isToday'   => $is_today,
+					'gatherpress/weekday'   => $day['weekday'] ?? '',
+					'gatherpress/isWeekend' => ! empty( $day['isWeekend'] ),
 				)
 			);
 
