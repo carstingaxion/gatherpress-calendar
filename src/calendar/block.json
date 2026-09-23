@@ -50,7 +50,7 @@
     "alignWide": true,
     "customClassName": true,
     "color": {
-      "gradients": false,
+      "gradients": true,
       "link": false,
       "text": false,
       "__experimentalDefaultControls": {
