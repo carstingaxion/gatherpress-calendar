@@ -45,6 +45,7 @@ import save from './save';
 import metadata from './block.json';
 
 import './variation';
+import transforms from './transforms';
 
 /**
  * Register the GatherPress Calendar block type
@@ -71,6 +72,7 @@ registerBlockType( metadata.name, {
 	 * @see ./save.js
 	 */
 	save,
+	transforms,
 } );
 
 
