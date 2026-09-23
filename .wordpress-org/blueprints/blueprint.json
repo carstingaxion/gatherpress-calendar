@@ -1,8 +1,8 @@
 {
   "$schema": "https://playground.wordpress.net/blueprint-schema.json",
-  "landingPage": "/wp-admin/post.php?post=4&action=edit",
+  "landingPage": "/wp-admin/post-new.php",
   "preferredVersions": {
-    "php": "8.2",
+    "php": "8.4",
     "wp": "latest"
   },
   "phpExtensionBundles": [
@@ -32,13 +32,6 @@
       "code": "<?php require '/wordpress/wp-load.php'; $user_id = wp_create_user('editor', 'editorpass', 'editor@localhost.test'); (new WP_User($user_id))->set_role('editor');"
     },
     {
-      "step": "runPHP",
-      "code": "<?php require_once '/wordpress/wp-load.php';\n$page_args = array(\n'post_type'    => 'page',\n'post_status'  => 'publish',\n'post_title'   => 'GatherPress Calendar',\n'post_content' => '<!-- wp:query {\"queryId\":0,\"query\":{\"perPage\":12,\"pages\":0,\"offset\":0,\"postType\":\"gatherpress_event\",\"order\":\"asc\",\"author\":\"\",\"search\":\"\",\"exclude\":[],\"sticky\":\"\",\"inherit\":false,\"parents\":[],\"format\":[]},\"namespace\":\"gatherpress-event-query\",\"align\":\"full\",\"layout\":{\"type\":\"constrained\",\"justifyContent\":\"center\"}} -->\n<div class=\"wp-block-query alignfull\"><!-- wp:gatherpress/calendar {\"templateConfigStyle\":{\"padding\":{\"top\":\"23\",\"bottom\":\"23\",\"left\":\"23\",\"right\":\"23\"},\"boxShadow\":\"0 8px 24px rgba(0, 0, 0, 0.15)\",\"borderWidth\":\"0px\",\"borderStyle\":\"none\"},\"align\":\"full\",\"className\":\"is-style-default\"} -->\n<div class=\"wp-block-gatherpress-calendar alignfull gatherpress-calendar-block is-style-default\"><div class=\"gatherpress-calendar-template\"><!-- wp:post-title {\"level\":3,\"fontSize\":\"xx-large\"} /-->\n<!-- wp:post-excerpt /-->\n<!-- wp:post-date /--></div></div>\n<!-- /wp:gatherpress/calendar --></div>\n<!-- /wp:query -->',\n);\n$page_id = wp_insert_post( $page_args, true );\nif ( is_wp_error( $page_id ) ) {\nerror_log( 'addPage error: ' . $page_id->get_error_message() );\n}",
-      "progress": {
-        "caption": "Crafting a GatherPress Calendar Demo Page"
-      }
-    },
-    {
       "step": "login",
       "username": "admin"
     },
@@ -62,22 +55,18 @@
     {
       "step": "installPlugin",
       "pluginData": {
-        "resource": "git:directory",
-        "url": "https://github.com/carstingaxion/gatherpress-calendar",
-        "ref": "HEAD"
+          "resource": "url",
+          "url": "https://github.com/carstingaxion/gatherpress-calendar/releases/latest/download/gatherpress-calendar.zip"
       },
       "options": {
-        "activate": true
-      },
-      "progress": {
-        "caption": "Installing plugin from GitHub: carstingaxion/gatherpress-calendar"
+          "activate": true
       }
     },
     {
       "step": "importWxr",
       "file": {
         "resource": "url",
-        "url": "https://raw.githubusercontent.com/GatherPress/gatherpress-demo-data/main/GatherPress-demo-data-0.33.0.xml"
+        "url": "https://raw.githubusercontent.com/GatherPress/gatherpress-demo-data/main/GatherPress-demo-data-0.35.0.xml"
       }
     }
   ]
