@@ -19,6 +19,7 @@
 
 	/* 7-column Calendar Grid */
 	&__table {
+
 		/* Inherits the calendar block's background to fill the gaps between cells */
 		background: inherit;
 		container-type: inline-size;
@@ -31,7 +32,7 @@
 
 		&.is-hidden-weekends {
 			--gatherpress-calendar-columns: 5;
-			grid-template-columns: repeat(var(--gatherpress-calendar-columns,5), 1fr);
+			grid-template-columns: repeat(var(--gatherpress-calendar-columns, 5), 1fr);
 		}
 
 		thead,

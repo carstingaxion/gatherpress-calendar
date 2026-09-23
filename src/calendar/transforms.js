@@ -213,7 +213,8 @@ const transforms = {
 			type: 'block',
 			blocks: [ 'core/post-template' ],
 			transform: ( attributes, innerBlocks ) => {
-				const preservedBlocks = extractModalContentBlocks( innerBlocks );
+				const preservedBlocks =
+					extractModalContentBlocks( innerBlocks );
 				return createBlock( 'core/post-template', {}, preservedBlocks );
 			},
 		},

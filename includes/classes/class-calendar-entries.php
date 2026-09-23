@@ -171,6 +171,8 @@ class Calendar_Entries {
 			$GLOBALS['post'] = $this->original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		}
 
+		// TODO: Maybe reuse as id attribute, 
+		//       and add the posts css classes here.
 		$event_content_id = 'event-content-' . $post_id;
 
 		ob_start();

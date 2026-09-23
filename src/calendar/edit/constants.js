@@ -1,4 +1,3 @@
-
 import { __ } from '@wordpress/i18n';
 
 /**
@@ -29,8 +28,18 @@ export const ENTRIES_TEMPLATE = [
 					className: 'gatherpress-modal--trigger-open',
 					style: {
 						spacing: {
-							padding: { top: '0', bottom: '0', left: '0', right: '0' },
-							margin: { top: '0', bottom: '0', left: '0', right: '0' },
+							padding: {
+								top: '0',
+								bottom: '0',
+								left: '0',
+								right: '0',
+							},
+							margin: {
+								top: '0',
+								bottom: '0',
+								left: '0',
+								right: '0',
+							},
 						},
 					},
 					fontSize: 'small',
@@ -60,7 +69,10 @@ export const ENTRIES_TEMPLATE = [
 							[
 								'core/group',
 								{
-									layout: { type: 'flex', flexWrap: 'nowrap' },
+									layout: {
+										type: 'flex',
+										flexWrap: 'nowrap',
+									},
 								},
 								[
 									[
@@ -68,8 +80,18 @@ export const ENTRIES_TEMPLATE = [
 										{
 											style: {
 												spacing: {
-													padding: { top: '0', bottom: '0', left: '0', right: '0' },
-													margin: { top: '0', bottom: '0', left: '0', right: '0' },
+													padding: {
+														top: '0',
+														bottom: '0',
+														left: '0',
+														right: '0',
+													},
+													margin: {
+														top: '0',
+														bottom: '0',
+														left: '0',
+														right: '0',
+													},
 												},
 											},
 											fontSize: 'small',
@@ -82,8 +104,18 @@ export const ENTRIES_TEMPLATE = [
 											isLink: true,
 											style: {
 												spacing: {
-													padding: { top: '0', bottom: '0', left: '0', right: '0' },
-													margin: { top: '0', bottom: '0', left: '0', right: '0' },
+													padding: {
+														top: '0',
+														bottom: '0',
+														left: '0',
+														right: '0',
+													},
+													margin: {
+														top: '0',
+														bottom: '0',
+														left: '0',
+														right: '0',
+													},
 												},
 											},
 											fontSize: 'small',
@@ -96,15 +128,22 @@ export const ENTRIES_TEMPLATE = [
 								'core/buttons',
 								{
 									align: 'center',
-									layout: { type: 'flex', justifyContent: 'center' },
+									layout: {
+										type: 'flex',
+										justifyContent: 'center',
+									},
 								},
 								[
 									[
 										'core/button',
 										{
 											tagName: 'button',
-											className: 'gatherpress-modal--trigger-close',
-											text: __( 'Close', 'gatherpress-calendar' ),
+											className:
+												'gatherpress-modal--trigger-close',
+											text: __(
+												'Close',
+												'gatherpress-calendar'
+											),
 										},
 									],
 								],
@@ -160,8 +199,18 @@ export const DAY_TEMPLATE = [
 					style: {
 						spacing: {
 							blockGap: '0',
-							padding: { top: '0', bottom: '0', left: '0', right: '0' },
-							margin: { top: '0', bottom: '0', left: '0', right: '0' },
+							padding: {
+								top: '0',
+								bottom: '0',
+								left: '0',
+								right: '0',
+							},
+							margin: {
+								top: '0',
+								bottom: '0',
+								left: '0',
+								right: '0',
+							},
 						},
 						layout: {
 							selfStretch: 'fill',
@@ -180,11 +229,7 @@ export const DAY_TEMPLATE = [
  * Week container holding the day template.
  */
 export const CALENDAR_TEMPLATE = [
-	[
-		'gatherpress/calendar-week',
-		{},
-		DAY_TEMPLATE,
-	],
+	[ 'gatherpress/calendar-week', {}, DAY_TEMPLATE ],
 ];
 
 /**

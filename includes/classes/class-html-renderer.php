@@ -129,8 +129,8 @@ class HTML_Renderer {
 			$week_context = array_merge(
 				$this->block->context,
 				array(
-					'gatherpress/weekIndex'     => $week_index,
-					'gatherpress/weekDays'      => $week_days,
+					'gatherpress/weekIndex' => $week_index,
+					'gatherpress/weekDays'  => $week_days,
 				)
 			);
 				

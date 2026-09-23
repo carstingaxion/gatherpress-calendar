@@ -26,7 +26,6 @@ import {
 } from '@wordpress/block-editor';
 import domReady from '@wordpress/dom-ready';
 
-
 /**
  * Style imports
  *
@@ -75,9 +74,9 @@ registerBlockType( metadata.name, {
 	transforms,
 } );
 
-
 /**
  * Helper to recursively search a block tree for gatherpress/calendar.
+ * @param blocks
  */
 function findCalendarBlock( blocks = [] ) {
 	for ( const block of blocks ) {
@@ -133,7 +132,9 @@ domReady( () => {
 					parentQueryIds[ parentQueryIds.length - 1 ]
 				);
 				if ( parentQuery?.innerBlocks ) {
-					calendarBlock = findCalendarBlock( parentQuery.innerBlocks );
+					calendarBlock = findCalendarBlock(
+						parentQuery.innerBlocks
+					);
 				}
 			}
 

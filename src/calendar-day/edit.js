@@ -16,9 +16,7 @@ import { useMemo } from '@wordpress/element';
 
 import './editor.scss';
 
-import {
-	findDayNumberBlock,
-} from '../utils/day-number';
+import { findDayNumberBlock } from '../utils/day-number';
 
 const EMPTY_ARRAY = [];
 
@@ -60,14 +58,14 @@ export default function Edit( { context, clientId } ) {
 			'gatherpress/weekday': weekday,
 			'gatherpress/isWeekend': isWeekend,
 		} ),
-		[ dayDate, dayNumber, posts, isEmpty, isToday ]
+		[ dayDate, dayNumber, posts, isEmpty, isToday, weekday, isWeekend ]
 	);
 
 	// If a real Day Number block (a paragraph bound to the calendar-day
 	// binding source) already exists among this day's own inner blocks,
 	// it renders the day number itself - skip the plain fallback below to
 	// avoid showing the number twice, and mirror its own text alignment.
-	const { hasDayNumberBlock, justifyContent } = useSelect(
+	const { hasDayNumberBlock } = useSelect(
 		( select ) => {
 			const blocks = select( blockEditorStore ).getBlocks( clientId );
 			return {
@@ -93,11 +91,10 @@ export default function Edit( { context, clientId } ) {
 	} );
 
 	const { children, ...innerBlocksWrapperProps } = useInnerBlocksProps(
-		{
-		},
+		{},
 		{
 			templateLock: false,
-			renderAppender: false
+			renderAppender: false,
 		}
 	);
 

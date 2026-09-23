@@ -58,7 +58,6 @@ export function getDayNumberJustifyContent( blocks ) {
 	return JUSTIFY_CONTENT_BY_TEXT_ALIGN[ textAlign ];
 }
 
-
 /**
  * Resolves Gutenberg layout attributes (flex, grid, orientation, justification, alignment)
  * into standard Core classes and inline styles for virtual previews.
@@ -95,10 +94,22 @@ export function getLayoutProps( layout = {} ) {
 
 		// Justification (Horizontal along main axis)
 		const justifyMap = {
-			left: { className: 'is-content-justification-left', css: 'flex-start' },
-			center: { className: 'is-content-justification-center', css: 'center' },
-			right: { className: 'is-content-justification-right', css: 'flex-end' },
-			'space-between': { className: 'is-content-justification-space-between', css: 'space-between' },
+			left: {
+				className: 'is-content-justification-left',
+				css: 'flex-start',
+			},
+			center: {
+				className: 'is-content-justification-center',
+				css: 'center',
+			},
+			right: {
+				className: 'is-content-justification-right',
+				css: 'flex-end',
+			},
+			'space-between': {
+				className: 'is-content-justification-space-between',
+				css: 'space-between',
+			},
 		};
 		if ( layout.justifyContent && justifyMap[ layout.justifyContent ] ) {
 			classes.push( justifyMap[ layout.justifyContent ].className );
@@ -108,11 +119,23 @@ export function getLayoutProps( layout = {} ) {
 		// Vertical Alignment (Cross axis)
 		const alignMap = {
 			top: { className: 'is-vertically-aligned-top', css: 'flex-start' },
-			center: { className: 'is-vertically-aligned-center', css: 'center' },
-			bottom: { className: 'is-vertically-aligned-bottom', css: 'flex-end' },
-			stretch: { className: 'is-vertically-aligned-stretch', css: 'stretch' },
+			center: {
+				className: 'is-vertically-aligned-center',
+				css: 'center',
+			},
+			bottom: {
+				className: 'is-vertically-aligned-bottom',
+				css: 'flex-end',
+			},
+			stretch: {
+				className: 'is-vertically-aligned-stretch',
+				css: 'stretch',
+			},
 		};
-		if ( layout.verticalAlignment && alignMap[ layout.verticalAlignment ] ) {
+		if (
+			layout.verticalAlignment &&
+			alignMap[ layout.verticalAlignment ]
+		) {
 			classes.push( alignMap[ layout.verticalAlignment ].className );
 			style.alignItems = alignMap[ layout.verticalAlignment ].css;
 		}

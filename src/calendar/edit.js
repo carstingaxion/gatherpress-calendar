@@ -12,18 +12,11 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 	InspectorControls,
-	PanelColorSettings,
 	store as blockEditorStore,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
-import {
-	Placeholder,
-	PanelBody,
-	RangeControl,
-	BoxControl,
-	BorderControl,
-	ToggleControl,
-} from '@wordpress/components';
+import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
 import { useState, useMemo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 
@@ -163,7 +156,9 @@ export default function Edit( {
 	const tableClasses = [
 		'gatherpress-calendar__table',
 		! showWeekends ? 'is-hidden-weekends' : '',
-	].filter( Boolean ).join( ' ' );
+	]
+		.filter( Boolean )
+		.join( ' ' );
 
 	const tableStyle = {
 		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
@@ -268,7 +263,9 @@ export default function Edit( {
 					<ToggleControl
 						label={ __( 'Show Weekends', 'gatherpress-calendar' ) }
 						checked={ showWeekends }
-						onChange={ ( value ) => setAttributes( { showWeekends: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showWeekends: value } )
+						}
 						help={ __(
 							'Display weekend days in the calendar grid.',
 							'gatherpress-calendar'

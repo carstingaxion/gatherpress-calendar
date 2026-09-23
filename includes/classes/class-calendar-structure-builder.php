@@ -105,7 +105,7 @@ class Calendar_Structure_Builder {
 				$empty_days       = false !== $start_col ? (int) $start_col : 0;
 
 				for ( $i = 0; $i < $empty_days; $i++ ) {
-					$empty_dow = $active_days_of_week[ $i ];
+					$empty_dow      = $active_days_of_week[ $i ];
 					$current_week[] = array(
 						'isEmpty'   => true,
 						'posts'     => array(),

@@ -4,7 +4,6 @@ import { applyFilters } from '@wordpress/hooks';
 import { calculateTargetDate } from './date-utils';
 import { DATE_FORMAT } from '../constants';
 
-
 export const WEEKDAY_SLUGS = [
 	'sunday',
 	'monday',
@@ -51,7 +50,7 @@ export function isWeekendDay( dayOfWeek ) {
  *
  * @since 0.1.0
  *
- * @param {number}  startOfWeek - The start of week (0=Sunday, 1=Monday, 2=Tuesday, etc.).
+ * @param {number}  startOfWeek  - The start of week (0=Sunday, 1=Monday, 2=Tuesday, etc.).
  * @param {boolean} showWeekends - Whether to include weekend days.
  *
  * @return {Array<string>} Array of day name labels in the correct order.
@@ -155,7 +154,7 @@ export function generateMonthOptions() {
  * @param {number}        startOfWeek   - The start of week (0=Sunday, 1=Monday, etc.).
  * @param {string}        selectedMonth - The selected month in format "YYYY-MM".
  * @param {number}        monthModifier - The month offset from current month.
- * @param {boolean}       showWeekends - Whether to include weekend days.
+ * @param {boolean}       showWeekends  - Whether to include weekend days.
  *
  * @return {Object} Calendar data structure containing:
  *   - {string} monthName - Formatted month and year (e.g., "January 2025")
@@ -280,15 +279,22 @@ export function generateMonthOptions() {
 /**
  * Build the weeks array for the requested month.
  *
- * @param {number}  year          Target year.
- * @param {number}  month         Target month (1-12).
- * @param {number}  startOfWeek   Start of week (0-6).
- * @param {number}  daysInMonth   Number of days in month (28-31).
- * @param {Object}  postsByDate   Posts grouped by 'YYYY-MM-DD'.
- * @param {boolean} showWeekends  Whether to include weekend days.
+ * @param {number}  year         Target year.
+ * @param {number}  month        Target month (1-12).
+ * @param {number}  startOfWeek  Start of week (0-6).
+ * @param {number}  daysInMonth  Number of days in month (28-31).
+ * @param {Object}  postsByDate  Posts grouped by 'YYYY-MM-DD'.
+ * @param {boolean} showWeekends Whether to include weekend days.
  * @return {Array[]} Array of week arrays containing day objects.
  */
-export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate = {}, showWeekends = true ) {
+export function buildWeeks(
+	year,
+	month,
+	startOfWeek,
+	daysInMonth,
+	postsByDate = {},
+	showWeekends = true
+) {
 	// Today's date string, used to flag the current day in the grid.
 	const today = dateI18n( DATE_FORMAT, new Date() );
 
@@ -373,6 +379,11 @@ export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate =
 
 /**
  * Main generateCalendar function.
+ * @param posts
+ * @param startOfWeek
+ * @param selectedMonth
+ * @param monthModifier
+ * @param showWeekends
  */
 export function generateCalendar(
 	posts = [],
@@ -433,7 +444,14 @@ export function generateCalendar(
 	return {
 		monthName,
 		dayNames: getDayNames( startOfWeek, showWeekends ),
-		weeks: buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate, showWeekends ),
+		weeks: buildWeeks(
+			year,
+			month,
+			startOfWeek,
+			daysInMonth,
+			postsByDate,
+			showWeekends
+		),
 	};
 }
 /**

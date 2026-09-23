@@ -439,26 +439,26 @@ class Setup {
 			// // Read queryId from context (supports any nesting level, e.g. Query -> Group -> Calendar).
 			// $query_id = 0;
 			// if ( $parent_block instanceof WP_Block ) {
-			// 	$query_id = $parent_block->context['queryId'] ?? ( $parent_block->parsed_block['attrs']['queryId'] ?? 0 );
+			// $query_id = $parent_block->context['queryId'] ?? ( $parent_block->parsed_block['attrs']['queryId'] ?? 0 );
 			// }
 			// // Only paginate if inside a Query Loop.
 			// if ( $query_id === 0 && ! isset( $parent_block->context['queryId'] ) ) {
-			// 	return $parsed_block;
+			// return $parsed_block;
 			// }
 			// $page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
 			// $page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			// // An existing "?query-1-page=4" does not match our queryId
 			// // or it is indeed page 1.
 			// if ( $page === 1 ) {
-			// 	return $parsed_block;
+			// return $parsed_block;
 			// }
 			// // Determine baseline starting month (defaults to current site month).
 			// $initial_month = ! empty( $parsed_block['attrs']['selectedMonth'] )
-			// 	? $parsed_block['attrs']['selectedMonth']
-			// 	: current_datetime()->format( 'Y-m' );
+			// ? $parsed_block['attrs']['selectedMonth']
+			// : current_datetime()->format( 'Y-m' );
 			// $base_date = DateTimeImmutable::createFromFormat( '!Y-m', $initial_month, wp_timezone() );
 			// if ( ! $base_date ) {
-			// 	$base_date = current_datetime();
+			// $base_date = current_datetime();
 			// }
 			// // Page 1 = offset 0, Page 2 = +1 month, Page 3 = +2 months, etc.
 			// $offset = $page - 1;

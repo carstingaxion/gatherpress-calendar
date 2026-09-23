@@ -5,15 +5,11 @@
  * @since 0.4.0
  */
 
-import {
-	useBlockProps,
-	useInnerBlocksProps,
-	InnerBlocks,
-} from '@wordpress/block-editor';
+import { useBlockProps, useInnerBlocksProps } from '@wordpress/block-editor';
 
 import './editor.scss';
 
-export default function Edit( { context, isSelected } ) {
+export default function Edit( { context } ) {
 	const dayPosts = context?.[ 'gatherpress/dayPosts' ] ?? [];
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
 
@@ -24,7 +20,7 @@ export default function Edit( { context, isSelected } ) {
 	const innerBlocksProps = useInnerBlocksProps(
 		{ className: 'gatherpress-calendar__entry-template' },
 		{
-			renderAppender: false
+			renderAppender: false,
 		}
 	);
 

@@ -112,10 +112,10 @@ function DayPreviewCellComponent( {
 	// The events row is a flex container; a block's own text-align has no
 	// visible effect on its shrink-wrapped position within that row, so
 	// mirror the Day Number block's alignment via justify-content instead.
-	const justifyContent = useMemo(
-		() => getDayNumberJustifyContent( innerBlocks ),
-		[ innerBlocks ]
-	);
+	// const justifyContent = useMemo(
+	// 	() => getDayNumberJustifyContent( innerBlocks ),
+	// 	[ innerBlocks ]
+	// );
 
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
@@ -133,7 +133,7 @@ function DayPreviewCellComponent( {
 	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
 	const layoutProps = getLayoutProps( dayBlockAttributes?.layout );
-// console.log(layoutProps);
+	// console.log(layoutProps);
 	const classNames = [
 		'gatherpress-calendar__day',
 		day.isEmpty ? 'is-empty' : '',
