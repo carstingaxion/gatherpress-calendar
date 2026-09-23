@@ -1,6 +1,7 @@
 import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 
+const EMPTY_ARRAY = [];
 /**
  * Hook to fetch posts and site settings for calendar rendering.
  *
@@ -60,13 +61,14 @@ export function useCalendarData( query, dateQuery ) {
 			const site = getSite();
 			const weekStartsOn = site?.start_of_week || 0;
 
+			const records = getEntityRecords(
+				'postType',
+				query?.postType || 'gatherpress_event',
+				queryArgs
+			);
+
 			return {
-				posts:
-					getEntityRecords(
-						'postType',
-						cleanQuery.postType || 'post',
-						queryArgs
-					) || [],
+				posts: records ?? EMPTY_ARRAY,
 				startOfWeek: weekStartsOn,
 			};
 		},

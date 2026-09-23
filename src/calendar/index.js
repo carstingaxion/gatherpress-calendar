@@ -24,6 +24,8 @@ import {
 	store as blockEditorStore,
 	InspectorControls,
 } from '@wordpress/block-editor';
+import domReady from '@wordpress/dom-ready';
+
 
 /**
  * Style imports
@@ -69,29 +71,101 @@ registerBlockType( metadata.name, {
 	save,
 } );
 
-/**
- * Register the Month Heading block binding source.
- *
- * Lets a `core/heading` bound to this source (see the "Event Calendar"
- * pattern, placed inside the Query block before the calendar) display the
- * month/year currently shown by the calendar. The PHP-side source
- * (`Setup::get_month_heading_binding_value()`) is the source of truth on
- * the frontend, reading core Query's pagination; the editor canvas has no
- * URL-based pagination to read, so this preview simply shows the current
- * site month.
- *
- * @since 0.6.0
- */
-registerBlockBindingsSource( {
-	name: 'gatherpress/calendar-month-heading',
-	label: __( 'Calendar Month Heading', 'gatherpress-calendar' ),
-	getValues() {
-		return {
-			content: dateI18n( 'F Y', new Date() ),
-		};
-	},
-} );
 
+/**
+ * Helper to recursively search a block tree for gatherpress/calendar.
+ */
+function findCalendarBlock( blocks = [] ) {
+	for ( const block of blocks ) {
+		if ( block.name === 'gatherpress/calendar' ) {
+			return block;
+		}
+		if ( block.innerBlocks && block.innerBlocks.length ) {
+			const found = findCalendarBlock( block.innerBlocks );
+			if ( found ) {
+				return found;
+			}
+		}
+	}
+	return null;
+}
+
+domReady( () => {
+	if ( typeof registerBlockBindingsSource !== 'function' ) {
+		return;
+	}
+
+	/**
+	 * Register the Month Heading block binding source.
+	 *
+	 * Lets a `core/heading` bound to this source (see the "Event Calendar"
+	 * pattern, placed inside the Query block before the calendar) display the
+	 * month/year currently shown by the calendar. The PHP-side source
+	 * (`Setup::get_month_heading_binding_value()`) is the source of truth on
+	 * the frontend, reading core Query's pagination; the editor canvas has no
+	 * URL-based pagination to read, so this preview simply shows the current
+	 * site month.
+	 *
+	 * @since 0.6.0
+	 */
+	registerBlockBindingsSource( {
+		name: 'gatherpress/calendar-month-heading',
+		label: __( 'Calendar Month Heading', 'gatherpress-calendar' ),
+		usesContext: [ 'query' ],
+		getValues( { select, clientId } ) {
+			const { getBlockParentsByBlockName, getBlock, getBlocks } =
+				select( 'core/block-editor' );
+
+			let calendarBlock = null;
+
+			// 1. First, search inside the same parent Query block (if nested in one)
+			const parentQueryIds = getBlockParentsByBlockName(
+				clientId,
+				'core/query'
+			);
+
+			if ( parentQueryIds && parentQueryIds.length ) {
+				const parentQuery = getBlock(
+					parentQueryIds[ parentQueryIds.length - 1 ]
+				);
+				if ( parentQuery?.innerBlocks ) {
+					calendarBlock = findCalendarBlock( parentQuery.innerBlocks );
+				}
+			}
+
+			// 2. Fallback: search all blocks in the editor canvas
+			if ( ! calendarBlock ) {
+				calendarBlock = findCalendarBlock( getBlocks() );
+			}
+
+			const { selectedMonth = '', monthModifier = 0 } =
+				calendarBlock?.attributes || {};
+
+			// Resolve Target Year and Month
+			let year, month;
+			if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
+				const [ y, m ] = selectedMonth.split( '-' ).map( Number );
+				year = y;
+				month = m;
+			} else {
+				const now = new Date();
+				if ( monthModifier !== 0 ) {
+					now.setMonth( now.getMonth() + Number( monthModifier ) );
+				}
+				year = now.getFullYear();
+				month = now.getMonth() + 1;
+			}
+
+			// Format matching PHP's wp_date( 'F Y' ) using WordPress dateI18n
+			const targetDate = new Date( year, month - 1, 1 );
+			const formattedMonth = dateI18n( 'F Y', targetDate );
+
+			return {
+				content: formattedMonth,
+			};
+		},
+	} );
+} );
 /**
  * Add calendar notice to Query Loop block inspector controls.
  *
