@@ -24,9 +24,9 @@ registerBlockVariation( 'core/query', {
 		__( 'query', 'gatherpress-calendar' ),
 	],
 	attributes: {
-		namespace: 'gatherpress-event-query',
+		// namespace: 'gatherpress-event-query',
 		enhancedPagination: true,
-		className: 'gatherpress-event-query',
+		// className: 'gatherpress-event-query',
 		query: {
 			perPage: 5,
 			pages: 0,

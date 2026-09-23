@@ -25,7 +25,9 @@
     }
   },
   "supports": {
-    "interactivity": true,
+    "interactivity": {
+      "clientNavigation": true
+    },
     "html": false,
     "reusable": false,
     "layout": {

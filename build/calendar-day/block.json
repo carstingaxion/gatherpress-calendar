@@ -52,7 +52,9 @@
     }
   },
   "supports": {
-    "interactivity": true,
+    "interactivity": {
+      "clientNavigation": true
+    },
     "html": false,
     "reusable": false,
     "customClassName": true,
@@ -69,7 +71,8 @@
     "contentRole": true,
     "spacing": {
       "padding": true,
-      "margin": true
+      "margin": true,
+      "blockGap": true
     },
     "layout": {
       "allowSwitching": true,
