@@ -3,7 +3,7 @@
 **Contributors:** carstenbach & WordPress Telex  
 **Tags:** block, calendar, gatherpress, events, query-loop  
 **Tested up to:** 7.1  
-**Stable tag:** 0.3.1  
+**Stable tag:** 0.4.0  
 **License:** GPLv2 or later  
 **License URI:** <https://www.gnu.org/licenses/gpl-2.0.html>  
 
