@@ -289,6 +289,9 @@ export function generateMonthOptions() {
  * @return {Array[]} Array of week arrays containing day objects.
  */
 export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate = {}, showWeekends = true ) {
+	// Today's date string, used to flag the current day in the grid.
+	const today = dateI18n( DATE_FORMAT, new Date() );
+
 	// Determine the ordered active columns (5 or 7 columns)
 	const activeDaysOfWeek = [];
 	for ( let i = 0; i < 7; i++ ) {
@@ -340,6 +343,7 @@ export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate =
 			date: dateStr,
 			posts: dayPosts,
 			isEmpty: false,
+			isToday: dateStr === today,
 			dayOfWeek,
 			weekday,
 			isWeekend,
@@ -399,18 +403,31 @@ export function generateCalendar(
 		year: 'numeric',
 	} );
 
-	// 3. Group Posts by Date (YYYY-MM-DD)
+	// 3. Organize posts by date for quick lookup.
+	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
 	const postsByDate = {};
-	posts.forEach( ( post ) => {
-		const dateKey = post.date?.split( 'T' )?.[ 0 ];
-		if ( dateKey ) {
-			if ( ! postsByDate[ dateKey ] ) {
-				postsByDate[ dateKey ] = [];
+	if ( posts && posts.length > 0 ) {
+		posts.forEach( ( post ) => {
+			let postDate;
+			// For GatherPress events, use event start date.
+			if ( post.type === 'gatherpress_event' ) {
+				postDate = post.meta.gatherpress_datetime_start;
+			} else {
+				// For other post types, use publication date.
+				postDate = post.date;
 			}
-			postsByDate[ dateKey ].push( post );
-		}
-	} );
+			if ( ! postDate ) {
+				return;
+			}
 
+			const dateObj = new Date( postDate );
+			const dateStr = dateI18n( DATE_FORMAT, dateObj );
+			if ( ! postsByDate[ dateStr ] ) {
+				postsByDate[ dateStr ] = [];
+			}
+			postsByDate[ dateStr ].push( post );
+		} );
+	}
 	const daysInMonth = new Date( year, month, 0 ).getDate();
 
 	return {

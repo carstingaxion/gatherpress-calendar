@@ -131,12 +131,14 @@ function DayPreviewCellComponent( {
 	const borderProps = useBorderProps( dayBlockAttributes ?? {} );
 	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
-
+// console.log(layoutProps);
 	const classNames = [
 		'gatherpress-calendar__day',
 		day.isEmpty ? 'is-empty' : '',
 		day.isToday ? 'is-today' : '',
 		day.posts?.length > 0 ? 'has-posts' : '',
+		day.isWeekend ? 'is-weekend' : '',
+		day.weekday ? `is-${ day.weekday }` : '',
 		colorProps.className,
 		borderProps.className,
 	]

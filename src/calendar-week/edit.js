@@ -92,6 +92,8 @@ export default function Edit( { context, clientId } ) {
 						'gatherpress/dayPosts': activeDay.posts ?? [],
 						'gatherpress/isEmpty': !! activeDay.isEmpty,
 						'gatherpress/isToday': !! activeDay.isToday,
+						'gatherpress/weekday': activeDay.weekday ?? '',
+						'gatherpress/isWeekend': !! activeDay.isWeekend,
 				  }
 				: {},
 		[ activeDay ]

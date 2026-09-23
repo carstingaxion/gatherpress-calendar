@@ -58,6 +58,8 @@ export default function Edit( { context, clientId } ) {
 			'gatherpress/dayPosts': posts,
 			'gatherpress/isEmpty': isEmpty,
 			'gatherpress/isToday': isToday,
+			'gatherpress/weekday': weekday,
+			'gatherpress/isWeekend': isWeekend,
 		} ),
 		[ dayDate, dayNumber, posts, isEmpty, isToday ]
 	);
