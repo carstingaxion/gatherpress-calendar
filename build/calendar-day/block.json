@@ -20,6 +20,8 @@
     "gatherpress/dayPosts",
     "gatherpress/isEmpty",
     "gatherpress/isToday",
+    "gatherpress/weekday",
+    "gatherpress/isWeekend",
     "gatherpress/popoverStyles"
   ],
   "providesContext": {
@@ -27,7 +29,9 @@
     "gatherpress/dayNumber": "day",
     "gatherpress/dayPosts": "posts",
     "gatherpress/isEmpty": "isEmpty",
-    "gatherpress/isToday": "isToday"
+    "gatherpress/isToday": "isToday",
+    "gatherpress/weekday": "weekday",
+    "gatherpress/isWeekend": "isWeekend"
   },
   "attributes": {
     "date": {
@@ -62,11 +66,20 @@
       }
     },
     "shadow": true,
-    "listView": true,
     "contentRole": true,
     "spacing": {
       "padding": true,
       "margin": true
+    },
+    "layout": {
+      "allowSwitching": true,
+      "allowInheriting": false,
+      "allowSizingOnChildren": true,
+      "default": {
+        "type": "flex",
+        "orientation": "horizontal",
+        "justifyContent": "left"
+      }
     },
     "__experimentalBorder": {
       "color": true,

@@ -53,7 +53,8 @@
       "text": true,
       "gradients": true
     },
-    "listView": true
+    "listView": true,
+    "contentRole": true
   },
   "styles": [
     {

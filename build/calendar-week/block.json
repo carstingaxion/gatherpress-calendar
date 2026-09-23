@@ -21,7 +21,8 @@
     "gatherpress/weekDays",
     "gatherpress/popoverStyles",
     "gatherpress/activeDate",
-    "gatherpress/setActiveDate"
+    "gatherpress/setActiveDate",
+    "gatherpress/showWeekends"
   ],
   "providesContext": {
     "gatherpress/weekIndex": "weekIndex"
@@ -38,25 +39,9 @@
     "reusable": false,
     "customClassName": true,
     "color": {
-      "background": true,
+      "background": false,
       "text": true,
-      "gradients": true
-    },
-    "spacing": {
-      "padding": [
-        "top",
-        "bottom"
-      ],
-      "margin": [
-        "top",
-        "bottom"
-      ]
-    },
-    "border": {
-      "color": true,
-      "radius": true,
-      "style": true,
-      "width": true
+      "gradients": false
     }
   },
   "textdomain": "gatherpress-calendar",

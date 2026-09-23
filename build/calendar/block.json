@@ -21,6 +21,9 @@
     "templateSlug",
     "previewPostType"
   ],
+  "providesContext": {
+    "gatherpress/showWeekends": "showWeekends"
+  },
   "attributes": {
     "selectedMonth": {
       "type": "string",
@@ -33,6 +36,10 @@
     "showWeekdays": {
       "type": "boolean",
       "default": true
+    },
+    "showWeekends": {
+      "type": "boolean",
+      "default": true
     }
   },
   "supports": {
@@ -43,7 +50,7 @@
     "alignWide": true,
     "customClassName": true,
     "color": {
-      "gradients": false,
+      "gradients": true,
       "link": false,
       "text": false,
       "__experimentalDefaultControls": {
