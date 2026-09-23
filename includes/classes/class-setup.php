@@ -120,43 +120,6 @@ class Setup {
 			register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-entries/' );
 		}
 
-		$pattern = '<!-- wp:query {"queryId":null,"query":{"perPage":5,"pages":0,"offset":0,"postType":"gatherpress_event","order":"asc","orderBy":"datetime","inherit":false,"excludeCurrent":null,"parents":[],"sticky":"","format":[],"gatherpress_event_query":"upcoming","include_unfinished":1},"namespace":"gatherpress-event-query","enhancedPagination":true,"metadata":{"name":"Upcoming Events"},"className":"gatherpress-event-query"} -->
-<div class="wp-block-query gatherpress-event-query"><!-- wp:heading {"level":2,"metadata":{"bindings":{"content":{"source":"gatherpress/calendar-month-heading"}}},"className":"gatherpress-calendar__month"} -->
-<h2 class="wp-block-heading gatherpress-calendar__month">' . esc_html( wp_date( 'F Y' ) ) . '</h2>
-<!-- /wp:heading -->
-
-<!-- wp:query-pagination {"paginationArrow":"chevron","layout":{"type":"flex","justifyContent":"space-between"}} -->
-<!-- wp:query-pagination-previous {"label":"Previous Month"} /-->
-
-<!-- wp:query-pagination-next {"label":"Next Month"} /-->
-<!-- /wp:query-pagination -->
-
-<!-- wp:gatherpress/calendar {"style":{"spacing":{"padding":{"top":"0","bottom":"0","left":"0","right":"0"}}}} -->
-<div class="wp-block-gatherpress-calendar gatherpress-calendar-block" style="padding-top:0;padding-right:0;padding-bottom:0;padding-left:0"><div class="gatherpress-calendar-template"><!-- wp:group {"style":{"border":{"bottom":{"color":"var:preset|color|accent-5","width":"1px"},"top":[],"right":[],"left":[]}},"layout":{"type":"flex","flexWrap":"nowrap","verticalAlignment":"center"}} -->
-<div class="wp-block-group" style="border-bottom-color:var(--wp--preset--color--accent-5);border-bottom-width:1px"><!-- wp:gatherpress/event-date {"displayType":"start","style":{"elements":{"link":{"color":{"text":"var:preset|color|contrast"}}}},"textColor":"contrast","fontSize":"large","fontFamily":"system-serif"} /-->
-
-<!-- wp:post-title {"level":3,"isLink":true} /--></div>
-<!-- /wp:group -->
-
-<!-- wp:post-excerpt /-->
-<!-- wp:gatherpress/rsvp {"patternPicked":true} -->
-<div class="wp-block-gatherpress-rsvp"></div>
-<!-- /wp:gatherpress/rsvp --></div></div>
-<!-- /wp:gatherpress/calendar --></div>
-<!-- /wp:query -->';
-
-		register_block_pattern(
-			'gatherpress/calendar',
-			array(
-				'title'         => __( 'Event Calendar', 'gatherpress-calendar' ),
-				'description'   => _x( 'Show GatherPress events in a monthly calendar format.', 'Block pattern description', 'gatherpress-calendar' ),
-				'content'       => $pattern,
-				'categories'    => array( 'gatherpress' ),
-				'keywords'      => array( 'calendar', 'event', 'query' ),
-				'viewportWidth' => 1400,
-			)
-		);
-
 		register_block_bindings_source(
 			'gatherpress/calendar-day',
 			array(

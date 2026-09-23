@@ -37,7 +37,7 @@ import { useSelect } from '@wordpress/data';
  */
 import './editor.scss';
 
-import { TEMPLATE } from './edit/constants';
+import { CALENDAR_TEMPLATE } from './edit/constants';
 
 import { calculateDateQuery } from './edit/utils/date-utils';
 import {
@@ -153,7 +153,7 @@ export default function Edit( {
 		},
 		{
 			allowedBlocks: [ 'gatherpress/calendar-week' ],
-			template: TEMPLATE,
+			template: CALENDAR_TEMPLATE,
 			templateLock: false,
 			renderAppender: false,
 		}
