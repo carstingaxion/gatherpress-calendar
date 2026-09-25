@@ -75,8 +75,10 @@ export function getLayoutProps( layout = {} ) {
 		classes.push( 'is-layout-flex' );
 		style.display = 'flex';
 
+		const isVertical = layout.orientation === 'vertical';
+
 		// Orientation (Row vs Column)
-		if ( layout.orientation === 'vertical' ) {
+		if ( isVertical ) {
 			classes.push( 'is-vertical' );
 			style.flexDirection = 'column';
 		} else {
@@ -92,7 +94,7 @@ export function getLayoutProps( layout = {} ) {
 			style.flexWrap = 'wrap';
 		}
 
-		// Justification (Horizontal along main axis)
+		// Horizontal alignment (Justification)
 		const justifyMap = {
 			left: {
 				className: 'is-content-justification-left',
@@ -111,14 +113,25 @@ export function getLayoutProps( layout = {} ) {
 				css: 'space-between',
 			},
 		};
+
 		if ( layout.justifyContent && justifyMap[ layout.justifyContent ] ) {
 			classes.push( justifyMap[ layout.justifyContent ].className );
-			style.justifyContent = justifyMap[ layout.justifyContent ].css;
+			const cssVal = justifyMap[ layout.justifyContent ].css;
+			
+			// In vertical flex, horizontal alignment belongs to the cross axis (alignItems)
+			if ( isVertical ) {
+				style.alignItems = cssVal === 'space-between' ? 'stretch' : cssVal;
+			} else {
+				style.justifyContent = cssVal;
+			}
 		}
 
-		// Vertical Alignment (Cross axis)
+		// Vertical alignment
 		const alignMap = {
-			top: { className: 'is-vertically-aligned-top', css: 'flex-start' },
+			top: { 
+				className: 'is-vertically-aligned-top', 
+				css: 'flex-start',
+			},
 			center: {
 				className: 'is-vertically-aligned-center',
 				css: 'center',
@@ -132,12 +145,17 @@ export function getLayoutProps( layout = {} ) {
 				css: 'stretch',
 			},
 		};
-		if (
-			layout.verticalAlignment &&
-			alignMap[ layout.verticalAlignment ]
-		) {
+
+		if ( layout.verticalAlignment && alignMap[ layout.verticalAlignment ] ) {
 			classes.push( alignMap[ layout.verticalAlignment ].className );
-			style.alignItems = alignMap[ layout.verticalAlignment ].css;
+			const cssVal = alignMap[ layout.verticalAlignment ].css;
+
+			// In vertical flex, vertical alignment belongs to the main axis (justifyContent)
+			if ( isVertical ) {
+				style.justifyContent = cssVal === 'stretch' ? 'flex-start' : cssVal;
+			} else {
+				style.alignItems = cssVal;
+			}
 		}
 	} else if ( type === 'grid' ) {
 		classes.push( 'is-layout-grid' );
