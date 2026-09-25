@@ -12,7 +12,7 @@ import {
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
-import { useMemo } from '@wordpress/element';
+import { useMemo, memo } from '@wordpress/element';
 
 import './editor.scss';
 
@@ -30,7 +30,7 @@ const EMPTY_ARRAY = [];
  * @param {string} props.clientId This block's client ID.
  * @return {Element} Day cell preview element.
  */
-export default function Edit( { context, clientId } ) {
+export default memo( function Edit( { context, clientId } ) {
 	const dayDate = context?.[ 'gatherpress/dayDate' ] ?? '';
 	const dayNumber = context?.[ 'gatherpress/dayNumber' ] ?? 1;
 	const isToday = context?.[ 'gatherpress/isToday' ] ?? false;
@@ -116,4 +116,4 @@ export default function Edit( { context, clientId } ) {
 			</div>
 		</td>
 	);
-}
+} );

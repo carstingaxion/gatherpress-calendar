@@ -20,6 +20,8 @@ import { useMemo, memo } from '@wordpress/element';
 
 import './editor.scss';
 
+const EMPTY_ARRAY = [];
+
 /**
  * Renders preview copies for the 2nd, 3rd, etc. posts in the day cell.
  */
@@ -38,7 +40,7 @@ const EventPreview = memo( function EventPreview( { blocks } ) {
 /**
  * Individual event item wrapper that supplies postId and postType context.
  */
-function EventItem( { post, isFirst, innerBlocksProps, innerBlocks } ) {
+const EventItem = memo( function EventItem( { post, isFirst, innerBlocksProps, innerBlocks } ) {
 	// Safely resolve postId and postType whether post is an object or primitive ID
 	const postId =
 		typeof post === 'object' && typeof post?.id === 'number'
@@ -79,10 +81,10 @@ function EventItem( { post, isFirst, innerBlocksProps, innerBlocks } ) {
 			</div>
 		</BlockContextProvider>
 	);
-}
+} );
 
 export default function Edit( { attributes, clientId, context } ) {
-	const dayPosts = context?.[ 'gatherpress/dayPosts' ] ?? [];
+	const dayPosts = context?.[ 'gatherpress/dayPosts' ] ?? EMPTY_ARRAY;
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
 	const blockGap = attributes?.style?.spacing?.blockGap;
 
@@ -106,7 +108,7 @@ export default function Edit( { attributes, clientId, context } ) {
 	// Retrieve the template blocks so additional items can mirror them in preview
 	const innerBlocks = useSelect(
 		( select ) =>
-			select( blockEditorStore ).getBlock( clientId )?.innerBlocks ?? [],
+			select( blockEditorStore ).getBlock( clientId )?.innerBlocks ?? EMPTY_ARRAY,
 		[ clientId ]
 	);
 

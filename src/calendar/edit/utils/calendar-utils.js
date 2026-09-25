@@ -1,7 +1,7 @@
 import { dateI18n } from '@wordpress/date';
 import { applyFilters } from '@wordpress/hooks';
 
-import { calculateTargetDate } from './date-utils';
+// import { calculateTargetDate } from './date-utils';
 import { DATE_FORMAT } from '../constants';
 
 export const WEEKDAY_SLUGS = [

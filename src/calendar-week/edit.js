@@ -1,4 +1,4 @@
-import { useMemo } from '@wordpress/element';
+import { useMemo, memo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import {
 	BlockContextProvider,
@@ -31,7 +31,7 @@ const NOOP = () => {};
  *
  * @return {Element} Week row element.
  */
-export default function Edit( { context, clientId } ) {
+export default memo( function Edit( { context, clientId } ) {
 	const rawWeekDays = context?.[ 'gatherpress/weekDays' ];
 	const weekDays = useMemo(
 		() => rawWeekDays ?? EMPTY_ARRAY,
@@ -121,4 +121,4 @@ export default function Edit( { context, clientId } ) {
 			) }
 		</tr>
 	);
-}
+} );
