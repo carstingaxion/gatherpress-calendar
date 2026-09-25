@@ -31,7 +31,6 @@
 	&.is-today {
 		outline: 2px solid var(--wp--preset--color--primary, #007cba);
 		outline-offset: -2px;
-		z-index: 1;
 
 		.gatherpress-calendar__day-number {
 			color: var(--wp--preset--color--primary, #007cba);
@@ -45,7 +44,9 @@
    ========================================================================== */
 
 .gatherpress-calendar__day-number {
-	line-height: 1;
 	margin: 0.2em; // set a default for the UI
+    display: inline;
+    aspect-ratio: 1;
+	z-index: 1; // Allow to overrule the outline of its parent calendar-day block.
 }
 
