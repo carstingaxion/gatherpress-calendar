@@ -189,6 +189,7 @@ export const DAY_TEMPLATE = [
 					fontSize: 'small',
 					placeholder: 'DD',
 					content: 'DD',
+					className: 'gatherpress-calendar__day-number',
 				},
 			],
 			[
