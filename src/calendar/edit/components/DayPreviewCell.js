@@ -11,6 +11,8 @@ import {
 	__experimentalGetShadowClassesAndStyles as getShadowClassesAndStyles,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseBlockPreview as useBlockPreview,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 
 import {
@@ -109,6 +111,43 @@ function DayPreviewCellComponent( {
 		[ innerBlocks, day ]
 	);
 
+
+	// Mirror the real calendar-day block's own color/border/spacing/shadow
+	// styling (e.g. a custom background, padding, or drop-shadow) so every
+	// previewed day looks like the live one.
+	const colorProps = useColorProps( dayBlockAttributes ?? {} );
+	const borderProps = useBorderProps( dayBlockAttributes ?? {} );
+	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
+	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
+	const layoutProps = getLayoutProps( dayBlockAttributes?.layout );
+	// console.group("getLayoutProps");
+	// console.log(dayBlockAttributes);
+	// console.log(colorProps.className);
+	// console.log(layoutProps.className);
+	// console.log(layoutProps.style);
+	// console.groupEnd();
+	const classNames = [
+		'gatherpress-calendar__day',
+		day.isEmpty ? 'is-empty' : '',
+		day.isToday ? 'is-today' : '',
+		day.posts?.length > 0 ? 'has-posts' : '',
+		day.isWeekend ? 'is-weekend' : '',
+		day.weekday ? `is-${ day.weekday }` : '',
+		colorProps.className,
+		borderProps.className,
+		// layoutProps.className,
+	]
+		.filter( Boolean )
+		.join( ' ' );
+
+	const style = {
+		...colorProps.style,
+		...borderProps.style,
+		...spacingProps.style,
+		...shadowProps.style,
+		// ...layoutProps.style,
+	};
+
 	// The events row is a flex container; a block's own text-align has no
 	// visible effect on its shrink-wrapped position within that row, so
 	// mirror the Day Number block's alignment via justify-content instead.
@@ -120,41 +159,15 @@ function DayPreviewCellComponent( {
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
 		props: {
-			className: 'gatherpress-calendar__events',
-			// style: justifyContent ? { justifyContent } : undefined,
+			// className: 'gatherpress-calendar__events',
+			// className: 'block-editor-block-list__layout',
+			className: layoutProps.className ? layoutProps.className : undefined,
+			style: {
+				...layoutProps.style,
+				gap: getGapCSSValue( dayBlockAttributes?.style?.spacing?.blockGap ),
+			},
 		},
 	} );
-
-	// Mirror the real calendar-day block's own color/border/spacing/shadow
-	// styling (e.g. a custom background, padding, or drop-shadow) so every
-	// previewed day looks like the live one.
-	const colorProps = useColorProps( dayBlockAttributes ?? {} );
-	const borderProps = useBorderProps( dayBlockAttributes ?? {} );
-	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
-	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
-	const layoutProps = getLayoutProps( dayBlockAttributes?.layout );
-	// console.log(layoutProps);
-	const classNames = [
-		'gatherpress-calendar__day',
-		day.isEmpty ? 'is-empty' : '',
-		day.isToday ? 'is-today' : '',
-		day.posts?.length > 0 ? 'has-posts' : '',
-		day.isWeekend ? 'is-weekend' : '',
-		day.weekday ? `is-${ day.weekday }` : '',
-		colorProps.className,
-		borderProps.className,
-		layoutProps.className,
-	]
-		.filter( Boolean )
-		.join( ' ' );
-
-	const style = {
-		...colorProps.style,
-		...borderProps.style,
-		...spacingProps.style,
-		...shadowProps.style,
-		...layoutProps.style,
-	};
 
 	if ( day.isEmpty ) {
 		return <td className={ classNames } style={ style } />;
