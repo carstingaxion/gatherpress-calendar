@@ -12,6 +12,8 @@ import {
 	__experimentalUseBlockPreview as useBlockPreview,
 	BlockContextProvider,
 	store as blockEditorStore,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { useMemo, memo } from '@wordpress/element';
@@ -63,10 +65,10 @@ function EventItem( { post, isFirst, innerBlocksProps, innerBlocks } ) {
 	return (
 		<BlockContextProvider value={ contextValue }>
 			<div className="gatherpress-calendar__event-item">
-				<span
+				{/* <span
 					className="gatherpress-calendar__event"
 					aria-hidden="true"
-				/>
+				/> */}
 				{ isFirst ? (
 					// The primary, editable template container
 					<div { ...innerBlocksProps } />
@@ -79,16 +81,23 @@ function EventItem( { post, isFirst, innerBlocksProps, innerBlocks } ) {
 	);
 }
 
-export default function Edit( { clientId, context } ) {
+export default function Edit( { attributes, clientId, context } ) {
 	const dayPosts = context?.[ 'gatherpress/dayPosts' ] ?? [];
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
+	const blockGap = attributes?.style?.spacing?.blockGap;
 
 	const blockProps = useBlockProps( {
 		className: 'gatherpress-calendar__events',
+		style: {
+			gap: blockGap ? getGapCSSValue( blockGap ) : undefined,
+		},
 	} );
 
+
 	const innerBlocksProps = useInnerBlocksProps(
-		{ className: 'gatherpress-calendar__entry-template' },
+		{
+			className: 'gatherpress-calendar__entry-template',
+		},
 		{
 			renderAppender: false,
 		}

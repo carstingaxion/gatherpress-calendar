@@ -147,7 +147,7 @@ export default function Edit( {
 		{
 			allowedBlocks: [ 'gatherpress/calendar-week' ],
 			template: CALENDAR_TEMPLATE,
-			templateLock: false,
+			templateLock: false, // TODO: Consider 'contentOnly', which is nice here.
 			renderAppender: false,
 		}
 	);
