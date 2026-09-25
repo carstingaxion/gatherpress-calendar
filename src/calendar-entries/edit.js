@@ -1,15 +1,85 @@
 /**
  * GatherPress Calendar Entries Block Editor Component
  *
- * @package
+ * @package GatherPressCalendar
  * @since 0.4.0
  */
 
-import { useBlockProps, useInnerBlocksProps } from '@wordpress/block-editor';
+import {
+	useBlockProps,
+	useInnerBlocksProps,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalUseBlockPreview as useBlockPreview,
+	BlockContextProvider,
+	store as blockEditorStore,
+} from '@wordpress/block-editor';
+import { useSelect } from '@wordpress/data';
+import { useMemo, memo } from '@wordpress/element';
 
 import './editor.scss';
 
-export default function Edit( { context } ) {
+/**
+ * Renders preview copies for the 2nd, 3rd, etc. posts in the day cell.
+ */
+const EventPreview = memo( function EventPreview( { blocks } ) {
+	const previewProps = useBlockPreview( { blocks } );
+	return (
+		<div
+			{ ...previewProps }
+			className={ `gatherpress-calendar__entry-template ${
+				previewProps.className || ''
+			}` }
+		/>
+	);
+} );
+
+/**
+ * Individual event item wrapper that supplies postId and postType context.
+ */
+function EventItem( { post, isFirst, innerBlocksProps, innerBlocks } ) {
+	// Safely resolve postId and postType whether post is an object or primitive ID
+	const postId =
+		typeof post === 'object' && typeof post?.id === 'number'
+			? post.id
+			: typeof post === 'number'
+			? post
+			: undefined;
+
+	const postType =
+		typeof post === 'object' && post?.type
+			? post.type
+			: 'gatherpress_event';
+
+	const contextValue = useMemo( () => {
+		if ( ! postId ) {
+			return {};
+		}
+		return {
+			postId,
+			postType,
+		};
+	}, [ postId, postType ] );
+
+	return (
+		<BlockContextProvider value={ contextValue }>
+			<div className="gatherpress-calendar__event-item">
+				<span
+					className="gatherpress-calendar__event"
+					aria-hidden="true"
+				/>
+				{ isFirst ? (
+					// The primary, editable template container
+					<div { ...innerBlocksProps } />
+				) : (
+					// Cloned previews reflecting the same template for additional posts
+					<EventPreview blocks={ innerBlocks } />
+				) }
+			</div>
+		</BlockContextProvider>
+	);
+}
+
+export default function Edit( { clientId, context } ) {
 	const dayPosts = context?.[ 'gatherpress/dayPosts' ] ?? [];
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
 
@@ -24,31 +94,33 @@ export default function Edit( { context } ) {
 		}
 	);
 
-	// In the editor, only skip rendering if the cell is explicitly an empty padding day
+	// Retrieve the template blocks so additional items can mirror them in preview
+	const innerBlocks = useSelect(
+		( select ) =>
+			select( blockEditorStore ).getBlock( clientId )?.innerBlocks ?? [],
+		[ clientId ]
+	);
+
+	// Skip rendering if the cell is an empty padding day
 	if ( isEmpty ) {
 		return null;
 	}
 
-	// Show at least one placeholder dot so the block is visible and clickable
+	// Show at least one placeholder item so the block template is editable on empty days
 	const displayDots =
 		dayPosts.length > 0 ? dayPosts : [ { id: 'placeholder' } ];
 
 	return (
 		<div { ...blockProps }>
 			{ displayDots.map( ( post, index ) => (
-				<div
+				<EventItem
 					key={ post?.id ?? index }
-					className="gatherpress-calendar__event-item"
-				>
-					<span
-						className="gatherpress-calendar__event"
-						aria-hidden="true"
-					/>
-				</div>
+					post={ post }
+					isFirst={ index === 0 }
+					innerBlocksProps={ innerBlocksProps }
+					innerBlocks={ innerBlocks }
+				/>
 			) ) }
-
-			{ /* The template container where inner blocks are inserted */ }
-			<div { ...innerBlocksProps } />
 		</div>
 	);
 }
