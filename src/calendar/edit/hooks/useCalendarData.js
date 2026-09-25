@@ -57,6 +57,13 @@ export function useCalendarData( query, dateQuery ) {
 				queryArgs.search = cleanQuery.search;
 			}
 
+			if ( cleanQuery.orderBy ) {
+				queryArgs.orderBy = cleanQuery.orderBy;
+			}
+			if ( cleanQuery.order ) {
+				queryArgs.order = cleanQuery.order;
+			}
+
 			// Get site settings for start_of_week.
 			const site = getSite();
 			const weekStartsOn = site?.start_of_week || 0;
