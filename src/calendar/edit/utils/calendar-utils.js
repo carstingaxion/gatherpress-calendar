@@ -134,149 +134,6 @@ export function generateMonthOptions() {
 }
 
 /**
- * Generate calendar structure with posts.
- *
- * Creates a monthly calendar grid where posts are placed on their respective dates.
- * The calendar structure includes:
- * - Month name and year
- * - Weeks array (each week is 7 days)
- * - Each day contains: day number, date string, and array of posts for that date
- * - Empty days before/after the month to complete the grid
- *
- * Post organization:
- * - For GatherPress events: uses gatherpress_datetime_start meta field
- * - For other post types: uses publication date
- * - Multiple posts can appear on the same day
- *
- * @since 0.1.0
- *
- * @param {Array<Object>} posts         - Array of post objects from the REST API.
- * @param {number}        startOfWeek   - The start of week (0=Sunday, 1=Monday, etc.).
- * @param {string}        selectedMonth - The selected month in format "YYYY-MM".
- * @param {number}        monthModifier - The month offset from current month.
- * @param {boolean}       showWeekends  - Whether to include weekend days.
- *
- * @return {Object} Calendar data structure containing:
- *   - {string} monthName - Formatted month and year (e.g., "January 2025")
- *   - {Array<Array<Object>>} weeks - Array of weeks, each containing 7 day objects
- *   - {Array<string>} dayNames - Array of day name labels
- *
- * @example
- * const calendar = generateCalendar(posts, 0, '', 0);
- * // Returns:
- * // {
- * //   monthName: 'January 2025',
- * //   weeks: [
- * //     [
- * //       { isEmpty: true },
- * //       { day: 1, date: '2025-01-01', posts: [], isEmpty: false },
- * //       ...
- * //     ],
- * //     ...
- * //   ],
- * //   dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
- * // }
- */
-// export function generateCalendar(
-// 	posts,
-// 	startOfWeek = 0,
-// 	selectedMonth = '',
-// 	monthModifier = 0,
-// 	showWeekends = true
-// ) {
-// 	// Use the single source of truth for date calculation.
-// 	const targetDate = calculateTargetDate( selectedMonth, monthModifier );
-// 	const year = targetDate.getFullYear();
-// 	const month = targetDate.getMonth();
-
-// 	// Organize posts by date for quick lookup.
-// 	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
-// 	const postsByDate = {};
-// 	if ( posts && posts.length > 0 ) {
-// 		posts.forEach( ( post ) => {
-// 			let postDate;
-// 			// For GatherPress events, use event start date.
-// 			if ( post.type === 'gatherpress_event' ) {
-// 				postDate = post.meta.gatherpress_datetime_start;
-// 			} else {
-// 				// For other post types, use publication date.
-// 				postDate = post.date;
-// 			}
-// 			if ( ! postDate ) {
-// 				return;
-// 			}
-
-// 			const dateObj = new Date( postDate );
-// 			const dateStr = dateI18n( DATE_FORMAT, dateObj );
-// 			if ( ! postsByDate[ dateStr ] ) {
-// 				postsByDate[ dateStr ] = [];
-// 			}
-// 			postsByDate[ dateStr ].push( post );
-// 		} );
-// 	}
-
-// 	// Today's date string, used to flag the current day in the grid.
-// 	const today = dateI18n( DATE_FORMAT, new Date() );
-
-// 	// Calculate calendar dimensions.
-// 	const firstDay = new Date( year, month, 1 );
-// 	const lastDay = new Date( year, month + 1, 0 );
-// 	const daysInMonth = lastDay.getDate();
-// 	let startDayOfWeek = firstDay.getDay();
-
-// 	// Adjust start day based on start_of_week setting.
-// 	// This shifts the calendar so it starts on the configured day.
-// 	startDayOfWeek = ( startDayOfWeek - startOfWeek + 7 ) % 7;
-
-// 	// Build the weeks array.
-// 	const weeks = [];
-// 	let currentWeek = [];
-
-// 	// Fill initial empty days before the month starts.
-// 	for ( let i = 0; i < startDayOfWeek; i++ ) {
-// 		currentWeek.push( { isEmpty: true } );
-// 	}
-
-// 	// Fill days with posts.
-// 	for ( let day = 1; day <= daysInMonth; day++ ) {
-// 		const dateStr = `${ year }-${ String( month + 1 ).padStart(
-// 			2,
-// 			'0'
-// 		) }-${ String( day ).padStart( 2, '0' ) }`;
-// 		const dayPosts = postsByDate[ dateStr ] || [];
-
-// 		currentWeek.push( {
-// 			day,
-// 			date: dateStr,
-// 			posts: dayPosts,
-// 			isEmpty: false,
-// 			isToday: dateStr === today,
-// 		} );
-
-// 		// When week is complete (7 days), start a new week.
-// 		if ( currentWeek.length === 7 ) {
-// 			weeks.push( currentWeek );
-// 			currentWeek = [];
-// 		}
-// 	}
-
-// 	// Fill remaining empty days after the month ends.
-// 	while ( currentWeek.length > 0 && currentWeek.length < 7 ) {
-// 		currentWeek.push( { isEmpty: true } );
-// 	}
-
-// 	if ( currentWeek.length > 0 ) {
-// 		weeks.push( currentWeek );
-// 	}
-
-// 	return {
-// 		monthName: dateI18n( 'F Y', firstDay ),
-// 		weeks,
-// 		dayNames: getDayNames( startOfWeek, showWeekends ),
-// 	};
-// }
-
-/**
  * Build the weeks array for the requested month.
  *
  * @param {number}  year         Target year.
@@ -378,12 +235,47 @@ export function buildWeeks(
 }
 
 /**
- * Main generateCalendar function.
- * @param posts
- * @param startOfWeek
- * @param selectedMonth
- * @param monthModifier
- * @param showWeekends
+ * Generate calendar structure with posts.
+ *
+ * Creates a monthly calendar grid where posts are placed on their respective dates.
+ * The calendar structure includes:
+ * - Month name and year
+ * - Weeks array (each week is 7 days)
+ * - Each day contains: day number, date string, and array of posts for that date
+ * - Empty days before/after the month to complete the grid
+ *
+ * Post organization:
+ * - For GatherPress events: uses gatherpress_datetime_start meta field
+ * - For other post types: uses publication date
+ * - Multiple posts can appear on the same day
+ *
+ * @since 0.1.0
+ *
+ * @param {Array<Object>} posts         - Array of post objects from the REST API.
+ * @param {number}        startOfWeek   - The start of week (0=Sunday, 1=Monday, etc.).
+ * @param {string}        selectedMonth - The selected month in format "YYYY-MM".
+ * @param {number}        monthModifier - The month offset from current month.
+ * @param {boolean}       showWeekends  - Whether to include weekend days.
+ *
+ * @return {Object} Calendar data structure containing:
+ *   - {string} monthName - Formatted month and year (e.g., "January 2025")
+ *   - {Array<Array<Object>>} weeks - Array of weeks, each containing 7 day objects
+ *   - {Array<string>} dayNames - Array of day name labels
+ *
+ * @example
+ * const calendar = generateCalendar(posts, 0, '', 0);
+ * // Returns:
+ * // {
+ * //   weeks: [
+ * //     [
+ * //       { isEmpty: true },
+ * //       { day: 1, date: '2025-01-01', posts: [], isEmpty: false },
+ * //       ...
+ * //     ],
+ * //     ...
+ * //   ],
+ * //   dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+ * // }
  */
 export function generateCalendar(
 	posts = [],
@@ -406,13 +298,6 @@ export function generateCalendar(
 		year = now.getFullYear();
 		month = now.getMonth() + 1;
 	}
-
-	// // 2. Format Month Title
-	// const firstDay = new Date( year, month - 1, 1 );
-	// const monthName = firstDay.toLocaleDateString( undefined, {
-	// 	month: 'long',
-	// 	year: 'numeric',
-	// } );
 
 	// 3. Organize posts by date for quick lookup.
 	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
@@ -442,7 +327,6 @@ export function generateCalendar(
 	const daysInMonth = new Date( year, month, 0 ).getDate();
 
 	return {
-		// monthName,
 		dayNames: getDayNames( startOfWeek, showWeekends ),
 		weeks: buildWeeks(
 			year,
