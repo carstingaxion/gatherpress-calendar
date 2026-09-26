@@ -95,7 +95,7 @@ class Calendar_Entries {
 			return '';
 		}
 
-		$classes = array( 'gatherpress-calendar__events' );
+		$classes = array();
 		if ( 'grid' === ( $attributes['layout']['type'] ?? 'default' ) ) {
 			$classes[] = 'is-layout-grid';
 		}

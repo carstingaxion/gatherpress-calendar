@@ -89,7 +89,6 @@ export default function Edit( { attributes, clientId, context } ) {
 	const blockGap = attributes?.style?.spacing?.blockGap;
 
 	const blockProps = useBlockProps( {
-		className: 'gatherpress-calendar__events',
 		style: {
 			gap: blockGap ? getGapCSSValue( blockGap ) : undefined,
 		},

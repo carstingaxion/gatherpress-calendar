@@ -159,8 +159,6 @@ function DayPreviewCellComponent( {
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
 		props: {
-			// className: 'gatherpress-calendar__events',
-			// className: 'block-editor-block-list__layout',
 			className: layoutProps.className ? layoutProps.className : undefined,
 			style: {
 				...layoutProps.style,

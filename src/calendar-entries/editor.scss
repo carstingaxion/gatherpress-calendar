@@ -2,45 +2,6 @@
  * GatherPress Calendar Entries Block Editor Styles
  *
  * @package GatherPressCalendar
- * @since 0.4.0
- */
-
-/**
- * The template inner blocks (e.g. Post Title, Event Date) aren't previewed
- * per-event yet - only editable via the List View - so keep them out of
- * the visual canvas for now. Only the placeholder dots show.
-
-.gatherpress-calendar__entry-template,
-.editor-styles-wrapper .wp-block-gatherpress-calendar-entries {
-	display: none;
-} */
-
-/* Make it visible when the entries block or an inner block is selected
-.gatherpress-calendar__events.is-selected .gatherpress-calendar__entry-template,
-.gatherpress-calendar__events.has-child-selected .gatherpress-calendar__entry-template {
-	display: block;
-	position: absolute;
-	top: 100%;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 999;
-	background: #fff;
-	padding: 1rem;
-	border: 1px solid #ccc;
-	border-radius: 4px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-	min-width: 240px;
-} */
-
-/**
- * GatherPress Calendar Block Editor Styles
- *
- * Styles defined in this file are applied exclusively within the
- * WordPress block editor. These styles help distinguish the editor
- * view from the frontend display and provide enhanced styling for
- * the template configuration area.
- *
- * @package GatherPressCalendar
  * @since 0.1.0
  */
 
