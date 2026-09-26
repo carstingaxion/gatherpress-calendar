@@ -284,27 +284,6 @@ class Setup {
 	}
 
 	/**
-	 * Recursively search inner blocks for a specific block name.
-	 *
-	 * @since 0.4.0
-	 *
-	 * @param string                                     $block_name The block name to search for (e.g. 'gatherpress/calendar').
-	 * @param array<int, array<string, string|int|bool>> $inner_blocks Array of parsed inner blocks.
-	 * @return bool
-	 */
-	public static function gatherpress_has_inner_block( string $block_name, array $inner_blocks ): bool {
-		foreach ( $inner_blocks as $block ) {
-			if ( ( $block['blockName'] ?? '' ) === $block_name ) {
-				return true;
-			}
-			if ( ! empty( $block['innerBlocks'] ) && self::gatherpress_has_inner_block( $block_name, $block['innerBlocks'] ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * Recursively find the attrs of the first inner block matching a name.
 	 *
 	 * @since 0.6.0
