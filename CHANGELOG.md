@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.4.1...HEAD)
+## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.4.2...HEAD)
+
+## [0.4.2](https://github.com/carstingaxion/gatherpress-calendar/compare/0.4.1...0.4.2) - 2026-09-26
+
+- Fix/remove unused code ([#79](https://github.com/carstingaxion/gatherpress-calendar/pull/79))
 
 ## [0.4.1](https://github.com/carstingaxion/gatherpress-calendar/compare/0.4.0...0.4.1) - 2026-09-25
 
