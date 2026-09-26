@@ -95,12 +95,7 @@ class Calendar_Entries {
 			return '';
 		}
 
-		$classes = array();
-		if ( 'grid' === ( $attributes['layout']['type'] ?? 'default' ) ) {
-			$classes[] = 'is-layout-grid';
-		}
-
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
+		$wrapper_attributes = get_block_wrapper_attributes();
 
 		$items_html = '';
 		foreach ( $day_posts as $post_id ) {
@@ -109,7 +104,11 @@ class Calendar_Entries {
 			}
 		}
 
-		return sprintf( '<div %1$s>%2$s</div>', $wrapper_attributes, $items_html ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		return sprintf(
+			'<div %1$s>%2$s</div>',
+			$wrapper_attributes,  // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			$items_html  // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		);
 	}
 
 	/**

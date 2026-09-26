@@ -13,12 +13,6 @@
 	flex: 1;
 	min-height: 0;
 
-	&.is-layout-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(clamp(8px, 2.5vw, 12px), 1fr));
-		justify-items: center;
-	}
-
 	/* ======================================================================
 		BLOCK STYLE: Dots
 		====================================================================== */
