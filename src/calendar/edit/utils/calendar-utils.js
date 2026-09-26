@@ -75,7 +75,7 @@ function getDayNames( startOfWeek = 0, showWeekends ) {
 		// The modulo ensures we wrap around (e.g., day 7 becomes day 0).
 		const dayOfWeek = ( startOfWeek + i ) % 7;
 
-		if ( ! showWeekends && ( dayOfWeek === 0 || dayOfWeek === 6 ) ) {
+		if ( ! showWeekends && isWeekendDay( dayOfWeek ) ) {
 			continue;
 		}
 
@@ -302,7 +302,7 @@ export function buildWeeks(
 	const activeDaysOfWeek = [];
 	for ( let i = 0; i < 7; i++ ) {
 		const dow = ( startOfWeek + i ) % 7;
-		if ( ! showWeekends && ( dow === 0 || dow === 6 ) ) {
+		if ( ! showWeekends && isWeekendDay( dow ) ) {
 			continue;
 		}
 		activeDaysOfWeek.push( dow );
@@ -318,7 +318,7 @@ export function buildWeeks(
 		const dayOfWeek = dateObj.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
 
 		// Skip weekends if hidden
-		if ( ! showWeekends && ( dayOfWeek === 0 || dayOfWeek === 6 ) ) {
+		if ( ! showWeekends && isWeekendDay( dayOfWeek ) ) {
 			continue;
 		}
 
@@ -407,12 +407,12 @@ export function generateCalendar(
 		month = now.getMonth() + 1;
 	}
 
-	// 2. Format Month Title
-	const firstDay = new Date( year, month - 1, 1 );
-	const monthName = firstDay.toLocaleDateString( undefined, {
-		month: 'long',
-		year: 'numeric',
-	} );
+	// // 2. Format Month Title
+	// const firstDay = new Date( year, month - 1, 1 );
+	// const monthName = firstDay.toLocaleDateString( undefined, {
+	// 	month: 'long',
+	// 	year: 'numeric',
+	// } );
 
 	// 3. Organize posts by date for quick lookup.
 	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
@@ -442,7 +442,7 @@ export function generateCalendar(
 	const daysInMonth = new Date( year, month, 0 ).getDate();
 
 	return {
-		monthName,
+		// monthName,
 		dayNames: getDayNames( startOfWeek, showWeekends ),
 		weeks: buildWeeks(
 			year,
