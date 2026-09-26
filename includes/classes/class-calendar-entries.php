@@ -177,7 +177,7 @@ class Calendar_Entries {
 
 		ob_start();
 		?>
-		<div class="gatherpress-calendar__event-item">
+		<div class="gatherpress-calendar__entry">
 			<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</div>
 		<?php

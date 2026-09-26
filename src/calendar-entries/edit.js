@@ -66,11 +66,7 @@ const EventItem = memo( function EventItem( { post, isFirst, innerBlocksProps, i
 
 	return (
 		<BlockContextProvider value={ contextValue }>
-			<div className="gatherpress-calendar__event-item">
-				{/* <span
-					className="gatherpress-calendar__event"
-					aria-hidden="true"
-				/> */}
+			<div className="gatherpress-calendar__entry">
 				{ isFirst ? (
 					// The primary, editable template container
 					<div { ...innerBlocksProps } />

@@ -24,58 +24,59 @@
 		====================================================================== */
 	&.is-style-dots {
 
-		.gatherpress-calendar__event-item {
+		.gatherpress-calendar__entry {
 
-			.gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+			.gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>* {
 				background: var(--wp--preset--color--primary, #007cba);
 			}
 
-			&:nth-child(2) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+			&:nth-child(2) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>* {
 				background: var(--wp--preset--color--secondary, #e65054);
 			}
 
-			&:nth-child(3) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+			&:nth-child(3) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>* {
 				background: var(--wp--preset--color--tertiary, #4ab866);
 			}
 
-			&:nth-child(4) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+			&:nth-child(4) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>* {
 				background: var(--wp--preset--color--vivid-purple, #9b51e0);
 			}
 
-			&:nth-child(5) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+			&:nth-child(5) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>* {
 				background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
 			}
 
-			&:nth-child(n+6) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+			&:nth-child(n+6) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>* {
 				background: var(--wp--preset--color--contrast, #666);
 			}
-		}
 
-		// Select all modal-triggers, that are not part of a modal itself.
-		.gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
-			width: clamp(8px, 2.5vw, 12px);
-			height: clamp(8px, 2.5vw, 12px);
-			min-width: clamp(8px, 2.5vw, 12px);
-			min-height: clamp(8px, 2.5vw, 12px);
-			border-radius: 50%;
-			cursor: pointer;
-			position: relative;
-			transition: transform 0.2s ease, box-shadow 0.2s ease;
-			flex-shrink: 0;
-			display: inline-block;
-			text-decoration: none;
 
-			font-size: 0;
+			// Select all modal-triggers, that are not part of a modal itself.
+			.gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>* {
+				width: clamp(8px, 2.5vw, 12px);
+				height: clamp(8px, 2.5vw, 12px);
+				min-width: clamp(8px, 2.5vw, 12px);
+				min-height: clamp(8px, 2.5vw, 12px);
+				border-radius: 50%;
+				cursor: pointer;
+				position: relative;
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+				flex-shrink: 0;
+				display: inline-block;
+				text-decoration: none;
 
-			&:hover {
-				transform: scale(1.3);
-				box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.2);
-			}
+				font-size: 0;
 
-			&:focus-visible {
-				outline: 2px solid var(--wp--preset--color--contrast, #007cba);
-				outline-offset: 2px;
-				transform: scale(1.3);
+				&:hover {
+					transform: scale(1.3);
+					box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.2);
+				}
+
+				&:focus-visible {
+					outline: 2px solid var(--wp--preset--color--contrast, #007cba);
+					outline-offset: 2px;
+					transform: scale(1.3);
+				}
 			}
 		}
 	}
