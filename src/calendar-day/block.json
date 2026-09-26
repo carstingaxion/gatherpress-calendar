@@ -21,8 +21,7 @@
     "gatherpress/isEmpty",
     "gatherpress/isToday",
     "gatherpress/weekday",
-    "gatherpress/isWeekend",
-    "gatherpress/popoverStyles"
+    "gatherpress/isWeekend"
   ],
   "providesContext": {
     "gatherpress/dayDate": "date",

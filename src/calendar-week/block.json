@@ -19,7 +19,6 @@
     "gatherpress/month",
     "gatherpress/weekIndex",
     "gatherpress/weekDays",
-    "gatherpress/popoverStyles",
     "gatherpress/activeDate",
     "gatherpress/setActiveDate",
     "gatherpress/showWeekends"

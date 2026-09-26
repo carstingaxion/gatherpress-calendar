@@ -13,8 +13,7 @@
   "usesContext": [
     "gatherpress/dayDate",
     "gatherpress/dayPosts",
-    "gatherpress/isEmpty",
-    "gatherpress/popoverStyles"
+    "gatherpress/isEmpty"
   ],
   "attributes": {
     "layout": {
