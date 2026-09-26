@@ -171,7 +171,7 @@ class Calendar_Entries {
 		}
 
 		// TODO: Maybe reuse as id attribute, 
-		//       and add the posts css classes here.
+		// and add the posts css classes here.
 		$event_content_id = 'event-content-' . $post_id;
 
 		ob_start();

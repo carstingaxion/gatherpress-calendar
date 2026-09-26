@@ -76,7 +76,7 @@ registerBlockType( metadata.name, {
 
 /**
  * Helper to recursively search a block tree for gatherpress/calendar.
- * @param blocks
+ * @param {Object} blocks One block, that may have innerBlocks.
  */
 function findCalendarBlock( blocks = [] ) {
 	for ( const block of blocks ) {

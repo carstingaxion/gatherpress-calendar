@@ -17,8 +17,8 @@ import {
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
-import { useState, useMemo, useEffect } from '@wordpress/element';
-import { useSelect, useDispatch } from '@wordpress/data';
+import { useState, useMemo } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
 
 /**
  * Editor-specific styles
@@ -82,60 +82,6 @@ export default function Edit( {
 		() => calculateDateQuery( selectedMonth, monthModifier ),
 		[ selectedMonth, monthModifier ]
 	);
-
-	// // =========================================================================
-	// // TRY TO: SYNCHRONIZE WITH PARENT CORE/QUERY BLOCK
-	// // =========================================================================
-	// const { updateBlockAttributes } = useDispatch( blockEditorStore );
-
-	// // Locate the enclosing parent core/query block
-	// const { queryBlockId, queryBlockAttrs } = useSelect(
-	// 	( select ) => {
-	// 		const { getBlockParents, getBlock } = select( blockEditorStore );
-	// 		const parents = getBlockParents( clientId ) || [];
-	// 		const qId = [ ...parents ]
-	// 			.reverse()
-	// 			.find( ( id ) => getBlock( id )?.name === 'core/query' );
-
-	// 		return {
-	// 			queryBlockId: qId,
-	// 			queryBlockAttrs: qId ? getBlock( qId )?.attributes : null,
-	// 		};
-	// 	},
-	// 	[ clientId ]
-	// );
-
-	// // Push calendar month/year and marker into the parent core/query's query attribute
-	// useEffect( () => {
-	// 	if ( ! queryBlockId || ! queryBlockAttrs?.query ) {
-	// 		return;
-	// 	}
-
-	// 	const currentQuery = queryBlockAttrs.query;
-
-	// 	// Guard: only update when values actually change to prevent render loops
-	// 	if (
-	// 		currentQuery.gatherpress_calendar_query !== true ||
-	// 		currentQuery.gatherpress_calendar_year !== dateQuery.year ||
-	// 		currentQuery.gatherpress_calendar_month !== dateQuery.month ||
-	// 		currentQuery.year !== dateQuery.year ||
-	// 		currentQuery.month !== dateQuery.month ||
-	// 		currentQuery.perPage !== 100
-	// 	) {
-	// 		updateBlockAttributes( queryBlockId, {
-	// 			query: {
-	// 				...currentQuery,
-	// 				gatherpress_calendar_query: true,
-	// 				gatherpress_calendar_year: dateQuery.year,
-	// 				gatherpress_calendar_month: dateQuery.month,
-	// 				year: dateQuery.year,
-	// 				month: dateQuery.month,
-	// 				perPage: 100,
-	// 			},
-	// 		} );
-	// 	}
-	// }, [ queryBlockId, queryBlockAttrs, dateQuery, updateBlockAttributes ] );
-	// // =========================================================================
 
 	// Fetch posts and site settings.
 	const { posts, startOfWeek } = useCalendarData( query, dateQuery );

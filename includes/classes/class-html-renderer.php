@@ -62,9 +62,9 @@ class HTML_Renderer {
 	 * @return string Calendar HTML.
 	 */
 	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
-		$workday_count   = 7 - count( Date_Calculator::get_weekend_days() );
-		$show_weekends   = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
-		$columns_count   = $show_weekends ? 7 : $workday_count;
+		$workday_count = 7 - count( Date_Calculator::get_weekend_days() );
+		$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
+		$columns_count = $show_weekends ? 7 : $workday_count;
 
 		$wrapper_attributes = get_block_wrapper_attributes();
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
@@ -81,7 +81,7 @@ class HTML_Renderer {
 				$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
 			}
 
-			$table_style   = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
+			$table_style = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
 			?>
 			<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 				<?php if ( $show_weekdays ) { ?>
