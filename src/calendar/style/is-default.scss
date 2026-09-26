@@ -29,11 +29,6 @@
 		grid-template-columns: repeat(var(--gatherpress-calendar-columns, 7), 1fr);
 		gap: 2px; /* Default thin grid line when no spacing is set */
 
-		&.is-hidden-weekends {
-			--gatherpress-calendar-columns: 5;
-			grid-template-columns: repeat(var(--gatherpress-calendar-columns, 5), 1fr);
-		}
-
 		thead,
 		tbody,
 		tr {

@@ -62,8 +62,9 @@ class HTML_Renderer {
 	 * @return string Calendar HTML.
 	 */
 	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
+		$workday_count   = 7 - count( Date_Calculator::get_weekend_days() );
 		$show_weekends   = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
-		$columns_count   = $show_weekends ? 7 : 5;
+		$columns_count   = $show_weekends ? 7 : $workday_count;
 		$wrapper_classes = array();
 
 		if ( ! $show_weekends ) {

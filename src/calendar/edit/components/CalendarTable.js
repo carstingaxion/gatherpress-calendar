@@ -26,7 +26,6 @@ import { WeekPreviewRow } from './WeekPreviewRow';
  * @param {Array}    props.dayInnerBlocks      - The real day template's inner blocks, for previews.
  * @param {Object}   props.weekBlockAttributes - The real calendar-week block's own attributes, for style parity.
  * @param {Object}   props.dayBlockAttributes  - The real calendar-day block's own attributes, for style parity.
- * @param            props.tableClasses
  * @param {Object}   props.tbodyProps          - Props (ref/className) tying <tbody> to the live week's InnerBlocks.
  *
  * @return {Element} Calendar table component.
@@ -35,7 +34,6 @@ export function CalendarTable( {
 	calendar,
 	showWeekdays,
 	style,
-	tableClasses,
 	activeDate,
 	setActiveDate,
 	weekContext,
@@ -62,7 +60,7 @@ export function CalendarTable( {
 	);
 
 	return (
-		<table className={ tableClasses } style={ style }>
+		<table className="gatherpress-calendar__table" style={ style }>
 			{ showWeekdays && (
 				<thead>
 					<tr>

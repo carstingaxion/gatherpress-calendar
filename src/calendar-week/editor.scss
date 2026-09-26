@@ -8,8 +8,4 @@
 	width: 100%;
 	position: relative;
 	margin: 0;
-
-	&.is-hidden-weekends {
-		grid-template-columns: repeat(var(--gatherpress-calendar-columns, 5), 1fr);
-	}
 }

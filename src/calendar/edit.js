@@ -36,6 +36,7 @@ import { calculateDateQuery } from './edit/utils/date-utils';
 import {
 	generateCalendar,
 	getDefaultActiveDate,
+	getWeekendDays,
 } from './edit/utils/calendar-utils';
 import { useStableValue } from '../utils/use-stable-value';
 
@@ -203,18 +204,10 @@ export default function Edit( {
 			renderAppender: false,
 		}
 	);
-
-	// Dynamic grid columns style and modifier class
-	const tableClasses = [
-		'gatherpress-calendar__table',
-		! showWeekends ? 'is-hidden-weekends' : '',
-	]
-		.filter( Boolean )
-		.join( ' ' );
-
+	const workdayCount = 7 - getWeekendDays().length;
 	const tableStyle = {
 		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
-		'--gatherpress-calendar-columns': showWeekends ? 7 : 5,
+		'--gatherpress-calendar-columns': showWeekends ? 7 : workdayCount,
 	};
 
 	// Stable reference: every week's BlockContextProvider value is built on
@@ -330,7 +323,6 @@ export default function Edit( {
 					calendar={ calendar }
 					showWeekdays={ showWeekdays }
 					style={ tableStyle }
-					tableClasses={ tableClasses }
 					activeDate={ resolvedActiveDate }
 					setActiveDate={ setActiveDate }
 					weekContext={ weekContext }
