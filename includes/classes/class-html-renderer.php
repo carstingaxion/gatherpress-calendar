@@ -65,13 +65,8 @@ class HTML_Renderer {
 		$workday_count   = 7 - count( Date_Calculator::get_weekend_days() );
 		$show_weekends   = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
 		$columns_count   = $show_weekends ? 7 : $workday_count;
-		$wrapper_classes = array();
 
-		if ( ! $show_weekends ) {
-			$wrapper_classes[] = 'is-hidden-weekends';
-		}
-
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $wrapper_classes ) ) );
+		$wrapper_attributes = get_block_wrapper_attributes();
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 		ob_start();
@@ -87,12 +82,8 @@ class HTML_Renderer {
 			}
 
 			$table_style   = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
-			$table_classes = array( 'gatherpress-calendar__table' );
-			if ( ! $show_weekends ) {
-				$table_classes[] = 'is-hidden-weekends';
-			}
 			?>
-			<table class="<?php echo esc_attr( implode( ' ', $table_classes ) ); ?>" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+			<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 				<?php if ( $show_weekdays ) { ?>
 					<thead>
 						<tr>
