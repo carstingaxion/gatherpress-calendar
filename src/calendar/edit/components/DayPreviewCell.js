@@ -17,7 +17,6 @@ import {
 
 import {
 	isDayNumberBindingBlock,
-	getDayNumberJustifyContent,
 	getLayoutProps,
 } from '../../../utils/day-number';
 
@@ -111,7 +110,6 @@ function DayPreviewCellComponent( {
 		[ innerBlocks, day ]
 	);
 
-
 	// Mirror the real calendar-day block's own color/border/spacing/shadow
 	// styling (e.g. a custom background, padding, or drop-shadow) so every
 	// previewed day looks like the live one.
@@ -148,23 +146,17 @@ function DayPreviewCellComponent( {
 		// ...layoutProps.style,
 	};
 
-	// The events row is a flex container; a block's own text-align has no
-	// visible effect on its shrink-wrapped position within that row, so
-	// mirror the Day Number block's alignment via justify-content instead.
-	// const justifyContent = useMemo(
-	// 	() => getDayNumberJustifyContent( innerBlocks ),
-	// 	[ innerBlocks ]
-	// );
-
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
 		props: {
-			// className: 'gatherpress-calendar__events',
-			// className: 'block-editor-block-list__layout',
-			className: layoutProps.className ? layoutProps.className : undefined,
+			className: layoutProps.className
+				? layoutProps.className
+				: undefined,
 			style: {
 				...layoutProps.style,
-				gap: getGapCSSValue( dayBlockAttributes?.style?.spacing?.blockGap ),
+				gap: getGapCSSValue(
+					dayBlockAttributes?.style?.spacing?.blockGap
+				),
 			},
 		},
 	} );

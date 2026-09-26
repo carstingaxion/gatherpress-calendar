@@ -117,10 +117,11 @@ export function getLayoutProps( layout = {} ) {
 		if ( layout.justifyContent && justifyMap[ layout.justifyContent ] ) {
 			classes.push( justifyMap[ layout.justifyContent ].className );
 			const cssVal = justifyMap[ layout.justifyContent ].css;
-			
+
 			// In vertical flex, horizontal alignment belongs to the cross axis (alignItems)
 			if ( isVertical ) {
-				style.alignItems = cssVal === 'space-between' ? 'stretch' : cssVal;
+				style.alignItems =
+					cssVal === 'space-between' ? 'stretch' : cssVal;
 			} else {
 				style.justifyContent = cssVal;
 			}
@@ -128,8 +129,8 @@ export function getLayoutProps( layout = {} ) {
 
 		// Vertical alignment
 		const alignMap = {
-			top: { 
-				className: 'is-vertically-aligned-top', 
+			top: {
+				className: 'is-vertically-aligned-top',
 				css: 'flex-start',
 			},
 			center: {
@@ -146,13 +147,17 @@ export function getLayoutProps( layout = {} ) {
 			},
 		};
 
-		if ( layout.verticalAlignment && alignMap[ layout.verticalAlignment ] ) {
+		if (
+			layout.verticalAlignment &&
+			alignMap[ layout.verticalAlignment ]
+		) {
 			classes.push( alignMap[ layout.verticalAlignment ].className );
 			const cssVal = alignMap[ layout.verticalAlignment ].css;
 
 			// In vertical flex, vertical alignment belongs to the main axis (justifyContent)
 			if ( isVertical ) {
-				style.justifyContent = cssVal === 'stretch' ? 'flex-start' : cssVal;
+				style.justifyContent =
+					cssVal === 'stretch' ? 'flex-start' : cssVal;
 			} else {
 				style.alignItems = cssVal;
 			}

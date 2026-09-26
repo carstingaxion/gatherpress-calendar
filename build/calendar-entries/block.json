@@ -7,14 +7,13 @@
   "category": "gatherpress",
   "icon": "list-view",
   "description": "Lists a calendar day's events, one per event. Works like the Post Template block: its inner blocks are the template used to render each event - for now, that template is only used for the event's popover content.",
-  "parent": [
+  "ancestor": [
     "gatherpress/calendar-day"
   ],
   "usesContext": [
     "gatherpress/dayDate",
     "gatherpress/dayPosts",
-    "gatherpress/isEmpty",
-    "gatherpress/popoverStyles"
+    "gatherpress/isEmpty"
   ],
   "attributes": {
     "layout": {

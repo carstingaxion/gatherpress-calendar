@@ -95,12 +95,7 @@ class Calendar_Entries {
 			return '';
 		}
 
-		$classes = array( 'gatherpress-calendar__events' );
-		if ( 'grid' === ( $attributes['layout']['type'] ?? 'default' ) ) {
-			$classes[] = 'is-layout-grid';
-		}
-
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
+		$wrapper_attributes = get_block_wrapper_attributes();
 
 		$items_html = '';
 		foreach ( $day_posts as $post_id ) {
@@ -109,7 +104,11 @@ class Calendar_Entries {
 			}
 		}
 
-		return sprintf( '<div %1$s>%2$s</div>', $wrapper_attributes, $items_html ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		return sprintf(
+			'<div %1$s>%2$s</div>',
+			$wrapper_attributes,  // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			$items_html  // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		);
 	}
 
 	/**
@@ -172,12 +171,12 @@ class Calendar_Entries {
 		}
 
 		// TODO: Maybe reuse as id attribute, 
-		//       and add the posts css classes here.
+		// and add the posts css classes here.
 		$event_content_id = 'event-content-' . $post_id;
 
 		ob_start();
 		?>
-		<div class="gatherpress-calendar__event-item">
+		<div class="gatherpress-calendar__entry">
 			<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</div>
 		<?php

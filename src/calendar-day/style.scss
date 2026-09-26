@@ -45,8 +45,8 @@
 
 .gatherpress-calendar__day-number {
 	margin: 0.2em; // set a default for the UI
-    display: inline;
-    aspect-ratio: 1;
+	display: inline;
+	aspect-ratio: 1;
 	z-index: 1; // Allow to overrule the outline of its parent calendar-day block.
 }
 

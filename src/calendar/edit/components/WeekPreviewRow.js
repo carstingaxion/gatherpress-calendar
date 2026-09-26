@@ -2,10 +2,6 @@ import { memo } from '@wordpress/element';
 import {
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseColorProps as useColorProps,
-	// // eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	// __experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
-	// // eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	// __experimentalGetShadowClassesAndStyles as getShadowClassesAndStyles,
 } from '@wordpress/block-editor';
 
 import { DayPreviewCell } from './DayPreviewCell';
@@ -40,10 +36,6 @@ function WeekPreviewRowComponent( {
 	// Mirror the real calendar-week block's own color/spacing/shadow
 	// styling so every previewed week row looks like the live one.
 	const colorProps = useColorProps( weekBlockAttributes ?? {} );
-	// const spacingProps = getSpacingClassesAndStyles(
-	// 	weekBlockAttributes ?? {}
-	// );
-	// const shadowProps = getShadowClassesAndStyles( weekBlockAttributes ?? {} );
 
 	const classNames = [ 'gatherpress-calendar__week', colorProps.className ]
 		.filter( Boolean )
@@ -51,8 +43,6 @@ function WeekPreviewRowComponent( {
 
 	const style = {
 		...colorProps.style,
-		// ...spacingProps.style,
-		// ...shadowProps.style,
 	};
 
 	return (

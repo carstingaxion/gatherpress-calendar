@@ -9,16 +9,8 @@
  * @return {Element} The React element representing the saved block content.
  */
 
-import { InnerBlocks, useBlockProps } from '@wordpress/block-editor';
+import { InnerBlocks } from '@wordpress/block-editor';
 
 export default function save() {
-	const blockProps = useBlockProps.save( {
-		className: 'gatherpress-calendar-block',
-	} );
-
-	return (
-		<div { ...blockProps }>
-			<InnerBlocks.Content />
-		</div>
-	);
+	return <InnerBlocks.Content />;
 }

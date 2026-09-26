@@ -1,1 +1,1 @@
-.editor-styles-wrapper .gatherpress-calendar__week{display:contents;grid-column:1/-1;grid-template-columns:repeat(var(--gatherpress-calendar-columns,7),1fr);margin:0;position:relative;width:100%}.editor-styles-wrapper .gatherpress-calendar__week.is-hidden-weekends{grid-template-columns:repeat(var(--gatherpress-calendar-columns,5),1fr)}
+.editor-styles-wrapper .gatherpress-calendar__week{display:contents;grid-column:1/-1;grid-template-columns:repeat(var(--gatherpress-calendar-columns,7),1fr);margin:0;position:relative;width:100%}

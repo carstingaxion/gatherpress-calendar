@@ -1,7 +1,7 @@
 /**
  * GatherPress Calendar Entries Block Editor Component
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.4.0
  */
 
@@ -25,7 +25,7 @@ const EMPTY_ARRAY = [];
 /**
  * Renders preview copies for the 2nd, 3rd, etc. posts in the day cell.
  */
-const EventPreview = memo( function EventPreview( { blocks } ) {
+const EventPreview = memo( function EventPreviewComponent( { blocks } ) {
 	const previewProps = useBlockPreview( { blocks } );
 	return (
 		<div
@@ -40,7 +40,12 @@ const EventPreview = memo( function EventPreview( { blocks } ) {
 /**
  * Individual event item wrapper that supplies postId and postType context.
  */
-const EventItem = memo( function EventItem( { post, isFirst, innerBlocksProps, innerBlocks } ) {
+const EventItem = memo( function EventItemComponent( {
+	post,
+	isFirst,
+	innerBlocksProps,
+	innerBlocks,
+} ) {
 	// Safely resolve postId and postType whether post is an object or primitive ID
 	const postId =
 		typeof post === 'object' && typeof post?.id === 'number'
@@ -66,11 +71,7 @@ const EventItem = memo( function EventItem( { post, isFirst, innerBlocksProps, i
 
 	return (
 		<BlockContextProvider value={ contextValue }>
-			<div className="gatherpress-calendar__event-item">
-				{/* <span
-					className="gatherpress-calendar__event"
-					aria-hidden="true"
-				/> */}
+			<div className="gatherpress-calendar__entry">
 				{ isFirst ? (
 					// The primary, editable template container
 					<div { ...innerBlocksProps } />
@@ -89,12 +90,10 @@ export default function Edit( { attributes, clientId, context } ) {
 	const blockGap = attributes?.style?.spacing?.blockGap;
 
 	const blockProps = useBlockProps( {
-		className: 'gatherpress-calendar__events',
 		style: {
 			gap: blockGap ? getGapCSSValue( blockGap ) : undefined,
 		},
 	} );
-
 
 	const innerBlocksProps = useInnerBlocksProps(
 		{
@@ -108,7 +107,8 @@ export default function Edit( { attributes, clientId, context } ) {
 	// Retrieve the template blocks so additional items can mirror them in preview
 	const innerBlocks = useSelect(
 		( select ) =>
-			select( blockEditorStore ).getBlock( clientId )?.innerBlocks ?? EMPTY_ARRAY,
+			select( blockEditorStore ).getBlock( clientId )?.innerBlocks ??
+			EMPTY_ARRAY,
 		[ clientId ]
 	);
 

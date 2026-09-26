@@ -46,7 +46,7 @@
 	.wp-block-gatherpress-calendar-entries.is-style-dots {
 
 		/* stylelint-disable-next-line no-descending-specificity */
-		.gatherpress-modal--trigger-open > * {
+		.gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
 			width: clamp(14px, 3vw, 18px);
 			height: clamp(14px, 3vw, 18px);
 			min-width: clamp(14px, 3vw, 18px);
