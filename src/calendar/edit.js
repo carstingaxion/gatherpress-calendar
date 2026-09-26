@@ -187,9 +187,7 @@ export default function Edit( {
 			)
 		);
 
-	const blockProps = useBlockProps( {
-		className: 'gatherpress-calendar-block',
-	} );
+	const blockProps = useBlockProps();
 
 	// The real, live-editable week+day+content InnerBlocks tree. Rendered
 	// inside <tbody> at whichever week row contains resolvedActiveDate;
@@ -328,22 +326,20 @@ export default function Edit( {
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
-				<div className="gatherpress-calendar">
-					<CalendarTable
-						calendar={ calendar }
-						showWeekdays={ showWeekdays }
-						style={ tableStyle }
-						tableClasses={ tableClasses }
-						activeDate={ resolvedActiveDate }
-						setActiveDate={ setActiveDate }
-						weekContext={ weekContext }
-						liveWeekChildren={ liveWeekChildren }
-						dayInnerBlocks={ dayInnerBlocks }
-						weekBlockAttributes={ weekBlockAttributes }
-						dayBlockAttributes={ dayBlockAttributes }
-						tbodyProps={ tbodyProps }
-					/>
-				</div>
+				<CalendarTable
+					calendar={ calendar }
+					showWeekdays={ showWeekdays }
+					style={ tableStyle }
+					tableClasses={ tableClasses }
+					activeDate={ resolvedActiveDate }
+					setActiveDate={ setActiveDate }
+					weekContext={ weekContext }
+					liveWeekChildren={ liveWeekChildren }
+					dayInnerBlocks={ dayInnerBlocks }
+					weekBlockAttributes={ weekBlockAttributes }
+					dayBlockAttributes={ dayBlockAttributes }
+					tbodyProps={ tbodyProps }
+				/>
 			</div>
 		</>
 	);

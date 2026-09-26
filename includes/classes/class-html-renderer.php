@@ -64,7 +64,7 @@ class HTML_Renderer {
 	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
 		$show_weekends   = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
 		$columns_count   = $show_weekends ? 7 : 5;
-		$wrapper_classes = array( 'gatherpress-calendar-block' );
+		$wrapper_classes = array();
 
 		if ( ! $show_weekends ) {
 			$wrapper_classes[] = 'is-hidden-weekends';
@@ -76,37 +76,35 @@ class HTML_Renderer {
 		ob_start();
 		?>
 		<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-			<div class="gatherpress-calendar">
-				<?php
-				$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
-				$table_styles = array(
-					sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
-				);
-				if ( ! empty( $grid_gap ) ) {
-					$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
-				}
+			<?php
+			$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
+			$table_styles = array(
+				sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
+			);
+			if ( ! empty( $grid_gap ) ) {
+				$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
+			}
 
-				$table_style   = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
-				$table_classes = array( 'gatherpress-calendar__table' );
-				if ( ! $show_weekends ) {
-					$table_classes[] = 'is-hidden-weekends';
-				}
-				?>
-				<table class="<?php echo esc_attr( implode( ' ', $table_classes ) ); ?>" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-					<?php if ( $show_weekdays ) { ?>
-						<thead>
-							<tr>
-								<?php foreach ( $calendar_data['day_names'] as $day_name ) { ?>
-									<th><?php echo esc_html( $day_name ); ?></th>
-								<?php } ?>
-							</tr>
-						</thead>
-					<?php } ?>
-					<tbody>
-						<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'] ) ); ?>
-					</tbody>
-				</table>
-			</div>
+			$table_style   = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
+			$table_classes = array( 'gatherpress-calendar__table' );
+			if ( ! $show_weekends ) {
+				$table_classes[] = 'is-hidden-weekends';
+			}
+			?>
+			<table class="<?php echo esc_attr( implode( ' ', $table_classes ) ); ?>" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+				<?php if ( $show_weekdays ) { ?>
+					<thead>
+						<tr>
+							<?php foreach ( $calendar_data['day_names'] as $day_name ) { ?>
+								<th><?php echo esc_html( $day_name ); ?></th>
+							<?php } ?>
+						</tr>
+					</thead>
+				<?php } ?>
+				<tbody>
+					<?php echo wp_kses_post( $this->render_calendar_weeks( $calendar_data['weeks'] ) ); ?>
+				</tbody>
+			</table>
 		</div>
 		<?php
 		return (string) ob_get_clean();

@@ -7,18 +7,17 @@
 	background: var(--wp--preset--color--base, #fff);
 	padding: 0;
 	margin-block: var(--wp--preset--spacing--50, 1rem);
-}
+
 
 /* ==========================================================================
    Calendar Wrapper
    ========================================================================== */
-.gatherpress-calendar {
 	width: 100%;
 	// max-width: var(--wp--style--global--wide-size, 1200px);
 	margin-inline: auto;
 
 	/* 7-column Calendar Grid */
-	&__table {
+	.gatherpress-calendar__table {
 
 		/* Inherits the calendar block's background to fill the gaps between cells */
 		background: inherit;
