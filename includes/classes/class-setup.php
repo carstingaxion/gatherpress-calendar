@@ -82,7 +82,6 @@ class Setup {
 	protected function setup_hooks(): void {
 		add_action( 'init', array( $this, 'block_init' ) );
 		add_filter( 'rest_gatherpress_event_query', array( $this, 'rest_gatherpress_event_query' ), 20, 2 );
-		add_filter( 'posts_where', array( $this, 'posts_where' ), 10, 2 );
 		add_filter( 'render_block_data', array( $this, 'allow_core_pagination' ), 10, 3 );
 		add_filter( 'render_block_context', array( $this, 'disable_query_pagination_numbers' ), 10, 2 );
 		add_filter( 'query_vars', array( $this, 'query_vars' ) );
@@ -211,76 +210,6 @@ class Setup {
 		}
 
 		return $args;
-	}
-
-	/**
-	 * Filter SQL WHERE clause to use GatherPress event dates instead of post dates.
-	 *
-	 * The exact same filter exists in GatherPress/Statistics to enable date queries.
-	 *
-	 * @since 0.1.0
-	 *
-	 * @global wpdb $wpdb WordPress database abstraction object.
-	 *
-	 * @param string   $where The WHERE clause of the query.
-	 * @param WP_Query $query The WP_Query instance.
-	 *
-	 * @return string Modified WHERE clause.
-	 */
-	public function posts_where( string $where, WP_Query $query ): string {
-		global $wpdb;
-
-		if ( ! ( $wpdb instanceof wpdb ) ) {
-			return $where;
-		}
-
-		if ( empty( $query->query_vars['date_query'] ) || ! is_array( $query->query_vars['date_query'] ) ) {
-			return $where;
-		}
-
-		if ( 'gatherpress_event' !== $query->get( 'post_type' ) && ! in_array( 'gatherpress_event', (array) $query->get( 'post_type' ), true ) ) {
-			return $where;
-		}
-
-		$date_filter_raw = $query->query_vars['date_query'][0] ?? array();
-		$date_filter     = is_array( $date_filter_raw ) ? $date_filter_raw : array();
-
-		$date_conditions = array();
-
-		if ( ! empty( $date_filter['year'] ) && is_numeric( $date_filter['year'] ) ) {
-			$year              = absint( $date_filter['year'] );
-			$date_conditions[] = $wpdb->prepare( 'YEAR(ge.datetime_start_gmt) = %d', $year );
-		}
-
-		if ( ! empty( $date_filter['month'] ) && is_numeric( $date_filter['month'] ) ) {
-			$month             = absint( $date_filter['month'] );
-			$date_conditions[] = $wpdb->prepare( 'MONTH(ge.datetime_start_gmt) = %d', $month );
-		}
-
-		if ( empty( $date_conditions ) ) {
-			return $where;
-		}
-
-		$where = preg_replace(
-			'/AND\s*\(\s*\(\s*YEAR\(\s*[^)]+\s*\)\s*=\s*\d+(?:\s+AND\s+MONTH\(\s*[^)]+\s*\)\s*=\s*\d+)?\s*\)\s*\)/',
-			'',
-			$where
-		);
-
-		if ( ! is_string( $where ) ) {
-			$where = '';
-		}
-
-		$events_table = $wpdb->prefix . 'gatherpress_events';
-		$date_where   = implode( ' AND ', $date_conditions );
-
-		$where .= " AND {$wpdb->posts}.ID IN (
-			SELECT ge.post_id 
-			FROM {$events_table} ge 
-			WHERE {$date_where}
-		)";
-
-		return $where;
 	}
 
 	/**
