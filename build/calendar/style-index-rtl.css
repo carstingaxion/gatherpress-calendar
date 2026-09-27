@@ -1,1 +1,386 @@
-.wp-block-gatherpress-calendar{background:var(--wp--preset--color--base,#fff);margin-block:var(--wp--preset--spacing--50,1rem);margin-inline:auto;padding:0;width:100%}.wp-block-gatherpress-calendar .gatherpress-calendar__table{background:inherit;border-collapse:collapse;container-name:calendar;container-type:inline-size;display:grid;gap:2px;grid-template-columns:repeat(var(--gatherpress-calendar-columns,7),1fr);width:100%}.wp-block-gatherpress-calendar .gatherpress-calendar__table tbody,.wp-block-gatherpress-calendar .gatherpress-calendar__table thead,.wp-block-gatherpress-calendar .gatherpress-calendar__table tr{display:contents}.wp-block-gatherpress-calendar .gatherpress-calendar__table th{align-items:center;aspect-ratio:1;background:var(--wp--preset--color--base-2,#f8f9fa);border:none;color:var(--wp--preset--color--contrast,#495057);display:flex;font-size:clamp(.625rem,2vw,.875rem);font-weight:600;justify-content:center;letter-spacing:.05em;padding:clamp(.5rem,2vw,.75rem);text-align:center;text-transform:uppercase}.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table{background:transparent;border:none;gap:0}.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table th{background:transparent;border-bottom:1px solid var(--wp--preset--color--contrast,#e8e8e8);color:var(--wp--preset--color--contrast,#999);font-weight:300;letter-spacing:0;text-transform:none}.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td{background:transparent;border-bottom:1px solid var(--wp--preset--color--contrast,#f5f5f5)}.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td.is-empty{opacity:.2}.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td.is-today{background:transparent}.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number{align-items:center;background:var(--wp--preset--color--primary,#007cba);border-radius:50%;color:#fff;display:flex;font-weight:300;height:clamp(24px,5vw,32px);justify-content:center;margin-inline:auto;width:clamp(24px,5vw,32px)}.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td.has-posts{background:transparent}.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__day-number{color:var(--wp--preset--color--contrast,#333);font-weight:300}.wp-block-gatherpress-calendar.is-style-minimal .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>*{height:clamp(6px,2vw,8px);min-height:clamp(6px,2vw,8px);min-width:clamp(6px,2vw,8px);opacity:.7;width:clamp(6px,2vw,8px)}.wp-block-gatherpress-calendar.is-style-minimal .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>:hover{opacity:1;transform:scale(1.5)}.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table{background:var(--wp--preset--color--contrast,#1e1e1e);border:clamp(2px,.5vw,4px) solid var(--wp--preset--color--contrast,#1e1e1e);gap:clamp(2px,.5vw,4px)}.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table th{background:var(--wp--preset--color--contrast,#1e1e1e);color:var(--wp--preset--color--base,#fff);font-weight:900;letter-spacing:.1em}.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table td.is-empty{background:var(--wp--preset--color--contrast,#333)}.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table td.is-today{background:var(--wp--preset--color--primary,#007cba);box-shadow:inset 0 0 0 clamp(2px,.5vw,4px) hsla(0,0%,100%,.3)}.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number{color:#fff;font-weight:900}.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__day-number{color:var(--wp--preset--color--contrast,#1e1e1e);font-weight:900}.wp-block-gatherpress-calendar.is-style-bold .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>*{border:clamp(2px,.5vw,3px) solid #fff;box-shadow:0 3px 6px rgba(0,0,0,.3);height:clamp(14px,3vw,18px);min-height:clamp(14px,3vw,18px);min-width:clamp(14px,3vw,18px);width:clamp(14px,3vw,18px)}.wp-block-gatherpress-calendar.is-style-bold .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>:hover{transform:scale(1.2) rotate(-45deg)}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__month{color:var(--wp--preset--color--primary,inherit)}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table{background:transparent;border:none;gap:clamp(.5rem,2vw,1rem);padding:clamp(.5rem,2vw,1rem)}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table th{background:transparent;border:none;border-radius:50%;color:var(--wp--preset--color--primary,#007cba);font-weight:600;text-transform:none}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td{background:var(--wp--preset--color--base-2,#f0f4f8);border:2px solid transparent;border-radius:50%;transition:all .3s ease}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.is-empty{background:transparent;opacity:.3}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.has-posts{background:var(--wp--preset--color--base,#fff);border-color:var(--wp--preset--color--contrast,#d0dae5);box-shadow:0 2px 8px rgba(0,0,0,.08)}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.is-today{background:linear-gradient(-135deg,var(--wp--preset--color--primary,#007cba) 0,var(--wp--preset--color--secondary,#0693e3) 100%);border-color:var(--wp--preset--color--primary,#007cba);box-shadow:0 4px 16px rgba(0,124,186,.3)}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number{color:#fff;font-weight:700}.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__day-number{font-weight:600;text-align:center}.wp-block-gatherpress-calendar.is-style-circular .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>*{box-shadow:0 2px 4px rgba(0,0,0,.15)}.wp-block-gatherpress-calendar.is-style-circular .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>:hover{box-shadow:0 4px 8px rgba(0,0,0,.25);transform:scale(1.4)}.wp-block-gatherpress-calendar.is-style-gradient{background:linear-gradient(-135deg,#667eea,#764ba2);border-radius:16px;padding:clamp(1rem,4vw,2rem)}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table{background:transparent;border:none;gap:clamp(.5rem,1.5vw,.75rem);padding:clamp(.5rem,1.5vw,.75rem)}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table th{backdrop-filter:blur(10px);background:hsla(0,0%,100%,.15);border:1px solid hsla(0,0%,100%,.2);border-radius:8px;color:#fff;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td{background:hsla(0,0%,100%,.1);border:1px solid hsla(0,0%,100%,.2);border-radius:8px;transition:all .3s ease}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.is-empty{background:hsla(0,0%,100%,.05);opacity:.4}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.has-posts{background:hsla(0,0%,100%,.2);border-color:hsla(0,0%,100%,.3)}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.has-posts .gatherpress-calendar__day-number{color:#fff}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.is-today{background:linear-gradient(-135deg,hsla(0,0%,100%,.4),hsla(0,0%,100%,.2));border:2px solid #fff;box-shadow:0 8px 24px rgba(0,0,0,.3),0 0 0 4px hsla(0,0%,100%,.2)}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number{color:#fff;font-weight:900;text-shadow:0 2px 4px rgba(0,0,0,.3)}.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__day-number{color:#fff;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.2)}.wp-block-gatherpress-calendar.is-style-gradient .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>*{border:2px solid hsla(0,0%,100%,.5);box-shadow:0 2px 6px rgba(0,0,0,.2)}.wp-block-gatherpress-calendar.is-style-gradient .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>:hover{background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3);transform:scale(1.3)}@container calendar (max-width: 400px){.gatherpress-calendar__table th{display:none}.gatherpress-calendar__day-number{font-size:clamp(.625rem,1.5vw,.7rem)}.wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>*{height:clamp(6px,2vw,8px);min-height:clamp(6px,2vw,8px);min-width:clamp(6px,2vw,8px);width:clamp(6px,2vw,8px)}.wp-block-gatherpress-calendar.is-style-bold .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>*{height:clamp(8px,2.5vw,10px);min-height:clamp(8px,2.5vw,10px);min-width:clamp(8px,2.5vw,10px);width:clamp(8px,2.5vw,10px)}}@media(max-width:400px){@supports not (container-type:inline-size){.gatherpress-calendar__table th{display:none}.gatherpress-calendar__day-number{font-size:clamp(.625rem,1.5vw,.7rem)}.wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open)>*{height:clamp(6px,2vw,8px);min-height:clamp(6px,2vw,8px);min-width:clamp(6px,2vw,8px);width:clamp(6px,2vw,8px)}}}@media print{.gatherpress-calendar__table,.gatherpress-calendar__table td{break-inside:avoid}}
+/*!************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[4].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[4].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[4].use[3]!./src/calendar/style.scss ***!
+  \************************************************************************************************************************************************************************************************************************************************/
+/**
+ * GatherPress Calendar Block Styles
+ *
+ * CSS-first approach with progressive enhancement.
+ * Leverages modern CSS features:
+ * - Container queries for responsive behavior
+ * - CSS Grid for layout
+ * - Intrinsic sizing with clamp()
+ * - aspect-ratio for consistent shapes
+ *
+ * @package GatherPressCalendar
+ * @since 0.1.0
+ */
+/* ==========================================================================
+   Block Container
+   ========================================================================== */
+.wp-block-gatherpress-calendar {
+  /* Default decent background that fills the grid lines. */
+  background: var(--wp--preset--color--base, #fff);
+  padding: 0;
+  margin-block: var(--wp--preset--spacing--50, 1rem);
+  /* ==========================================================================
+    Calendar Wrapper
+    ========================================================================== */
+  width: 100%;
+  margin-inline: auto;
+  /* 7-column Calendar Grid */
+}
+.wp-block-gatherpress-calendar .gatherpress-calendar__table {
+  /* Inherits the calendar block's background to fill the gaps between cells */
+  background: inherit;
+  container-type: inline-size;
+  container-name: calendar;
+  border-collapse: collapse;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(var(--gatherpress-calendar-columns, 7), 1fr);
+  gap: 2px; /* Default thin grid line when no spacing is set */
+}
+.wp-block-gatherpress-calendar .gatherpress-calendar__table thead,
+.wp-block-gatherpress-calendar .gatherpress-calendar__table tbody,
+.wp-block-gatherpress-calendar .gatherpress-calendar__table tr {
+  display: contents;
+}
+.wp-block-gatherpress-calendar .gatherpress-calendar__table {
+  /* Weekday Column Headers (Sun, Mon, Tue...) */
+}
+.wp-block-gatherpress-calendar .gatherpress-calendar__table th {
+  background: var(--wp--preset--color--base-2, #f8f9fa);
+  color: var(--wp--preset--color--contrast, #495057);
+  font-weight: 600;
+  text-align: center;
+  padding: clamp(0.5rem, 2vw, 0.75rem);
+  font-size: clamp(0.625rem, 2vw, 0.875rem);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ======================================================================
+    BLOCK STYLE: Minimal
+    ====================================================================== */
+.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table {
+  background: transparent;
+  border: none;
+  gap: 0;
+}
+.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table th {
+  background: transparent;
+  border-bottom: 1px solid var(--wp--preset--color--contrast, #e8e8e8);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 300;
+  color: var(--wp--preset--color--contrast, #999);
+}
+.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td {
+  background: transparent;
+  border-bottom: 1px solid var(--wp--preset--color--contrast, #f5f5f5);
+}
+.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td.is-empty {
+  opacity: 0.2;
+}
+.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td.is-today {
+  background: transparent;
+}
+.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number {
+  background: var(--wp--preset--color--primary, #007cba);
+  color: #fff;
+  width: clamp(24px, 5vw, 32px);
+  height: clamp(24px, 5vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-inline: auto;
+  font-weight: 300;
+}
+.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__table td.has-posts {
+  background: transparent;
+}
+.wp-block-gatherpress-calendar.is-style-minimal {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
+.wp-block-gatherpress-calendar.is-style-minimal .gatherpress-calendar__day-number {
+  font-weight: 300;
+  color: var(--wp--preset--color--contrast, #333);
+}
+.wp-block-gatherpress-calendar.is-style-minimal {
+  /* ======================================================================
+  	BLOCK STYLE: Dots (style-variation of calendar-entries block)
+  	====================================================================== */
+}
+.wp-block-gatherpress-calendar.is-style-minimal .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+  width: clamp(6px, 2vw, 8px);
+  height: clamp(6px, 2vw, 8px);
+  min-width: clamp(6px, 2vw, 8px);
+  min-height: clamp(6px, 2vw, 8px);
+  opacity: 0.7;
+}
+.wp-block-gatherpress-calendar.is-style-minimal .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > *:hover {
+  opacity: 1;
+  transform: scale(1.5);
+}
+
+/* ======================================================================
+    BLOCK STYLE: Bold
+    ====================================================================== */
+.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table {
+  gap: clamp(2px, 0.5vw, 4px);
+  background: var(--wp--preset--color--contrast, #1e1e1e);
+  border: clamp(2px, 0.5vw, 4px) solid var(--wp--preset--color--contrast, #1e1e1e);
+}
+.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table th {
+  background: var(--wp--preset--color--contrast, #1e1e1e);
+  color: var(--wp--preset--color--base, #fff);
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table td.is-empty {
+  background: var(--wp--preset--color--contrast, #333);
+}
+.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table td.is-today {
+  background: var(--wp--preset--color--primary, #007cba);
+  box-shadow: inset 0 0 0 clamp(2px, 0.5vw, 4px) rgba(255, 255, 255, 0.3);
+}
+.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number {
+  color: #fff;
+  font-weight: 900;
+}
+.wp-block-gatherpress-calendar.is-style-bold {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
+.wp-block-gatherpress-calendar.is-style-bold .gatherpress-calendar__day-number {
+  font-weight: 900;
+  color: var(--wp--preset--color--contrast, #1e1e1e);
+}
+.wp-block-gatherpress-calendar.is-style-bold {
+  /* ======================================================================
+  	BLOCK STYLE: Dots (style-variation of calendar-entries block)
+  	====================================================================== */
+}
+.wp-block-gatherpress-calendar.is-style-bold .wp-block-gatherpress-calendar-entries.is-style-dots {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
+.wp-block-gatherpress-calendar.is-style-bold .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+  width: clamp(14px, 3vw, 18px);
+  height: clamp(14px, 3vw, 18px);
+  min-width: clamp(14px, 3vw, 18px);
+  min-height: clamp(14px, 3vw, 18px);
+  border: clamp(2px, 0.5vw, 3px) solid #fff;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+.wp-block-gatherpress-calendar.is-style-bold .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > *:hover {
+  transform: scale(1.2) rotate(-45deg);
+}
+
+/* ======================================================================
+    BLOCK STYLE: Circular
+    ====================================================================== */
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__month {
+  color: var(--wp--preset--color--primary, inherit);
+}
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table {
+  gap: clamp(0.5rem, 2vw, 1rem);
+  background: transparent;
+  border: none;
+  padding: clamp(0.5rem, 2vw, 1rem);
+}
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table th {
+  background: transparent;
+  border: none;
+  color: var(--wp--preset--color--primary, #007cba);
+  font-weight: 600;
+  text-transform: none;
+  border-radius: 50%;
+}
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td {
+  border-radius: 50%;
+  background: var(--wp--preset--color--base-2, #f0f4f8);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.is-empty {
+  background: transparent;
+  opacity: 0.3;
+}
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.has-posts {
+  background: var(--wp--preset--color--base, #fff);
+  border-color: var(--wp--preset--color--contrast, #d0dae5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.is-today {
+  background: linear-gradient(-135deg, var(--wp--preset--color--primary, #007cba) 0%, var(--wp--preset--color--secondary, #0693e3) 100%);
+  border-color: var(--wp--preset--color--primary, #007cba);
+  box-shadow: 0 4px 16px rgba(0, 124, 186, 0.3);
+}
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number {
+  color: #fff;
+  font-weight: 700;
+}
+.wp-block-gatherpress-calendar.is-style-circular {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
+.wp-block-gatherpress-calendar.is-style-circular .gatherpress-calendar__day-number {
+  text-align: center;
+  font-weight: 600;
+}
+.wp-block-gatherpress-calendar.is-style-circular {
+  /* ======================================================================
+  	BLOCK STYLE: Dots (style-variation of calendar-entries block)
+  	====================================================================== */
+}
+.wp-block-gatherpress-calendar.is-style-circular .wp-block-gatherpress-calendar-entries.is-style-dots {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
+.wp-block-gatherpress-calendar.is-style-circular .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.wp-block-gatherpress-calendar.is-style-circular .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > *:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  transform: scale(1.4);
+}
+
+/* ======================================================================
+    BLOCK STYLE: Gradient
+    ====================================================================== */
+.wp-block-gatherpress-calendar.is-style-gradient {
+  background: linear-gradient(-135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table {
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  background: transparent;
+  border: none;
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table th {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.is-empty {
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.4;
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.has-posts {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.has-posts .gatherpress-calendar__day-number {
+  color: #fff;
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.is-today {
+  background: linear-gradient(-135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%);
+  border: 2px solid #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__table td.is-today .gatherpress-calendar__day-number {
+  color: #fff;
+  font-weight: 900;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.wp-block-gatherpress-calendar.is-style-gradient {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
+.wp-block-gatherpress-calendar.is-style-gradient .gatherpress-calendar__day-number {
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+.wp-block-gatherpress-calendar.is-style-gradient {
+  /* ======================================================================
+  	BLOCK STYLE: Dots (style-variation of calendar-entries block)
+  	====================================================================== */
+}
+.wp-block-gatherpress-calendar.is-style-gradient .wp-block-gatherpress-calendar-entries.is-style-dots {
+  /* stylelint-disable-next-line no-descending-specificity */
+}
+.wp-block-gatherpress-calendar.is-style-gradient .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+.wp-block-gatherpress-calendar.is-style-gradient .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > *:hover {
+  background: #fff;
+  transform: scale(1.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ======================================================================
+   Container Queries - Hide day names on narrow screens
+   ====================================================================== */
+@container calendar (max-width: 400px) {
+  .gatherpress-calendar__table th {
+    display: none;
+  }
+  .gatherpress-calendar__day-number {
+    font-size: clamp(0.625rem, 1.5vw, 0.7rem);
+  }
+  /* ======================================================================
+  	BLOCK STYLE: Dots (style-variation of calendar-entries block)
+  	====================================================================== */
+  .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+    width: clamp(6px, 2vw, 8px);
+    height: clamp(6px, 2vw, 8px);
+    min-width: clamp(6px, 2vw, 8px);
+    min-height: clamp(6px, 2vw, 8px);
+  }
+  .wp-block-gatherpress-calendar.is-style-bold .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+    width: clamp(8px, 2.5vw, 10px);
+    height: clamp(8px, 2.5vw, 10px);
+    min-width: clamp(8px, 2.5vw, 10px);
+    min-height: clamp(8px, 2.5vw, 10px);
+  }
+}
+/* ======================================================================
+   Traditional Responsive Fallback
+   ====================================================================== */
+@media (max-width: 400px) {
+  @supports not (container-type: inline-size) {
+    .gatherpress-calendar__table th {
+      display: none;
+    }
+    .gatherpress-calendar__day-number {
+      font-size: clamp(0.625rem, 1.5vw, 0.7rem);
+    }
+    /* ======================================================================
+    	BLOCK STYLE: Dots (style-variation of calendar-entries block)
+    	====================================================================== */
+    .wp-block-gatherpress-calendar-entries.is-style-dots .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
+      width: clamp(6px, 2vw, 8px);
+      height: clamp(6px, 2vw, 8px);
+      min-width: clamp(6px, 2vw, 8px);
+      min-height: clamp(6px, 2vw, 8px);
+    }
+  }
+}
+/* ======================================================================
+   Print Styles
+   ====================================================================== */
+@media print {
+  .gatherpress-calendar__table {
+    break-inside: avoid;
+  }
+  .gatherpress-calendar__table td {
+    break-inside: avoid;
+  }
+}

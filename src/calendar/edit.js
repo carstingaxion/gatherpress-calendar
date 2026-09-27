@@ -42,8 +42,8 @@ import { useStableValue } from '../utils/use-stable-value';
 
 import { useCalendarData } from './edit/hooks/useCalendarData';
 
-import { MonthPicker } from './edit/components/MonthPicker';
-import { MonthControls } from './edit/components/MonthControls';
+// import { MonthPicker } from './edit/components/MonthPicker';
+// import { MonthControls } from './edit/components/MonthControls';
 import { CalendarTable } from './edit/components/CalendarTable';
 
 /**
@@ -74,7 +74,7 @@ export default function Edit( {
 		showWeekends = true,
 	} = attributes;
 	const { query } = context;
-	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
+	// const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 	const [ activeDate, setActiveDate ] = useState( '' );
 
 	// Calculate date query based on selectedMonth and monthModifier.
@@ -188,22 +188,22 @@ export default function Edit( {
 		);
 	}
 
-	// Handlers
-	const handleMonthSelect = ( value ) => {
-		setAttributes( { selectedMonth: value } );
-		setShowMonthPicker( false );
-	};
+	// // Handlers
+	// const handleMonthSelect = ( value ) => {
+	// 	setAttributes( { selectedMonth: value } );
+	// 	setShowMonthPicker( false );
+	// };
 
-	const handleMonthChange = ( value ) => {
-		setAttributes( { selectedMonth: value } );
-	};
+	// const handleMonthChange = ( value ) => {
+	// 	setAttributes( { selectedMonth: value } );
+	// };
 
-	const handleModifierChange = ( value ) => {
-		const numValue = value === '' ? 0 : parseInt( value, 10 );
-		setAttributes( {
-			monthModifier: isNaN( numValue ) ? 0 : numValue,
-		} );
-	};
+	// const handleModifierChange = ( value ) => {
+	// 	const numValue = value === '' ? 0 : parseInt( value, 10 );
+	// 	setAttributes( {
+	// 		monthModifier: isNaN( numValue ) ? 0 : numValue,
+	// 	} );
+	// };
 
 	return (
 		<>
@@ -211,7 +211,7 @@ export default function Edit( {
 				<PanelBody
 					title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }
 				>
-					<p>
+					{/* <p>
 						{ __(
 							'Select a specific month to display, or leave empty to show the current month.',
 							'gatherpress-calendar'
@@ -231,7 +231,7 @@ export default function Edit( {
 							onModifierChange={ handleModifierChange }
 							onOpenPicker={ () => setShowMonthPicker( true ) }
 						/>
-					) }
+					) } */}
 
 					<hr
 						style={ {
