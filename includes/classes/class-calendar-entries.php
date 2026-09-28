@@ -95,7 +95,13 @@ class Calendar_Entries {
 			return '';
 		}
 
-		$wrapper_attributes = get_block_wrapper_attributes();
+		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
+		if ( ! empty( $grid_gap ) ) {
+			$entries_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
+		}
+		$wrapper_attributes = get_block_wrapper_attributes( array(
+			'style' => esc_attr( implode( '; ', $entries_styles ) ),
+		) );
 
 		$items_html = '';
 		foreach ( $day_posts as $post_id ) {
