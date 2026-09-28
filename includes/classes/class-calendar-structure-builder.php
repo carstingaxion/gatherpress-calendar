@@ -27,9 +27,7 @@ class Calendar_Structure_Builder {
 	/**
 	 * Build complete calendar structure.
 	 *
-	 * @since 0.1.0
-	 *
-	 * @param array<string, mixed>     $date_range    Date range array from Date_Calculator.
+	 * @param array<string, mixed>     $date_range    Date range array.
 	 * @param int                      $start_of_week Start of week setting (0-6).
 	 * @param array<string, list<int>> $posts_by_date Posts organized by date.
 	 * @param bool                     $show_weekends Whether to include weekend days.
@@ -49,8 +47,9 @@ class Calendar_Structure_Builder {
 			$weeks     = self::build_single_day( $date_range['start_date_obj'], $posts_by_date );
 			$day_names = array( (string) wp_date( 'D', $date_range['start_date_obj']->getTimestamp() ) );
 		} elseif ( 'week' === $view_type ) {
-			$weeks     = self::build_single_week( $date_range['start_date_obj'], $posts_by_date, $show_weekends );
-			$day_names = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
+			$week_start = $date_range['raw_week_start'] ?? $date_range['start_date_obj'];
+			$weeks      = self::build_single_week( $week_start, $posts_by_date, $show_weekends );
+			$day_names  = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
 		} else {
 			$year          = (int) $date_range['year'];
 			$month         = (int) $date_range['month'];

@@ -27,13 +27,9 @@ import {
 import domReady from '@wordpress/dom-ready';
 
 /**
- * Style imports
- */
-import './style.scss';
-
-/**
  * Internal dependencies
- */
+*/
+import './style.scss';
 import Edit from './edit';
 import save from './save';
 import metadata from './block.json';
@@ -151,6 +147,7 @@ domReady( () => {
 			dateModifier = 0,
 			selectedMonth = '',
 			monthModifier = 0,
+			showWeekends = true,
 		} = liveCalendar?.attributes || {};
 
 		const site = select( 'core' )?.getSite?.();
@@ -161,6 +158,7 @@ domReady( () => {
 				viewType,
 				selectedDate: selectedDate || selectedMonth,
 				dateModifier: dateModifier || monthModifier,
+				showWeekends,
 			},
 			startOfWeek
 		);

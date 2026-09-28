@@ -360,9 +360,10 @@ export function generateCalendar(
 	}
 
 	if ( 'week' === viewType ) {
+		const weekStart = dateRange.rawWeekStart || dateRange.startDateObj || new Date( dateRange.startDate );
 		return {
 			dayNames: getDayNames( startOfWeek, showWeekends ),
-			weeks: buildWeekView( dateRange.startDateObj || new Date( dateRange.startDate ), postsByDate, showWeekends ),
+			weeks: buildWeekView( weekStart, postsByDate, showWeekends ),
 		};
 	}
 

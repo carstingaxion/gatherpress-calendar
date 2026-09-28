@@ -33,7 +33,7 @@ class Date_Calculator {
 	const DATE_FORMAT = 'Y-m-d';
 
 	/**
-	 * Calculate the target date range for the calendar based on viewType, selectedDate/Month, and modifiers.
+	 * Calculate the target date range for the calendar based on viewType, selectedDate/Month, modifiers, and weekend visibility.
 	 *
 	 * @since 0.5.0
 	 *
@@ -46,6 +46,7 @@ class Date_Calculator {
 	 *     end_date: string,
 	 *     start_date_obj: DateTimeImmutable,
 	 *     end_date_obj: DateTimeImmutable,
+	 *     raw_week_start: DateTimeImmutable,
 	 *     target_date: DateTimeImmutable,
 	 *     year: int,
 	 *     month: int,
@@ -63,6 +64,8 @@ class Date_Calculator {
 		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] )
 			? (int) $attributes['dateModifier']
 			: ( isset( $attributes['monthModifier'] ) && is_numeric( $attributes['monthModifier'] ) ? (int) $attributes['monthModifier'] : 0 );
+
+		$show_weekends = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
 
 		$tz        = wp_timezone();
 		$base_date = null;
@@ -100,11 +103,30 @@ class Date_Calculator {
 			$base_date = $base_date->modify( sprintf( '%+d %s', $offset, $step_unit ) );
 		}
 
-		$start_of_week = (int) get_option( 'start_of_week', 0 );
+		$start_of_week  = (int) get_option( 'start_of_week', 0 );
+		$raw_week_start = null;
 
 		if ( 'week' === $view_type ) {
-			$start_date_obj = self::get_week_start( $base_date, $start_of_week );
-			$end_date_obj   = $start_date_obj->modify( '+6 days' )->setTime( 23, 59, 59 );
+			$raw_week_start = self::get_week_start( $base_date, $start_of_week );
+			$visible_days   = array();
+
+			for ( $i = 0; $i < 7; $i++ ) {
+				$day_obj    = $raw_week_start->modify( "+{$i} days" );
+				$dow        = (int) $day_obj->format( 'w' );
+				$is_weekend = self::is_weekend_day( $dow );
+
+				if ( $show_weekends || ! $is_weekend ) {
+					$visible_days[] = $day_obj;
+				}
+			}
+
+			if ( ! empty( $visible_days ) ) {
+				$start_date_obj = $visible_days[0]->setTime( 0, 0, 0 );
+				$end_date_obj   = $visible_days[ count( $visible_days ) - 1 ]->setTime( 23, 59, 59 );
+			} else {
+				$start_date_obj = $raw_week_start->setTime( 0, 0, 0 );
+				$end_date_obj   = $raw_week_start->modify( '+6 days' )->setTime( 23, 59, 59 );
+			}
 		} elseif ( 'day' === $view_type ) {
 			$start_date_obj = $base_date->setTime( 0, 0, 0 );
 			$end_date_obj   = $base_date->setTime( 23, 59, 59 );
@@ -122,6 +144,7 @@ class Date_Calculator {
 			'end_date'       => $end_date_obj->format( 'Y-m-d' ),
 			'start_date_obj' => $start_date_obj,
 			'end_date_obj'   => $end_date_obj,
+			'raw_week_start' => $raw_week_start ?? $start_date_obj,
 			'target_date'    => $base_date,
 			'year'           => (int) $base_date->format( 'Y' ),
 			'month'          => (int) $base_date->format( 'n' ),
