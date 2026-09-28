@@ -92,11 +92,11 @@ export default function Edit( {
 			generateCalendar(
 				posts,
 				startOfWeek,
-				selectedMonth,
-				monthModifier,
+				dateQuery.year,
+				dateQuery.month,
 				showWeekends
 			),
-		[ posts, startOfWeek, selectedMonth, monthModifier, showWeekends ]
+		[ posts, startOfWeek, dateQuery, showWeekends ]
 	);
 
 	// Resolve which day is currently "live"/editable: keep the previously
