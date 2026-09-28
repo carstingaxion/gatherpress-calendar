@@ -179,6 +179,12 @@ export const CalendarQueryControlsPanel = ( props ) => {
 		return null;
 	}
 
+	// Calculate date query based on selectedMonth and monthModifier.
+	const dateQuery = useMemo(
+		() => calculateDateQuery( selectedMonth, monthModifier ),
+		[ selectedMonth, monthModifier ]
+	);
+
 	const handleMonthSelect = ( value ) => {
 		setAttributes( {
 			query: {

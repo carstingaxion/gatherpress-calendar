@@ -54,4 +54,7 @@ registerBlockVariation( 'core/query', {
 	// RSVP" starter pattern out of the Change design picker since that
 	// pattern is scoped to this variation.
 	isActive: [ 'namespace' ],
+		// Disabling irrelevant or unsupported query controls
+	// @see https://developer.wordpress.org/block-editor/how-to-guides/block-tutorial/extending-the-query-loop-block/#disabling-irrelevant-or-unsupported-query-controls
+	allowedControls: [ 'inherit', 'postType', 'taxQuery', 'author', 'search' ],
 } );
