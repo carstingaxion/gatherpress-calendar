@@ -233,13 +233,6 @@ export default function Edit( {
 						/>
 					) }
 
-					<hr
-						style={ {
-							margin: '16px 0',
-							borderTop: '1px solid #ddd',
-						} }
-					/>
-
 					<ToggleControl
 						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
 						checked={ showWeekdays }
