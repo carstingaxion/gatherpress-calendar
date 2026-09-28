@@ -95,7 +95,13 @@ class Calendar_Entries {
 			return '';
 		}
 
-		$wrapper_attributes = get_block_wrapper_attributes();
+		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
+		if ( ! empty( $grid_gap ) ) {
+			$entries_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
+		}
+		$wrapper_attributes = get_block_wrapper_attributes( array(
+			'style' => esc_attr( implode( '; ', $entries_styles ) ),
+		) );
 
 		$items_html = '';
 		foreach ( $day_posts as $post_id ) {
@@ -152,6 +158,9 @@ class Calendar_Entries {
 			$post_title = '';
 		}
 
+		$attributes   = $block->parsed_block['attrs'];
+		$entry_styles = $this->get_entry_styles_and_classes( $attributes );
+
 		// Context filter for the template's inner blocks (core/post-title, event-date, etc.).
 		$filter_block_context = static function ( array $context ) use ( $post_id, $post_type ): array {
 			$context['postType'] = $post_type;
@@ -176,12 +185,126 @@ class Calendar_Entries {
 
 		ob_start();
 		?>
-		<div class="gatherpress-calendar__entry">
+		<div class="<?php echo esc_attr( $entry_styles['classnames'] ); ?>"<?php echo $entry_styles['inline_styles']; ?>>
 			<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</div>
 		<?php
 		$output = ob_get_clean();
 		return is_string( $output ) ? $output : '';
+	}
+
+	/**
+	 * Builds CSS styles and classnames for an entry using wp_style_engine_get_styles.
+	 *
+	 * Handles color, border, shadow, and spacing (margin/padding).
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 *
+	 * @return array{classnames: string, inline_styles: string} Resolved CSS class names and inline style attribute.
+	 */
+	private function get_entry_styles_and_classes( array $attributes ): array {
+		$block_styles  = array();
+		$extra_classes = array( 'gatherpress-calendar__entry' );
+
+		/* -------------------------------------------------------------
+		 * 1. COLOR (Text, Background, Gradient)
+		 * ----------------------------------------------------------- */
+		$color_styles = array();
+
+		// Text color.
+		if ( ! empty( $attributes['textColor'] ) ) {
+			$color_styles['text'] = "var:preset|color|{$attributes['textColor']}";
+		} elseif ( ! empty( $attributes['style']['color']['text'] ) ) {
+			$color_styles['text'] = $attributes['style']['color']['text'];
+		}
+
+		// Background color.
+		if ( ! empty( $attributes['backgroundColor'] ) ) {
+			$color_styles['background'] = "var:preset|color|{$attributes['backgroundColor']}";
+		} elseif ( ! empty( $attributes['style']['color']['background'] ) ) {
+			$color_styles['background'] = $attributes['style']['color']['background'];
+		}
+
+		// Gradient.
+		if ( ! empty( $attributes['gradient'] ) ) {
+			$color_styles['gradient'] = "var:preset|gradient|{$attributes['gradient']}";
+		} elseif ( ! empty( $attributes['style']['color']['gradient'] ) ) {
+			$color_styles['gradient'] = $attributes['style']['color']['gradient'];
+		}
+
+		if ( ! empty( $color_styles ) ) {
+			$block_styles['color'] = $color_styles;
+		}
+
+		if ( ! empty( $attributes['style']['elements']['link']['color']['text'] ) ) {
+			$extra_classes[] = 'has-link-color';
+		}
+
+		/* -------------------------------------------------------------
+		 * 2. BORDER (Radius, Color, Width, Style, Sides)
+		 * ----------------------------------------------------------- */
+		$border_styles = array();
+
+		if ( ! empty( $attributes['borderColor'] ) ) {
+			$border_styles['color'] = "var:preset|color|{$attributes['borderColor']}";
+		}
+
+		if ( ! empty( $attributes['style']['border'] ) && is_array( $attributes['style']['border'] ) ) {
+			$border_styles = array_merge( $border_styles, $attributes['style']['border'] );
+		}
+
+		if ( ! empty( $border_styles ) ) {
+			$block_styles['border'] = $border_styles;
+		}
+
+		/* -------------------------------------------------------------
+		 * 3. SHADOW (Single level path)
+		 * ----------------------------------------------------------- */
+		$shadow = $attributes['style']['shadow'] ?? ( $attributes['shadow'] ?? null );
+		if ( ! empty( $shadow ) && is_string( $shadow ) ) {
+			$block_styles['shadow'] = ( strpos( $shadow, 'var:preset|' ) === 0 || strpos( $shadow, ' ' ) !== false )
+				? $shadow
+				: "var:preset|shadow|{$shadow}";
+		}
+
+		/* -------------------------------------------------------------
+		 * 4. SPACING (Padding & Margin)
+		 * ----------------------------------------------------------- */
+		$spacing_styles = array();
+
+		if ( ! empty( $attributes['style']['spacing']['padding'] ) ) {
+			$spacing_styles['padding'] = $attributes['style']['spacing']['padding'];
+		}
+
+		if ( ! empty( $attributes['style']['spacing']['margin'] ) ) {
+			$spacing_styles['margin'] = $attributes['style']['spacing']['margin'];
+		}
+
+		if ( ! empty( $spacing_styles ) ) {
+			$block_styles['spacing'] = $spacing_styles;
+		}
+
+		/* -------------------------------------------------------------
+		 * 5. COMPILE VIA STYLE ENGINE
+		 * ----------------------------------------------------------- */
+		// convert_vars_to_classnames MUST be false so that var:preset|spacing|...
+		// converts to var(--wp--preset--spacing--...) instead of remaining raw.
+		$styles = wp_style_engine_get_styles(
+			$block_styles,
+			array( 'convert_vars_to_classnames' => false )
+		);
+
+		$classnames = trim( implode( ' ', array_filter( array_merge(
+			$extra_classes,
+			explode( ' ', $styles['classnames'] ?? '' )
+		) ) ) );
+
+		$inline_styles = ! empty( $styles['css'] ) ? sprintf( ' style="%s"', esc_attr( $styles['css'] ) ) : '';
+
+		return array(
+			'classnames'    => $classnames,
+			'inline_styles' => $inline_styles,
+		);
 	}
 
 	/**

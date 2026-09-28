@@ -8,10 +8,18 @@
 import {
 	useBlockProps,
 	useInnerBlocksProps,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalUseBlockPreview as useBlockPreview,
 	BlockContextProvider,
 	store as blockEditorStore,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalUseColorProps as useColorProps,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalUseBorderProps as useBorderProps,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalGetShadowClassesAndStyles as getShadowClassesAndStyles,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalUseBlockPreview as useBlockPreview,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
@@ -45,6 +53,7 @@ const EventItem = memo( function EventItemComponent( {
 	isFirst,
 	innerBlocksProps,
 	innerBlocks,
+	parentAttributes
 } ) {
 	// Safely resolve postId and postType whether post is an object or primitive ID
 	const postId =
@@ -69,9 +78,34 @@ const EventItem = memo( function EventItemComponent( {
 		};
 	}, [ postId, postType ] );
 
+	const colorProps = useColorProps( parentAttributes ?? {} );
+	const borderProps = useBorderProps( parentAttributes ?? {} );
+	// const spacingProps = getSpacingClassesAndStyles( parentAttributes ?? {} );
+	const shadowProps = getShadowClassesAndStyles( parentAttributes ?? {} );
+
+	const classNames = [
+		'gatherpress-calendar__entry',
+		colorProps.className,
+		borderProps.className,
+	]
+		.filter( Boolean )
+		.join( ' ' );
+
+	const style = {
+		...colorProps.style,
+		...borderProps.style,
+		// ...spacingProps.style,
+		...shadowProps.style,
+	};
+
+	const entryProps = useBlockProps( {
+		className: classNames,
+		style: style,
+	} );
+
 	return (
 		<BlockContextProvider value={ contextValue }>
-			<div className="gatherpress-calendar__entry">
+			<div { ...entryProps }>
 				{ isFirst ? (
 					// The primary, editable template container
 					<div { ...innerBlocksProps } />
@@ -130,6 +164,7 @@ export default function Edit( { attributes, clientId, context } ) {
 					isFirst={ index === 0 }
 					innerBlocksProps={ innerBlocksProps }
 					innerBlocks={ innerBlocks }
+					parentAttributes={ attributes }
 				/>
 			) ) }
 		</div>
