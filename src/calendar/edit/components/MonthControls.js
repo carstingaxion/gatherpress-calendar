@@ -39,7 +39,7 @@ export function MonthControls( {
 		<>
 			<div
 				style={ {
-					marginBottom: '12px',
+					marginBottom: '8px',
 					padding: '8px',
 					background: '#f0f0f1',
 					borderRadius: '4px',
@@ -66,17 +66,19 @@ export function MonthControls( {
 				) }
 			</div>
 			<Button
-				isPrimary
+				variant="primary"
 				onClick={ onOpenPicker }
+				__next40pxDefaultSize
 				style={ { width: '100%', marginBottom: '8px' } }
 			>
 				{ __( 'Change Month', 'gatherpress-calendar' ) }
 			</Button>
 			{ selectedMonth && (
 				<Button
-					isSecondary
 					onClick={ () => onMonthChange( '' ) }
-					style={ { width: '100%' } }
+					variant="secondary"
+					__next40pxDefaultSize
+					style={ { width: '100%', marginBottom: '8px' } }
 				>
 					{ __( 'Reset to Current Month', 'gatherpress-calendar' ) }
 				</Button>
@@ -84,12 +86,6 @@ export function MonthControls( {
 
 			{ ! selectedMonth && (
 				<>
-					<hr
-						style={ {
-							margin: '16px 0',
-							borderTop: '1px solid #ddd',
-						} }
-					/>
 					<p
 						style={ {
 							marginTop: '16px',
@@ -116,6 +112,8 @@ export function MonthControls( {
 							'Months from current',
 							'gatherpress-calendar'
 						) }
+						labelPosition="side"
+						type="number"
 						value={ monthModifier }
 						onChange={ onModifierChange }
 						min={ -12 }
@@ -125,9 +123,10 @@ export function MonthControls( {
 					/>
 					{ monthModifier !== 0 && (
 						<Button
-							isSecondary
 							onClick={ () => onModifierChange( 0 ) }
-							style={ { width: '100%', marginTop: '8px' } }
+							variant="secondary"
+							__next40pxDefaultSize
+							style={ { width: '100%', marginBottom: '8px' } }
 						>
 							{ __(
 								'Reset Month Offset',

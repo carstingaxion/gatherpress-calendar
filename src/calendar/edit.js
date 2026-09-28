@@ -92,11 +92,11 @@ export default function Edit( {
 			generateCalendar(
 				posts,
 				startOfWeek,
-				selectedMonth,
-				monthModifier,
+				dateQuery.year,
+				dateQuery.month,
 				showWeekends
 			),
-		[ posts, startOfWeek, selectedMonth, monthModifier, showWeekends ]
+		[ posts, startOfWeek, dateQuery, showWeekends ]
 	);
 
 	// Resolve which day is currently "live"/editable: keep the previously
@@ -232,13 +232,6 @@ export default function Edit( {
 							onOpenPicker={ () => setShowMonthPicker( true ) }
 						/>
 					) }
-
-					<hr
-						style={ {
-							margin: '16px 0',
-							borderTop: '1px solid #ddd',
-						} }
-					/>
 
 					<ToggleControl
 						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
