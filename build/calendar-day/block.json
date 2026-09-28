@@ -48,6 +48,15 @@
     "isToday": {
       "type": "boolean",
       "default": false
+    },
+    "layout": {
+      "type": "object",
+      "default": {
+        "type": "flex",
+        "orientation": "horizontal",
+        "justifyContent": "left",
+        "alignItems": "center"
+      }
     }
   },
   "supports": {
@@ -76,12 +85,7 @@
     "layout": {
       "allowSwitching": true,
       "allowInheriting": false,
-      "allowSizingOnChildren": true,
-      "default": {
-        "type": "flex",
-        "orientation": "horizontal",
-        "justifyContent": "left"
-      }
+      "allowSizingOnChildren": true
     },
     "__experimentalBorder": {
       "color": true,

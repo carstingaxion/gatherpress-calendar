@@ -6,7 +6,7 @@
 	aspect-ratio: 1;
 	min-height: 0;
 	display: flex;
-	align-items: stretch;
+	align-items: center;
 	justify-content: stretch;
 	overflow: visible;
 	// background: var(--wp--preset--color--base, #fff);
@@ -46,7 +46,7 @@
 .gatherpress-calendar__day-number {
 	margin: 0.2em; // set a default for the UI
 	display: inline;
-	aspect-ratio: 1;
+	// aspect-ratio: 1;
 	z-index: 1; // Allow to overrule the outline of its parent calendar-day block.
 }
 
