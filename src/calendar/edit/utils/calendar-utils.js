@@ -239,7 +239,6 @@ export function buildWeeks(
  *
  * Creates a monthly calendar grid where posts are placed on their respective dates.
  * The calendar structure includes:
- * - Month name and year
  * - Weeks array (each week is 7 days)
  * - Each day contains: day number, date string, and array of posts for that date
  * - Empty days before/after the month to complete the grid
@@ -253,17 +252,16 @@ export function buildWeeks(
  *
  * @param {Array<Object>} posts         - Array of post objects from the REST API.
  * @param {number}        startOfWeek   - The start of week (0=Sunday, 1=Monday, etc.).
- * @param {string}        selectedMonth - The selected month in format "YYYY-MM".
- * @param {number}        monthModifier - The month offset from current month.
+ * @param {number}        year - The selected year in format "YYYY".
+ * @param {number}        month -  The selected month in format "MM".
  * @param {boolean}       showWeekends  - Whether to include weekend days.
  *
  * @return {Object} Calendar data structure containing:
- *   - {string} monthName - Formatted month and year (e.g., "January 2025")
  *   - {Array<Array<Object>>} weeks - Array of weeks, each containing 7 day objects
  *   - {Array<string>} dayNames - Array of day name labels
  *
  * @example
- * const calendar = generateCalendar(posts, 0, '', 0);
+ * const calendar = generateCalendar(posts, 0, 2025, 01, true);
  * // Returns:
  * // {
  * //   weeks: [
@@ -280,26 +278,12 @@ export function buildWeeks(
 export function generateCalendar(
 	posts = [],
 	startOfWeek = 0,
-	selectedMonth = '',
-	monthModifier = 0,
+	year,
+	month,
 	showWeekends = true
 ) {
-	// 1. Resolve Target Date
-	let year, month;
-	if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
-		const [ y, m ] = selectedMonth.split( '-' ).map( Number );
-		year = y;
-		month = m;
-	} else {
-		const now = new Date();
-		if ( monthModifier !== 0 ) {
-			now.setMonth( now.getMonth() + monthModifier );
-		}
-		year = now.getFullYear();
-		month = now.getMonth() + 1;
-	}
 
-	// 3. Organize posts by date for quick lookup.
+	// Organize posts by date for quick lookup.
 	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
 	const postsByDate = {};
 	if ( posts && posts.length > 0 ) {

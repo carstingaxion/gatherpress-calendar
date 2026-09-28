@@ -42,8 +42,8 @@ import { useStableValue } from '../utils/use-stable-value';
 
 import { useCalendarData } from './edit/hooks/useCalendarData';
 
-import { MonthPicker } from './edit/components/MonthPicker';
-import { MonthControls } from './edit/components/MonthControls';
+// import { MonthPicker } from './edit/components/MonthPicker';
+// import { MonthControls } from './edit/components/MonthControls';
 import { CalendarTable } from './edit/components/CalendarTable';
 
 /**
@@ -68,20 +68,17 @@ export default function Edit( {
 	clientId,
 } ) {
 	const {
-		selectedMonth,
-		monthModifier = 0,
 		showWeekdays = true,
 		showWeekends = true,
 	} = attributes;
 	const { query } = context;
-	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 	const [ activeDate, setActiveDate ] = useState( '' );
 
-	// Calculate date query based on selectedMonth and monthModifier.
-	const dateQuery = useMemo(
-		() => calculateDateQuery( selectedMonth, monthModifier ),
-		[ selectedMonth, monthModifier ]
-	);
+	// // Calculate date query based on selectedMonth and monthModifier.
+	// const dateQuery = useMemo(
+	// 	() => calculateDateQuery( selectedMonth, monthModifier ),
+	// 	[ selectedMonth, monthModifier ]
+	// );
 
 	// Fetch posts and site settings.
 	const { posts, startOfWeek } = useCalendarData( query, dateQuery );
@@ -92,11 +89,11 @@ export default function Edit( {
 			generateCalendar(
 				posts,
 				startOfWeek,
-				selectedMonth,
-				monthModifier,
+				dateQuery.year,
+				dateQuery.month,
 				showWeekends
 			),
-		[ posts, startOfWeek, selectedMonth, monthModifier, showWeekends ]
+		[ posts, startOfWeek, dateQuery, showWeekends ]
 	);
 
 	// Resolve which day is currently "live"/editable: keep the previously
@@ -188,58 +185,12 @@ export default function Edit( {
 		);
 	}
 
-	// Handlers
-	const handleMonthSelect = ( value ) => {
-		setAttributes( { selectedMonth: value } );
-		setShowMonthPicker( false );
-	};
-
-	const handleMonthChange = ( value ) => {
-		setAttributes( { selectedMonth: value } );
-	};
-
-	const handleModifierChange = ( value ) => {
-		const numValue = value === '' ? 0 : parseInt( value, 10 );
-		setAttributes( {
-			monthModifier: isNaN( numValue ) ? 0 : numValue,
-		} );
-	};
-
 	return (
 		<>
 			<InspectorControls>
 				<PanelBody
 					title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }
 				>
-					<p>
-						{ __(
-							'Select a specific month to display, or leave empty to show the current month.',
-							'gatherpress-calendar'
-						) }
-					</p>
-					{ showMonthPicker ? (
-						<MonthPicker
-							selectedMonth={ selectedMonth }
-							onSelect={ handleMonthSelect }
-							onCancel={ () => setShowMonthPicker( false ) }
-						/>
-					) : (
-						<MonthControls
-							selectedMonth={ selectedMonth }
-							monthModifier={ monthModifier }
-							onMonthChange={ handleMonthChange }
-							onModifierChange={ handleModifierChange }
-							onOpenPicker={ () => setShowMonthPicker( true ) }
-						/>
-					) }
-
-					<hr
-						style={ {
-							margin: '16px 0',
-							borderTop: '1px solid #ddd',
-						} }
-					/>
-
 					<ToggleControl
 						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
 						checked={ showWeekdays }
