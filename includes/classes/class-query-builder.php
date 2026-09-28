@@ -20,24 +20,22 @@ use WP_Block;
  * Query_Builder Class
  *
  * Constructs WP_Query arguments from Query Loop context.
- * Adds date filtering and calendar-specific parameters.
  *
  * @since 0.1.0
  */
 class Query_Builder {
 
 	/**
-	 * Build query arguments from block context.
+	 * Build query arguments from block context and resolved date range.
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param WP_Block $block Block instance.
-	 * @param int      $year  Target year.
-	 * @param int      $month Target month.
+	 * @param WP_Block             $block      Block instance.
+	 * @param array<string, mixed> $date_range Resolved date range array.
 	 *
 	 * @return array<string, mixed> WP_Query arguments.
 	 */
-	public static function build_query_args( WP_Block $block, int $year, int $month ): array {
+	public static function build_query_args( WP_Block $block, array $date_range ): array {
 		$query_id   = isset( $block->context['queryId'] ) && is_int( $block->context['queryId'] ) ? $block->context['queryId'] : 0;
 		$page_param = 'query-' . $query_id . '-page';
 		$page       = isset( $_GET[ $page_param ] ) && is_numeric( $_GET[ $page_param ] ) ? max( 1, (int) $_GET[ $page_param ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -49,19 +47,24 @@ class Query_Builder {
 		 */
 		$query_args = build_query_vars_from_query_block( $block, $page );
 
-		// Add calendar query marker and date filtering.
-		$query_args[ Event\Query::EVENT_QUERY_PARAM ] = 'all'; // Was formerly just unset, but this seems more reliable.
-		$query_args[ Setup::CALENDAR_QUERY_PARAM ]    = true;
-		$query_args['posts_per_page']                 = 99;
-		$query_args['date_query']                     = array(
+		// Set calendar query markers and range parameters.
+		$query_args[ Event\Query::EVENT_QUERY_PARAM ]   = 'all';
+		$query_args[ Setup::CALENDAR_QUERY_PARAM ]      = true;
+		$query_args[ Setup::CALENDAR_QUERY_VIEW_TYPE ]  = $date_range['view_type'];
+		$query_args[ Setup::CALENDAR_QUERY_START_DATE ] = $date_range['start_date'];
+		$query_args[ Setup::CALENDAR_QUERY_END_DATE ]   = $date_range['end_date'];
+		$query_args['posts_per_page']                   = 99;
+
+		// Inclusive date range prevents boundary clipping across weeks and multi-month periods.
+		$query_args['date_query'] = array(
 			array(
-				'year'  => $year,
-				'month' => $month,
+				'after'     => $date_range['start_date'] . ' 00:00:00',
+				'before'    => $date_range['end_date'] . ' 23:59:59',
+				'inclusive' => true,
 			),
 		);
 
-		// Remove conflicting parameters.
-		if ( $page !== 1 ) {
+		if ( 1 !== $page ) {
 			unset( $query_args['offset'] );
 		}
 

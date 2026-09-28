@@ -1,7 +1,11 @@
+/**
+ * Calendar generation utility functions.
+ *
+ * @package GatherPressCalendar
+ */
+
 import { dateI18n } from '@wordpress/date';
 import { applyFilters } from '@wordpress/hooks';
-
-// import { calculateTargetDate } from './date-utils';
 import { DATE_FORMAT } from '../constants';
 
 export const WEEKDAY_SLUGS = [
@@ -63,7 +67,7 @@ export function isWeekendDay( dayOfWeek ) {
  * // Monday-first week (European style)
  * getDayNames(1) // Returns ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
  */
-function getDayNames( startOfWeek = 0, showWeekends ) {
+function getDayNames( startOfWeek = 0, showWeekends = true ) {
 	const days = [];
 
 	// Base date: 2024-01-07 is a Sunday (day 0).
@@ -93,7 +97,7 @@ function getDayNames( startOfWeek = 0, showWeekends ) {
 }
 
 /**
- * Generate month options for the month picker.
+ * Generate month options for month picker.
  *
  * Creates an array of month options spanning from last year to next year,
  * providing users with a reasonable range of months to choose from without
@@ -139,10 +143,11 @@ export function generateMonthOptions() {
  * @param {number}  year         Target year.
  * @param {number}  month        Target month (1-12).
  * @param {number}  startOfWeek  Start of week (0-6).
- * @param {number}  daysInMonth  Number of days in month (28-31).
- * @param {Object}  postsByDate  Posts grouped by 'YYYY-MM-DD'.
- * @param {boolean} showWeekends Whether to include weekend days.
- * @return {Array[]} Array of week arrays containing day objects.
+ * @param {number}  daysInMonth  Number of days in month.
+ * @param {Object}  postsByDate  Posts grouped by date.
+ * @param {boolean} showWeekends Weekend visibility.
+ *
+ * @return {Array[]} Weeks array.
  */
 export function buildWeeks(
 	year,
@@ -154,9 +159,8 @@ export function buildWeeks(
 ) {
 	// Today's date string, used to flag the current day in the grid.
 	const today = dateI18n( DATE_FORMAT, new Date() );
-
-	// Determine the ordered active columns (5 or 7 columns)
 	const activeDaysOfWeek = [];
+
 	for ( let i = 0; i < 7; i++ ) {
 		const dow = ( startOfWeek + i ) % 7;
 		if ( ! showWeekends && isWeekendDay( dow ) ) {
@@ -165,7 +169,7 @@ export function buildWeeks(
 		activeDaysOfWeek.push( dow );
 	}
 
-	const daysPerWeek = activeDaysOfWeek.length; // 5 or 7
+	const daysPerWeek = activeDaysOfWeek.length;
 	const weeks = [];
 	let currentWeek = [];
 	let firstDayPlaced = false;
@@ -183,7 +187,7 @@ export function buildWeeks(
 		if ( ! firstDayPlaced ) {
 			firstDayPlaced = true;
 			const startCol = activeDaysOfWeek.indexOf( dayOfWeek );
-			const emptyDays = startCol !== -1 ? startCol : 0;
+			const emptyDays = -1 !== startCol ? startCol : 0;
 
 			// Fill initial empty days before the month starts.
 			for ( let i = 0; i < emptyDays; i++ ) {
@@ -235,65 +239,102 @@ export function buildWeeks(
 }
 
 /**
- * Generate calendar structure with posts.
+ * Build single week view without artificial empty padding.
  *
- * Creates a monthly calendar grid where posts are placed on their respective dates.
- * The calendar structure includes:
- * - Weeks array (each week is 7 days)
- * - Each day contains: day number, date string, and array of posts for that date
- * - Empty days before/after the month to complete the grid
+ * @param {Date}    startDateObj Start date of the week.
+ * @param {Object}  postsByDate  Posts grouped by date.
+ * @param {boolean} showWeekends Weekend visibility.
  *
- * Post organization:
- * - For GatherPress events: uses gatherpress_datetime_start meta field
- * - For other post types: uses publication date
- * - Multiple posts can appear on the same day
+ * @return {Array[]} Single-element array containing the week days.
+ */
+export function buildWeekView( startDateObj, postsByDate = {}, showWeekends = true ) {
+	const today = dateI18n( DATE_FORMAT, new Date() );
+	const week = [];
+	const baseDate = new Date( startDateObj );
+
+	for ( let i = 0; i < 7; i++ ) {
+		const dateObj = new Date( baseDate );
+		dateObj.setDate( baseDate.getDate() + i );
+		const dayOfWeek = dateObj.getDay();
+
+		if ( ! showWeekends && isWeekendDay( dayOfWeek ) ) {
+			continue;
+		}
+
+		const dateStr = dateI18n( DATE_FORMAT, dateObj );
+		const dayPosts = postsByDate?.[ dateStr ] ?? [];
+		const isWeekend = isWeekendDay( dayOfWeek );
+		const weekday = WEEKDAY_SLUGS[ dayOfWeek ];
+
+		week.push( {
+			day: dateObj.getDate(),
+			date: dateStr,
+			posts: dayPosts,
+			isEmpty: false,
+			isToday: dateStr === today,
+			dayOfWeek,
+			weekday,
+			isWeekend,
+		} );
+	}
+
+	return [ week ];
+}
+
+/**
+ * Build single day view.
  *
- * @since 0.1.0
+ * @param {Date}   dayObj      Day Date object.
+ * @param {Object} postsByDate Posts grouped by date.
  *
- * @param {Array<Object>} posts         - Array of post objects from the REST API.
- * @param {number}        startOfWeek   - The start of week (0=Sunday, 1=Monday, etc.).
- * @param {number}        year - The selected year in format "YYYY".
- * @param {number}        month -  The selected month in format "MM".
- * @param {boolean}       showWeekends  - Whether to include weekend days.
+ * @return {Array[]} Single-element array with single-day week.
+ */
+export function buildDayView( dayObj, postsByDate = {} ) {
+	const today = dateI18n( DATE_FORMAT, new Date() );
+	const dateObj = new Date( dayObj );
+	const dayOfWeek = dateObj.getDay();
+	const dateStr = dateI18n( DATE_FORMAT, dateObj );
+	const dayPosts = postsByDate?.[ dateStr ] ?? [];
+	const isWeekend = isWeekendDay( dayOfWeek );
+	const weekday = WEEKDAY_SLUGS[ dayOfWeek ];
+
+	const singleDay = {
+		day: dateObj.getDate(),
+		date: dateStr,
+		posts: dayPosts,
+		isEmpty: false,
+		isToday: dateStr === today,
+		dayOfWeek,
+		weekday,
+		isWeekend,
+	};
+
+	return [ [ singleDay ] ];
+}
+
+/**
+ * Generate calendar structure for any viewType.
  *
- * @return {Object} Calendar data structure containing:
- *   - {Array<Array<Object>>} weeks - Array of weeks, each containing 7 day objects
- *   - {Array<string>} dayNames - Array of day name labels
+ * @param {Array<Object>} posts        Posts from the query.
+ * @param {number}        startOfWeek  Start of week (0-6).
+ * @param {Object}        dateRange    Resolved date range.
+ * @param {boolean}       showWeekends Weekend visibility.
  *
- * @example
- * const calendar = generateCalendar(posts, 0, 2025, 01, true);
- * // Returns:
- * // {
- * //   weeks: [
- * //     [
- * //       { isEmpty: true },
- * //       { day: 1, date: '2025-01-01', posts: [], isEmpty: false },
- * //       ...
- * //     ],
- * //     ...
- * //   ],
- * //   dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
- * // }
+ * @return {Object} Calendar data structure.
  */
 export function generateCalendar(
 	posts = [],
 	startOfWeek = 0,
-	year,
-	month,
+	dateRange,
 	showWeekends = true
 ) {
-
-	// Organize posts by date for quick lookup.
-	// Format: { 'YYYY-MM-DD': [post1, post2, ...] }
 	const postsByDate = {};
 	if ( posts && posts.length > 0 ) {
 		posts.forEach( ( post ) => {
 			let postDate;
-			// For GatherPress events, use event start date.
-			if ( post.type === 'gatherpress_event' ) {
-				postDate = post.meta.gatherpress_datetime_start;
+			if ( 'gatherpress_event' === post.type ) {
+				postDate = post.meta?.gatherpress_datetime_start;
 			} else {
-				// For other post types, use publication date.
 				postDate = post.date;
 			}
 			if ( ! postDate ) {
@@ -308,13 +349,30 @@ export function generateCalendar(
 			postsByDate[ dateStr ].push( post );
 		} );
 	}
-	const daysInMonth = new Date( year, month, 0 ).getDate();
+
+	const viewType = dateRange.viewType || 'month';
+
+	if ( 'day' === viewType ) {
+		return {
+			dayNames: [ dateI18n( 'D', dateRange.startDateObj || new Date( dateRange.startDate ) ) ],
+			weeks: buildDayView( dateRange.startDateObj || new Date( dateRange.startDate ), postsByDate ),
+		};
+	}
+
+	if ( 'week' === viewType ) {
+		return {
+			dayNames: getDayNames( startOfWeek, showWeekends ),
+			weeks: buildWeekView( dateRange.startDateObj || new Date( dateRange.startDate ), postsByDate, showWeekends ),
+		};
+	}
+
+	const daysInMonth = new Date( dateRange.year, dateRange.month, 0 ).getDate();
 
 	return {
 		dayNames: getDayNames( startOfWeek, showWeekends ),
 		weeks: buildWeeks(
-			year,
-			month,
+			dateRange.year,
+			dateRange.month,
 			startOfWeek,
 			daysInMonth,
 			postsByDate,
@@ -322,16 +380,14 @@ export function generateCalendar(
 		),
 	};
 }
+
 /**
  * Pick a sensible default "active" (live-editable) day for the calendar
  * preview: today's date when it falls inside the displayed month,
  * otherwise the first non-empty day of the month.
  *
- * @since 0.4.0
- *
- * @param {Object} calendar - Calendar data structure from generateCalendar().
- *
- * @return {string} Date string (Y-m-d) to treat as the active/live day.
+ * @param {Object} calendar Calendar structure.
+ * @return {string} Date string.
  */
 export function getDefaultActiveDate( calendar ) {
 	const days = calendar.weeks.flat();

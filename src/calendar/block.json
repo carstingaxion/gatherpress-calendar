@@ -2,11 +2,11 @@
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
   "name": "gatherpress/calendar",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "title": "GatherPress Calendar",
   "category": "gatherpress",
   "icon": "calendar-alt",
-  "description": "Display query loop posts in a monthly calendar format.",
+  "description": "Display query loop posts in a monthly, weekly, or daily calendar format.",
   "ancestor": [
     "core/query"
   ],
@@ -22,9 +22,23 @@
     "previewPostType"
   ],
   "providesContext": {
+    "gatherpress/viewType": "viewType",
     "gatherpress/showWeekends": "showWeekends"
   },
   "attributes": {
+    "viewType": {
+      "type": "string",
+      "enum": [ "month", "week", "day" ],
+      "default": "month"
+    },
+    "selectedDate": {
+      "type": "string",
+      "default": ""
+    },
+    "dateModifier": {
+      "type": "number",
+      "default": 0
+    },
     "selectedMonth": {
       "type": "string",
       "default": ""
@@ -74,29 +88,29 @@
       "allowEditing": false
     }
   },
-	"styles": [
-		{
-			"name": "default",
-			"label": "Classic",
-			"isDefault": true
-		},
-		{
-			"name": "minimal",
-			"label": "Minimal"
-		},
-		{
-			"name": "bold",
-			"label": "Bold"
-		},
-		{
-			"name": "circular",
-			"label": "Circular"
-		},
-		{
-			"name": "gradient",
-			"label": "Gradient"
-		}
-	],
+  "styles": [
+    {
+      "name": "default",
+      "label": "Classic",
+      "isDefault": true
+    },
+    {
+      "name": "minimal",
+      "label": "Minimal"
+    },
+    {
+      "name": "bold",
+      "label": "Bold"
+    },
+    {
+      "name": "circular",
+      "label": "Circular"
+    },
+    {
+      "name": "gradient",
+      "label": "Gradient"
+    }
+  ],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",

@@ -13,13 +13,12 @@ namespace GatherPress_Calendar;
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
+use DateTimeImmutable;
+
 /**
  * Date_Calculator Class
  *
- * Handles all date-related calculations for the calendar including:
- * - Target month/year determination
- * - Day name localization
- * - Date formatting
+ * Handles date-related calculations for month, week, and day calendar views.
  *
  * @since 0.1.0
  */
@@ -34,54 +33,163 @@ class Date_Calculator {
 	const DATE_FORMAT = 'Y-m-d';
 
 	/**
-	 * Calculate target year and month from attributes.
+	 * Calculate the target date range for the calendar based on viewType, selectedDate/Month, and modifiers.
 	 *
-	 * Logic:
-	 * 1. If selectedMonth is set: use that specific month
-	 * 2. Otherwise: use current month + monthModifier
-	 *
-	 * @since 0.1.0
+	 * @since 0.5.0
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param int                  $page       Pagination page offset (1-based, default 1).
 	 *
-	 * @return array{year: int, month: int} Target year and month.
+	 * @return array{
+	 *     view_type: string,
+	 *     start_date: string,
+	 *     end_date: string,
+	 *     start_date_obj: DateTimeImmutable,
+	 *     end_date_obj: DateTimeImmutable,
+	 *     target_date: DateTimeImmutable,
+	 *     year: int,
+	 *     month: int,
+	 *     heading: string
+	 * }
 	 */
-	public static function calculate_target_date( array $attributes ): array {
-		$selected_month = isset( $attributes['selectedMonth'] ) && is_string( $attributes['selectedMonth'] ) ? $attributes['selectedMonth'] : '';
-		$month_modifier = isset( $attributes['monthModifier'] ) && is_numeric( $attributes['monthModifier'] ) ? (int) $attributes['monthModifier'] : 0;
+	public static function calculate_date_range( array $attributes, int $page = 1 ): array {
+		$view_type = isset( $attributes['viewType'] ) && is_string( $attributes['viewType'] ) && in_array( $attributes['viewType'], array( 'month', 'week', 'day' ), true )
+			? $attributes['viewType']
+			: 'month';
 
-		if ( ! empty( $selected_month ) && preg_match( '/^\d{4}-\d{2}$/', $selected_month ) ) {
-			// Use selected month.
-			$parts = explode( '-', $selected_month );
-			if ( count( $parts ) === 2 ) {
-				return array(
-					'year'  => (int) $parts[0],
-					'month' => (int) $parts[1],
-				);
+		$selected_date  = ! empty( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
+		$selected_month = ! empty( $attributes['selectedMonth'] ) && is_string( $attributes['selectedMonth'] ) ? $attributes['selectedMonth'] : '';
+
+		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] )
+			? (int) $attributes['dateModifier']
+			: ( isset( $attributes['monthModifier'] ) && is_numeric( $attributes['monthModifier'] ) ? (int) $attributes['monthModifier'] : 0 );
+
+		$tz        = wp_timezone();
+		$base_date = null;
+
+		if ( ! empty( $selected_date ) ) {
+			if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $selected_date ) ) {
+				$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_date, $tz );
+			} elseif ( preg_match( '/^\d{4}-\d{2}$/', $selected_date ) ) {
+				$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_date . '-01', $tz );
 			}
+		} elseif ( ! empty( $selected_month ) && preg_match( '/^\d{4}-\d{2}$/', $selected_month ) ) {
+			$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_month . '-01', $tz );
 		}
 
-		// Use current month with modifier.
-		$local_time = current_datetime();
-		$now        = $local_time->getTimestamp() + $local_time->getOffset();
-		if ( ! $now ) {
-			$now = time();
+		if ( ! $base_date instanceof DateTimeImmutable ) {
+			$base_date = current_datetime();
 		}
 
-		if ( 0 !== $month_modifier ) {
-			$target_timestamp = strtotime( sprintf( '%+d months', $month_modifier ), $now );
-			if ( false !== $target_timestamp ) {
-				return array(
-					'year'  => (int) gmdate( 'Y', $target_timestamp ),
-					'month' => (int) gmdate( 'n', $target_timestamp ),
-				);
+		// Normalize base date to the 1st of the month in month view to prevent overflow (e.g. Jan 31 + 1 month).
+		if ( 'month' === $view_type ) {
+			$base_date = $base_date->modify( 'first day of this month' );
+		}
+
+		// Combine user-defined dateModifier with query pagination offset.
+		$offset = $date_modifier + max( 0, $page - 1 );
+
+		if ( 0 !== $offset ) {
+			$step_unit = 'month';
+			if ( 'week' === $view_type ) {
+				$step_unit = 'week';
+			} elseif ( 'day' === $view_type ) {
+				$step_unit = 'day';
 			}
+
+			$base_date = $base_date->modify( sprintf( '%+d %s', $offset, $step_unit ) );
 		}
+
+		$start_of_week = (int) get_option( 'start_of_week', 0 );
+
+		if ( 'week' === $view_type ) {
+			$start_date_obj = self::get_week_start( $base_date, $start_of_week );
+			$end_date_obj   = $start_date_obj->modify( '+6 days' )->setTime( 23, 59, 59 );
+		} elseif ( 'day' === $view_type ) {
+			$start_date_obj = $base_date->setTime( 0, 0, 0 );
+			$end_date_obj   = $base_date->setTime( 23, 59, 59 );
+		} else {
+			// Month view.
+			$start_date_obj = $base_date->modify( 'first day of this month' )->setTime( 0, 0, 0 );
+			$end_date_obj   = $base_date->modify( 'last day of this month' )->setTime( 23, 59, 59 );
+		}
+
+		$heading = self::format_heading( $view_type, $start_date_obj, $end_date_obj );
 
 		return array(
-			'year'  => (int) gmdate( 'Y', $now ),
-			'month' => (int) gmdate( 'n', $now ),
+			'view_type'      => $view_type,
+			'start_date'     => $start_date_obj->format( 'Y-m-d' ),
+			'end_date'       => $end_date_obj->format( 'Y-m-d' ),
+			'start_date_obj' => $start_date_obj,
+			'end_date_obj'   => $end_date_obj,
+			'target_date'    => $base_date,
+			'year'           => (int) $base_date->format( 'Y' ),
+			'month'          => (int) $base_date->format( 'n' ),
+			'heading'        => $heading,
 		);
+	}
+
+	/**
+	 * Get start of the week for a given date and start_of_week setting.
+	 *
+	 * @since 0.5.0
+	 *
+	 * @param DateTimeImmutable $date          Given date.
+	 * @param int               $start_of_week Start of week (0 = Sunday, 1 = Monday, etc.).
+	 *
+	 * @return DateTimeImmutable Start of the week date at 00:00:00.
+	 */
+	public static function get_week_start( DateTimeImmutable $date, int $start_of_week ): DateTimeImmutable {
+		$dow  = (int) $date->format( 'w' ); // 0 = Sunday, 6 = Saturday.
+		$diff = ( $dow - $start_of_week + 7 ) % 7;
+
+		return $date->modify( "-{$diff} days" )->setTime( 0, 0, 0 );
+	}
+
+	/**
+	 * Format calendar heading based on view type and date range.
+	 *
+	 * @since 0.5.0
+	 *
+	 * @param string            $view_type  View type ('month', 'week', 'day').
+	 * @param DateTimeImmutable $start_date Start date.
+	 * @param DateTimeImmutable $end_date   End date.
+	 *
+	 * @return string Formatted heading.
+	 */
+	public static function format_heading( string $view_type, DateTimeImmutable $start_date, DateTimeImmutable $end_date ): string {
+		if ( 'day' === $view_type ) {
+			$day_heading = wp_date( 'l, F j, Y', $start_date->getTimestamp() );
+			return is_string( $day_heading ) ? $day_heading : '';
+		}
+
+		if ( 'week' === $view_type ) {
+			if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
+				return sprintf(
+					'%s – %s',
+					wp_date( 'M j, Y', $start_date->getTimestamp() ),
+					wp_date( 'M j, Y', $end_date->getTimestamp() )
+				);
+			}
+
+			if ( $start_date->format( 'n' ) !== $end_date->format( 'n' ) ) {
+				return sprintf(
+					'%s – %s',
+					wp_date( 'M j', $start_date->getTimestamp() ),
+					wp_date( 'M j, Y', $end_date->getTimestamp() )
+				);
+			}
+
+			return sprintf(
+				'%s %s – %s',
+				wp_date( 'M', $start_date->getTimestamp() ),
+				wp_date( 'j', $start_date->getTimestamp() ),
+				wp_date( 'j, Y', $end_date->getTimestamp() )
+			);
+		}
+
+		$month_heading = wp_date( 'F Y', $start_date->getTimestamp() );
+		return is_string( $month_heading ) ? $month_heading : '';
 	}
 
 	/**

@@ -69,7 +69,7 @@ Binds the day number to text/paragraph blocks inside a day cell.
 * **Context used:** `gatherpress/dayNumber`, `gatherpress/isEmpty`.
 * **Example:** Connects a `core/paragraph` block to automatically output the numeric day of the month without custom HTML.
 
-### `gatherpress/calendar-month-heading`
+### `gatherpress/calendar-heading`
 Binds the currently active calendar month heading to a `core/heading` or `core/paragraph` block placed anywhere inside the same Query Loop.
 * **Context used:** `query`.
 * **Output:** Localized "Month Year" string (e.g., `September 2026`) that updates automatically when navigating between months.

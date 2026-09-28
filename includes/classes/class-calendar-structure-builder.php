@@ -13,10 +13,12 @@ namespace GatherPress_Calendar;
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
+use DateTimeImmutable;
+
 /**
  * Calendar_Structure_Builder Class
  *
- * Generates the calendar grid structure with weeks and days.
+ * Generates the calendar grid structure with weeks and days for month, week, or day view.
  *
  * @since 0.1.0
  */
@@ -27,41 +29,48 @@ class Calendar_Structure_Builder {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param int                      $year          Target year.
-	 * @param int                      $month         Target month.
-	 * @param int                      $start_of_week Start of week setting.
+	 * @param array<string, mixed>     $date_range    Date range array from Date_Calculator.
+	 * @param int                      $start_of_week Start of week setting (0-6).
 	 * @param array<string, list<int>> $posts_by_date Posts organized by date.
 	 * @param bool                     $show_weekends Whether to include weekend days.
 	 *
 	 * @return array{
+	 *   heading: string,
 	 *   month_name: string,
 	 *   day_names: list<string>,
-	 *   weeks: list<list<array<string, mixed>>>
+	 *   weeks: list<list<array<string, mixed>>>,
+	 *   view_type: string
 	 * } Calendar structure.
 	 */
-	public static function build_structure( int $year, int $month, int $start_of_week, array $posts_by_date, bool $show_weekends = true ): array {
-		$first_day = mktime( 0, 0, 0, $month, 1, $year );
-		if ( false === $first_day ) {
-			$first_day = time();
-		}
+	public static function build_structure( array $date_range, int $start_of_week, array $posts_by_date, bool $show_weekends = true ): array {
+		$view_type = $date_range['view_type'] ?? 'month';
 
-		$days_in_month = (int) gmdate( 't', $first_day );
-		$month_name    = wp_date( 'F Y', $first_day );
-		if ( ! is_string( $month_name ) ) {
-			$month_name = '';
+		if ( 'day' === $view_type ) {
+			$weeks     = self::build_single_day( $date_range['start_date_obj'], $posts_by_date );
+			$day_names = array( (string) wp_date( 'D', $date_range['start_date_obj']->getTimestamp() ) );
+		} elseif ( 'week' === $view_type ) {
+			$weeks     = self::build_single_week( $date_range['start_date_obj'], $posts_by_date, $show_weekends );
+			$day_names = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
+		} else {
+			$year          = (int) $date_range['year'];
+			$month         = (int) $date_range['month'];
+			$first_day     = mktime( 0, 0, 0, $month, 1, $year );
+			$days_in_month = (int) gmdate( 't', false !== $first_day ? $first_day : time() );
+			$weeks         = self::build_month_weeks( $year, $month, $start_of_week, $days_in_month, $posts_by_date, $show_weekends );
+			$day_names     = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
 		}
 
 		return array(
-			'month_name' => $month_name,
-			'day_names'  => Date_Calculator::get_day_names( $start_of_week, $show_weekends ),
-			'weeks'      => self::build_weeks( $year, $month, $start_of_week, $days_in_month, $posts_by_date, $show_weekends ),
+			'heading'    => $date_range['heading'],
+			'month_name' => $date_range['heading'],
+			'day_names'  => $day_names,
+			'weeks'      => $weeks,
+			'view_type'  => $view_type,
 		);
 	}
 
 	/**
-	 * Build weeks array.
-	 *
-	 * @since 0.1.0
+	 * Build weeks array for a full month (with leading/trailing empty cells).
 	 *
 	 * @param int                      $year          Target year.
 	 * @param int                      $month         Target month.
@@ -70,9 +79,9 @@ class Calendar_Structure_Builder {
 	 * @param array<string, list<int>> $posts_by_date Posts by date.
 	 * @param bool                     $show_weekends Whether to include weekend days.
 	 *
-	 * @return list<list<array<string, mixed>>> Weeks array.
+	 * @return list<list<array<string, mixed>>>
 	 */
-	private static function build_weeks( int $year, int $month, int $start_of_week, int $days_in_month, array $posts_by_date, bool $show_weekends = true ): array {
+	private static function build_month_weeks( int $year, int $month, int $start_of_week, int $days_in_month, array $posts_by_date, bool $show_weekends = true ): array {
 		$active_days_of_week = array();
 		for ( $i = 0; $i < 7; $i++ ) {
 			$dow = ( $start_of_week + $i ) % 7;
@@ -93,12 +102,10 @@ class Calendar_Structure_Builder {
 			$is_weekend    = Date_Calculator::is_weekend_day( $day_of_week );
 			$weekday_slug  = Date_Calculator::get_weekday_slug( $day_of_week );
 
-			// Skip Saturdays and Sundays when weekends are hidden.
 			if ( ! $show_weekends && $is_weekend ) {
 				continue;
 			}
 
-			// Pre-pad leading empty days before the first visible day of the month.
 			if ( ! $first_day_placed ) {
 				$first_day_placed = true;
 				$start_col        = array_search( $day_of_week, $active_days_of_week, true );
@@ -137,7 +144,6 @@ class Calendar_Structure_Builder {
 			}
 		}
 
-		// Trailing empty days after the end of the month.
 		$week_count = count( $current_week );
 		while ( $week_count > 0 && $week_count < $days_per_week ) {
 			$trailing_dow   = $active_days_of_week[ $week_count ];
@@ -156,5 +162,69 @@ class Calendar_Structure_Builder {
 		}
 
 		return $weeks;
+	}
+
+	/**
+	 * Build weeks array for a single week view (continuous days, no isEmpty padding).
+	 *
+	 * @param DateTimeImmutable        $week_start    Start of the week.
+	 * @param array<string, list<int>> $posts_by_date Posts by date.
+	 * @param bool                     $show_weekends Whether to include weekend days.
+	 *
+	 * @return list<list<array<string, mixed>>>
+	 */
+	private static function build_single_week( DateTimeImmutable $week_start, array $posts_by_date, bool $show_weekends = true ): array {
+		$week = array();
+
+		for ( $i = 0; $i < 7; $i++ ) {
+			$day_obj     = $week_start->modify( "+{$i} days" );
+			$day_of_week = (int) $day_obj->format( 'w' );
+			$is_weekend  = Date_Calculator::is_weekend_day( $day_of_week );
+
+			if ( ! $show_weekends && $is_weekend ) {
+				continue;
+			}
+
+			$date_str  = $day_obj->format( 'Y-m-d' );
+			$day_posts = $posts_by_date[ $date_str ] ?? array();
+
+			$week[] = array(
+				'day'       => (int) $day_obj->format( 'j' ),
+				'date'      => $date_str,
+				'posts'     => $day_posts,
+				'isEmpty'   => false,
+				'dayOfWeek' => $day_of_week,
+				'weekday'   => Date_Calculator::get_weekday_slug( $day_of_week ),
+				'isWeekend' => $is_weekend,
+			);
+		}
+
+		return array( $week );
+	}
+
+	/**
+	 * Build single day view.
+	 *
+	 * @param DateTimeImmutable        $day_obj       Target day.
+	 * @param array<string, list<int>> $posts_by_date Posts by date.
+	 *
+	 * @return list<list<array<string, mixed>>>
+	 */
+	private static function build_single_day( DateTimeImmutable $day_obj, array $posts_by_date ): array {
+		$day_of_week = (int) $day_obj->format( 'w' );
+		$date_str    = $day_obj->format( 'Y-m-d' );
+		$day_posts   = $posts_by_date[ $date_str ] ?? array();
+
+		$day = array(
+			'day'       => (int) $day_obj->format( 'j' ),
+			'date'      => $date_str,
+			'posts'     => $day_posts,
+			'isEmpty'   => false,
+			'dayOfWeek' => $day_of_week,
+			'weekday'   => Date_Calculator::get_weekday_slug( $day_of_week ),
+			'isWeekend' => Date_Calculator::is_weekend_day( $day_of_week ),
+		);
+
+		return array( array( $day ) );
 	}
 }

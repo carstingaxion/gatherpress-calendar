@@ -2,13 +2,12 @@ import { useSelect } from '@wordpress/data';
 import { store as coreStore } from '@wordpress/core-data';
 
 const EMPTY_ARRAY = [];
+
 /**
  * Hook to fetch posts and site settings for calendar rendering.
  *
- * @since 0.1.0
- *
- * @param {Object|null} query     - Query Loop query configuration.
- * @param {Object}      dateQuery - Date query parameters.
+ * @param {Object|null} query     Query Loop configuration.
+ * @param {Object}      dateQuery Date query parameters.
  *
  * @return {Object} Object containing:
  *   - {Array} posts - Array of post objects
@@ -21,8 +20,7 @@ export function useCalendarData( query, dateQuery ) {
 				return { posts: [], startOfWeek: 0 };
 			}
 
-			const { getEntityRecords } = select( coreStore );
-			const { getSite } = select( coreStore );
+			const { getEntityRecords, getSite } = select( coreStore );
 
 			// Create a clean query object.
 			const cleanQuery = { ...query };
@@ -33,11 +31,16 @@ export function useCalendarData( query, dateQuery ) {
 				_embed: 'wp:term',
 			};
 
-			// Add calendar identifier and date query filter.
-			if ( dateQuery && dateQuery.year && dateQuery.month ) {
+			if ( dateQuery ) {
 				queryArgs.gatherpress_calendar_query = true;
-				queryArgs.year = dateQuery.year;
-				queryArgs.month = dateQuery.month;
+				if ( dateQuery.startDate && dateQuery.endDate ) {
+					queryArgs.start_date = dateQuery.startDate;
+					queryArgs.end_date = dateQuery.endDate;
+				}
+				// if ( dateQuery.year && dateQuery.month ) {
+				// 	queryArgs.year = dateQuery.year;
+				// 	queryArgs.month = dateQuery.month;
+				// }
 			}
 
 			// Add taxonomy query if present.

@@ -95,6 +95,7 @@ class Calendar_Entries {
 			return '';
 		}
 
+		$entries_styles = array();
 		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
 		if ( ! empty( $grid_gap ) ) {
 			$entries_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );

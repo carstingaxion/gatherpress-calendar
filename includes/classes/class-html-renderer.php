@@ -27,46 +27,40 @@ class HTML_Renderer {
 	/**
 	 * Surrounding parent block.
 	 *
-	 * @since 0.1.0
 	 * @var WP_Block
 	 */
 	private WP_Block $block;
 
 	/**
-	 * Today's date.
-	 *
-	 * @since 0.1.0
-	 * @var string
-	 */
-	private string $today = '';
-
-	/**
 	 * Constructor.
 	 *
-	 * @since 0.1.0
 	 * @param WP_Block $block The parent gatherpress/calendar block instance.
 	 */
 	public function __construct( WP_Block $block ) {
-		$this->today = Date_Calculator::get_today();
 		$this->block = $block;
 	}
 
 	/**
 	 * Generate complete calendar HTML.
 	 *
-	 * @since 0.1.0
-	 *
-	 * @param array<string, mixed>                                                                      $attributes     Block attributes.
-	 * @param array{month_name: string,day_names: list<string>,weeks: list<list<array<string, mixed>>>} $calendar_data  Calendar structure.
+	 * @param array<string, mixed> $attributes    Block attributes.
+	 * @param array<string, mixed> $calendar_data Calendar structure.
 	 *
 	 * @return string Calendar HTML.
 	 */
 	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
-		$workday_count = 7 - count( Date_Calculator::get_weekend_days() );
-		$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
-		$columns_count = $show_weekends ? 7 : $workday_count;
+		$view_type = $calendar_data['view_type'] ?? ( $attributes['viewType'] ?? 'month' );
 
-		$wrapper_attributes = get_block_wrapper_attributes();
+		if ( 'day' === $view_type ) {
+			$columns_count = 1;
+		} else {
+			$workday_count = 7 - count( Date_Calculator::get_weekend_days() );
+			$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
+			$columns_count = $show_weekends ? 7 : $workday_count;
+		}
+
+		$classes            = array( 'is-view-' . $view_type );
+		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 		ob_start();
@@ -102,11 +96,10 @@ class HTML_Renderer {
 		return (string) ob_get_clean();
 	}
 
-
 	/**
 	 * Render calendar weeks by delegating to gatherpress/calendar-week blocks.
 	 *
-	 * @param list<list<array<string, mixed>>> $weeks          Weeks array.
+	 * @param list<list<array<string, mixed>>> $weeks Weeks array.
 	 *
 	 * @return string Weeks HTML.
 	 */
@@ -123,7 +116,7 @@ class HTML_Renderer {
 					'gatherpress/weekDays'  => $week_days,
 				)
 			);
-				
+
 			$week_block = new WP_Block( $week_template, $week_context );
 			echo $week_block->render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
@@ -145,7 +138,6 @@ class HTML_Renderer {
 			}
 		}
 
-		// Fallback structure.
 		return array(
 			'blockName'    => Calendar_Week::BLOCK_NAME,
 			'attrs'        => array(),

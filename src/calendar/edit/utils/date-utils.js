@@ -1,59 +1,68 @@
 /**
- * Calculate target date based on selectedMonth and monthModifier.
+ * Date utility functions for GatherPress Calendar.
  *
- * This is the SINGLE SOURCE OF TRUTH for date calculation throughout the block.
- * It's used by both the date query (for fetching posts) and the calendar generation
- * (for displaying the grid). This ensures consistency between what posts are fetched
- * and where they appear in the calendar.
- *
- * Logic:
- * 1. If selectedMonth is set (format: "YYYY-MM"), use that specific month
- * 2. Otherwise, use current month + monthModifier
- * 3. JavaScript Date handles year overflow automatically (e.g., month 13 becomes January of next year)
- *
- * Why we set date to 1 first:
- * Setting the date to 1 before applying monthModifier prevents issues with months
- * that have different numbers of days. For example, if today is Jan 31 and we add
- * 1 month without this, JavaScript would try to create Feb 31, which doesn't exist.
- *
- * @since 0.1.0
- *
- * @param {string} selectedMonth - The selected month in format "YYYY-MM" (e.g., "2025-07").
- * @param {number} monthModifier - The month offset from current month (e.g., -1 for last month, +1 for next month).
- *
- * @return {Date} The calculated target date object.
- *
- * @example
- * // Get a specific month
- * calculateTargetDate('2025-07', 0) // Returns July 2025
- *
- * @example
- * // Get last month relative to today
- * calculateTargetDate('', -1) // Returns last month's date
- *
- * @example
- * // Get next month relative to today
- * calculateTargetDate('', 1) // Returns next month's date
+ * @package GatherPressCalendar
  */
-export function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
+
+import { dateI18n } from '@wordpress/date';
+import { DATE_FORMAT } from '../constants';
+
+/**
+ * Format a Date object to YYYY-MM-DD.
+ *
+ * @param {Date} date Date instance.
+ * @return {string} Formatted date.
+ */
+export function formatDate( date ) {
+	return dateI18n( DATE_FORMAT, date );
+}
+
+/**
+ * Calculate the target date based on viewType, selectedDate/Month, and modifiers.
+ *
+ * @param {Object|string} selectedDateOrOptions Options object or legacy selectedMonth string.
+ * @param {number}        modifier              Legacy modifier offset.
+ *
+ * @return {Date} Calculated target date.
+ */
+export function calculateTargetDate( selectedDateOrOptions, modifier = 0 ) {
+	let viewType = 'month';
+	let selectedDate = '';
+	let dateModifier = 0;
+
+	if ( typeof selectedDateOrOptions === 'object' && null !== selectedDateOrOptions ) {
+		viewType = selectedDateOrOptions.viewType || 'month';
+		selectedDate = selectedDateOrOptions.selectedDate || selectedDateOrOptions.selectedMonth || '';
+		dateModifier = selectedDateOrOptions.dateModifier ?? selectedDateOrOptions.monthModifier ?? 0;
+	} else {
+		selectedDate = selectedDateOrOptions || '';
+		dateModifier = modifier;
+	}
+
 	let targetDate;
 
-	if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
-		// Use selected month (ignore monthModifier when explicit month is set).
-		const [ year, month ] = selectedMonth.split( '-' ).map( Number );
+	if ( selectedDate && /^\d{4}-\d{2}-\d{2}$/.test( selectedDate ) ) {
+		const [ year, month, day ] = selectedDate.split( '-' ).map( Number );
+		targetDate = new Date( year, month - 1, day );
+	} else if ( selectedDate && /^\d{4}-\d{2}$/.test( selectedDate ) ) {
+		const [ year, month ] = selectedDate.split( '-' ).map( Number );
 		targetDate = new Date( year, month - 1, 1 );
 	} else {
-		// Use current month with modifier.
 		targetDate = new Date();
+	}
 
-		// Apply month modifier if no explicit month is selected.
-		if ( monthModifier !== 0 ) {
-			// Set to first day of month first to avoid date overflow issues.
-			// This prevents problems like "Jan 31 + 1 month = March 3" instead of "Feb 28/29".
+	if ( 'month' === viewType ) {
+		targetDate.setDate( 1 );
+	}
+
+	if ( 0 !== dateModifier ) {
+		if ( 'week' === viewType ) {
+			targetDate.setDate( targetDate.getDate() + dateModifier * 7 );
+		} else if ( 'day' === viewType ) {
+			targetDate.setDate( targetDate.getDate() + dateModifier );
+		} else {
 			targetDate.setDate( 1 );
-			// Now apply the month modifier - JavaScript handles year overflow automatically.
-			// For example: December (month 11) + 1 = January (month 0) of next year.
-			targetDate.setMonth( targetDate.getMonth() + monthModifier );
+			targetDate.setMonth( targetDate.getMonth() + dateModifier );
 		}
 	}
 
@@ -61,61 +70,78 @@ export function calculateTargetDate( selectedMonth, monthModifier = 0 ) {
 }
 
 /**
- * Calculate date query parameters for the selected month.
+ * Calculate range and boundaries for a given date selection.
  *
- * Converts the selectedMonth attribute (or current month with modifier) to year
- * and month values that can be used in a WP_Query date_query or REST API request.
+ * @param {Object} options     Options containing viewType, selectedDate, etc.
+ * @param {number} startOfWeek Start of week index (0-6).
  *
- * JavaScript Date Month Behavior:
- * - Date.getMonth() returns 0-11 (January=0, December=11) - zero-based index
- * - WP_Query expects 1-12 (January=1, December=12) - one-based index
- * - Therefore we must add 1 to getMonth() result for WordPress compatibility
- *
- * This is a common source of off-by-one errors in JavaScript date handling.
- * Always remember: JavaScript months are zero-based.
- *
- * @since 0.1.0
- *
- * @param {string} selectedMonth - The selected month in format "YYYY-MM".
- * @param {number} monthModifier - The month offset from current month.
- *
- * @return {Object} Date query object containing:
- *   - {number} year - Four-digit year (e.g., 2025)
- *   - {number} month - Month number 1-12 (January=1, December=12)
- *
- * @example
- * // Calculate for January 2025
- * calculateDateQuery('2025-01', 0)
- * // Returns: { year: 2025, month: 1 }
- *
- * @example
- * // Calculate for last month (if current is Feb 2025)
- * calculateDateQuery('', -1)
- * // Returns: { year: 2025, month: 1 }
+ * @return {Object} Range object with startDate, endDate, year, month, and viewType.
  */
-export function calculateDateQuery( selectedMonth, monthModifier = 0 ) {
-	// Use the single source of truth for date calculation.
-	const targetDate = calculateTargetDate( selectedMonth, monthModifier );
+export function calculateDateRange( options, startOfWeek = 0 ) {
+	const targetDate = calculateTargetDate( options );
+	const viewType = options.viewType || 'month';
 
-	const year = targetDate.getFullYear();
-	/**
-	 * CRITICAL: JavaScript's getMonth() returns 0-11 (January=0, December=11)
-	 * We MUST add 1 to convert to human-readable/WP_Query format (January=1, December=12)
-	 *
-	 * Why this matters:
-	 * - Without +1: December would be month 11, January would be month 0
-	 * - WP_Query interprets month 0 as "all months"
-	 * - WP_Query expects month 1-12 to match specific months
-	 *
-	 * Example:
-	 * const dec = new Date('2025-12-01');
-	 * dec.getMonth()     // Returns 11 (zero-based)
-	 * dec.getMonth() + 1 // Returns 12 (one-based, correct for WP_Query)
-	 */
-	const month = targetDate.getMonth() + 1;
+	let startDate;
+	let endDate;
+
+	if ( 'week' === viewType ) {
+		const currentDow = targetDate.getDay();
+		const diff = ( currentDow - startOfWeek + 7 ) % 7;
+		startDate = new Date( targetDate );
+		startDate.setDate( targetDate.getDate() - diff );
+
+		endDate = new Date( startDate );
+		endDate.setDate( startDate.getDate() + 6 );
+	} else if ( 'day' === viewType ) {
+		startDate = new Date( targetDate );
+		endDate = new Date( targetDate );
+	} else {
+		const year = targetDate.getFullYear();
+		const month = targetDate.getMonth();
+		startDate = new Date( year, month, 1 );
+		endDate = new Date( year, month + 1, 0 );
+	}
 
 	return {
-		year,
-		month,
+		startDate: formatDate( startDate ),
+		endDate: formatDate( endDate ),
+		startDateObj: startDate,
+		endDateObj: endDate,
+		year: targetDate.getFullYear(),
+		month: targetDate.getMonth() + 1,
+		targetDate,
+		viewType,
+	};
+}
+
+/**
+ * Calculate date query parameters for REST requests.
+ *
+ * @param {Object|string} selectedMonthOrOptions Configuration or legacy selectedMonth.
+ * @param {number}        monthModifier          Legacy modifier.
+ * @param {number}        startOfWeek            Start of week index.
+ *
+ * @return {Object} Query parameters.
+ */
+export function calculateDateQuery( selectedMonthOrOptions, monthModifier = 0, startOfWeek = 0 ) {
+	let options;
+	if ( typeof selectedMonthOrOptions === 'object' && null !== selectedMonthOrOptions ) {
+		options = selectedMonthOrOptions;
+	} else {
+		options = {
+			selectedMonth: selectedMonthOrOptions,
+			monthModifier,
+			viewType: 'month',
+		};
+	}
+
+	const range = calculateDateRange( options, startOfWeek );
+
+	return {
+		year: range.year,
+		month: range.month,
+		startDate: range.startDate,
+		endDate: range.endDate,
+		viewType: range.viewType,
 	};
 }
