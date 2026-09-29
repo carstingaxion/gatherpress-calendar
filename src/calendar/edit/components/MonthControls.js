@@ -7,7 +7,7 @@ import {
 import { useMemo } from '@wordpress/element';
 
 import { generateMonthOptions } from '../utils/calendar-utils';
-import { useMonthOffsetHelp } from '../hooks/useMonthOffsetHelp';
+import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
 
 /**
  * MonthControls Component
@@ -33,7 +33,7 @@ export function MonthControls( {
 	onOpenPicker,
 } ) {
 	const monthOptions = useMemo( () => generateMonthOptions(), [] );
-	const monthOffsetHelp = useMonthOffsetHelp( monthModifier );
+	const monthOffsetHelp = useDateOffsetHelp( monthModifier, 'month' );
 
 	return (
 		<>

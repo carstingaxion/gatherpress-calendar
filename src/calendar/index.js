@@ -19,7 +19,6 @@ import { addFilter } from '@wordpress/hooks';
 import { Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
-import { dateI18n } from '@wordpress/date';
 import {
 	store as blockEditorStore,
 	InspectorControls,
@@ -27,56 +26,31 @@ import {
 import domReady from '@wordpress/dom-ready';
 
 /**
- * Style imports
- *
- * Imports SCSS files that contain styles applied to both the frontend
- * and the editor. The webpack configuration processes these files.
- *
- * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
- */
-import './style.scss';
-
-/**
  * Internal dependencies
  */
+import './style.scss';
 import Edit from './edit';
 import save from './save';
 import metadata from './block.json';
+import { calculateDateRange, formatHeading } from './edit/utils/date-utils';
 
 import './variation';
 import transforms from './transforms';
 
 /**
  * Register the GatherPress Calendar block type
- *
- * This registration connects the block metadata with its edit and save
- * implementations. Even though this is a dynamic block that uses render.php,
- * the save function is needed to preserve the InnerBlocks template structure.
- *
- * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-registration/
  */
 registerBlockType( metadata.name, {
-	/**
-	 * Edit function for the block
-	 *
-	 * @see ./edit.js
-	 */
 	edit: Edit,
-
-	/**
-	 * Save function for the block
-	 *
-	 * Saves the InnerBlocks template structure to the database.
-	 *
-	 * @see ./save.js
-	 */
 	save,
 	transforms,
 } );
 
 /**
  * Helper to recursively search a block tree for gatherpress/calendar.
- * @param {Object} blocks One block, that may have innerBlocks.
+ *
+ * @param {Array} blocks Blocks array to search.
+ * @return {Object|null} Matching block or null.
  */
 function findCalendarBlock( blocks = [] ) {
 	for ( const block of blocks ) {
@@ -99,78 +73,101 @@ domReady( () => {
 	}
 
 	/**
-	 * Register the Month Heading block binding source.
+	 * Callback to get heading content for bound heading blocks in the editor.
 	 *
-	 * Lets a `core/heading` bound to this source (see the "Event Calendar"
-	 * pattern, placed inside the Query block before the calendar) display the
-	 * month/year currently shown by the calendar. The PHP-side source
-	 * (`Setup::get_month_heading_binding_value()`) is the source of truth on
-	 * the frontend, reading core Query's pagination; the editor canvas has no
-	 * URL-based pagination to read, so this preview simply shows the current
-	 * site month.
-	 *
-	 * @since 0.6.0
+	 * @param {Object}   root0          Parameters object.
+	 * @param {Function} root0.select   Block editor select function.
+	 * @param {string}   root0.clientId Current block client ID.
+	 * @return {Object} Content object.
 	 */
-	registerBlockBindingsSource( {
-		name: 'gatherpress/calendar-month-heading',
-		label: __( 'Calendar Month Heading', 'gatherpress-calendar' ),
-		usesContext: [ 'query' ],
-		getValues( { select, clientId } ) {
-			const { getBlockParentsByBlockName, getBlock, getBlocks } =
-				select( 'core/block-editor' );
+	const getCalendarHeadingValues = ( { select, clientId } ) => {
+		const { getBlockParentsByBlockName, getBlock, getBlocks } =
+			select( 'core/block-editor' );
 
-			let calendarBlock = null;
+		let calendarBlock = null;
 
-			// 1. First, search inside the same parent Query block (if nested in one)
-			const parentQueryIds = getBlockParentsByBlockName(
-				clientId,
-				'core/query'
+		// 1. Search inside the same parent Query block
+		const parentQueryIds = getBlockParentsByBlockName(
+			clientId,
+			'core/query'
+		);
+
+		if ( parentQueryIds && parentQueryIds.length ) {
+			const parentQuery = getBlock(
+				parentQueryIds[ parentQueryIds.length - 1 ]
 			);
-
-			if ( parentQueryIds && parentQueryIds.length ) {
-				const parentQuery = getBlock(
-					parentQueryIds[ parentQueryIds.length - 1 ]
-				);
-				if ( parentQuery?.innerBlocks ) {
-					calendarBlock = findCalendarBlock(
-						parentQuery.innerBlocks
-					);
-				}
+			if ( parentQuery?.innerBlocks ) {
+				calendarBlock = findCalendarBlock( parentQuery.innerBlocks );
 			}
+		}
 
-			// 2. Fallback: search all blocks in the editor canvas
-			if ( ! calendarBlock ) {
-				calendarBlock = findCalendarBlock( getBlocks() );
+		// 2. Fallback: search all blocks in the editor canvas
+		if ( ! calendarBlock ) {
+			calendarBlock = findCalendarBlock( getBlocks() );
+		}
+
+		// Establish reactive subscription to calendar attributes
+		const liveCalendar = calendarBlock
+			? getBlock( calendarBlock.clientId )
+			: null;
+
+		const {
+			viewType = 'month',
+			selectedDate = '',
+			dateModifier = 0,
+			showWeekends = true,
+		} = liveCalendar?.attributes || {};
+
+		const site = select( 'core' )?.getSite?.();
+		const startOfWeek = site?.start_of_week ?? 0;
+
+		const range = calculateDateRange(
+			{
+				viewType,
+				selectedDate,
+				dateModifier,
+				showWeekends,
+			},
+			startOfWeek
+		);
+
+		return {
+			content: formatHeading(
+				viewType,
+				range.startDateObj,
+				range.endDateObj
+			),
+		};
+	};
+
+	// Register current heading binding source
+	registerBlockBindingsSource( {
+		name: 'gatherpress/calendar-heading',
+		label: __( 'Calendar Heading', 'gatherpress-calendar' ),
+		usesContext: [ 'query' ],
+		getValues: getCalendarHeadingValues,
+	} );
+
+	// Register Day Number binding source in editor so active day cells resolve their number
+	registerBlockBindingsSource( {
+		name: 'gatherpress/calendar-day',
+		label: __( 'Calendar Day Number', 'gatherpress-calendar' ),
+		usesContext: [ 'gatherpress/dayNumber', 'gatherpress/isEmpty' ],
+		getValues( { context } ) {
+			if ( context?.[ 'gatherpress/isEmpty' ] ) {
+				return { content: '' };
 			}
-
-			const { selectedMonth = '', monthModifier = 0 } =
-				calendarBlock?.attributes || {};
-
-			// Resolve Target Year and Month
-			let year, month;
-			if ( selectedMonth && /^\d{4}-\d{2}$/.test( selectedMonth ) ) {
-				const [ y, m ] = selectedMonth.split( '-' ).map( Number );
-				year = y;
-				month = m;
-			} else {
-				const now = new Date();
-				if ( monthModifier !== 0 ) {
-					now.setMonth( now.getMonth() + Number( monthModifier ) );
-				}
-				year = now.getFullYear();
-				month = now.getMonth() + 1;
-			}
-
-			// Format matching PHP's wp_date( 'F Y' ) using WordPress dateI18n
-			const targetDate = new Date( year, month - 1, 1 );
-			const formattedMonth = dateI18n( 'F Y', targetDate );
-
+			const dayNumber = context?.[ 'gatherpress/dayNumber' ];
 			return {
-				content: formattedMonth,
+				content:
+					null !== dayNumber && undefined !== dayNumber
+						? String( dayNumber )
+						: '',
 			};
 		},
 	} );
 } );
+
 /**
  * Add calendar notice to Query Loop block inspector controls.
  *
@@ -192,7 +189,6 @@ domReady( () => {
  */
 const withCalendarNotice = createHigherOrderComponent( ( BlockEdit ) => {
 	return ( props ) => {
-		// Only apply to Query Loop blocks
 		if ( props.name !== 'core/query' ) {
 			return <BlockEdit { ...props } />;
 		}
@@ -250,13 +246,13 @@ const withCalendarNotice = createHigherOrderComponent( ( BlockEdit ) => {
 						<Notice status="info" isDismissible={ false }>
 							<p>
 								{ __(
-									'The GatherPress Calendar block is active in this Query Loop. The calendar will use date-based filtering for the selected month, overriding the "Upcoming or past events" setting.',
+									'The GatherPress Calendar block is active in this Query Loop. The calendar will use date-based filtering, overriding the "Upcoming or past events" setting.',
 									'gatherpress-calendar'
 								) }
 							</p>
 							<p>
 								{ __(
-									'This ensures the calendar only displays events from the specific month, regardless of whether they are past or upcoming events.',
+									'This ensures the calendar only displays events from the active calendar date range, regardless of whether they are past or upcoming events.',
 									'gatherpress-calendar'
 								) }
 							</p>

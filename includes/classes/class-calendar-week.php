@@ -72,12 +72,16 @@ class Calendar_Week {
 			: array();
 
 		$today        = Date_Calculator::get_today();
-		$day_template = $this->get_day_template_block( $block );
+		$day_template = HTML_Renderer::get_inner_template_block( $block, Calendar_Day::BLOCK_NAME );
 
 		ob_start();
 
 		// Render the days of this week using the Day template block.
 		foreach ( $week_days as $day ) {
+			if ( ! is_array( $day ) ) {
+				continue;
+			}
+
 			$day_posts = isset( $day['posts'] ) && is_array( $day['posts'] ) ? $day['posts'] : array();
 			$is_today  = isset( $day['date'] ) && is_string( $day['date'] ) && $day['date'] === $today;
 
@@ -107,32 +111,6 @@ class Calendar_Week {
 			'<tr %1$s>%2$s</tr>',
 			$wrapper_attributes,
 			$days_html
-		);
-	}
-
-	/**
-	 * Locate the gatherpress/calendar-day template block inside this week block.
-	 *
-	 * @param WP_Block $block The week block instance.
-	 *
-	 * @return array<string, mixed> Parsed day template block.
-	 */
-	private function get_day_template_block( WP_Block $block ): array {
-		if ( ! empty( $block->parsed_block['innerBlocks'] ) ) {
-			foreach ( $block->parsed_block['innerBlocks'] as $inner_block ) {
-				if ( ( $inner_block['blockName'] ?? '' ) === Calendar_Day::BLOCK_NAME ) {
-					return $inner_block;
-				}
-			}
-		}
-
-		// Fallback if no day block was found.
-		return array(
-			'blockName'    => Calendar_Day::BLOCK_NAME,
-			'attrs'        => array(),
-			'innerBlocks'  => $block->parsed_block['innerBlocks'] ?? array(),
-			'innerHTML'    => $block->parsed_block['innerHTML'] ?? '',
-			'innerContent' => $block->parsed_block['innerContent'] ?? array(),
 		);
 	}
 }

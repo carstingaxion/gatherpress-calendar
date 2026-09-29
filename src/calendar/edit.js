@@ -1,8 +1,6 @@
 /**
  * GatherPress Calendar Block Editor Component
  *
- * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
- *
  * @package
  * @since 0.1.0
  */
@@ -20,30 +18,20 @@ import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
 import { useState, useMemo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 
-/**
- * Editor-specific styles
- *
- * Styles defined here are only applied within the block editor context.
- * They help distinguish the editor view from the frontend display.
- *
- * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
- */
-import './editor.scss';
-
 import { CALENDAR_TEMPLATE } from './edit/constants';
-
-import { calculateDateQuery } from './edit/utils/date-utils';
+import {
+	calculateDateRange,
+	calculateDateQuery,
+} from './edit/utils/date-utils';
 import {
 	generateCalendar,
 	getDefaultActiveDate,
-	getWeekendDays,
+	getColumnsCount,
 } from './edit/utils/calendar-utils';
 import { useStableValue } from '../utils/use-stable-value';
-
 import { useCalendarData } from './edit/hooks/useCalendarData';
-
 import { MonthPicker } from './edit/components/MonthPicker';
-import { MonthControls } from './edit/components/MonthControls';
+import { DateControls } from './edit/components/DateControls';
 import { CalendarTable } from './edit/components/CalendarTable';
 
 /**
@@ -68,35 +56,51 @@ export default function Edit( {
 	clientId,
 } ) {
 	const {
-		selectedMonth,
-		monthModifier = 0,
+		viewType = 'month',
+		selectedDate = '',
+		dateModifier = 0,
 		showWeekdays = true,
 		showWeekends = true,
 	} = attributes;
+
 	const { query } = context;
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 	const [ activeDate, setActiveDate ] = useState( '' );
 
-	// Calculate date query based on selectedMonth and monthModifier.
-	const dateQuery = useMemo(
-		() => calculateDateQuery( selectedMonth, monthModifier ),
-		[ selectedMonth, monthModifier ]
+	const { posts, startOfWeek } = useCalendarData(
+		query,
+		useMemo(
+			() =>
+				calculateDateQuery(
+					{
+						viewType,
+						selectedDate,
+						dateModifier,
+						showWeekends,
+					},
+					0
+				),
+			[ viewType, selectedDate, dateModifier, showWeekends ]
+		)
 	);
 
-	// Fetch posts and site settings.
-	const { posts, startOfWeek } = useCalendarData( query, dateQuery );
-
-	// Generate calendar structure.
-	const calendar = useMemo(
+	const dateRange = useMemo(
 		() =>
-			generateCalendar(
-				posts,
-				startOfWeek,
-				dateQuery.year,
-				dateQuery.month,
-				showWeekends
+			calculateDateRange(
+				{
+					viewType,
+					selectedDate,
+					dateModifier,
+					showWeekends,
+				},
+				startOfWeek
 			),
-		[ posts, startOfWeek, dateQuery, showWeekends ]
+		[ viewType, selectedDate, dateModifier, showWeekends, startOfWeek ]
+	);
+
+	const calendar = useMemo(
+		() => generateCalendar( posts, startOfWeek, dateRange, showWeekends ),
+		[ posts, startOfWeek, dateRange, showWeekends ]
 	);
 
 	// Resolve which day is currently "live"/editable: keep the previously
@@ -134,7 +138,9 @@ export default function Edit( {
 			)
 		);
 
-	const blockProps = useBlockProps();
+	const blockProps = useBlockProps( {
+		className: `is-view-${ viewType }`,
+	} );
 
 	// The real, live-editable week+day+content InnerBlocks tree. Rendered
 	// inside <tbody> at whichever week row contains resolvedActiveDate;
@@ -150,26 +156,26 @@ export default function Edit( {
 			renderAppender: false,
 		}
 	);
-	const workdayCount = 7 - getWeekendDays().length;
+
 	const tableStyle = {
 		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
-		'--gatherpress-calendar-columns': showWeekends ? 7 : workdayCount,
+		'--gatherpress-calendar-columns': getColumnsCount(
+			viewType,
+			showWeekends
+		),
 	};
 
-	// Stable reference: every week's BlockContextProvider value is built on
-	// top of this, and an unstable base object here would force a fresh
-	// context (and a cascading re-render of every preview cell) on every
-	// render, even ones unrelated to the calendar's own data (e.g. simply
-	// selecting a block).
 	const weekContext = useMemo(
 		() => ( {
-			'gatherpress/year': dateQuery.year,
-			'gatherpress/month': dateQuery.month,
+			'gatherpress/viewType': viewType,
+			'gatherpress/year': dateRange.year,
+			'gatherpress/month': dateRange.month,
+			'gatherpress/startDate': dateRange.startDate,
+			'gatherpress/endDate': dateRange.endDate,
 		} ),
-		[ dateQuery ]
+		[ viewType, dateRange ]
 	);
 
-	// Show placeholder if block is not inside a Query Loop.
 	if ( ! query ) {
 		return (
 			<div { ...blockProps }>
@@ -188,20 +194,15 @@ export default function Edit( {
 		);
 	}
 
-	// Handlers
-	const handleMonthSelect = ( value ) => {
-		setAttributes( { selectedMonth: value } );
+	const handleDateChange = ( value ) => {
+		setAttributes( { selectedDate: value } );
 		setShowMonthPicker( false );
-	};
-
-	const handleMonthChange = ( value ) => {
-		setAttributes( { selectedMonth: value } );
 	};
 
 	const handleModifierChange = ( value ) => {
 		const numValue = value === '' ? 0 : parseInt( value, 10 );
 		setAttributes( {
-			monthModifier: isNaN( numValue ) ? 0 : numValue,
+			dateModifier: isNaN( numValue ) ? 0 : numValue,
 		} );
 	};
 
@@ -211,23 +212,21 @@ export default function Edit( {
 				<PanelBody
 					title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }
 				>
-					<p>
-						{ __(
-							'Select a specific month to display, or leave empty to show the current month.',
-							'gatherpress-calendar'
-						) }
-					</p>
 					{ showMonthPicker ? (
 						<MonthPicker
-							selectedMonth={ selectedMonth }
-							onSelect={ handleMonthSelect }
+							selectedMonth={ selectedDate }
+							onSelect={ handleDateChange }
 							onCancel={ () => setShowMonthPicker( false ) }
 						/>
 					) : (
-						<MonthControls
-							selectedMonth={ selectedMonth }
-							monthModifier={ monthModifier }
-							onMonthChange={ handleMonthChange }
+						<DateControls
+							viewType={ viewType }
+							onViewTypeChange={ ( val ) =>
+								setAttributes( { viewType: val } )
+							}
+							selectedDate={ selectedDate }
+							dateModifier={ dateModifier }
+							onDateChange={ handleDateChange }
 							onModifierChange={ handleModifierChange }
 							onOpenPicker={ () => setShowMonthPicker( true ) }
 						/>
@@ -240,21 +239,26 @@ export default function Edit( {
 							setAttributes( { showWeekdays: value } )
 						}
 						help={ __(
-							'Display the days of the week inside the calendars header.',
+							'Display the days of the week inside the calendar header.',
 							'gatherpress-calendar'
 						) }
 					/>
-					<ToggleControl
-						label={ __( 'Show Weekends', 'gatherpress-calendar' ) }
-						checked={ showWeekends }
-						onChange={ ( value ) =>
-							setAttributes( { showWeekends: value } )
-						}
-						help={ __(
-							'Display weekend days in the calendar grid.',
-							'gatherpress-calendar'
-						) }
-					/>
+					{ 'day' !== viewType && (
+						<ToggleControl
+							label={ __(
+								'Show Weekends',
+								'gatherpress-calendar'
+							) }
+							checked={ showWeekends }
+							onChange={ ( value ) =>
+								setAttributes( { showWeekends: value } )
+							}
+							help={ __(
+								'Display weekend days in the calendar grid.',
+								'gatherpress-calendar'
+							) }
+						/>
+					) }
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>

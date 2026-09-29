@@ -27,46 +27,40 @@ class HTML_Renderer {
 	/**
 	 * Surrounding parent block.
 	 *
-	 * @since 0.1.0
 	 * @var WP_Block
 	 */
 	private WP_Block $block;
 
 	/**
-	 * Today's date.
-	 *
-	 * @since 0.1.0
-	 * @var string
-	 */
-	private string $today = '';
-
-	/**
 	 * Constructor.
 	 *
-	 * @since 0.1.0
 	 * @param WP_Block $block The parent gatherpress/calendar block instance.
 	 */
 	public function __construct( WP_Block $block ) {
-		$this->today = Date_Calculator::get_today();
 		$this->block = $block;
 	}
 
 	/**
 	 * Generate complete calendar HTML.
 	 *
-	 * @since 0.1.0
-	 *
-	 * @param array<string, mixed>                                                                      $attributes     Block attributes.
-	 * @param array{month_name: string,day_names: list<string>,weeks: list<list<array<string, mixed>>>} $calendar_data  Calendar structure.
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param array{
+	 *   heading: string,
+	 *   day_names: list<string>,
+	 *   weeks: list<list<array<string, mixed>>>,
+	 *   view_type: string
+	 * } $calendar_data Calendar structure.
 	 *
 	 * @return string Calendar HTML.
 	 */
 	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
-		$workday_count = 7 - count( Date_Calculator::get_weekend_days() );
+		// @phpstan-ignore-next-line    
+		$view_type     = $calendar_data['view_type'] ?? ( $attributes['viewType'] ?? 'month' );
 		$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
-		$columns_count = $show_weekends ? 7 : $workday_count;
+		$columns_count = Date_Calculator::get_columns_count( $view_type, $show_weekends );
 
-		$wrapper_attributes = get_block_wrapper_attributes();
+		$classes            = array( 'is-view-' . $view_type );
+		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 		ob_start();
@@ -77,7 +71,7 @@ class HTML_Renderer {
 			$table_styles = array(
 				sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
 			);
-			if ( ! empty( $grid_gap ) ) {
+			if ( '' !== $grid_gap ) {
 				$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
 			}
 
@@ -102,18 +96,17 @@ class HTML_Renderer {
 		return (string) ob_get_clean();
 	}
 
-
 	/**
 	 * Render calendar weeks by delegating to gatherpress/calendar-week blocks.
 	 *
-	 * @param list<list<array<string, mixed>>> $weeks          Weeks array.
+	 * @param list<list<array<string, mixed>>> $weeks Weeks array.
 	 *
 	 * @return string Weeks HTML.
 	 */
 	private function render_calendar_weeks( array $weeks ): string {
 		ob_start();
 
-		$week_template = $this->get_week_template_block();
+		$week_template = self::get_inner_template_block( $this->block, Calendar_Week::BLOCK_NAME );
 
 		foreach ( $weeks as $week_index => $week_days ) {
 			$week_context = array_merge(
@@ -123,7 +116,7 @@ class HTML_Renderer {
 					'gatherpress/weekDays'  => $week_days,
 				)
 			);
-				
+
 			$week_block = new WP_Block( $week_template, $week_context );
 			echo $week_block->render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
@@ -132,26 +125,36 @@ class HTML_Renderer {
 	}
 
 	/**
-	 * Locate the gatherpress/calendar-week template block from innerBlocks.
+	 * Locate the inner template block by name within a block's innerBlocks,
+	 * or generate a fallback structure.
 	 *
-	 * @return array<string, mixed> Parsed week template block.
+	 * @param WP_Block $block      Parent block instance.
+	 * @param string   $block_name Target inner block name.
+	 *
+	 * @return array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} Parsed template block.
 	 */
-	private function get_week_template_block(): array {
-		if ( ! empty( $this->block->parsed_block['innerBlocks'] ) ) {
-			foreach ( $this->block->parsed_block['innerBlocks'] as $inner_block ) {
-				if ( ( $inner_block['blockName'] ?? '' ) === Calendar_Week::BLOCK_NAME ) {
-					return $inner_block;
-				}
+	public static function get_inner_template_block( WP_Block $block, string $block_name ): array {
+		$inner_blocks = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] )
+			? $block->parsed_block['innerBlocks']
+			: array();
+
+		foreach ( $inner_blocks as $inner_block ) {
+			if ( is_array( $inner_block ) && ( $inner_block['blockName'] ?? '' ) === $block_name ) {
+				/** @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_block */
+				return $inner_block;
 			}
 		}
 
-		// Fallback structure.
+		$fallback_inner_blocks  = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
+		$fallback_inner_html    = isset( $block->parsed_block['innerHTML'] ) && is_string( $block->parsed_block['innerHTML'] ) ? $block->parsed_block['innerHTML'] : '';
+		$fallback_inner_content = isset( $block->parsed_block['innerContent'] ) && is_array( $block->parsed_block['innerContent'] ) ? $block->parsed_block['innerContent'] : array();
+
 		return array(
-			'blockName'    => Calendar_Week::BLOCK_NAME,
+			'blockName'    => $block_name,
 			'attrs'        => array(),
-			'innerBlocks'  => $this->block->parsed_block['innerBlocks'] ?? array(),
-			'innerHTML'    => $this->block->parsed_block['innerHTML'] ?? '',
-			'innerContent' => $this->block->parsed_block['innerContent'] ?? array(),
+			'innerBlocks'  => $fallback_inner_blocks,
+			'innerHTML'    => $fallback_inner_html,
+			'innerContent' => $fallback_inner_content,
 		);
 	}
 }

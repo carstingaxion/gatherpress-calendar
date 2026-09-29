@@ -80,76 +80,128 @@ class Calendar_Day {
 			return '';
 		}
 
-		$day_number = isset( $block->context['gatherpress/dayNumber'] ) ? (int) $block->context['gatherpress/dayNumber'] : 0;
 		$is_empty   = ! empty( $block->context['gatherpress/isEmpty'] );
-		$is_today   = ! empty( $block->context['gatherpress/isToday'] );
-		$day_posts  = isset( $block->context['gatherpress/dayPosts'] ) && is_array( $block->context['gatherpress/dayPosts'] )
-			? $block->context['gatherpress/dayPosts']
-			: array();
-		$has_posts  = ! empty( $day_posts );
+		$day_number = isset( $block->context['gatherpress/dayNumber'] ) && is_numeric( $block->context['gatherpress/dayNumber'] ) ? (int) $block->context['gatherpress/dayNumber'] : 0;
+		$classes    = $this->get_day_cell_classes( $block->context );
 
-		// Resolve weekend and weekday from context (with fallback if dayDate is present).
-		$weekday = $block->context['gatherpress/weekday'] ?? '';
-		if ( empty( $weekday ) && ! empty( $block->context['gatherpress/dayDate'] ) ) {
-			$ts         = strtotime( (string) $block->context['gatherpress/dayDate'] );
+		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
+		$inner_blocks_raw   = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
+		$inner_blocks       = $this->find_day_inner_blocks( $inner_blocks_raw );
+		$cell_content       = '';
+
+		if ( ! $is_empty && $day_number > 0 ) {
+			$cell_content = $this->render_day_cell_content( $block->context, $inner_blocks['day_number'], $inner_blocks['entries'] );
+		}
+
+		return sprintf(
+			'<td %1$s>%2$s</td>',
+			$wrapper_attributes,
+			$cell_content
+		);
+	}
+
+	/**
+	 * Resolve class names for a calendar day cell.
+	 *
+	 * @param array<mixed> $context Block context.
+	 *
+	 * @return list<string> Array of CSS classes.
+	 */
+	private function get_day_cell_classes( array $context ): array {
+		$classes = array( 'gatherpress-calendar__day' );
+
+		if ( ! empty( $context['gatherpress/isEmpty'] ) ) {
+			$classes[] = 'is-empty';
+		}
+		if ( ! empty( $context['gatherpress/dayPosts'] ) ) {
+			$classes[] = 'has-posts';
+		}
+		if ( ! empty( $context['gatherpress/isToday'] ) ) {
+			$classes[] = 'is-today';
+		}
+
+		$weekday    = isset( $context['gatherpress/weekday'] ) && is_string( $context['gatherpress/weekday'] ) ? $context['gatherpress/weekday'] : '';
+		$is_weekend = ! empty( $context['gatherpress/isWeekend'] );
+		$day_date   = isset( $context['gatherpress/dayDate'] ) && is_string( $context['gatherpress/dayDate'] ) ? $context['gatherpress/dayDate'] : '';
+
+		if ( '' === $weekday && '' !== $day_date ) {
+			$ts         = strtotime( $day_date );
 			$dow        = false !== $ts ? (int) gmdate( 'w', $ts ) : 0;
 			$weekday    = Date_Calculator::get_weekday_slug( $dow );
 			$is_weekend = Date_Calculator::is_weekend_day( $dow );
-		} else {
-			$is_weekend = ! empty( $block->context['gatherpress/isWeekend'] );
 		}
 
-		$classes = array( 'gatherpress-calendar__day' );
-		if ( $is_empty ) {
-			$classes[] = 'is-empty';
-		}
-		if ( $has_posts ) {
-			$classes[] = 'has-posts';
-		}
-		if ( $is_today ) {
-			$classes[] = 'is-today';
-		}
 		if ( $is_weekend ) {
 			$classes[] = 'is-weekend';
 		}
-		if ( ! empty( $weekday ) ) {
-			$classes[] = 'is-' . sanitize_html_class( strtolower( (string) $weekday ) );
+		if ( '' !== $weekday ) {
+			$classes[] = 'is-' . sanitize_html_class( strtolower( $weekday ) );
 		}
 
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
+		return $classes;
+	}
 
+	/**
+	 * Locate day number and entries inner blocks.
+	 *
+	 * @param array<mixed> $inner_blocks Parsed inner blocks.
+	 *
+	 * @return array{
+	 *   day_number: array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>}|null,
+	 *   entries: array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>}|null
+	 * } Found blocks.
+	 */
+	private function find_day_inner_blocks( array $inner_blocks ): array {
 		$day_number_block = null;
 		$entries_block    = null;
-		if ( ! empty( $block->parsed_block['innerBlocks'] ) ) {
-			foreach ( $block->parsed_block['innerBlocks'] as $inner ) {
-				if ( null === $day_number_block && ( $inner['attrs']['metadata']['bindings']['content']['source'] ?? '' ) === 'gatherpress/calendar-day' ) {
-					$day_number_block = $inner;
-				}
-				if ( null === $entries_block && 'gatherpress/calendar-entries' === ( $inner['blockName'] ?? '' ) ) {
-					$entries_block = $inner;
-				}
+
+		foreach ( $inner_blocks as $inner ) {
+			if ( ! is_array( $inner ) ) {
+				continue;
+			}
+
+			$attrs           = isset( $inner['attrs'] ) && is_array( $inner['attrs'] ) ? $inner['attrs'] : array();
+			$metadata        = isset( $attrs['metadata'] ) && is_array( $attrs['metadata'] ) ? $attrs['metadata'] : array();
+			$bindings        = isset( $metadata['bindings'] ) && is_array( $metadata['bindings'] ) ? $metadata['bindings'] : array();
+			$content_binding = isset( $bindings['content'] ) && is_array( $bindings['content'] ) ? $bindings['content'] : array();
+			$binding_source  = isset( $content_binding['source'] ) && is_string( $content_binding['source'] ) ? $content_binding['source'] : '';
+
+			/** @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_typed */
+			$inner_typed = $inner;
+
+			if ( null === $day_number_block && 'gatherpress/calendar-day' === $binding_source ) {
+				$day_number_block = $inner_typed;
+			}
+			if ( null === $entries_block && 'gatherpress/calendar-entries' === ( $inner['blockName'] ?? '' ) ) {
+				$entries_block = $inner_typed;
 			}
 		}
 
-		// Render the bound paragraph block with this day's context.
-		$day_number_html = $day_number_block
-			? ( new \WP_Block( $day_number_block, $block->context ) )->render()
+		return array(
+			'day_number' => $day_number_block,
+			'entries'    => $entries_block,
+		);
+	}
+
+	/**
+	 * Render day cell content (day number and events list).
+	 *
+	 * @param array<mixed>                                                                                                                                   $context          Day context.
+	 * @param array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>}|null $day_number_block Bound day number block.
+	 * @param array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>}|null $entries_block    Calendar entries block.
+	 *
+	 * @return string Rendered HTML.
+	 */
+	private function render_day_cell_content( array $context, ?array $day_number_block, ?array $entries_block ): string {
+		$day_number      = isset( $context['gatherpress/dayNumber'] ) && is_numeric( $context['gatherpress/dayNumber'] ) ? (int) $context['gatherpress/dayNumber'] : 0;
+		$day_number_html = null !== $day_number_block
+			? ( new WP_Block( $day_number_block, $context ) )->render()
 			: sprintf( '<p class="gatherpress-calendar__day-number">%s</p>', esc_html( (string) $day_number ) );
 
-		// Render the events list block (gatherpress/calendar-entries) with this day's context.
-		$entries_html = $entries_block
-			? ( new \WP_Block( $entries_block, $block->context ) )->render()
+		$entries_html = null !== $entries_block
+			? ( new WP_Block( $entries_block, $context ) )->render()
 			: '';
 
-		ob_start();
-		?>
-		<td <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-			<?php if ( ! $is_empty && $day_number > 0 ) { ?>
-				<?php echo $day_number_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-				<?php echo $entries_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-			<?php } ?>
-		</td>
-		<?php
-		return (string) ob_get_clean();
+		return $day_number_html . $entries_html;
 	}
 }
