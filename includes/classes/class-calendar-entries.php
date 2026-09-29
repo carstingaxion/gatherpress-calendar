@@ -96,13 +96,15 @@ class Calendar_Entries {
 		}
 
 		$entries_styles = array();
-		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
+		$grid_gap       = Style_Processor::get_block_gap_value( $attributes );
 		if ( ! empty( $grid_gap ) ) {
 			$entries_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
 		}
-		$wrapper_attributes = get_block_wrapper_attributes( array(
-			'style' => esc_attr( implode( '; ', $entries_styles ) ),
-		) );
+		$wrapper_attributes = get_block_wrapper_attributes(
+			array(
+				'style' => esc_attr( implode( '; ', $entries_styles ) ),
+			) 
+		);
 
 		$items_html = '';
 		foreach ( $day_posts as $post_id ) {
@@ -207,7 +209,8 @@ class Calendar_Entries {
 		$block_styles  = array();
 		$extra_classes = array( 'gatherpress-calendar__entry' );
 
-		/* -------------------------------------------------------------
+		/*
+		-------------------------------------------------------------
 		 * 1. COLOR (Text, Background, Gradient)
 		 * ----------------------------------------------------------- */
 		$color_styles = array();
@@ -241,7 +244,8 @@ class Calendar_Entries {
 			$extra_classes[] = 'has-link-color';
 		}
 
-		/* -------------------------------------------------------------
+		/*
+		-------------------------------------------------------------
 		 * 2. BORDER (Radius, Color, Width, Style, Sides)
 		 * ----------------------------------------------------------- */
 		$border_styles = array();
@@ -258,7 +262,8 @@ class Calendar_Entries {
 			$block_styles['border'] = $border_styles;
 		}
 
-		/* -------------------------------------------------------------
+		/*
+		-------------------------------------------------------------
 		 * 3. SHADOW (Single level path)
 		 * ----------------------------------------------------------- */
 		$shadow = $attributes['style']['shadow'] ?? ( $attributes['shadow'] ?? null );
@@ -268,7 +273,8 @@ class Calendar_Entries {
 				: "var:preset|shadow|{$shadow}";
 		}
 
-		/* -------------------------------------------------------------
+		/*
+		-------------------------------------------------------------
 		 * 4. SPACING (Padding & Margin)
 		 * ----------------------------------------------------------- */
 		$spacing_styles = array();
@@ -285,7 +291,8 @@ class Calendar_Entries {
 			$block_styles['spacing'] = $spacing_styles;
 		}
 
-		/* -------------------------------------------------------------
+		/*
+		-------------------------------------------------------------
 		 * 5. COMPILE VIA STYLE ENGINE
 		 * ----------------------------------------------------------- */
 		// convert_vars_to_classnames MUST be false so that var:preset|spacing|...
@@ -295,10 +302,17 @@ class Calendar_Entries {
 			array( 'convert_vars_to_classnames' => false )
 		);
 
-		$classnames = trim( implode( ' ', array_filter( array_merge(
-			$extra_classes,
-			explode( ' ', $styles['classnames'] ?? '' )
-		) ) ) );
+		$classnames = trim(
+			implode(
+				' ',
+				array_filter(
+					array_merge(
+						$extra_classes,
+						explode( ' ', $styles['classnames'] ?? '' )
+					) 
+				) 
+			) 
+		);
 
 		$inline_styles = ! empty( $styles['css'] ) ? sprintf( ' style="%s"', esc_attr( $styles['css'] ) ) : '';
 

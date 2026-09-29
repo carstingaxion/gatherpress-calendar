@@ -64,10 +64,10 @@ class Calendar_Structure_Builder {
 	/**
 	 * Factory to create an active day entry.
 	 *
-	 * @param int             $day         Day of month.
-	 * @param string          $date_str    YYYY-MM-DD date string.
-	 * @param int             $day_of_week Day of week (0-6).
-	 * @param list<int>       $posts       Associated post IDs.
+	 * @param int       $day         Day of month.
+	 * @param string    $date_str    YYYY-MM-DD date string.
+	 * @param int       $day_of_week Day of week (0-6).
+	 * @param list<int> $posts       Associated post IDs.
 	 *
 	 * @return array<string, mixed>
 	 */
