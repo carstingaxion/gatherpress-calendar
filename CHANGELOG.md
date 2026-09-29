@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.4.2...HEAD)
+## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.5.0...HEAD)
+
+## [0.5.0](https://github.com/carstingaxion/gatherpress-calendar/compare/0.4.2...0.5.0) - 2026-09-29
+
+### 🚀 Added
+
+- week & day views ([#87](https://github.com/carstingaxion/gatherpress-calendar/pull/87))
+- Fix/apply styles to entries ([#85](https://github.com/carstingaxion/gatherpress-calendar/pull/85))
+- Fix/remove useless code ([#84](https://github.com/carstingaxion/gatherpress-calendar/pull/84))
+- Remove custom date-query filter in favor of GatherPress' core  ([#82](https://github.com/carstingaxion/gatherpress-calendar/pull/82))
 
 ## [0.4.2](https://github.com/carstingaxion/gatherpress-calendar/compare/0.4.1...0.4.2) - 2026-09-26
 
