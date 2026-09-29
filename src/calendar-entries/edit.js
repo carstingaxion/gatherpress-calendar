@@ -14,8 +14,8 @@ import {
 	__experimentalUseColorProps as useColorProps,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseBorderProps as useBorderProps,
-	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
-	__experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
+
+	// __experimentalGetSpacingClassesAndStyles as getSpacingClassesAndStyles,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetShadowClassesAndStyles as getShadowClassesAndStyles,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -53,15 +53,15 @@ const EventItem = memo( function EventItemComponent( {
 	isFirst,
 	innerBlocksProps,
 	innerBlocks,
-	parentAttributes
+	parentAttributes,
 } ) {
-	// Safely resolve postId and postType whether post is an object or primitive ID
-	const postId =
-		typeof post === 'object' && typeof post?.id === 'number'
-			? post.id
-			: typeof post === 'number'
-			? post
-			: undefined;
+	// Safely resolve postId.
+	let postId;
+	if ( typeof post === 'object' && typeof post?.id === 'number' ) {
+		postId = post.id;
+	} else if ( typeof post === 'number' ) {
+		postId = post;
+	}
 
 	const postType =
 		typeof post === 'object' && post?.type
@@ -100,7 +100,7 @@ const EventItem = memo( function EventItemComponent( {
 
 	const entryProps = useBlockProps( {
 		className: classNames,
-		style: style,
+		style,
 	} );
 
 	return (

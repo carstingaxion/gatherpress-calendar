@@ -1,7 +1,7 @@
 /**
  * Date utility functions for GatherPress Calendar.
  *
- * @package GatherPressCalendar
+ * @package
  */
 
 import { dateI18n } from '@wordpress/date';
@@ -13,15 +13,19 @@ export function formatDate( date ) {
 }
 
 /**
- * Calculate the target date based on viewType, selectedDate and modifiers.
+ * Calculate the target date based on viewType, selectedDate, and modifiers.
  *
- * @param {string} viewType One of 'month', 'week' or'day'.
- * @param {string} selectedDate The date string.
- * @param {number} dateModifier Modifier offset.
- *
+ * @param {Object} [options]              Options object.
+ * @param {string} [options.viewType]     One of 'month', 'week', or 'day'.
+ * @param {string} [options.selectedDate] The date string.
+ * @param {number} [options.dateModifier] Modifier offset.
  * @return {Date} Calculated target date.
  */
-export function calculateTargetDate( { viewType = 'month', selectedDate = '', dateModifier = 0 } = {} ) {
+export function calculateTargetDate( {
+	viewType = 'month',
+	selectedDate = '',
+	dateModifier = 0,
+} = {} ) {
 	let targetDate;
 
 	if ( selectedDate && /^\d{4}-\d{2}-\d{2}$/.test( selectedDate ) ) {
@@ -60,10 +64,11 @@ export function calculateTargetDate( { viewType = 'month', selectedDate = '', da
  *
  * @return {Object} Range object.
  */
-export function calculateDateRange( options ={}, startOfWeek = 0 ) {
+export function calculateDateRange( options = {}, startOfWeek = 0 ) {
 	const targetDate = calculateTargetDate( options );
 	const viewType = options.viewType || 'month';
-	const showWeekends = options.showWeekends !== false && options.showWeekends !== 'false';
+	const showWeekends =
+		options.showWeekends !== false && options.showWeekends !== 'false';
 
 	let startDate;
 	let endDate;
@@ -118,8 +123,8 @@ export function calculateDateRange( options ={}, startOfWeek = 0 ) {
 /**
  * Calculate date query parameters for REST requests.
  *
- * @param {Object} options Configuration.
- * @param {number}        startOfWeek            Start of week index.
+ * @param {Object} options     Configuration.
+ * @param {number} startOfWeek Start of week index.
  *
  * @return {Object} Query parameters.
  */
@@ -156,14 +161,23 @@ export function formatHeading( viewType, startDate, endDate ) {
 		const endMonth = endDate.getMonth();
 
 		if ( startYear !== endYear ) {
-			return `${ dateI18n( 'M j, Y', startDate ) } – ${ dateI18n( 'M j, Y', endDate ) }`;
+			return `${ dateI18n( 'M j, Y', startDate ) } – ${ dateI18n(
+				'M j, Y',
+				endDate
+			) }`;
 		}
 
 		if ( startMonth !== endMonth ) {
-			return `${ dateI18n( 'M j', startDate ) } – ${ dateI18n( 'M j, Y', endDate ) }`;
+			return `${ dateI18n( 'M j', startDate ) } – ${ dateI18n(
+				'M j, Y',
+				endDate
+			) }`;
 		}
 
-		return `${ dateI18n( 'M', startDate ) } ${ dateI18n( 'j', startDate ) } – ${ dateI18n( 'j, Y', endDate ) }`;
+		return `${ dateI18n( 'M', startDate ) } ${ dateI18n(
+			'j',
+			startDate
+		) } – ${ dateI18n( 'j, Y', endDate ) }`;
 	}
 
 	return dateI18n( 'F Y', startDate );

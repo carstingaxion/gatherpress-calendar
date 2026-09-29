@@ -1,7 +1,7 @@
 /**
  * GatherPress Calendar Block Editor Component
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
 
@@ -20,7 +20,10 @@ import { useSelect } from '@wordpress/data';
 
 import './editor.scss';
 import { CALENDAR_TEMPLATE } from './edit/constants';
-import { calculateDateRange, calculateDateQuery } from './edit/utils/date-utils';
+import {
+	calculateDateRange,
+	calculateDateQuery,
+} from './edit/utils/date-utils';
 import {
 	generateCalendar,
 	getDefaultActiveDate,
@@ -97,13 +100,7 @@ export default function Edit( {
 	);
 
 	const calendar = useMemo(
-		() =>
-			generateCalendar(
-				posts,
-				startOfWeek,
-				dateRange,
-				showWeekends
-			),
+		() => generateCalendar( posts, startOfWeek, dateRange, showWeekends ),
 		[ posts, startOfWeek, dateRange, showWeekends ]
 	);
 
@@ -163,7 +160,10 @@ export default function Edit( {
 
 	const tableStyle = {
 		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
-		'--gatherpress-calendar-columns': getColumnsCount( viewType, showWeekends ),
+		'--gatherpress-calendar-columns': getColumnsCount(
+			viewType,
+			showWeekends
+		),
 	};
 
 	const weekContext = useMemo(
@@ -182,7 +182,10 @@ export default function Edit( {
 			<div { ...blockProps }>
 				<Placeholder
 					icon="calendar-alt"
-					label={ __( 'GatherPress Calendar', 'gatherpress-calendar' ) }
+					label={ __(
+						'GatherPress Calendar',
+						'gatherpress-calendar'
+					) }
 					instructions={ __(
 						'This block must be used inside a Query Loop block.',
 						'gatherpress-calendar'
@@ -207,7 +210,9 @@ export default function Edit( {
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }>
+				<PanelBody
+					title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }
+				>
 					{ showMonthPicker ? (
 						<MonthPicker
 							selectedMonth={ selectedDate }
@@ -217,7 +222,9 @@ export default function Edit( {
 					) : (
 						<DateControls
 							viewType={ viewType }
-							onViewTypeChange={ ( val ) => setAttributes( { viewType: val } ) }
+							onViewTypeChange={ ( val ) =>
+								setAttributes( { viewType: val } )
+							}
 							selectedDate={ selectedDate }
 							dateModifier={ dateModifier }
 							onDateChange={ handleDateChange }
@@ -229,7 +236,9 @@ export default function Edit( {
 					<ToggleControl
 						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
 						checked={ showWeekdays }
-						onChange={ ( value ) => setAttributes( { showWeekdays: value } ) }
+						onChange={ ( value ) =>
+							setAttributes( { showWeekdays: value } )
+						}
 						help={ __(
 							'Display the days of the week inside the calendar header.',
 							'gatherpress-calendar'
@@ -237,9 +246,14 @@ export default function Edit( {
 					/>
 					{ 'day' !== viewType && (
 						<ToggleControl
-							label={ __( 'Show Weekends', 'gatherpress-calendar' ) }
+							label={ __(
+								'Show Weekends',
+								'gatherpress-calendar'
+							) }
 							checked={ showWeekends }
-							onChange={ ( value ) => setAttributes( { showWeekends: value } ) }
+							onChange={ ( value ) =>
+								setAttributes( { showWeekends: value } )
+							}
 							help={ __(
 								'Display weekend days in the calendar grid.',
 								'gatherpress-calendar'

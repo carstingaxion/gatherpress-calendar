@@ -26,41 +26,44 @@ export function useDateOffsetHelp( dateModifier = 0, viewType = 'month' ) {
 		if ( 'day' === viewType ) {
 			return dateModifier < 0
 				? sprintf(
-					/* translators: %d: number of days ago */
-					__( 'Showing %d day(s) ago', 'gatherpress-calendar' ),
-					absVal
-				)
+						/* translators: %d: number of days ago */
+						__( 'Showing %d day(s) ago', 'gatherpress-calendar' ),
+						absVal
+				  )
 				: sprintf(
-					/* translators: %d: number of days ahead */
-					__( 'Showing %d day(s) ahead', 'gatherpress-calendar' ),
-					dateModifier
-				);
+						/* translators: %d: number of days ahead */
+						__( 'Showing %d day(s) ahead', 'gatherpress-calendar' ),
+						dateModifier
+				  );
 		}
 
 		if ( 'week' === viewType ) {
 			return dateModifier < 0
 				? sprintf(
-					/* translators: %d: number of weeks ago */
-					__( 'Showing %d week(s) ago', 'gatherpress-calendar' ),
-					absVal
-				)
+						/* translators: %d: number of weeks ago */
+						__( 'Showing %d week(s) ago', 'gatherpress-calendar' ),
+						absVal
+				  )
 				: sprintf(
-					/* translators: %d: number of weeks ahead */
-					__( 'Showing %d week(s) ahead', 'gatherpress-calendar' ),
-					dateModifier
-				);
+						/* translators: %d: number of weeks ahead */
+						__(
+							'Showing %d week(s) ahead',
+							'gatherpress-calendar'
+						),
+						dateModifier
+				  );
 		}
 
 		return dateModifier < 0
 			? sprintf(
-				/* translators: %d: number of months ago */
-				__( 'Showing %d month(s) ago', 'gatherpress-calendar' ),
-				absVal
-			)
+					/* translators: %d: number of months ago */
+					__( 'Showing %d month(s) ago', 'gatherpress-calendar' ),
+					absVal
+			  )
 			: sprintf(
-				/* translators: %d: number of months ahead */
-				__( 'Showing %d month(s) ahead', 'gatherpress-calendar' ),
-				dateModifier
-			);
+					/* translators: %d: number of months ahead */
+					__( 'Showing %d month(s) ahead', 'gatherpress-calendar' ),
+					dateModifier
+			  );
 	}, [ dateModifier, viewType ] );
 }

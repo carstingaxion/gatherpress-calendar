@@ -6,7 +6,7 @@
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-registration/
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.1.0
  */
 
@@ -19,7 +19,6 @@ import { addFilter } from '@wordpress/hooks';
 import { Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
-import { dateI18n } from '@wordpress/date';
 import {
 	store as blockEditorStore,
 	InspectorControls,
@@ -28,7 +27,7 @@ import domReady from '@wordpress/dom-ready';
 
 /**
  * Internal dependencies
-*/
+ */
 import './style.scss';
 import Edit from './edit';
 import save from './save';
@@ -75,6 +74,11 @@ domReady( () => {
 
 	/**
 	 * Callback to get heading content for bound heading blocks in the editor.
+	 *
+	 * @param {Object}   root0          Parameters object.
+	 * @param {Function} root0.select   Block editor select function.
+	 * @param {string}   root0.clientId Current block client ID.
+	 * @return {Object} Content object.
 	 */
 	const getCalendarHeadingValues = ( { select, clientId } ) => {
 		const { getBlockParentsByBlockName, getBlock, getBlocks } =

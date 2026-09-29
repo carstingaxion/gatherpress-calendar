@@ -1,7 +1,7 @@
 /**
  * Calendar generation utility functions.
  *
- * @package GatherPressCalendar
+ * @package
  */
 
 import { dateI18n } from '@wordpress/date';
@@ -158,9 +158,10 @@ export function groupPostsByDate( posts = [] ) {
 	}
 
 	posts.forEach( ( post ) => {
-		const postDate = 'gatherpress_event' === post.type
-			? post.meta?.gatherpress_datetime_start
-			: post.date;
+		const postDate =
+			'gatherpress_event' === post.type
+				? post.meta?.gatherpress_datetime_start
+				: post.date;
 
 		if ( ! postDate ) {
 			return;
@@ -178,6 +179,11 @@ export function groupPostsByDate( posts = [] ) {
 
 /**
  * Helper to build an active day descriptor object.
+ *
+ * @param {Date}   dateObj     Date object.
+ * @param {Object} postsByDate Posts grouped by date string.
+ * @param {string} todayStr    Today's date string.
+ * @return {Object} Day descriptor object.
  */
 function createDayEntry( dateObj, postsByDate, todayStr ) {
 	const dayOfWeek = dateObj.getDay();
@@ -207,7 +213,14 @@ function createDayEntry( dateObj, postsByDate, todayStr ) {
  *
  * @return {Array[]} Weeks array.
  */
-export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate = {}, showWeekends = true ) {
+export function buildWeeks(
+	year,
+	month,
+	startOfWeek,
+	daysInMonth,
+	postsByDate = {},
+	showWeekends = true
+) {
 	// Today's date string, used to flag the current day in the grid.
 	const today = dateI18n( DATE_FORMAT, new Date() );
 	const activeDaysOfWeek = [];
@@ -276,7 +289,11 @@ export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate =
  *
  * @return {Array[]} Single-element array containing the week days.
  */
-export function buildWeekView( startDateObj, postsByDate = {}, showWeekends = true ) {
+export function buildWeekView(
+	startDateObj,
+	postsByDate = {},
+	showWeekends = true
+) {
 	const today = dateI18n( DATE_FORMAT, new Date() );
 	const week = [];
 	const baseDate = new Date( startDateObj );
@@ -318,30 +335,57 @@ export function buildDayView( dayObj, postsByDate = {} ) {
  *
  * @return {Object} Calendar data structure.
  */
-export function generateCalendar( posts = [], startOfWeek = 0, dateRange, showWeekends = true ) {
+export function generateCalendar(
+	posts = [],
+	startOfWeek = 0,
+	dateRange,
+	showWeekends = true
+) {
 	const postsByDate = groupPostsByDate( posts );
 	const viewType = dateRange.viewType || 'month';
 
 	if ( 'day' === viewType ) {
 		return {
-			dayNames: [ dateI18n( 'D', dateRange.startDateObj || new Date( dateRange.startDate ) ) ],
-			weeks: buildDayView( dateRange.startDateObj || new Date( dateRange.startDate ), postsByDate ),
+			dayNames: [
+				dateI18n(
+					'D',
+					dateRange.startDateObj || new Date( dateRange.startDate )
+				),
+			],
+			weeks: buildDayView(
+				dateRange.startDateObj || new Date( dateRange.startDate ),
+				postsByDate
+			),
 		};
 	}
 
 	if ( 'week' === viewType ) {
-		const weekStart = dateRange.rawWeekStart || dateRange.startDateObj || new Date( dateRange.startDate );
+		const weekStart =
+			dateRange.rawWeekStart ||
+			dateRange.startDateObj ||
+			new Date( dateRange.startDate );
 		return {
 			dayNames: getDayNames( startOfWeek, showWeekends ),
 			weeks: buildWeekView( weekStart, postsByDate, showWeekends ),
 		};
 	}
 
-	const daysInMonth = new Date( dateRange.year, dateRange.month, 0 ).getDate();
+	const daysInMonth = new Date(
+		dateRange.year,
+		dateRange.month,
+		0
+	).getDate();
 
 	return {
 		dayNames: getDayNames( startOfWeek, showWeekends ),
-		weeks: buildWeeks( dateRange.year, dateRange.month, startOfWeek, daysInMonth, postsByDate, showWeekends ),
+		weeks: buildWeeks(
+			dateRange.year,
+			dateRange.month,
+			startOfWeek,
+			daysInMonth,
+			postsByDate,
+			showWeekends
+		),
 	};
 }
 

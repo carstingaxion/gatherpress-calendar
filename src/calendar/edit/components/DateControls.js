@@ -47,15 +47,54 @@ export function DateControls( {
 		return __( 'Months from current', 'gatherpress-calendar' );
 	}, [ viewType ] );
 
+	const selectionLabel = useMemo( () => {
+		if ( selectedDate ) {
+			if ( 'month' === viewType ) {
+				const match = monthOptions.find(
+					( o ) => o.value === selectedDate
+				);
+				return match?.label || selectedDate;
+			}
+			return selectedDate;
+		}
+
+		if ( 'day' === viewType ) {
+			return __( 'Current Day', 'gatherpress-calendar' );
+		}
+		if ( 'week' === viewType ) {
+			return __( 'Current Week', 'gatherpress-calendar' );
+		}
+		return __( 'Current Month', 'gatherpress-calendar' );
+	}, [ selectedDate, viewType, monthOptions ] );
+
+	const unitLabel = useMemo( () => {
+		if ( 'day' === viewType ) {
+			return __( 'day(s)', 'gatherpress-calendar' );
+		}
+		if ( 'week' === viewType ) {
+			return __( 'week(s)', 'gatherpress-calendar' );
+		}
+		return __( 'month(s)', 'gatherpress-calendar' );
+	}, [ viewType ] );
+
 	return (
 		<>
 			<SelectControl
 				label={ __( 'Calendar View', 'gatherpress-calendar' ) }
 				value={ viewType }
 				options={ [
-					{ label: __( 'Month', 'gatherpress-calendar' ), value: 'month' },
-					{ label: __( 'Week', 'gatherpress-calendar' ), value: 'week' },
-					{ label: __( 'Day', 'gatherpress-calendar' ), value: 'day' },
+					{
+						label: __( 'Month', 'gatherpress-calendar' ),
+						value: 'month',
+					},
+					{
+						label: __( 'Week', 'gatherpress-calendar' ),
+						value: 'week',
+					},
+					{
+						label: __( 'Day', 'gatherpress-calendar' ),
+						value: 'day',
+					},
 				] }
 				onChange={ onViewTypeChange }
 			/>
@@ -72,24 +111,14 @@ export function DateControls( {
 					{ __( 'Current Selection:', 'gatherpress-calendar' ) }
 				</strong>
 				<br />
-				{ selectedDate
-					? ( 'month' === viewType
-						? monthOptions.find( ( o ) => o.value === selectedDate )?.label || selectedDate
-						: selectedDate )
-					: ( 'day' === viewType
-						? __( 'Current Day', 'gatherpress-calendar' )
-						: 'week' === viewType
-							? __( 'Current Week', 'gatherpress-calendar' )
-							: __( 'Current Month', 'gatherpress-calendar' ) ) }
+				{ selectionLabel }
 				{ ! selectedDate && 0 !== dateModifier && (
 					<>
 						{ ' ' }
-						{ dateModifier > 0 ? `+${ dateModifier }` : dateModifier }{ ' ' }
-						{ 'day' === viewType
-							? __( 'day(s)', 'gatherpress-calendar' )
-							: 'week' === viewType
-								? __( 'week(s)', 'gatherpress-calendar' )
-								: __( 'month(s)', 'gatherpress-calendar' ) }
+						{ dateModifier > 0
+							? `+${ dateModifier }`
+							: dateModifier }{ ' ' }
+						{ unitLabel }
 					</>
 				) }
 			</div>
@@ -105,7 +134,10 @@ export function DateControls( {
 				</Button>
 			) : (
 				<TextControl
-					label={ __( 'Specific Date (YYYY-MM-DD)', 'gatherpress-calendar' ) }
+					label={ __(
+						'Specific Date (YYYY-MM-DD)',
+						'gatherpress-calendar'
+					) }
 					type="date"
 					value={ selectedDate }
 					onChange={ onDateChange }
