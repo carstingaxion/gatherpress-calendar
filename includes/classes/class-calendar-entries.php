@@ -115,8 +115,8 @@ class Calendar_Entries {
 
 		return sprintf(
 			'<div %1$s>%2$s</div>',
-			$wrapper_attributes,  // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			$items_html  // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			$items_html // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		);
 	}
 
@@ -146,25 +146,9 @@ class Calendar_Entries {
 			$post_type = 'post';
 		}
 
-		$post_url = get_permalink( $post_id );
-		if ( ! is_string( $post_url ) ) {
-			$post_url = '';
-		}
-
-		$post_title = the_title_attribute(
-			array(
-				'echo' => false,
-				'post' => $post,
-			)
-		);
-		if ( ! is_string( $post_title ) ) {
-			$post_title = '';
-		}
-
-		$attributes   = $block->parsed_block['attrs'];
+		$attributes   = $block->parsed_block['attrs'] ?? array();
 		$entry_styles = $this->get_entry_styles_and_classes( $attributes );
 
-		// Context filter for the template's inner blocks (core/post-title, event-date, etc.).
 		$filter_block_context = static function ( array $context ) use ( $post_id, $post_type ): array {
 			$context['postType'] = $post_type;
 			$context['postId']   = $post_id;
@@ -172,9 +156,7 @@ class Calendar_Entries {
 		};
 
 		add_filter( 'render_block_context', $filter_block_context, 1 );
-
 		$inner_content = $this->render_template( $block->parsed_block['innerBlocks'] ?? array() );
-
 		remove_filter( 'render_block_context', $filter_block_context, 1 );
 
 		wp_reset_postdata();
@@ -182,72 +164,60 @@ class Calendar_Entries {
 			$GLOBALS['post'] = $this->original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		}
 
-		// TODO: Maybe reuse as id attribute, 
-		// and add the posts css classes here.
-		$event_content_id = 'event-content-' . $post_id;
+		$style_attribute = ! empty( $entry_styles['inline_styles'] ) ? sprintf( ' style="%s"', esc_attr( $entry_styles['inline_styles'] ) ) : '';
 
-		ob_start();
-		?>
-		<div class="<?php echo esc_attr( $entry_styles['classnames'] ); ?>"<?php echo $entry_styles['inline_styles']; ?>>
-			<?php echo $inner_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-		</div>
-		<?php
-		$output = ob_get_clean();
-		return is_string( $output ) ? $output : '';
+		return sprintf(
+			'<div class="%1$s"%2$s>%3$s</div>',
+			esc_attr( $entry_styles['classnames'] ),
+			$style_attribute,
+			$inner_content
+		);
 	}
 
 	/**
-	 * Builds CSS styles and classnames for an entry using wp_style_engine_get_styles.
+	 * Extract color styles from attributes.
 	 *
-	 * Handles color, border, shadow, and spacing (margin/padding).
+	 * @param array<string, mixed> $attributes    Block attributes.
+	 * @param string[]             $extra_classes Classes passed by reference.
 	 *
-	 * @param array<string, mixed> $attributes Block attributes.
-	 *
-	 * @return array{classnames: string, inline_styles: string} Resolved CSS class names and inline style attribute.
+	 * @return array<string, string>
 	 */
-	private function get_entry_styles_and_classes( array $attributes ): array {
-		$block_styles  = array();
-		$extra_classes = array( 'gatherpress-calendar__entry' );
-
-		/*
-		-------------------------------------------------------------
-		 * 1. COLOR (Text, Background, Gradient)
-		 * ----------------------------------------------------------- */
+	private function extract_color_styles( array $attributes, array &$extra_classes ): array {
 		$color_styles = array();
 
-		// Text color.
 		if ( ! empty( $attributes['textColor'] ) ) {
 			$color_styles['text'] = "var:preset|color|{$attributes['textColor']}";
 		} elseif ( ! empty( $attributes['style']['color']['text'] ) ) {
 			$color_styles['text'] = $attributes['style']['color']['text'];
 		}
 
-		// Background color.
 		if ( ! empty( $attributes['backgroundColor'] ) ) {
 			$color_styles['background'] = "var:preset|color|{$attributes['backgroundColor']}";
 		} elseif ( ! empty( $attributes['style']['color']['background'] ) ) {
 			$color_styles['background'] = $attributes['style']['color']['background'];
 		}
 
-		// Gradient.
 		if ( ! empty( $attributes['gradient'] ) ) {
 			$color_styles['gradient'] = "var:preset|gradient|{$attributes['gradient']}";
 		} elseif ( ! empty( $attributes['style']['color']['gradient'] ) ) {
 			$color_styles['gradient'] = $attributes['style']['color']['gradient'];
 		}
 
-		if ( ! empty( $color_styles ) ) {
-			$block_styles['color'] = $color_styles;
-		}
-
 		if ( ! empty( $attributes['style']['elements']['link']['color']['text'] ) ) {
 			$extra_classes[] = 'has-link-color';
 		}
 
-		/*
-		-------------------------------------------------------------
-		 * 2. BORDER (Radius, Color, Width, Style, Sides)
-		 * ----------------------------------------------------------- */
+		return $color_styles;
+	}
+
+	/**
+	 * Extract border styles from attributes.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function extract_border_styles( array $attributes ): array {
 		$border_styles = array();
 
 		if ( ! empty( $attributes['borderColor'] ) ) {
@@ -258,45 +228,53 @@ class Calendar_Entries {
 			$border_styles = array_merge( $border_styles, $attributes['style']['border'] );
 		}
 
+		return $border_styles;
+	}
+
+	/**
+	 * Builds CSS styles and classnames for an entry using wp_style_engine_get_styles.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 *
+	 * @return array{classnames: string, inline_styles: string} Resolved CSS class names and inline style values.
+	 */
+	private function get_entry_styles_and_classes( array $attributes ): array {
+		$block_styles  = array();
+		$extra_classes = array( 'gatherpress-calendar__entry' );
+
+		// 1. Color styles.
+		$color_styles = $this->extract_color_styles( $attributes, $extra_classes );
+		if ( ! empty( $color_styles ) ) {
+			$block_styles['color'] = $color_styles;
+		}
+
+		// 2. Border styles.
+		$border_styles = $this->extract_border_styles( $attributes );
 		if ( ! empty( $border_styles ) ) {
 			$block_styles['border'] = $border_styles;
 		}
 
-		/*
-		-------------------------------------------------------------
-		 * 3. SHADOW (Single level path)
-		 * ----------------------------------------------------------- */
+		// 3. Shadow styles.
 		$shadow = $attributes['style']['shadow'] ?? ( $attributes['shadow'] ?? null );
 		if ( ! empty( $shadow ) && is_string( $shadow ) ) {
-			$block_styles['shadow'] = ( strpos( $shadow, 'var:preset|' ) === 0 || strpos( $shadow, ' ' ) !== false )
+			$block_styles['shadow'] = ( 0 === strpos( $shadow, 'var:preset|' ) || false !== strpos( $shadow, ' ' ) )
 				? $shadow
 				: "var:preset|shadow|{$shadow}";
 		}
 
-		/*
-		-------------------------------------------------------------
-		 * 4. SPACING (Padding & Margin)
-		 * ----------------------------------------------------------- */
+		// 4. Spacing styles.
 		$spacing_styles = array();
-
 		if ( ! empty( $attributes['style']['spacing']['padding'] ) ) {
 			$spacing_styles['padding'] = $attributes['style']['spacing']['padding'];
 		}
-
 		if ( ! empty( $attributes['style']['spacing']['margin'] ) ) {
 			$spacing_styles['margin'] = $attributes['style']['spacing']['margin'];
 		}
-
 		if ( ! empty( $spacing_styles ) ) {
 			$block_styles['spacing'] = $spacing_styles;
 		}
 
-		/*
-		-------------------------------------------------------------
-		 * 5. COMPILE VIA STYLE ENGINE
-		 * ----------------------------------------------------------- */
-		// convert_vars_to_classnames MUST be false so that var:preset|spacing|...
-		// converts to var(--wp--preset--spacing--...) instead of remaining raw.
+		// 5. Compile via Style Engine.
 		$styles = wp_style_engine_get_styles(
 			$block_styles,
 			array( 'convert_vars_to_classnames' => false )
@@ -314,11 +292,9 @@ class Calendar_Entries {
 			) 
 		);
 
-		$inline_styles = ! empty( $styles['css'] ) ? sprintf( ' style="%s"', esc_attr( $styles['css'] ) ) : '';
-
 		return array(
 			'classnames'    => $classnames,
-			'inline_styles' => $inline_styles,
+			'inline_styles' => $styles['css'] ?? '',
 		);
 	}
 

@@ -32,9 +32,84 @@ class Date_Calculator {
 	const DATE_FORMAT = 'Y-m-d';
 
 	/**
-	 * Calculate the target date range for the calendar based on viewType, selectedDate, dateModifier, and weekend visibility.
+	 * Resolves the baseline target date applying date modifiers.
 	 *
-	 * @since 0.5.0
+	 * @param string $selected_date Selected date string.
+	 * @param string $view_type     View type.
+	 * @param int    $offset        Offset count.
+	 *
+	 * @return DateTimeImmutable
+	 */
+	private static function resolve_base_date( string $selected_date, string $view_type, int $offset ): DateTimeImmutable {
+		$tz        = wp_timezone();
+		$base_date = null;
+
+		if ( ! empty( $selected_date ) ) {
+			if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $selected_date ) ) {
+				$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_date, $tz );
+			} elseif ( preg_match( '/^\d{4}-\d{2}$/', $selected_date ) ) {
+				$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_date . '-01', $tz );
+			}
+		}
+
+		if ( ! $base_date instanceof DateTimeImmutable ) {
+			$base_date = current_datetime();
+		}
+
+		// Normalize base date to the 1st of the month in month view to prevent overflow (e.g. Jan 31 + 1 month).
+		if ( 'month' === $view_type ) {
+			$base_date = $base_date->modify( 'first day of this month' );
+		}
+
+		if ( 0 !== $offset ) {
+			$step_unit = 'month';
+			if ( 'week' === $view_type ) {
+				$step_unit = 'week';
+			} elseif ( 'day' === $view_type ) {
+				$step_unit = 'day';
+			}
+			$base_date = $base_date->modify( sprintf( '%+d %s', $offset, $step_unit ) );
+		}
+
+		return $base_date;
+	}
+
+	/**
+	 * Computes visible week start, end, and raw week start objects.
+	 *
+	 * @param DateTimeImmutable $base_date     Target base date.
+	 * @param int               $start_of_week Start of week setting (0-6).
+	 * @param bool              $show_weekends Weekend visibility.
+	 *
+	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable, 2: DateTimeImmutable} [start, end, raw_start].
+	 */
+	private static function calculate_week_bounds( DateTimeImmutable $base_date, int $start_of_week, bool $show_weekends ): array {
+		$raw_week_start = self::get_week_start( $base_date, $start_of_week );
+		$visible_days   = array();
+
+		for ( $i = 0; $i < 7; $i++ ) {
+			$day_obj    = $raw_week_start->modify( "+{$i} days" );
+			$dow        = (int) $day_obj->format( 'w' );
+			$is_weekend = self::is_weekend_day( $dow );
+
+			if ( $show_weekends || ! $is_weekend ) {
+				$visible_days[] = $day_obj;
+			}
+		}
+
+		if ( ! empty( $visible_days ) ) {
+			$start_date_obj = $visible_days[0]->setTime( 0, 0, 0 );
+			$end_date_obj   = $visible_days[ count( $visible_days ) - 1 ]->setTime( 23, 59, 59 );
+		} else {
+			$start_date_obj = $raw_week_start->setTime( 0, 0, 0 );
+			$end_date_obj   = $raw_week_start->modify( '+6 days' )->setTime( 23, 59, 59 );
+		}
+
+		return array( $start_date_obj, $end_date_obj, $raw_week_start );
+	}
+
+	/**
+	 * Calculate the target date range for the calendar based on viewType, selectedDate, dateModifier, and weekend visibility.
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
 	 * @param int                  $page       Pagination page offset (1-based, default 1).
@@ -60,64 +135,14 @@ class Date_Calculator {
 		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
 		$show_weekends = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
 
-		$tz        = wp_timezone();
-		$base_date = null;
-
-		if ( ! empty( $selected_date ) ) {
-			if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $selected_date ) ) {
-				$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_date, $tz );
-			} elseif ( preg_match( '/^\d{4}-\d{2}$/', $selected_date ) ) {
-				$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_date . '-01', $tz );
-			}
-		}
-
-		if ( ! $base_date instanceof DateTimeImmutable ) {
-			$base_date = current_datetime();
-		}
-
-		// Normalize base date to the 1st of the month in month view to prevent overflow (e.g. Jan 31 + 1 month).
-		if ( 'month' === $view_type ) {
-			$base_date = $base_date->modify( 'first day of this month' );
-		}
-
 		// Combine user-defined dateModifier with query pagination offset.
-		$offset = $date_modifier + max( 0, $page - 1 );
-
-		if ( 0 !== $offset ) {
-			$step_unit = 'month';
-			if ( 'week' === $view_type ) {
-				$step_unit = 'week';
-			} elseif ( 'day' === $view_type ) {
-				$step_unit = 'day';
-			}
-
-			$base_date = $base_date->modify( sprintf( '%+d %s', $offset, $step_unit ) );
-		}
-
+		$offset         = $date_modifier + max( 0, $page - 1 );
+		$base_date      = self::resolve_base_date( $selected_date, $view_type, $offset );
 		$start_of_week  = (int) get_option( 'start_of_week', 0 );
 		$raw_week_start = null;
 
 		if ( 'week' === $view_type ) {
-			$raw_week_start = self::get_week_start( $base_date, $start_of_week );
-			$visible_days   = array();
-
-			for ( $i = 0; $i < 7; $i++ ) {
-				$day_obj    = $raw_week_start->modify( "+{$i} days" );
-				$dow        = (int) $day_obj->format( 'w' );
-				$is_weekend = self::is_weekend_day( $dow );
-
-				if ( $show_weekends || ! $is_weekend ) {
-					$visible_days[] = $day_obj;
-				}
-			}
-
-			if ( ! empty( $visible_days ) ) {
-				$start_date_obj = $visible_days[0]->setTime( 0, 0, 0 );
-				$end_date_obj   = $visible_days[ count( $visible_days ) - 1 ]->setTime( 23, 59, 59 );
-			} else {
-				$start_date_obj = $raw_week_start->setTime( 0, 0, 0 );
-				$end_date_obj   = $raw_week_start->modify( '+6 days' )->setTime( 23, 59, 59 );
-			}
+			[ $start_date_obj, $end_date_obj, $raw_week_start ] = self::calculate_week_bounds( $base_date, $start_of_week, $show_weekends );
 		} elseif ( 'day' === $view_type ) {
 			$start_date_obj = $base_date->setTime( 0, 0, 0 );
 			$end_date_obj   = $base_date->setTime( 23, 59, 59 );
@@ -126,8 +151,6 @@ class Date_Calculator {
 			$start_date_obj = $base_date->modify( 'first day of this month' )->setTime( 0, 0, 0 );
 			$end_date_obj   = $base_date->modify( 'last day of this month' )->setTime( 23, 59, 59 );
 		}
-
-		$heading = self::format_heading( $view_type, $start_date_obj, $end_date_obj );
 
 		return array(
 			'view_type'      => $view_type,
@@ -139,26 +162,45 @@ class Date_Calculator {
 			'target_date'    => $base_date,
 			'year'           => (int) $base_date->format( 'Y' ),
 			'month'          => (int) $base_date->format( 'n' ),
-			'heading'        => $heading,
+			'heading'        => self::format_heading( $view_type, $start_date_obj, $end_date_obj ),
 		);
 	}
 
 	/**
 	 * Resolves a date range from query block context, falling back to calculation.
 	 *
-	 * @param array<string, mixed> $query              The `query` array from context.
+	 * @param array<string, mixed> $query              The query array from context.
 	 * @param array<string, mixed> $fallback_attributes Block attributes if context is incomplete.
 	 * @param int                  $page               Page number.
 	 *
-	 * @return array<string, mixed> Date range array.
+	 * @return array{
+	 *     view_type: string,
+	 *     start_date: string,
+	 *     end_date: string,
+	 *     start_date_obj: DateTimeImmutable,
+	 *     end_date_obj: DateTimeImmutable,
+	 *     raw_week_start: DateTimeImmutable,
+	 *     target_date: DateTimeImmutable,
+	 *     year: int,
+	 *     month: int,
+	 *     heading: string
+	 * } Date range array.
 	 */
 	public static function get_range_from_query( array $query, array $fallback_attributes = array(), int $page = 1 ): array {
 		if ( isset( $query[ Setup::CALENDAR_QUERY_START_DATE ], $query[ Setup::CALENDAR_QUERY_END_DATE ] ) ) {
 			$tz             = wp_timezone();
-			$start_date_obj = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ Setup::CALENDAR_QUERY_START_DATE ], $tz ) ?: current_datetime();
-			$end_date_obj   = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ Setup::CALENDAR_QUERY_END_DATE ], $tz ) ?: current_datetime();
-			$view_type      = (string) ( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ?? ( $fallback_attributes['viewType'] ?? 'month' ) );
-			$heading        = (string) ( $query[ Setup::CALENDAR_QUERY_HEADING ] ?? self::format_heading( $view_type, $start_date_obj, $end_date_obj ) );
+			$start_date_obj = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ Setup::CALENDAR_QUERY_START_DATE ], $tz );
+			if ( ! $start_date_obj instanceof DateTimeImmutable ) {
+				$start_date_obj = current_datetime();
+			}
+
+			$end_date_obj = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ Setup::CALENDAR_QUERY_END_DATE ], $tz );
+			if ( ! $end_date_obj instanceof DateTimeImmutable ) {
+				$end_date_obj = current_datetime();
+			}
+
+			$view_type = (string) ( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ?? ( $fallback_attributes['viewType'] ?? 'month' ) );
+			$heading   = (string) ( $query[ Setup::CALENDAR_QUERY_HEADING ] ?? self::format_heading( $view_type, $start_date_obj, $end_date_obj ) );
 
 			return array(
 				'view_type'      => $view_type,

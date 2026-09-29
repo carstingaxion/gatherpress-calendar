@@ -208,6 +208,53 @@ class Setup {
 	}
 
 	/**
+	 * Injects calendar pagination arguments onto the parent core/query block.
+	 *
+	 * @param array<string, mixed> $parsed_block Parsed query block data.
+	 *
+	 * @return array<string, mixed> Updated block data.
+	 */
+	private function paginate_query_block( array $parsed_block ): array {
+		$calendar_attrs = self::gatherpress_find_inner_block_attrs( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? array() );
+
+		if ( null !== $calendar_attrs && is_array( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs']['query'] ) ) {
+			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_PARAM ] = true;
+
+			$query_id = is_numeric( $parsed_block['attrs']['queryId'] ?? null ) ? (int) $parsed_block['attrs']['queryId'] : 0;
+			$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
+			$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+			$range = Date_Calculator::calculate_date_range( $calendar_attrs, $page );
+
+			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_VIEW_TYPE ]  = $range['view_type'];
+			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_START_DATE ] = $range['start_date'];
+			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_END_DATE ]   = $range['end_date'];
+			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_HEADING ]    = $range['heading'];
+		}
+
+		return $parsed_block;
+	}
+
+	/**
+	 * Injects paginated range attributes onto the child calendar block.
+	 *
+	 * @param array<string, mixed> $parsed_block Parsed calendar block data.
+	 * @param WP_Block|null        $parent_block Parent block instance.
+	 *
+	 * @return array<string, mixed> Updated block data.
+	 */
+	private function paginate_calendar_block( array $parsed_block, ?WP_Block $parent_block ): array {
+		$query = ( $parent_block instanceof WP_Block ) ? ( $parent_block->attributes['query'] ?? null ) : null;
+
+		if ( is_array( $query ) && isset( $query[ self::CALENDAR_QUERY_START_DATE ] ) ) {
+			$parsed_block['attrs']['selectedDate'] = $query[ self::CALENDAR_QUERY_START_DATE ];
+			$parsed_block['attrs']['viewType']     = $query[ self::CALENDAR_QUERY_VIEW_TYPE ] ?? ( $parsed_block['attrs']['viewType'] ?? 'month' );
+		}
+
+		return $parsed_block;
+	}
+
+	/**
 	 * Dynamically set date range and attributes based on core pagination query vars.
 	 *
 	 * @since 0.4.0
@@ -221,56 +268,15 @@ class Setup {
 	public function allow_core_pagination( array $parsed_block, array $source_block, ?WP_Block $parent_block ): array {
 		$block_name = $parsed_block['blockName'] ?? '';
 
-		// -------------------------------------------------------------
-		// 1. Target parent `core/query`: Set `pages` if calendar is inside,
-		// and resolve the calendar's target year/month *once* here so it
-		// can be shared - via `query` context - with every block inside
-		// this Query, including a Month Heading placed beside the calendar.
-		// -------------------------------------------------------------
 		if ( 'core/query' === $block_name ) {
-			$calendar_attrs = self::gatherpress_find_inner_block_attrs( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? array() );
-
-			if ( null !== $calendar_attrs && is_array( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs']['query'] ) ) {
-
-				// This could also be set in JS, but it works here, too.
-				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_PARAM ] = true;
-
-				$query_id = is_numeric( $parsed_block['attrs']['queryId'] ?? null ) ? (int) $parsed_block['attrs']['queryId'] : 0;
-				$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
-				$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-				$range = Date_Calculator::calculate_date_range( $calendar_attrs, $page );
-
-				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_VIEW_TYPE ]  = $range['view_type'];
-				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_START_DATE ] = $range['start_date'];
-				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_END_DATE ]   = $range['end_date'];
-				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_HEADING ]    = $range['heading'];
-			}
-
-			return $parsed_block;
+			return $this->paginate_query_block( $parsed_block );
 		}
 
-		// -------------------------------------------------------------
-		// 2. Target child `gatherpress/calendar`: Adopt the `selectedMonth`
-		// already resolved for it in step 1 (read back via the parent's
-		// `query` context), instead of recalculating it independently.
-		// -------------------------------------------------------------
 		if ( 'gatherpress/calendar' === $block_name ) {
-			$query = ( $parent_block instanceof WP_Block ) ? ( $parent_block->attributes['query'] ?? null ) : null;
-
-			if ( is_array( $query ) && isset( $query[ self::CALENDAR_QUERY_START_DATE ] ) ) {
-				$parsed_block['attrs']['selectedDate'] = $query[ self::CALENDAR_QUERY_START_DATE ];
-				$parsed_block['attrs']['viewType']     = $query[ self::CALENDAR_QUERY_VIEW_TYPE ] ?? ( $parsed_block['attrs']['viewType'] ?? 'month' );
-			}
-
-			return $parsed_block;
+			return $this->paginate_calendar_block( $parsed_block, $parent_block );
 		}
 
-		// -------------------------------------------------------------
-		// 3. Target `query-pagination-next` and `query-pagination-previous`
-		// -------------------------------------------------------------
 		if ( in_array( $block_name, array( 'core/query-pagination-next', 'core/query-pagination-previous' ), true ) ) {
-			// Attach the hook right before new WP_Query() is executed inside core.
 			add_filter( 'the_posts', array( $this, 'gatherpress_force_pagination_max_pages' ), 10, 2 );
 		}
 
@@ -432,7 +438,9 @@ class Setup {
 			return $range['heading'];
 		}
 
-		$now = current_datetime();
-		return wp_date( 'F Y', $now->getTimestamp() ) ?: null;
+		$now          = current_datetime();
+		$date_heading = wp_date( 'F Y', $now->getTimestamp() );
+
+		return is_string( $date_heading ) ? $date_heading : null;
 	}
 }

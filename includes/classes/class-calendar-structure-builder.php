@@ -64,12 +64,12 @@ class Calendar_Structure_Builder {
 	/**
 	 * Factory to create an active day entry.
 	 *
-	 * @param int       $day         Day of month.
-	 * @param string    $date_str    YYYY-MM-DD date string.
-	 * @param int       $day_of_week Day of week (0-6).
-	 * @param list<int> $posts       Associated post IDs.
+	 * @param int    $day         Day of month.
+	 * @param string $date_str    YYYY-MM-DD date string.
+	 * @param int    $day_of_week Day of week (0-6).
+	 * @param int[]  $posts       Associated post IDs.
 	 *
-	 * @return array<string, mixed>
+	 * @return array<string, mixed> Day entry.
 	 */
 	private static function create_day_entry( int $day, string $date_str, int $day_of_week, array $posts = array() ): array {
 		return array(
@@ -88,7 +88,7 @@ class Calendar_Structure_Builder {
 	 *
 	 * @param int $day_of_week Day of week (0-6).
 	 *
-	 * @return array<string, mixed>
+	 * @return array<string, mixed> Empty day entry.
 	 */
 	private static function create_empty_day_entry( int $day_of_week ): array {
 		return array(
@@ -98,6 +98,46 @@ class Calendar_Structure_Builder {
 			'weekday'   => Date_Calculator::get_weekday_slug( $day_of_week ),
 			'isWeekend' => Date_Calculator::is_weekend_day( $day_of_week ),
 		);
+	}
+
+	/**
+	 * Resolves active days of week based on start of week and weekend toggle.
+	 *
+	 * @param int  $start_of_week Start of week (0-6).
+	 * @param bool $show_weekends Weekend visibility.
+	 *
+	 * @return list<int> Active day-of-week indices.
+	 */
+	private static function get_active_week_columns( int $start_of_week, bool $show_weekends ): array {
+		$columns = array();
+		for ( $i = 0; $i < 7; $i++ ) {
+			$dow = ( $start_of_week + $i ) % 7;
+			if ( ! $show_weekends && Date_Calculator::is_weekend_day( $dow ) ) {
+				continue;
+			}
+			$columns[] = $dow;
+		}
+		return $columns;
+	}
+
+	/**
+	 * Generates leading empty padding days before the first day of the month.
+	 *
+	 * @param int   $first_day_dow First day of month day-of-week.
+	 * @param int[] $columns       Ordered active columns.
+	 *
+	 * @return list<array<string, mixed>>
+	 */
+	private static function pad_leading_empty_days( int $first_day_dow, array $columns ): array {
+		$start_col  = array_search( $first_day_dow, $columns, true );
+		$empty_days = false !== $start_col ? (int) $start_col : 0;
+		$padding    = array();
+
+		for ( $i = 0; $i < $empty_days; $i++ ) {
+			$padding[] = self::create_empty_day_entry( $columns[ $i ] );
+		}
+
+		return $padding;
 	}
 
 	/**
@@ -113,16 +153,8 @@ class Calendar_Structure_Builder {
 	 * @return list<list<array<string, mixed>>>
 	 */
 	private static function build_month_weeks( int $year, int $month, int $start_of_week, int $days_in_month, array $posts_by_date, bool $show_weekends = true ): array {
-		$active_days_of_week = array();
-		for ( $i = 0; $i < 7; $i++ ) {
-			$dow = ( $start_of_week + $i ) % 7;
-			if ( ! $show_weekends && Date_Calculator::is_weekend_day( $dow ) ) {
-				continue;
-			}
-			$active_days_of_week[] = $dow;
-		}
-
-		$days_per_week    = count( $active_days_of_week );
+		$columns          = self::get_active_week_columns( $start_of_week, $show_weekends );
+		$days_per_week    = count( $columns );
 		$weeks            = array();
 		$current_week     = array();
 		$first_day_placed = false;
@@ -130,20 +162,14 @@ class Calendar_Structure_Builder {
 		for ( $day = 1; $day <= $days_in_month; $day++ ) {
 			$day_timestamp = mktime( 0, 0, 0, $month, $day, $year );
 			$day_of_week   = (int) gmdate( 'w', false !== $day_timestamp ? $day_timestamp : time() );
-			$is_weekend    = Date_Calculator::is_weekend_day( $day_of_week );
 
-			if ( ! $show_weekends && $is_weekend ) {
+			if ( ! $show_weekends && Date_Calculator::is_weekend_day( $day_of_week ) ) {
 				continue;
 			}
 
 			if ( ! $first_day_placed ) {
 				$first_day_placed = true;
-				$start_col        = array_search( $day_of_week, $active_days_of_week, true );
-				$empty_days       = false !== $start_col ? (int) $start_col : 0;
-
-				for ( $i = 0; $i < $empty_days; $i++ ) {
-					$current_week[] = self::create_empty_day_entry( $active_days_of_week[ $i ] );
-				}
+				$current_week     = self::pad_leading_empty_days( $day_of_week, $columns );
 			}
 
 			$date_str       = sprintf( '%04d-%02d-%02d', $year, $month, $day );
@@ -158,7 +184,7 @@ class Calendar_Structure_Builder {
 
 		$week_count = count( $current_week );
 		while ( $week_count > 0 && $week_count < $days_per_week ) {
-			$current_week[] = self::create_empty_day_entry( $active_days_of_week[ $week_count ] );
+			$current_week[] = self::create_empty_day_entry( $columns[ $week_count ] );
 			++$week_count;
 		}
 
