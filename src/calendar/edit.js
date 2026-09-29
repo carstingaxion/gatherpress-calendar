@@ -18,7 +18,6 @@ import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
 import { useState, useMemo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 
-import './editor.scss';
 import { CALENDAR_TEMPLATE } from './edit/constants';
 import {
 	calculateDateRange,
