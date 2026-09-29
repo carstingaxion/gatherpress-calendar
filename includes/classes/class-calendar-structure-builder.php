@@ -27,6 +27,7 @@ class Calendar_Structure_Builder {
 	 *
 	 * @param array{
 	 *   view_type: string,
+	 *   unit_count: int,
 	 *   start_date: string,
 	 *   end_date: string,
 	 *   start_date_obj: DateTimeImmutable,
@@ -45,30 +46,60 @@ class Calendar_Structure_Builder {
 	 *   heading: string,
 	 *   day_names: list<string>,
 	 *   weeks: list<list<array<string, mixed>>>,
-	 *   view_type: string
+	 *   view_type: string,
+	 *   unit_count: int,
+	 *   units: list<array{
+	 *     day_names: list<string>,
+	 *     weeks: list<list<array<string, mixed>>>
+	 *   }>
 	 * }
 	 */
 	public static function build_structure( array $date_range, int $start_of_week, array $posts_by_date, bool $show_weekends = true ): array {
-		$view_type = $date_range['view_type'];
+		$view_type  = $date_range['view_type'];
+		$unit_count = max( 1, $date_range['unit_count'] );
+		$units      = array();
 
 		if ( 'day' === $view_type ) {
-			$weeks = self::build_single_day( $date_range['start_date_obj'], $posts_by_date );
+			$weeks     = self::build_consecutive_days( $date_range['start_date_obj'], $unit_count, $posts_by_date );
+			$day_names = Date_Calculator::get_view_day_names( $view_type, $date_range['start_date_obj'], $start_of_week, $show_weekends, $unit_count );
+			$units[]   = array(
+				'day_names' => $day_names,
+				'weeks'     => $weeks,
+			);
 		} elseif ( 'week' === $view_type ) {
-			$week_start = $date_range['raw_week_start'];
-			$weeks      = self::build_single_week( $week_start, $posts_by_date, $show_weekends );
+			$weeks     = self::build_consecutive_weeks( $date_range['raw_week_start'], $unit_count, $posts_by_date, $show_weekends );
+			$day_names = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
+			$units[]   = array(
+				'day_names' => $day_names,
+				'weeks'     => $weeks,
+			);
 		} else {
-			$year          = $date_range['year'];
-			$month         = $date_range['month'];
-			$first_day     = mktime( 0, 0, 0, $month, 1, $year );
-			$days_in_month = (int) gmdate( 't', false !== $first_day ? $first_day : time() );
-			$weeks         = self::build_month_weeks( $year, $month, $start_of_week, $days_in_month, $posts_by_date, $show_weekends );
+			// Month view: construct unit_count separate month grids
+			for ( $i = 0; $i < $unit_count; $i++ ) {
+				$month_date    = $date_range['start_date_obj']->modify( "+{$i} months" );
+				$m_year        = (int) $month_date->format( 'Y' );
+				$m_month       = (int) $month_date->format( 'n' );
+				$days_in_month = (int) $month_date->format( 't' );
+				$m_weeks       = self::build_month_weeks( $m_year, $m_month, $start_of_week, $days_in_month, $posts_by_date, $show_weekends );
+				$m_day_names   = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
+
+				$units[] = array(
+					'day_names' => $m_day_names,
+					'weeks'     => $m_weeks,
+				);
+			}
+
+			$weeks     = $units[0]['weeks'];
+			$day_names = $units[0]['day_names'];
 		}
 
 		return array(
-			'heading'   => $date_range['heading'],
-			'day_names' => Date_Calculator::get_view_day_names( $view_type, $date_range['start_date_obj'], $start_of_week, $show_weekends ),
-			'weeks'     => $weeks,
-			'view_type' => $view_type,
+			'heading'    => $date_range['heading'],
+			'day_names'  => $day_names,
+			'weeks'      => $weeks,
+			'view_type'  => $view_type,
+			'unit_count' => $unit_count,
+			'units'      => $units,
 		);
 	}
 
@@ -215,27 +246,34 @@ class Calendar_Structure_Builder {
 	 *
 	 * @return list<list<array<string, mixed>>>
 	 */
-	private static function build_single_week( DateTimeImmutable $week_start, array $posts_by_date, bool $show_weekends = true ): array {
-		$week = array();
+	private static function build_consecutive_weeks( DateTimeImmutable $week_start, int $unit_count, array $posts_by_date, bool $show_weekends = true ): array {
+		$weeks = array();
 
-		for ( $i = 0; $i < 7; $i++ ) {
-			$day_obj     = $week_start->modify( "+{$i} days" );
-			$day_of_week = (int) $day_obj->format( 'w' );
+		for ( $w = 0; $w < $unit_count; $w++ ) {
+			$current_week_start = $week_start->modify( sprintf( '+%d weeks', $w ) );
+			$week_days          = array();
 
-			if ( ! $show_weekends && Date_Calculator::is_weekend_day( $day_of_week ) ) {
-				continue;
+			for ( $i = 0; $i < 7; $i++ ) {
+				$day_obj     = $current_week_start->modify( "+{$i} days" );
+				$day_of_week = (int) $day_obj->format( 'w' );
+
+				if ( ! $show_weekends && Date_Calculator::is_weekend_day( $day_of_week ) ) {
+					continue;
+				}
+
+				$date_str    = $day_obj->format( 'Y-m-d' );
+				$week_days[] = self::create_day_entry(
+					(int) $day_obj->format( 'j' ),
+					$date_str,
+					$day_of_week,
+					$posts_by_date[ $date_str ] ?? array()
+				);
 			}
 
-			$date_str = $day_obj->format( 'Y-m-d' );
-			$week[]   = self::create_day_entry(
-				(int) $day_obj->format( 'j' ),
-				$date_str,
-				$day_of_week,
-				$posts_by_date[ $date_str ] ?? array()
-			);
+			$weeks[] = $week_days;
 		}
 
-		return array( $week );
+		return $weeks;
 	}
 
 	/**
@@ -246,15 +284,20 @@ class Calendar_Structure_Builder {
 	 *
 	 * @return list<list<array<string, mixed>>>
 	 */
-	private static function build_single_day( DateTimeImmutable $day_obj, array $posts_by_date ): array {
-		$date_str = $day_obj->format( 'Y-m-d' );
-		$day      = self::create_day_entry(
-			(int) $day_obj->format( 'j' ),
-			$date_str,
-			(int) $day_obj->format( 'w' ),
-			$posts_by_date[ $date_str ] ?? array()
-		);
+	private static function build_consecutive_days( DateTimeImmutable $start_day_obj, int $unit_count, array $posts_by_date ): array {
+		$days = array();
 
-		return array( array( $day ) );
+		for ( $i = 0; $i < $unit_count; $i++ ) {
+			$day_obj  = $start_day_obj->modify( "+{$i} days" );
+			$date_str = $day_obj->format( 'Y-m-d' );
+			$days[]   = self::create_day_entry(
+				(int) $day_obj->format( 'j' ),
+				$date_str,
+				(int) $day_obj->format( 'w' ),
+				$posts_by_date[ $date_str ] ?? array()
+			);
+		}
+
+		return array( $days );
 	}
 }

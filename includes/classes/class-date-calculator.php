@@ -75,19 +75,21 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Computes visible week start, end, and raw week start objects.
+	 * Computes visible week bounds for 1 or more consecutive weeks.
 	 *
 	 * @param DateTimeImmutable $base_date     Target base date.
 	 * @param int               $start_of_week Start of week setting (0-6).
 	 * @param bool              $show_weekends Weekend visibility.
+	 * @param int               $unit_count    Number of weeks.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable, 2: DateTimeImmutable} [start, end, raw_start].
 	 */
-	private static function calculate_week_bounds( DateTimeImmutable $base_date, int $start_of_week, bool $show_weekends ): array {
+	private static function calculate_week_bounds( DateTimeImmutable $base_date, int $start_of_week, bool $show_weekends, int $unit_count ): array {
 		$raw_week_start = self::get_week_start( $base_date, $start_of_week );
+		$total_days     = $unit_count * 7;
 		$visible_days   = array();
 
-		for ( $i = 0; $i < 7; $i++ ) {
+		for ( $i = 0; $i < $total_days; $i++ ) {
 			$day_obj    = $raw_week_start->modify( "+{$i} days" );
 			$dow        = (int) $day_obj->format( 'w' );
 			$is_weekend = self::is_weekend_day( $dow );
@@ -102,20 +104,21 @@ class Date_Calculator {
 			$end_date_obj   = $visible_days[ count( $visible_days ) - 1 ]->setTime( 23, 59, 59 );
 		} else {
 			$start_date_obj = $raw_week_start->setTime( 0, 0, 0 );
-			$end_date_obj   = $raw_week_start->modify( '+6 days' )->setTime( 23, 59, 59 );
+			$end_date_obj   = $raw_week_start->modify( sprintf( '+%d days', $total_days - 1 ) )->setTime( 23, 59, 59 );
 		}
 
 		return array( $start_date_obj, $end_date_obj, $raw_week_start );
 	}
 
 	/**
-	 * Calculate the target date range for the calendar based on viewType, selectedDate, dateModifier, and weekend visibility.
+	 * Calculate the target date range for the calendar based on viewType, unitCount, selectedDate, dateModifier, and weekend visibility.
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
 	 * @param int                  $page       Pagination page offset (1-based, default 1).
 	 *
 	 * @return array{
 	 *     view_type: string,
+	 *     unit_count: int,
 	 *     start_date: string,
 	 *     end_date: string,
 	 *     start_date_obj: DateTimeImmutable,
@@ -131,30 +134,32 @@ class Date_Calculator {
 		$view_type     = isset( $attributes['viewType'] ) && is_string( $attributes['viewType'] ) && in_array( $attributes['viewType'], array( 'month', 'week', 'day' ), true )
 			? $attributes['viewType']
 			: 'month';
+		$unit_count    = isset( $attributes['unitCount'] ) && is_numeric( $attributes['unitCount'] ) ? max( 1, (int) $attributes['unitCount'] ) : 1;
 		$selected_date = isset( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
 		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
 		$show_weekends = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
 
-		// Combine user-defined dateModifier with query pagination offset.
-		$offset         = $date_modifier + max( 0, $page - 1 );
+		// Step offset multiplies pagination by unitCount
+		$offset         = $date_modifier + ( max( 0, $page - 1 ) * $unit_count );
 		$base_date      = self::resolve_base_date( $selected_date, $view_type, $offset );
 		$start_of_week  = get_option( 'start_of_week', 0 );
 		$start_of_week  = is_numeric( $start_of_week ) ? (int) $start_of_week : 0;
 		$raw_week_start = null;
 
 		if ( 'week' === $view_type ) {
-			[ $start_date_obj, $end_date_obj, $raw_week_start ] = self::calculate_week_bounds( $base_date, $start_of_week, $show_weekends );
+			list( $start_date_obj, $end_date_obj, $raw_week_start ) = self::calculate_week_bounds( $base_date, $start_of_week, $show_weekends, $unit_count );
 		} elseif ( 'day' === $view_type ) {
 			$start_date_obj = $base_date->setTime( 0, 0, 0 );
-			$end_date_obj   = $base_date->setTime( 23, 59, 59 );
+			$end_date_obj   = $base_date->modify( sprintf( '+%d days', $unit_count - 1 ) )->setTime( 23, 59, 59 );
 		} else {
-			// Month view.
+			// Month view: spans from Month 1's first day to Month N's last day
 			$start_date_obj = $base_date->modify( 'first day of this month' )->setTime( 0, 0, 0 );
-			$end_date_obj   = $base_date->modify( 'last day of this month' )->setTime( 23, 59, 59 );
+			$end_date_obj   = $base_date->modify( sprintf( '+%d months', $unit_count - 1 ) )->modify( 'last day of this month' )->setTime( 23, 59, 59 );
 		}
 
 		return array(
 			'view_type'      => $view_type,
+			'unit_count'     => $unit_count,
 			'start_date'     => $start_date_obj->format( 'Y-m-d' ),
 			'end_date'       => $end_date_obj->format( 'Y-m-d' ),
 			'start_date_obj' => $start_date_obj,
@@ -203,9 +208,10 @@ class Date_Calculator {
 				$end_date_obj = current_datetime();
 			}
 
-			$view_type = isset( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] )
+			$view_type  = isset( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] )
 				? $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ]
 				: ( isset( $fallback_attributes['viewType'] ) && is_string( $fallback_attributes['viewType'] ) ? $fallback_attributes['viewType'] : 'month' );
+			$unit_count = isset( $fallback_attributes['unitCount'] ) && is_numeric( $fallback_attributes['unitCount'] ) ? max( 1, (int) $fallback_attributes['unitCount'] ) : 1;
 
 			$heading = isset( $query[ Setup::CALENDAR_QUERY_HEADING ] ) && is_string( $query[ Setup::CALENDAR_QUERY_HEADING ] )
 				? $query[ Setup::CALENDAR_QUERY_HEADING ]
@@ -213,6 +219,7 @@ class Date_Calculator {
 
 			return array(
 				'view_type'      => $view_type,
+				'unit_count'     => $unit_count,
 				'start_date'     => $start_date_raw,
 				'end_date'       => $end_date_raw,
 				'start_date_obj' => $start_date_obj,
@@ -236,9 +243,9 @@ class Date_Calculator {
 	 *
 	 * @return int Grid column count.
 	 */
-	public static function get_columns_count( string $view_type, bool $show_weekends ): int {
+	public static function get_columns_count( string $view_type, bool $show_weekends, int $unit_count = 1 ): int {
 		if ( 'day' === $view_type ) {
-			return 1;
+			return max( 1, $unit_count );
 		}
 
 		return $show_weekends ? 7 : ( 7 - count( self::get_weekend_days() ) );
@@ -254,10 +261,16 @@ class Date_Calculator {
 	 *
 	 * @return list<string> Localized day name labels.
 	 */
-	public static function get_view_day_names( string $view_type, DateTimeImmutable $start_date_obj, int $start_of_week, bool $show_weekends ): array {
+	public static function get_view_day_names( string $view_type, DateTimeImmutable $start_date_obj, int $start_of_week, bool $show_weekends, int $unit_count = 1 ): array {
 		if ( 'day' === $view_type ) {
-			$day_name = wp_date( 'D', $start_date_obj->getTimestamp() );
-			return array( is_string( $day_name ) ? $day_name : '' );
+			$day_names = array();
+			for ( $i = 0; $i < $unit_count; $i++ ) {
+				$day_name = wp_date( 'D', $start_date_obj->modify( "+{$i} days" )->getTimestamp() );
+				if ( is_string( $day_name ) ) {
+					$day_names[] = $day_name;
+				}
+			}
+			return $day_names;
 		}
 
 		return self::get_day_names( $start_of_week, $show_weekends );
@@ -290,12 +303,13 @@ class Date_Calculator {
 	 * @return string Formatted heading.
 	 */
 	public static function format_heading( string $view_type, DateTimeImmutable $start_date, DateTimeImmutable $end_date ): string {
-		if ( 'day' === $view_type ) {
+		if ( 'day' === $view_type && $start_date->format( 'Y-m-d' ) === $end_date->format( 'Y-m-d' ) ) {
 			$day_heading = wp_date( 'l, F j, Y', $start_date->getTimestamp() );
 			return is_string( $day_heading ) ? $day_heading : '';
 		}
 
-		if ( 'week' === $view_type ) {
+		// Multi-day or week spans
+		if ( 'day' === $view_type || 'week' === $view_type ) {
 			if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
 				return sprintf(
 					'%s – %s',
@@ -320,8 +334,25 @@ class Date_Calculator {
 			);
 		}
 
-		$month_heading = wp_date( 'F Y', $start_date->getTimestamp() );
-		return is_string( $month_heading ) ? $month_heading : '';
+		// Month view (single or multi-month)
+		if ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
+			$month_heading = wp_date( 'F Y', $start_date->getTimestamp() );
+			return is_string( $month_heading ) ? $month_heading : '';
+		}
+
+		if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
+			return sprintf(
+				'%s – %s',
+				wp_date( 'M Y', $start_date->getTimestamp() ),
+				wp_date( 'M Y', $end_date->getTimestamp() )
+			);
+		}
+
+		return sprintf(
+			'%s – %s',
+			wp_date( 'F', $start_date->getTimestamp() ),
+			wp_date( 'F Y', $end_date->getTimestamp() )
+		);
 	}
 
 	/**

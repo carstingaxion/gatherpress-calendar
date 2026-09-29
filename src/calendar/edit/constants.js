@@ -233,7 +233,7 @@ export const QUERY_VARIATION_INNER_BLOCKS = [
 			metadata: {
 				bindings: {
 					content: {
-						source: 'gatherpress/calendar-month-heading',
+						source: 'gatherpress/calendar-heading',
 					},
 				},
 				name: 'Month Heading',

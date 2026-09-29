@@ -43,59 +43,67 @@ export function CalendarTable( {
 	dayBlockAttributes,
 	tbodyProps,
 } ) {
-	// Memoized so each week's context object keeps its reference across
-	// renders that don't actually change the calendar/active day - an
-	// unstable BlockContextProvider value would otherwise re-render every
-	// descendant (live and previewed) on every unrelated render.
-	const weekContexts = useMemo(
-		() =>
-			calendar.weeks.map( ( week, weekIndex ) => ( {
-				...weekContext,
-				'gatherpress/weekIndex': weekIndex,
-				'gatherpress/weekDays': week,
-				'gatherpress/activeDate': activeDate,
-				'gatherpress/setActiveDate': setActiveDate,
-			} ) ),
-		[ calendar, weekContext, activeDate, setActiveDate ]
-	);
+	const units = calendar.units || [
+		{ dayNames: calendar.dayNames, weeks: calendar.weeks },
+	];
 
 	return (
-		<table className="gatherpress-calendar__table" style={ style }>
-			{ showWeekdays && (
-				<thead>
-					<tr>
-						{ calendar.dayNames.map( ( dayName, index ) => (
-							<th key={ index }>{ dayName }</th>
-						) ) }
-					</tr>
-				</thead>
-			) }
-			<tbody { ...tbodyProps }>
-				{ calendar.weeks.map( ( week, weekIndex ) => {
-					const isActiveWeek = week.some(
-						( day ) => day.date === activeDate
-					);
+		<>
+			{ units.map( ( unit, unitIndex ) => (
+				<table
+					key={ unitIndex }
+					className="gatherpress-calendar__table"
+					style={ style }
+				>
+					{ showWeekdays && (
+						<thead>
+							<tr>
+								{ unit.dayNames.map( ( dayName, index ) => (
+									<th key={ index }>{ dayName }</th>
+								) ) }
+							</tr>
+						</thead>
+					) }
+					<tbody { ...tbodyProps }>
+						{ unit.weeks.map( ( week, weekIndex ) => {
+							const isActiveWeek = week.some(
+								( day ) => day.date === activeDate
+							);
 
-					return (
-						<BlockContextProvider
-							key={ weekIndex }
-							value={ weekContexts[ weekIndex ] }
-						>
-							{ isActiveWeek ? (
-								liveWeekChildren
-							) : (
-								<WeekPreviewRow
-									week={ week }
-									dayInnerBlocks={ dayInnerBlocks }
-									weekBlockAttributes={ weekBlockAttributes }
-									dayBlockAttributes={ dayBlockAttributes }
-									onActivateDay={ setActiveDate }
-								/>
-							) }
-						</BlockContextProvider>
-					);
-				} ) }
-			</tbody>
-		</table>
+							const weekContextValue = {
+								...weekContext,
+								'gatherpress/weekIndex': weekIndex,
+								'gatherpress/weekDays': week,
+								'gatherpress/activeDate': activeDate,
+								'gatherpress/setActiveDate': setActiveDate,
+							};
+
+							return (
+								<BlockContextProvider
+									key={ weekIndex }
+									value={ weekContextValue }
+								>
+									{ isActiveWeek ? (
+										liveWeekChildren
+									) : (
+										<WeekPreviewRow
+											week={ week }
+											dayInnerBlocks={ dayInnerBlocks }
+											weekBlockAttributes={
+												weekBlockAttributes
+											}
+											dayBlockAttributes={
+												dayBlockAttributes
+											}
+											onActivateDay={ setActiveDate }
+										/>
+									) }
+								</BlockContextProvider>
+							);
+						} ) }
+					</tbody>
+				</table>
+			) ) }
+		</>
 	);
 }

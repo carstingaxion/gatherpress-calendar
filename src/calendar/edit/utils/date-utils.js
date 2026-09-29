@@ -67,6 +67,7 @@ export function calculateTargetDate( {
 export function calculateDateRange( options = {}, startOfWeek = 0 ) {
 	const targetDate = calculateTargetDate( options );
 	const viewType = options.viewType || 'month';
+	const unitCount = Math.max( 1, options.unitCount || 1 );
 	const showWeekends =
 		options.showWeekends !== false && options.showWeekends !== 'false';
 
@@ -80,8 +81,9 @@ export function calculateDateRange( options = {}, startOfWeek = 0 ) {
 		rawWeekStart = new Date( targetDate );
 		rawWeekStart.setDate( targetDate.getDate() - diff );
 
+		const totalDays = unitCount * 7;
 		const visibleDays = [];
-		for ( let i = 0; i < 7; i++ ) {
+		for ( let i = 0; i < totalDays; i++ ) {
 			const d = new Date( rawWeekStart );
 			d.setDate( rawWeekStart.getDate() + i );
 			if ( showWeekends || ! isWeekendDay( d.getDay() ) ) {
@@ -95,16 +97,17 @@ export function calculateDateRange( options = {}, startOfWeek = 0 ) {
 		} else {
 			startDate = rawWeekStart;
 			endDate = new Date( rawWeekStart );
-			endDate.setDate( rawWeekStart.getDate() + 6 );
+			endDate.setDate( rawWeekStart.getDate() + totalDays - 1 );
 		}
 	} else if ( 'day' === viewType ) {
 		startDate = new Date( targetDate );
 		endDate = new Date( targetDate );
+		endDate.setDate( targetDate.getDate() + unitCount - 1 );
 	} else {
 		const year = targetDate.getFullYear();
 		const month = targetDate.getMonth();
 		startDate = new Date( year, month, 1 );
-		endDate = new Date( year, month + 1, 0 );
+		endDate = new Date( year, month + unitCount, 0 );
 	}
 
 	return {
@@ -117,6 +120,7 @@ export function calculateDateRange( options = {}, startOfWeek = 0 ) {
 		month: targetDate.getMonth() + 1,
 		targetDate,
 		viewType,
+		unitCount,
 	};
 }
 
@@ -137,6 +141,7 @@ export function calculateDateQuery( options = {}, startOfWeek = 0 ) {
 		startDate: range.startDate,
 		endDate: range.endDate,
 		viewType: range.viewType,
+		unitCount: range.unitCount,
 	};
 }
 
@@ -150,16 +155,17 @@ export function calculateDateQuery( options = {}, startOfWeek = 0 ) {
  * @return {string} Formatted localized heading string.
  */
 export function formatHeading( viewType, startDate, endDate ) {
-	if ( 'day' === viewType ) {
+	const startYear = startDate.getFullYear();
+	const endYear = endDate.getFullYear();
+	const startMonth = startDate.getMonth();
+	const endMonth = endDate.getMonth();
+	const isSameDay = startDate.toDateString() === endDate.toDateString();
+
+	if ( 'day' === viewType && isSameDay ) {
 		return dateI18n( 'l, F j, Y', startDate );
 	}
 
-	if ( 'week' === viewType ) {
-		const startYear = startDate.getFullYear();
-		const endYear = endDate.getFullYear();
-		const startMonth = startDate.getMonth();
-		const endMonth = endDate.getMonth();
-
+	if ( 'day' === viewType || 'week' === viewType ) {
 		if ( startYear !== endYear ) {
 			return `${ dateI18n( 'M j, Y', startDate ) } – ${ dateI18n(
 				'M j, Y',
@@ -180,5 +186,20 @@ export function formatHeading( viewType, startDate, endDate ) {
 		) } – ${ dateI18n( 'j, Y', endDate ) }`;
 	}
 
-	return dateI18n( 'F Y', startDate );
+	// Month view
+	if ( startYear === endYear && startMonth === endMonth ) {
+		return dateI18n( 'F Y', startDate );
+	}
+
+	if ( startYear !== endYear ) {
+		return `${ dateI18n( 'M Y', startDate ) } – ${ dateI18n(
+			'M Y',
+			endDate
+		) }`;
+	}
+
+	return `${ dateI18n( 'F', startDate ) } – ${ dateI18n(
+		'F Y',
+		endDate
+	) }`;
 }
