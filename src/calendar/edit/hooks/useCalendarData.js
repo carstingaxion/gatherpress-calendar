@@ -31,16 +31,10 @@ export function useCalendarData( query, dateQuery ) {
 				_embed: 'wp:term',
 			};
 
-			if ( dateQuery ) {
+			if ( dateQuery && dateQuery.startDate && dateQuery.endDate ) {
 				queryArgs.gatherpress_calendar_query = true;
-				if ( dateQuery.startDate && dateQuery.endDate ) {
-					queryArgs.start_date = dateQuery.startDate;
-					queryArgs.end_date = dateQuery.endDate;
-				}
-				// if ( dateQuery.year && dateQuery.month ) {
-				// 	queryArgs.year = dateQuery.year;
-				// 	queryArgs.month = dateQuery.month;
-				// }
+				queryArgs.start_date = dateQuery.startDate;
+				queryArgs.end_date = dateQuery.endDate;
 			}
 
 			// Add taxonomy query if present.

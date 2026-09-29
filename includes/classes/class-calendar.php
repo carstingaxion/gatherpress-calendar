@@ -107,9 +107,10 @@ class Calendar {
 				'end_date'       => (string) $query[ Setup::CALENDAR_QUERY_END_DATE ],
 				'start_date_obj' => $start_date_obj,
 				'end_date_obj'   => $end_date_obj,
+				'raw_week_start' => $start_date_obj,
 				'target_date'    => $start_date_obj,
-				'year'           => (int) ( $query[ Setup::CALENDAR_QUERY_YEAR ] ?? $start_date_obj->format( 'Y' ) ),
-				'month'          => (int) ( $query[ Setup::CALENDAR_QUERY_MONTH ] ?? $start_date_obj->format( 'n' ) ),
+				'year'           => (int) $start_date_obj->format( 'Y' ),
+				'month'          => (int) $start_date_obj->format( 'n' ),
 				'heading'        => (string) ( $query[ Setup::CALENDAR_QUERY_HEADING ] ?? '' ),
 			);
 		} else {

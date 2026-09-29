@@ -200,18 +200,7 @@ class Setup {
 				'before'    => sanitize_text_field( (string) $end_date ) . ' 23:59:59',
 				'inclusive' => true,
 			);
-			return $args;
 		}
-
-		// // Fallback for legacy year/month filtering.
-		// if ( ! empty( $parameters['year'] ) ) {
-		// 	$args['date_query'][0] = array(
-		// 		'year' => (int) $parameters['year'],
-		// 	);
-		// 	if ( isset( $parameters['month'] ) && ! empty( $parameters['month'] ) ) {
-		// 		$args['date_query'][0]['month'] = (int) $parameters['month'];
-		// 	}
-		// }
 
 		return $args;
 	}
@@ -278,8 +267,6 @@ class Setup {
 				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_VIEW_TYPE ]  = $range['view_type'];
 				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_START_DATE ] = $range['start_date'];
 				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_END_DATE ]   = $range['end_date'];
-				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_YEAR ]       = $range['year'];
-				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_MONTH ]      = $range['month'];
 				$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_HEADING ]    = $range['heading'];
 			}
 
@@ -297,14 +284,6 @@ class Setup {
 			if ( is_array( $query ) && isset( $query[ self::CALENDAR_QUERY_START_DATE ] ) ) {
 				$parsed_block['attrs']['selectedDate'] = $query[ self::CALENDAR_QUERY_START_DATE ];
 				$parsed_block['attrs']['viewType']     = $query[ self::CALENDAR_QUERY_VIEW_TYPE ] ?? ( $parsed_block['attrs']['viewType'] ?? 'month' );
-
-				if ( isset( $query[ self::CALENDAR_QUERY_YEAR ], $query[ self::CALENDAR_QUERY_MONTH ] ) ) {
-					$parsed_block['attrs']['selectedMonth'] = sprintf(
-						'%04d-%02d',
-						(int) $query[ self::CALENDAR_QUERY_YEAR ],
-						(int) $query[ self::CALENDAR_QUERY_MONTH ]
-					);
-				}
 			}
 
 			return $parsed_block;
@@ -483,12 +462,6 @@ class Setup {
 			if ( $start_date && $end_date ) {
 				return Date_Calculator::format_heading( $view_type, $start_date, $end_date );
 			}
-		}
-
-		// Fallback for legacy query context.
-		if ( is_array( $query ) && isset( $query[ self::CALENDAR_QUERY_YEAR ], $query[ self::CALENDAR_QUERY_MONTH ] ) ) {
-			$timestamp = mktime( 0, 0, 0, (int) $query[ self::CALENDAR_QUERY_MONTH ], 1, (int) $query[ self::CALENDAR_QUERY_YEAR ] );
-			return false !== $timestamp ? wp_date( 'F Y', $timestamp ) : null;
 		}
 
 		$now = current_datetime();

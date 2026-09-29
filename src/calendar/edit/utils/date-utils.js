@@ -19,27 +19,15 @@ export function formatDate( date ) {
 }
 
 /**
- * Calculate the target date based on viewType, selectedDate/Month, and modifiers.
+ * Calculate the target date based on viewType, selectedDate and modifiers.
  *
- * @param {Object|string} selectedDateOrOptions Options object or legacy selectedMonth string.
- * @param {number}        modifier              Legacy modifier offset.
+ * @param {string} viewType One of 'month', 'week' or'day'.
+ * @param {string} selectedDate The date string.
+ * @param {number} dateModifier Modifier offset.
  *
  * @return {Date} Calculated target date.
  */
-export function calculateTargetDate( selectedDateOrOptions, modifier = 0 ) {
-	let viewType = 'month';
-	let selectedDate = '';
-	let dateModifier = 0;
-
-	if ( typeof selectedDateOrOptions === 'object' && null !== selectedDateOrOptions ) {
-		viewType = selectedDateOrOptions.viewType || 'month';
-		selectedDate = selectedDateOrOptions.selectedDate || selectedDateOrOptions.selectedMonth || '';
-		dateModifier = selectedDateOrOptions.dateModifier ?? selectedDateOrOptions.monthModifier ?? 0;
-	} else {
-		selectedDate = selectedDateOrOptions || '';
-		dateModifier = modifier;
-	}
-
+export function calculateTargetDate( { viewType = 'month', selectedDate = '', dateModifier = 0 } = {} ) {
 	let targetDate;
 
 	if ( selectedDate && /^\d{4}-\d{2}-\d{2}$/.test( selectedDate ) ) {
@@ -136,23 +124,12 @@ export function calculateDateRange( options, startOfWeek = 0 ) {
 /**
  * Calculate date query parameters for REST requests.
  *
- * @param {Object|string} selectedMonthOrOptions Configuration or legacy selectedMonth.
- * @param {number}        monthModifier          Legacy modifier.
+ * @param {Object} options Configuration.
  * @param {number}        startOfWeek            Start of week index.
  *
  * @return {Object} Query parameters.
  */
-export function calculateDateQuery( selectedMonthOrOptions, monthModifier = 0, startOfWeek = 0 ) {
-	let options;
-	if ( typeof selectedMonthOrOptions === 'object' && null !== selectedMonthOrOptions ) {
-		options = selectedMonthOrOptions;
-	} else {
-		options = {
-			selectedMonth: selectedMonthOrOptions,
-			monthModifier,
-			viewType: 'month',
-		};
-	}
+export function calculateDateQuery( options = {}, startOfWeek = 0 ) {
 
 	const range = calculateDateRange( options, startOfWeek );
 

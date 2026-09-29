@@ -145,8 +145,6 @@ domReady( () => {
 			viewType = 'month',
 			selectedDate = '',
 			dateModifier = 0,
-			selectedMonth = '',
-			monthModifier = 0,
 			showWeekends = true,
 		} = liveCalendar?.attributes || {};
 
@@ -156,8 +154,8 @@ domReady( () => {
 		const range = calculateDateRange(
 			{
 				viewType,
-				selectedDate: selectedDate || selectedMonth,
-				dateModifier: dateModifier || monthModifier,
+				selectedDate,
+				dateModifier,
 				showWeekends,
 			},
 			startOfWeek

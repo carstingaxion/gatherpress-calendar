@@ -57,20 +57,14 @@ export default function Edit( {
 		viewType = 'month',
 		selectedDate = '',
 		dateModifier = 0,
-		selectedMonth = '',
-		monthModifier = 0,
 		showWeekdays = true,
 		showWeekends = true,
 	} = attributes;
-
-	const effectiveDate = selectedDate || selectedMonth;
-	const effectiveModifier = dateModifier || monthModifier;
 
 	const { query } = context;
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 	const [ activeDate, setActiveDate ] = useState( '' );
 
-	// Fetch site settings first to get start_of_week for proper boundary calculation.
 	const { posts, startOfWeek } = useCalendarData(
 		query,
 		useMemo(
@@ -78,13 +72,13 @@ export default function Edit( {
 				calculateDateQuery(
 					{
 						viewType,
-						selectedDate: effectiveDate,
-						dateModifier: effectiveModifier,
+						selectedDate,
+						dateModifier,
+						showWeekends,
 					},
-					0,
 					0
 				),
-			[ viewType, effectiveDate, effectiveModifier ]
+			[ viewType, selectedDate, dateModifier, showWeekends ]
 		)
 	);
 
@@ -93,12 +87,13 @@ export default function Edit( {
 			calculateDateRange(
 				{
 					viewType,
-					selectedDate: effectiveDate,
-					dateModifier: effectiveModifier,
+					selectedDate,
+					dateModifier,
+					showWeekends,
 				},
 				startOfWeek
 			),
-		[ viewType, effectiveDate, effectiveModifier, startOfWeek ]
+		[ viewType, selectedDate, dateModifier, showWeekends, startOfWeek ]
 	);
 
 	const calendar = useMemo(
@@ -200,16 +195,14 @@ export default function Edit( {
 	}
 
 	const handleDateChange = ( value ) => {
-		setAttributes( { selectedDate: value, selectedMonth: value } );
+		setAttributes( { selectedDate: value } );
 		setShowMonthPicker( false );
 	};
 
 	const handleModifierChange = ( value ) => {
 		const numValue = value === '' ? 0 : parseInt( value, 10 );
-		const resolvedValue = isNaN( numValue ) ? 0 : numValue;
 		setAttributes( {
-			dateModifier: resolvedValue,
-			monthModifier: resolvedValue,
+			dateModifier: isNaN( numValue ) ? 0 : numValue,
 		} );
 	};
 
@@ -219,7 +212,7 @@ export default function Edit( {
 				<PanelBody title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }>
 					{ showMonthPicker ? (
 						<MonthPicker
-							selectedMonth={ effectiveDate }
+							selectedMonth={ selectedDate }
 							onSelect={ handleDateChange }
 							onCancel={ () => setShowMonthPicker( false ) }
 						/>
@@ -227,8 +220,8 @@ export default function Edit( {
 						<DateControls
 							viewType={ viewType }
 							onViewTypeChange={ ( val ) => setAttributes( { viewType: val } ) }
-							selectedDate={ effectiveDate }
-							dateModifier={ effectiveModifier }
+							selectedDate={ selectedDate }
+							dateModifier={ dateModifier }
 							onDateChange={ handleDateChange }
 							onModifierChange={ handleModifierChange }
 							onOpenPicker={ () => setShowMonthPicker( true ) }

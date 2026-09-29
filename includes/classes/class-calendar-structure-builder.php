@@ -34,11 +34,10 @@ class Calendar_Structure_Builder {
 	 *
 	 * @return array{
 	 *   heading: string,
-	 *   month_name: string,
 	 *   day_names: list<string>,
 	 *   weeks: list<list<array<string, mixed>>>,
 	 *   view_type: string
-	 * } Calendar structure.
+	 * }
 	 */
 	public static function build_structure( array $date_range, int $start_of_week, array $posts_by_date, bool $show_weekends = true ): array {
 		$view_type = $date_range['view_type'] ?? 'month';
@@ -60,11 +59,10 @@ class Calendar_Structure_Builder {
 		}
 
 		return array(
-			'heading'    => $date_range['heading'],
-			'month_name' => $date_range['heading'],
-			'day_names'  => $day_names,
-			'weeks'      => $weeks,
-			'view_type'  => $view_type,
+			'heading'   => $date_range['heading'],
+			'day_names' => $day_names,
+			'weeks'     => $weeks,
+			'view_type' => $view_type,
 		);
 	}
 

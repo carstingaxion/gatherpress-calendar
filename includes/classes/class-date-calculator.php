@@ -33,7 +33,7 @@ class Date_Calculator {
 	const DATE_FORMAT = 'Y-m-d';
 
 	/**
-	 * Calculate the target date range for the calendar based on viewType, selectedDate/Month, modifiers, and weekend visibility.
+	 * Calculate the target date range for the calendar based on viewType, selectedDate, dateModifier, and weekend visibility.
 	 *
 	 * @since 0.5.0
 	 *
@@ -58,13 +58,8 @@ class Date_Calculator {
 			? $attributes['viewType']
 			: 'month';
 
-		$selected_date  = ! empty( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
-		$selected_month = ! empty( $attributes['selectedMonth'] ) && is_string( $attributes['selectedMonth'] ) ? $attributes['selectedMonth'] : '';
-
-		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] )
-			? (int) $attributes['dateModifier']
-			: ( isset( $attributes['monthModifier'] ) && is_numeric( $attributes['monthModifier'] ) ? (int) $attributes['monthModifier'] : 0 );
-
+		$selected_date = ! empty( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
+		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
 		$show_weekends = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
 
 		$tz        = wp_timezone();
@@ -76,8 +71,6 @@ class Date_Calculator {
 			} elseif ( preg_match( '/^\d{4}-\d{2}$/', $selected_date ) ) {
 				$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_date . '-01', $tz );
 			}
-		} elseif ( ! empty( $selected_month ) && preg_match( '/^\d{4}-\d{2}$/', $selected_month ) ) {
-			$base_date = DateTimeImmutable::createFromFormat( '!Y-m-d', $selected_month . '-01', $tz );
 		}
 
 		if ( ! $base_date instanceof DateTimeImmutable ) {
