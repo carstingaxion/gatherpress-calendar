@@ -11,6 +11,12 @@ import { useMemo } from '@wordpress/element';
 import { generateMonthOptions } from '../utils/calendar-utils';
 import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
 
+const MAX_UNITS = {
+	month: 12,
+	week: 5,
+	day: 7,
+};
+
 /**
  * DateControls Component.
  *
@@ -40,6 +46,25 @@ export function DateControls( {
 } ) {
 	const monthOptions = useMemo( () => generateMonthOptions(), [] );
 	const offsetHelp = useDateOffsetHelp( dateModifier, viewType );
+
+	const maxUnits = MAX_UNITS[ viewType ] || 12;
+
+	const handleViewTypeChange = ( newViewType ) => {
+		const newMax = MAX_UNITS[ newViewType ] || 12;
+		if ( Number( unitCount ) > newMax ) {
+			onUnitCountChange( newMax );
+		}
+		onViewTypeChange( newViewType );
+	};
+
+	const handleUnitCountChange = ( nextValue ) => {
+		const num = Number( nextValue );
+		if ( ! Number.isNaN( num ) && num > maxUnits ) {
+			onUnitCountChange( maxUnits );
+			return;
+		}
+		onUnitCountChange( nextValue );
+	};
 
 	const stepLabel = useMemo( () => {
 		if ( 'day' === viewType ) {
@@ -110,7 +135,7 @@ export function DateControls( {
 						value: 'day',
 					},
 				] }
-				onChange={ onViewTypeChange }
+				onChange={ handleViewTypeChange }
 			/>
 
 			<NumberControl
@@ -118,9 +143,9 @@ export function DateControls( {
 				labelPosition="side"
 				type="number"
 				value={ unitCount }
-				onChange={ onUnitCountChange }
+				onChange={ handleUnitCountChange }
 				min={ 1 }
-				max={ 12 }
+				max={ maxUnits }
 				step={ 1 }
 				style={ { marginBottom: '16px' } }
 			/>

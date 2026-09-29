@@ -134,8 +134,10 @@ class Date_Calculator {
 		$view_type     = isset( $attributes['viewType'] ) && is_string( $attributes['viewType'] ) && in_array( $attributes['viewType'], array( 'month', 'week', 'day' ), true )
 			? $attributes['viewType']
 			: 'month';
-		$unit_count    = isset( $attributes['unitCount'] ) && is_numeric( $attributes['unitCount'] ) ? max( 1, (int) $attributes['unitCount'] ) : 1;
-		$selected_date = isset( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
+		$max_units     = self::get_max_unit_count( $view_type );
+		$unit_count    = isset( $attributes['unitCount'] ) && is_numeric( $attributes['unitCount'] )
+			? min( $max_units, max( 1, (int) $attributes['unitCount'] ) )
+			: 1;		$selected_date = isset( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
 		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
 		$show_weekends = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
 
@@ -211,8 +213,10 @@ class Date_Calculator {
 			$view_type  = isset( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] )
 				? $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ]
 				: ( isset( $fallback_attributes['viewType'] ) && is_string( $fallback_attributes['viewType'] ) ? $fallback_attributes['viewType'] : 'month' );
-			$unit_count = isset( $fallback_attributes['unitCount'] ) && is_numeric( $fallback_attributes['unitCount'] ) ? max( 1, (int) $fallback_attributes['unitCount'] ) : 1;
-
+			$max_units  = self::get_max_unit_count( $view_type );
+			$unit_count = isset( $fallback_attributes['unitCount'] ) && is_numeric( $fallback_attributes['unitCount'] )
+				? min( $max_units, max( 1, (int) $fallback_attributes['unitCount'] ) )
+				: 1;
 			$heading = isset( $query[ Setup::CALENDAR_QUERY_HEADING ] ) && is_string( $query[ Setup::CALENDAR_QUERY_HEADING ] )
 				? $query[ Setup::CALENDAR_QUERY_HEADING ]
 				: self::format_heading( $view_type, $start_date_obj, $end_date_obj );
@@ -470,5 +474,24 @@ class Date_Calculator {
 	public static function get_today(): string {
 		$today = wp_date( self::DATE_FORMAT );
 		return is_string( $today ) ? $today : '';
+	}
+
+/**
+	 * Get maximum allowed unit count for a given view type.
+	 *
+	 * @since 0.6.0
+	 *
+	 * @param string $view_type View type ('month', 'week', 'day').
+	 *
+	 * @return int Maximum units allowed.
+	 */
+	public static function get_max_unit_count( string $view_type ): int {
+		$max_units = array(
+			'month' => 12,
+			'week'  => 5,
+			'day'   => 7,
+		);
+
+		return $max_units[ $view_type ] ?? 12;
 	}
 }
