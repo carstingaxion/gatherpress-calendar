@@ -136,8 +136,8 @@ class Setup {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param array<string, mixed>                                                                          $args    WP_Query arguments that will be used for the REST request.
-	 * @param WP_REST_Request<array{gatherpress_calendar_query:string|null, year:int|null, month:int|null}> $request Request object which may contain gatherpress_calendar_query filter marker, year and month.
+	 * @param array<string, mixed>                                                                                                            $args    WP_Query arguments that will be used for the REST request.
+	 * @param WP_REST_Request<array{gatherpress_calendar_query:string|null, start_date:string, after:string, end_date:string, before:string}> $request Request object which may contain gatherpress_calendar_query filter marker, year and month.
 	 *
 	 * @return array<string, mixed> Modified query arguments with date_query added and gatherpress_event_query removed.
 	 *
@@ -168,13 +168,22 @@ class Setup {
 			$args['date_query'] = array();
 		}
 
-		$start_date = $parameters['start_date'] ?? $parameters['after'] ?? null;
-		$end_date   = $parameters['end_date'] ?? $parameters['before'] ?? null;
+		// @phpstan-ignore-next-line
+		$start_date = isset( $parameters['start_date'] ) && is_string( $parameters['start_date'] )
+			? $parameters['start_date']
+			// @phpstan-ignore-next-line
+			: ( isset( $parameters['after'] ) && is_string( $parameters['after'] ) ? $parameters['after'] : '' );
 
-		if ( ! empty( $start_date ) && ! empty( $end_date ) ) {
+		// @phpstan-ignore-next-line
+		$end_date = isset( $parameters['end_date'] ) && is_string( $parameters['end_date'] )
+			? $parameters['end_date']
+			// @phpstan-ignore-next-line
+			: ( isset( $parameters['before'] ) && is_string( $parameters['before'] ) ? $parameters['before'] : '' );
+
+		if ( '' !== $start_date && '' !== $end_date ) {
 			$args['date_query'][0] = array(
-				'after'     => sanitize_text_field( (string) $start_date ) . ' 00:00:00',
-				'before'    => sanitize_text_field( (string) $end_date ) . ' 23:59:59',
+				'after'     => sanitize_text_field( $start_date ) . ' 00:00:00',
+				'before'    => sanitize_text_field( $end_date ) . ' 23:59:59',
 				'inclusive' => true,
 			);
 		}
@@ -185,7 +194,7 @@ class Setup {
 	/**
 	 * Recursively find the attrs of the first inner block matching a name.
 	 *
-	 * @since 0.6.0
+	 * @since 0.5.0
 	 *
 	 * @param string                           $block_name   The block name to search for.
 	 * @param array<int, array<string, mixed>> $inner_blocks Array of parsed inner blocks.
@@ -194,10 +203,25 @@ class Setup {
 	 */
 	public static function gatherpress_find_inner_block_attrs( string $block_name, array $inner_blocks ): ?array {
 		foreach ( $inner_blocks as $block ) {
-			if ( ( $block['blockName'] ?? '' ) === $block_name ) {
-				return is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
+			// @phpstan-ignore-next-line    
+			if ( ! is_array( $block ) ) {
+				continue;
 			}
-			if ( ! empty( $block['innerBlocks'] ) ) {
+			/**
+			 * Type safe.
+			 *
+			 * @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<int, array<string, mixed>>, innerHTML?: string, innerContent?: array<mixed>} $block
+			 */
+			if ( ( $block['blockName'] ?? '' ) === $block_name ) {
+				$attrs = $block['attrs'] ?? null;
+				if ( is_array( $attrs ) ) {
+					/** @var array<string, mixed> $attrs */
+					return $attrs;
+				}
+				return array();
+			}
+			// @phpstan-ignore-next-line
+			if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
 				$found = self::gatherpress_find_inner_block_attrs( $block_name, $block['innerBlocks'] );
 				if ( null !== $found ) {
 					return $found;
@@ -215,14 +239,20 @@ class Setup {
 	 * @return array<string, mixed> Updated block data.
 	 */
 	private function paginate_query_block( array $parsed_block ): array {
-		$calendar_attrs = self::gatherpress_find_inner_block_attrs( 'gatherpress/calendar', $parsed_block['innerBlocks'] ?? array() );
+		$inner_blocks = isset( $parsed_block['innerBlocks'] ) && is_array( $parsed_block['innerBlocks'] ) ? $parsed_block['innerBlocks'] : array();
+		// @phpstan-ignore-next-line
+		$calendar_attrs = self::gatherpress_find_inner_block_attrs( 'gatherpress/calendar', $inner_blocks );
 
 		if ( null !== $calendar_attrs && is_array( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs']['query'] ) ) {
 			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_PARAM ] = true;
 
 			$query_id = is_numeric( $parsed_block['attrs']['queryId'] ?? null ) ? (int) $parsed_block['attrs']['queryId'] : 0;
 			$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
-			$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$raw_page = isset( $_GET[ $page_key ] ) && is_scalar( $_GET[ $page_key ] ) ? $_GET[ $page_key ] : 1;
+			$page     = absint( $raw_page );
+			if ( 0 === $page ) {
+				$page = 1;
+			}
 
 			$range = Date_Calculator::calculate_date_range( $calendar_attrs, $page );
 
@@ -247,8 +277,18 @@ class Setup {
 		$query = ( $parent_block instanceof WP_Block ) ? ( $parent_block->attributes['query'] ?? null ) : null;
 
 		if ( is_array( $query ) && isset( $query[ self::CALENDAR_QUERY_START_DATE ] ) ) {
-			$parsed_block['attrs']['selectedDate'] = $query[ self::CALENDAR_QUERY_START_DATE ];
-			$parsed_block['attrs']['viewType']     = $query[ self::CALENDAR_QUERY_VIEW_TYPE ] ?? ( $parsed_block['attrs']['viewType'] ?? 'month' );
+			if ( ! isset( $parsed_block['attrs'] ) || ! is_array( $parsed_block['attrs'] ) ) {
+				$parsed_block['attrs'] = array();
+			}
+
+			// @phpstan-ignore-next-line
+			$start_date = isset( $query[ self::CALENDAR_QUERY_START_DATE ] ) && is_string( $query[ self::CALENDAR_QUERY_START_DATE ] ) ? $query[ self::CALENDAR_QUERY_START_DATE ] : '';
+			$view_type  = isset( $query[ self::CALENDAR_QUERY_VIEW_TYPE ] ) && is_string( $query[ self::CALENDAR_QUERY_VIEW_TYPE ] )
+				? $query[ self::CALENDAR_QUERY_VIEW_TYPE ]
+				: ( isset( $parsed_block['attrs']['viewType'] ) && is_string( $parsed_block['attrs']['viewType'] ) ? $parsed_block['attrs']['viewType'] : 'month' );
+
+			$parsed_block['attrs']['selectedDate'] = $start_date;
+			$parsed_block['attrs']['viewType']     = $view_type;
 		}
 
 		return $parsed_block;
@@ -310,7 +350,7 @@ class Setup {
 	 * @since 0.4.0
 	 *
 	 * @param array<string, mixed> $context      Default context.
-	 * @param array                $parsed_block {
+	 * @param array<string, mixed> $parsed_block {
 	 *                    An associative array of the block being rendered. See WP_Block_Parser_Block.
 	 *
 	 *     @type string|null $blockName    Name of block.
@@ -380,13 +420,13 @@ class Setup {
 			false
 		);
 
-		$filtered_query_args = is_array( $filtered_query_args ) ? $filtered_query_args : $query_args;
-
-		// Return the merged query.
-		return array_merge(
+		/** @var array<string, mixed> $merged_query */
+		$merged_query = array_merge(
 			$query,
-			$filtered_query_args
+			is_array( $filtered_query_args ) ? $filtered_query_args : $query_args
 		);
+
+		return $merged_query;
 	}
 
 	/**
@@ -409,7 +449,7 @@ class Setup {
 
 		$day_number = $block_instance->context['gatherpress/dayNumber'] ?? null;
 
-		return null !== $day_number ? (string) $day_number : null;
+		return ( is_numeric( $day_number ) || is_string( $day_number ) ) ? (string) $day_number : null;
 	}
 
 	/**
@@ -434,7 +474,9 @@ class Setup {
 		$query = $block_instance->context['query'] ?? null;
 
 		if ( is_array( $query ) ) {
-			$range = Date_Calculator::get_range_from_query( $query );
+			/** @var array<string, mixed> $query_typed */
+			$query_typed = $query;
+			$range       = Date_Calculator::get_range_from_query( $query_typed );
 			return $range['heading'];
 		}
 

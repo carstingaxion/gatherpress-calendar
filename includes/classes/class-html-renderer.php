@@ -43,12 +43,18 @@ class HTML_Renderer {
 	/**
 	 * Generate complete calendar HTML.
 	 *
-	 * @param array<string, mixed> $attributes    Block attributes.
-	 * @param array<string, mixed> $calendar_data Calendar structure.
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param array{
+	 *   heading: string,
+	 *   day_names: list<string>,
+	 *   weeks: list<list<array<string, mixed>>>,
+	 *   view_type: string
+	 * } $calendar_data Calendar structure.
 	 *
 	 * @return string Calendar HTML.
 	 */
 	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
+		// @phpstan-ignore-next-line    
 		$view_type     = $calendar_data['view_type'] ?? ( $attributes['viewType'] ?? 'month' );
 		$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
 		$columns_count = Date_Calculator::get_columns_count( $view_type, $show_weekends );
@@ -65,7 +71,7 @@ class HTML_Renderer {
 			$table_styles = array(
 				sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
 			);
-			if ( ! empty( $grid_gap ) ) {
+			if ( '' !== $grid_gap ) {
 				$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
 			}
 
@@ -125,23 +131,30 @@ class HTML_Renderer {
 	 * @param WP_Block $block      Parent block instance.
 	 * @param string   $block_name Target inner block name.
 	 *
-	 * @return array<string, mixed> Parsed template block.
+	 * @return array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} Parsed template block.
 	 */
 	public static function get_inner_template_block( WP_Block $block, string $block_name ): array {
-		if ( ! empty( $block->parsed_block['innerBlocks'] ) ) {
-			foreach ( $block->parsed_block['innerBlocks'] as $inner_block ) {
-				if ( ( $inner_block['blockName'] ?? '' ) === $block_name ) {
-					return $inner_block;
-				}
+		$inner_blocks = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] )
+			? $block->parsed_block['innerBlocks']
+			: array();
+
+		foreach ( $inner_blocks as $inner_block ) {
+			if ( is_array( $inner_block ) && ( $inner_block['blockName'] ?? '' ) === $block_name ) {
+				/** @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_block */
+				return $inner_block;
 			}
 		}
+
+		$fallback_inner_blocks  = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
+		$fallback_inner_html    = isset( $block->parsed_block['innerHTML'] ) && is_string( $block->parsed_block['innerHTML'] ) ? $block->parsed_block['innerHTML'] : '';
+		$fallback_inner_content = isset( $block->parsed_block['innerContent'] ) && is_array( $block->parsed_block['innerContent'] ) ? $block->parsed_block['innerContent'] : array();
 
 		return array(
 			'blockName'    => $block_name,
 			'attrs'        => array(),
-			'innerBlocks'  => $block->parsed_block['innerBlocks'] ?? array(),
-			'innerHTML'    => $block->parsed_block['innerHTML'] ?? '',
-			'innerContent' => $block->parsed_block['innerContent'] ?? array(),
+			'innerBlocks'  => $fallback_inner_blocks,
+			'innerHTML'    => $fallback_inner_html,
+			'innerContent' => $fallback_inner_content,
 		);
 	}
 }

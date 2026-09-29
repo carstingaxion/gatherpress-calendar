@@ -30,7 +30,9 @@ class Style_Processor {
 	 * @return string CSS gap value (e.g., 'var(--wp--preset--spacing--50)' or '10px 20px') or empty string.
 	 */
 	public static function get_block_gap_value( array $attributes ): string {
-		$block_gap = $attributes['style']['spacing']['blockGap'] ?? null;
+		$style     = isset( $attributes['style'] ) && is_array( $attributes['style'] ) ? $attributes['style'] : array();
+		$spacing   = isset( $style['spacing'] ) && is_array( $style['spacing'] ) ? $style['spacing'] : array();
+		$block_gap = $spacing['blockGap'] ?? null;
 
 		if ( empty( $block_gap ) ) {
 			return '';
@@ -42,8 +44,11 @@ class Style_Processor {
 
 		// Handle axial/split (vertical and horizontal) gap objects.
 		if ( is_array( $block_gap ) ) {
-			$top  = isset( $block_gap['top'] ) ? self::resolve_preset_value( (string) $block_gap['top'] ) : '1px';
-			$left = isset( $block_gap['left'] ) ? self::resolve_preset_value( (string) $block_gap['left'] ) : '1px';
+			$top_raw  = isset( $block_gap['top'] ) && is_scalar( $block_gap['top'] ) ? (string) $block_gap['top'] : '1px';
+			$left_raw = isset( $block_gap['left'] ) && is_scalar( $block_gap['left'] ) ? (string) $block_gap['left'] : '1px';
+
+			$top  = self::resolve_preset_value( $top_raw );
+			$left = self::resolve_preset_value( $left_raw );
 
 			return "{$top} {$left}";
 		}
@@ -59,9 +64,9 @@ class Style_Processor {
 	 * @return string Resolved CSS string.
 	 */
 	public static function resolve_preset_value( string $value ): string {
-		if ( strpos( $value, 'var:preset|' ) === 0 ) {
+		if ( 0 === strpos( $value, 'var:preset|' ) ) {
 			$parts = explode( '|', $value );
-			if ( count( $parts ) === 3 ) {
+			if ( 3 === count( $parts ) ) {
 				return sprintf( 'var(--wp--preset--%s--%s)', $parts[1], $parts[2] );
 			}
 		}

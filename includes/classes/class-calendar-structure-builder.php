@@ -25,7 +25,18 @@ class Calendar_Structure_Builder {
 	/**
 	 * Build complete calendar structure.
 	 *
-	 * @param array<string, mixed>     $date_range    Date range array.
+	 * @param array{
+	 *   view_type: string,
+	 *   start_date: string,
+	 *   end_date: string,
+	 *   start_date_obj: DateTimeImmutable,
+	 *   end_date_obj: DateTimeImmutable,
+	 *   raw_week_start: DateTimeImmutable,
+	 *   target_date: DateTimeImmutable,
+	 *   year: int,
+	 *   month: int,
+	 *   heading: string
+	 * }                               $date_range    Date range array.
 	 * @param int                      $start_of_week Start of week setting (0-6).
 	 * @param array<string, list<int>> $posts_by_date Posts organized by date.
 	 * @param bool                     $show_weekends Whether to include weekend days.
@@ -38,16 +49,16 @@ class Calendar_Structure_Builder {
 	 * }
 	 */
 	public static function build_structure( array $date_range, int $start_of_week, array $posts_by_date, bool $show_weekends = true ): array {
-		$view_type = $date_range['view_type'] ?? 'month';
+		$view_type = $date_range['view_type'];
 
 		if ( 'day' === $view_type ) {
 			$weeks = self::build_single_day( $date_range['start_date_obj'], $posts_by_date );
 		} elseif ( 'week' === $view_type ) {
-			$week_start = $date_range['raw_week_start'] ?? $date_range['start_date_obj'];
+			$week_start = $date_range['raw_week_start'];
 			$weeks      = self::build_single_week( $week_start, $posts_by_date, $show_weekends );
 		} else {
-			$year          = (int) $date_range['year'];
-			$month         = (int) $date_range['month'];
+			$year          = $date_range['year'];
+			$month         = $date_range['month'];
 			$first_day     = mktime( 0, 0, 0, $month, 1, $year );
 			$days_in_month = (int) gmdate( 't', false !== $first_day ? $first_day : time() );
 			$weeks         = self::build_month_weeks( $year, $month, $start_of_week, $days_in_month, $posts_by_date, $show_weekends );

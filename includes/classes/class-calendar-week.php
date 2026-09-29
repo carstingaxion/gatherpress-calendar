@@ -78,6 +78,10 @@ class Calendar_Week {
 
 		// Render the days of this week using the Day template block.
 		foreach ( $week_days as $day ) {
+			if ( ! is_array( $day ) ) {
+				continue;
+			}
+
 			$day_posts = isset( $day['posts'] ) && is_array( $day['posts'] ) ? $day['posts'] : array();
 			$is_today  = isset( $day['date'] ) && is_string( $day['date'] ) && $day['date'] === $today;
 

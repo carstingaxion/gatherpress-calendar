@@ -93,10 +93,15 @@ class Calendar {
 			? (int) $block->context['queryId']
 			: 0;
 		$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
-		$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$raw_page = isset( $_GET[ $page_key ] ) && is_scalar( $_GET[ $page_key ] ) ? $_GET[ $page_key ] : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page     = absint( $raw_page );
+		if ( 0 === $page ) {
+			$page = 1;
+		}
 
-		// Unify range resolution via Date_Calculator (Single Source of Truth).
-		$date_range = Date_Calculator::get_range_from_query( $query, $attributes, $page );
+		/** @var array<string, mixed> $query_typed */
+		$query_typed = $query;
+		$date_range  = Date_Calculator::get_range_from_query( $query_typed, $attributes, $page );
 
 		// Propagate context tree for child blocks.
 		$block->context['gatherpress/viewType']     = $date_range['view_type'];
@@ -111,7 +116,8 @@ class Calendar {
 		$posts_by_date = Post_Organizer::organize_posts_by_date( $query_args );
 
 		// Assemble structure and delegate rendering.
-		$start_of_week = (int) get_option( 'start_of_week', 0 );
+		$start_of_week = get_option( 'start_of_week', 0 );
+		$start_of_week = is_numeric( $start_of_week ) ? (int) $start_of_week : 0;
 		$calendar_data = Calendar_Structure_Builder::build_structure( $date_range, $start_of_week, $posts_by_date, $block->context['gatherpress/showWeekends'] );
 
 		// Generate HTML.
