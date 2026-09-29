@@ -40,6 +40,14 @@ export function isWeekendDay( dayOfWeek ) {
 	return getWeekendDays().includes( dayOfWeek );
 }
 
+export function getColumnsCount( viewType, showWeekends ) {
+	if ( 'day' === viewType ) {
+		return 1;
+	}
+	const workdayCount = 7 - getWeekendDays().length;
+	return showWeekends ? 7 : workdayCount;
+}
+
 /**
  * Get day names based on start of week setting.
  *
@@ -67,7 +75,7 @@ export function isWeekendDay( dayOfWeek ) {
  * // Monday-first week (European style)
  * getDayNames(1) // Returns ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
  */
-function getDayNames( startOfWeek = 0, showWeekends = true ) {
+export function getDayNames( startOfWeek = 0, showWeekends = true ) {
 	const days = [];
 
 	// Base date: 2024-01-07 is a Sunday (day 0).
@@ -138,6 +146,56 @@ export function generateMonthOptions() {
 }
 
 /**
+ * Organizes posts by YYYY-MM-DD date string.
+ *
+ * @param {Array} posts Raw post entities.
+ * @return {Object} Posts grouped by date string.
+ */
+export function groupPostsByDate( posts = [] ) {
+	const grouped = {};
+	if ( ! posts || ! posts.length ) {
+		return grouped;
+	}
+
+	posts.forEach( ( post ) => {
+		const postDate = 'gatherpress_event' === post.type
+			? post.meta?.gatherpress_datetime_start
+			: post.date;
+
+		if ( ! postDate ) {
+			return;
+		}
+
+		const dateStr = dateI18n( DATE_FORMAT, new Date( postDate ) );
+		if ( ! grouped[ dateStr ] ) {
+			grouped[ dateStr ] = [];
+		}
+		grouped[ dateStr ].push( post );
+	} );
+
+	return grouped;
+}
+
+/**
+ * Helper to build an active day descriptor object.
+ */
+function createDayEntry( dateObj, postsByDate, todayStr ) {
+	const dayOfWeek = dateObj.getDay();
+	const dateStr = dateI18n( DATE_FORMAT, dateObj );
+
+	return {
+		day: dateObj.getDate(),
+		date: dateStr,
+		posts: postsByDate?.[ dateStr ] ?? [],
+		isEmpty: false,
+		isToday: dateStr === todayStr,
+		dayOfWeek,
+		weekday: WEEKDAY_SLUGS[ dayOfWeek ],
+		isWeekend: isWeekendDay( dayOfWeek ),
+	};
+}
+
+/**
  * Build the weeks array for the requested month.
  *
  * @param {number}  year         Target year.
@@ -149,14 +207,7 @@ export function generateMonthOptions() {
  *
  * @return {Array[]} Weeks array.
  */
-export function buildWeeks(
-	year,
-	month,
-	startOfWeek,
-	daysInMonth,
-	postsByDate = {},
-	showWeekends = true
-) {
+export function buildWeeks( year, month, startOfWeek, daysInMonth, postsByDate = {}, showWeekends = true ) {
 	// Today's date string, used to flag the current day in the grid.
 	const today = dateI18n( DATE_FORMAT, new Date() );
 	const activeDaysOfWeek = [];
@@ -191,30 +242,11 @@ export function buildWeeks(
 
 			// Fill initial empty days before the month starts.
 			for ( let i = 0; i < emptyDays; i++ ) {
-				currentWeek.push( {
-					isEmpty: true,
-					posts: [],
-				} );
+				currentWeek.push( { isEmpty: true, posts: [] } );
 			}
 		}
 
-		const monthStr = String( month ).padStart( 2, '0' );
-		const dayStr = String( day ).padStart( 2, '0' );
-		const dateStr = `${ year }-${ monthStr }-${ dayStr }`;
-		const dayPosts = postsByDate?.[ dateStr ] ?? [];
-		const isWeekend = isWeekendDay( dayOfWeek );
-		const weekday = WEEKDAY_SLUGS[ dayOfWeek ];
-
-		currentWeek.push( {
-			day,
-			date: dateStr,
-			posts: dayPosts,
-			isEmpty: false,
-			isToday: dateStr === today,
-			dayOfWeek,
-			weekday,
-			isWeekend,
-		} );
+		currentWeek.push( createDayEntry( dateObj, postsByDate, today ) );
 
 		// When week is complete (5 or 7 days), start a new week.
 		if ( currentWeek.length === daysPerWeek ) {
@@ -225,10 +257,7 @@ export function buildWeeks(
 
 	// Fill remaining empty days after the month ends.
 	while ( currentWeek.length > 0 && currentWeek.length < daysPerWeek ) {
-		currentWeek.push( {
-			isEmpty: true,
-			posts: [],
-		} );
+		currentWeek.push( { isEmpty: true, posts: [] } );
 	}
 
 	if ( currentWeek.length > 0 ) {
@@ -255,27 +284,12 @@ export function buildWeekView( startDateObj, postsByDate = {}, showWeekends = tr
 	for ( let i = 0; i < 7; i++ ) {
 		const dateObj = new Date( baseDate );
 		dateObj.setDate( baseDate.getDate() + i );
-		const dayOfWeek = dateObj.getDay();
 
-		if ( ! showWeekends && isWeekendDay( dayOfWeek ) ) {
+		if ( ! showWeekends && isWeekendDay( dateObj.getDay() ) ) {
 			continue;
 		}
 
-		const dateStr = dateI18n( DATE_FORMAT, dateObj );
-		const dayPosts = postsByDate?.[ dateStr ] ?? [];
-		const isWeekend = isWeekendDay( dayOfWeek );
-		const weekday = WEEKDAY_SLUGS[ dayOfWeek ];
-
-		week.push( {
-			day: dateObj.getDate(),
-			date: dateStr,
-			posts: dayPosts,
-			isEmpty: false,
-			isToday: dateStr === today,
-			dayOfWeek,
-			weekday,
-			isWeekend,
-		} );
+		week.push( createDayEntry( dateObj, postsByDate, today ) );
 	}
 
 	return [ week ];
@@ -291,25 +305,7 @@ export function buildWeekView( startDateObj, postsByDate = {}, showWeekends = tr
  */
 export function buildDayView( dayObj, postsByDate = {} ) {
 	const today = dateI18n( DATE_FORMAT, new Date() );
-	const dateObj = new Date( dayObj );
-	const dayOfWeek = dateObj.getDay();
-	const dateStr = dateI18n( DATE_FORMAT, dateObj );
-	const dayPosts = postsByDate?.[ dateStr ] ?? [];
-	const isWeekend = isWeekendDay( dayOfWeek );
-	const weekday = WEEKDAY_SLUGS[ dayOfWeek ];
-
-	const singleDay = {
-		day: dateObj.getDate(),
-		date: dateStr,
-		posts: dayPosts,
-		isEmpty: false,
-		isToday: dateStr === today,
-		dayOfWeek,
-		weekday,
-		isWeekend,
-	};
-
-	return [ [ singleDay ] ];
+	return [ [ createDayEntry( new Date( dayObj ), postsByDate, today ) ] ];
 }
 
 /**
@@ -322,34 +318,8 @@ export function buildDayView( dayObj, postsByDate = {} ) {
  *
  * @return {Object} Calendar data structure.
  */
-export function generateCalendar(
-	posts = [],
-	startOfWeek = 0,
-	dateRange,
-	showWeekends = true
-) {
-	const postsByDate = {};
-	if ( posts && posts.length > 0 ) {
-		posts.forEach( ( post ) => {
-			let postDate;
-			if ( 'gatherpress_event' === post.type ) {
-				postDate = post.meta?.gatherpress_datetime_start;
-			} else {
-				postDate = post.date;
-			}
-			if ( ! postDate ) {
-				return;
-			}
-
-			const dateObj = new Date( postDate );
-			const dateStr = dateI18n( DATE_FORMAT, dateObj );
-			if ( ! postsByDate[ dateStr ] ) {
-				postsByDate[ dateStr ] = [];
-			}
-			postsByDate[ dateStr ].push( post );
-		} );
-	}
-
+export function generateCalendar( posts = [], startOfWeek = 0, dateRange, showWeekends = true ) {
+	const postsByDate = groupPostsByDate( posts );
 	const viewType = dateRange.viewType || 'month';
 
 	if ( 'day' === viewType ) {
@@ -371,14 +341,7 @@ export function generateCalendar(
 
 	return {
 		dayNames: getDayNames( startOfWeek, showWeekends ),
-		weeks: buildWeeks(
-			dateRange.year,
-			dateRange.month,
-			startOfWeek,
-			daysInMonth,
-			postsByDate,
-			showWeekends
-		),
+		weeks: buildWeeks( dateRange.year, dateRange.month, startOfWeek, daysInMonth, postsByDate, showWeekends ),
 	};
 }
 
@@ -399,6 +362,5 @@ export function getDefaultActiveDate( calendar ) {
 	}
 
 	const firstDay = days.find( ( day ) => ! day.isEmpty );
-
 	return firstDay ? firstDay.date : '';
 }

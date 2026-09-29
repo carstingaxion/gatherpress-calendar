@@ -20,6 +20,7 @@ use WP_Block;
  * Query_Builder Class
  *
  * Constructs WP_Query arguments from Query Loop context.
+ * Adds date filtering and calendar-specific parameters.
  *
  * @since 0.1.0
  */

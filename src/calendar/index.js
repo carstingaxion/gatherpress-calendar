@@ -33,7 +33,7 @@ import './style.scss';
 import Edit from './edit';
 import save from './save';
 import metadata from './block.json';
-import { calculateDateRange } from './edit/utils/date-utils';
+import { calculateDateRange, formatHeading } from './edit/utils/date-utils';
 
 import './variation';
 import transforms from './transforms';
@@ -66,40 +66,6 @@ function findCalendarBlock( blocks = [] ) {
 		}
 	}
 	return null;
-}
-
-/**
- * Format heading based on view type and date range (matches PHP Date_Calculator::format_heading).
- *
- * @param {string} viewType  View type: 'month' | 'week' | 'day'.
- * @param {Date}   startDate Range start date object.
- * @param {Date}   endDate   Range end date object.
- *
- * @return {string} Formatted localized heading string.
- */
-function formatHeading( viewType, startDate, endDate ) {
-	if ( 'day' === viewType ) {
-		return dateI18n( 'l, F j, Y', startDate );
-	}
-
-	if ( 'week' === viewType ) {
-		const startYear = startDate.getFullYear();
-		const endYear = endDate.getFullYear();
-		const startMonth = startDate.getMonth();
-		const endMonth = endDate.getMonth();
-
-		if ( startYear !== endYear ) {
-			return `${ dateI18n( 'M j, Y', startDate ) } – ${ dateI18n( 'M j, Y', endDate ) }`;
-		}
-
-		if ( startMonth !== endMonth ) {
-			return `${ dateI18n( 'M j', startDate ) } – ${ dateI18n( 'M j, Y', endDate ) }`;
-		}
-
-		return `${ dateI18n( 'M', startDate ) } ${ dateI18n( 'j', startDate ) } – ${ dateI18n( 'j, Y', endDate ) }`;
-	}
-
-	return dateI18n( 'F Y', startDate );
 }
 
 domReady( () => {

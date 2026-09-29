@@ -13,7 +13,6 @@ namespace GatherPress_Calendar;
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
-use DateTimeImmutable;
 use GatherPress\Core\Traits\Singleton;
 use WP_Block;
 
@@ -96,47 +95,24 @@ class Calendar {
 		$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
 		$page     = ! empty( $_GET[ $page_key ] ) ? absint( $_GET[ $page_key ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		if ( isset( $query[ Setup::CALENDAR_QUERY_START_DATE ], $query[ Setup::CALENDAR_QUERY_END_DATE ] ) ) {
-			$tz             = wp_timezone();
-			$start_date_obj = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ Setup::CALENDAR_QUERY_START_DATE ], $tz ) ?: current_datetime();
-			$end_date_obj   = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ Setup::CALENDAR_QUERY_END_DATE ], $tz ) ?: current_datetime();
+		// Unify range resolution via Date_Calculator (Single Source of Truth).
+		$date_range = Date_Calculator::get_range_from_query( $query, $attributes, $page );
 
-			$date_range = array(
-				'view_type'      => (string) ( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ?? ( $attributes['viewType'] ?? 'month' ) ),
-				'start_date'     => (string) $query[ Setup::CALENDAR_QUERY_START_DATE ],
-				'end_date'       => (string) $query[ Setup::CALENDAR_QUERY_END_DATE ],
-				'start_date_obj' => $start_date_obj,
-				'end_date_obj'   => $end_date_obj,
-				'raw_week_start' => $start_date_obj,
-				'target_date'    => $start_date_obj,
-				'year'           => (int) $start_date_obj->format( 'Y' ),
-				'month'          => (int) $start_date_obj->format( 'n' ),
-				'heading'        => (string) ( $query[ Setup::CALENDAR_QUERY_HEADING ] ?? '' ),
-			);
-		} else {
-			$date_range = Date_Calculator::calculate_date_range( $attributes, $page );
-		}
+		// Propagate context tree for child blocks.
+		$block->context['gatherpress/viewType']     = $date_range['view_type'];
+		$block->context['gatherpress/year']         = $date_range['year'];
+		$block->context['gatherpress/month']        = $date_range['month'];
+		$block->context['gatherpress/startDate']    = $date_range['start_date'];
+		$block->context['gatherpress/endDate']      = $date_range['end_date'];
+		$block->context['gatherpress/showWeekends'] = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
 
-		// Inject context for child blocks.
-		$block->context['gatherpress/viewType']  = $date_range['view_type'];
-		$block->context['gatherpress/year']      = $date_range['year'];
-		$block->context['gatherpress/month']     = $date_range['month'];
-		$block->context['gatherpress/startDate'] = $date_range['start_date'];
-		$block->context['gatherpress/endDate']   = $date_range['end_date'];
-
-		$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] )
-			? $attributes['showWeekends']
-			: true;
-
-		$block->context['gatherpress/showWeekends'] = $show_weekends;
-
-		// Build query and fetch posts.
+		// Fetch and organize posts by date.
 		$query_args    = Query_Builder::build_query_args( $block, $date_range );
 		$posts_by_date = Post_Organizer::organize_posts_by_date( $query_args );
 
-		// Build calendar structure.
+		// Assemble structure and delegate rendering.
 		$start_of_week = (int) get_option( 'start_of_week', 0 );
-		$calendar_data = Calendar_Structure_Builder::build_structure( $date_range, $start_of_week, $posts_by_date, $show_weekends );
+		$calendar_data = Calendar_Structure_Builder::build_structure( $date_range, $start_of_week, $posts_by_date, $block->context['gatherpress/showWeekends'] );
 
 		// Generate HTML.
 		$renderer = new HTML_Renderer( $block );

@@ -18,9 +18,7 @@ use DateTimeImmutable;
 /**
  * Calendar_Structure_Builder Class
  *
- * Generates the calendar grid structure with weeks and days for month, week, or day view.
- *
- * @since 0.1.0
+ * Generates the calendar grid structure for month, week, or day view.
  */
 class Calendar_Structure_Builder {
 
@@ -43,26 +41,62 @@ class Calendar_Structure_Builder {
 		$view_type = $date_range['view_type'] ?? 'month';
 
 		if ( 'day' === $view_type ) {
-			$weeks     = self::build_single_day( $date_range['start_date_obj'], $posts_by_date );
-			$day_names = array( (string) wp_date( 'D', $date_range['start_date_obj']->getTimestamp() ) );
+			$weeks = self::build_single_day( $date_range['start_date_obj'], $posts_by_date );
 		} elseif ( 'week' === $view_type ) {
 			$week_start = $date_range['raw_week_start'] ?? $date_range['start_date_obj'];
 			$weeks      = self::build_single_week( $week_start, $posts_by_date, $show_weekends );
-			$day_names  = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
 		} else {
 			$year          = (int) $date_range['year'];
 			$month         = (int) $date_range['month'];
 			$first_day     = mktime( 0, 0, 0, $month, 1, $year );
 			$days_in_month = (int) gmdate( 't', false !== $first_day ? $first_day : time() );
 			$weeks         = self::build_month_weeks( $year, $month, $start_of_week, $days_in_month, $posts_by_date, $show_weekends );
-			$day_names     = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
 		}
 
 		return array(
 			'heading'   => $date_range['heading'],
-			'day_names' => $day_names,
+			'day_names' => Date_Calculator::get_view_day_names( $view_type, $date_range['start_date_obj'], $start_of_week, $show_weekends ),
 			'weeks'     => $weeks,
 			'view_type' => $view_type,
+		);
+	}
+
+	/**
+	 * Factory to create an active day entry.
+	 *
+	 * @param int             $day         Day of month.
+	 * @param string          $date_str    YYYY-MM-DD date string.
+	 * @param int             $day_of_week Day of week (0-6).
+	 * @param list<int>       $posts       Associated post IDs.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function create_day_entry( int $day, string $date_str, int $day_of_week, array $posts = array() ): array {
+		return array(
+			'day'       => $day,
+			'date'      => $date_str,
+			'posts'     => $posts,
+			'isEmpty'   => false,
+			'dayOfWeek' => $day_of_week,
+			'weekday'   => Date_Calculator::get_weekday_slug( $day_of_week ),
+			'isWeekend' => Date_Calculator::is_weekend_day( $day_of_week ),
+		);
+	}
+
+	/**
+	 * Factory to create an empty padded day entry.
+	 *
+	 * @param int $day_of_week Day of week (0-6).
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function create_empty_day_entry( int $day_of_week ): array {
+		return array(
+			'isEmpty'   => true,
+			'posts'     => array(),
+			'dayOfWeek' => $day_of_week,
+			'weekday'   => Date_Calculator::get_weekday_slug( $day_of_week ),
+			'isWeekend' => Date_Calculator::is_weekend_day( $day_of_week ),
 		);
 	}
 
@@ -97,7 +131,6 @@ class Calendar_Structure_Builder {
 			$day_timestamp = mktime( 0, 0, 0, $month, $day, $year );
 			$day_of_week   = (int) gmdate( 'w', false !== $day_timestamp ? $day_timestamp : time() );
 			$is_weekend    = Date_Calculator::is_weekend_day( $day_of_week );
-			$weekday_slug  = Date_Calculator::get_weekday_slug( $day_of_week );
 
 			if ( ! $show_weekends && $is_weekend ) {
 				continue;
@@ -109,31 +142,13 @@ class Calendar_Structure_Builder {
 				$empty_days       = false !== $start_col ? (int) $start_col : 0;
 
 				for ( $i = 0; $i < $empty_days; $i++ ) {
-					$empty_dow      = $active_days_of_week[ $i ];
-					$current_week[] = array(
-						'isEmpty'   => true,
-						'posts'     => array(),
-						'dayOfWeek' => $empty_dow,
-						'weekday'   => Date_Calculator::get_weekday_slug( $empty_dow ),
-						'isWeekend' => Date_Calculator::is_weekend_day( $empty_dow ),
-					);
+					$current_week[] = self::create_empty_day_entry( $active_days_of_week[ $i ] );
 				}
 			}
 
-			$date_str = sprintf( '%04d-%02d-%02d', $year, $month, $day );
-
-			/** @var list<int> $day_posts */
-			$day_posts = $posts_by_date[ $date_str ] ?? array();
-
-			$current_week[] = array(
-				'day'       => $day,
-				'date'      => $date_str,
-				'posts'     => $day_posts,
-				'isEmpty'   => false,
-				'dayOfWeek' => $day_of_week,
-				'weekday'   => $weekday_slug,
-				'isWeekend' => $is_weekend,
-			);
+			$date_str       = sprintf( '%04d-%02d-%02d', $year, $month, $day );
+			$day_posts      = $posts_by_date[ $date_str ] ?? array();
+			$current_week[] = self::create_day_entry( $day, $date_str, $day_of_week, $day_posts );
 
 			if ( count( $current_week ) === $days_per_week ) {
 				$weeks[]      = $current_week;
@@ -143,14 +158,7 @@ class Calendar_Structure_Builder {
 
 		$week_count = count( $current_week );
 		while ( $week_count > 0 && $week_count < $days_per_week ) {
-			$trailing_dow   = $active_days_of_week[ $week_count ];
-			$current_week[] = array(
-				'isEmpty'   => true,
-				'posts'     => array(),
-				'dayOfWeek' => $trailing_dow,
-				'weekday'   => Date_Calculator::get_weekday_slug( $trailing_dow ),
-				'isWeekend' => Date_Calculator::is_weekend_day( $trailing_dow ),
-			);
+			$current_week[] = self::create_empty_day_entry( $active_days_of_week[ $week_count ] );
 			++$week_count;
 		}
 
@@ -176,23 +184,17 @@ class Calendar_Structure_Builder {
 		for ( $i = 0; $i < 7; $i++ ) {
 			$day_obj     = $week_start->modify( "+{$i} days" );
 			$day_of_week = (int) $day_obj->format( 'w' );
-			$is_weekend  = Date_Calculator::is_weekend_day( $day_of_week );
 
-			if ( ! $show_weekends && $is_weekend ) {
+			if ( ! $show_weekends && Date_Calculator::is_weekend_day( $day_of_week ) ) {
 				continue;
 			}
 
-			$date_str  = $day_obj->format( 'Y-m-d' );
-			$day_posts = $posts_by_date[ $date_str ] ?? array();
-
-			$week[] = array(
-				'day'       => (int) $day_obj->format( 'j' ),
-				'date'      => $date_str,
-				'posts'     => $day_posts,
-				'isEmpty'   => false,
-				'dayOfWeek' => $day_of_week,
-				'weekday'   => Date_Calculator::get_weekday_slug( $day_of_week ),
-				'isWeekend' => $is_weekend,
+			$date_str = $day_obj->format( 'Y-m-d' );
+			$week[]   = self::create_day_entry(
+				(int) $day_obj->format( 'j' ),
+				$date_str,
+				$day_of_week,
+				$posts_by_date[ $date_str ] ?? array()
 			);
 		}
 
@@ -208,18 +210,12 @@ class Calendar_Structure_Builder {
 	 * @return list<list<array<string, mixed>>>
 	 */
 	private static function build_single_day( DateTimeImmutable $day_obj, array $posts_by_date ): array {
-		$day_of_week = (int) $day_obj->format( 'w' );
-		$date_str    = $day_obj->format( 'Y-m-d' );
-		$day_posts   = $posts_by_date[ $date_str ] ?? array();
-
-		$day = array(
-			'day'       => (int) $day_obj->format( 'j' ),
-			'date'      => $date_str,
-			'posts'     => $day_posts,
-			'isEmpty'   => false,
-			'dayOfWeek' => $day_of_week,
-			'weekday'   => Date_Calculator::get_weekday_slug( $day_of_week ),
-			'isWeekend' => Date_Calculator::is_weekend_day( $day_of_week ),
+		$date_str = $day_obj->format( 'Y-m-d' );
+		$day      = self::create_day_entry(
+			(int) $day_obj->format( 'j' ),
+			$date_str,
+			(int) $day_obj->format( 'w' ),
+			$posts_by_date[ $date_str ] ?? array()
 		);
 
 		return array( array( $day ) );

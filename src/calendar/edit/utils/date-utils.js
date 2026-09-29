@@ -8,12 +8,6 @@ import { dateI18n } from '@wordpress/date';
 import { DATE_FORMAT } from '../constants';
 import { isWeekendDay } from './calendar-utils';
 
-/**
- * Format a Date object to YYYY-MM-DD.
- *
- * @param {Date} date Date instance.
- * @return {string} Formatted date.
- */
 export function formatDate( date ) {
 	return dateI18n( DATE_FORMAT, date );
 }
@@ -66,7 +60,7 @@ export function calculateTargetDate( { viewType = 'month', selectedDate = '', da
  *
  * @return {Object} Range object.
  */
-export function calculateDateRange( options, startOfWeek = 0 ) {
+export function calculateDateRange( options ={}, startOfWeek = 0 ) {
 	const targetDate = calculateTargetDate( options );
 	const viewType = options.viewType || 'month';
 	const showWeekends = options.showWeekends !== false && options.showWeekends !== 'false';
@@ -130,7 +124,6 @@ export function calculateDateRange( options, startOfWeek = 0 ) {
  * @return {Object} Query parameters.
  */
 export function calculateDateQuery( options = {}, startOfWeek = 0 ) {
-
 	const range = calculateDateRange( options, startOfWeek );
 
 	return {
@@ -140,4 +133,38 @@ export function calculateDateQuery( options = {}, startOfWeek = 0 ) {
 		endDate: range.endDate,
 		viewType: range.viewType,
 	};
+}
+
+/**
+ * Format calendar heading string (matches PHP Date_Calculator::format_heading).
+ *
+ * @param {string} viewType  View type: 'month' | 'week' | 'day'.
+ * @param {Date}   startDate Range start date object.
+ * @param {Date}   endDate   Range end date object.
+ *
+ * @return {string} Formatted localized heading string.
+ */
+export function formatHeading( viewType, startDate, endDate ) {
+	if ( 'day' === viewType ) {
+		return dateI18n( 'l, F j, Y', startDate );
+	}
+
+	if ( 'week' === viewType ) {
+		const startYear = startDate.getFullYear();
+		const endYear = endDate.getFullYear();
+		const startMonth = startDate.getMonth();
+		const endMonth = endDate.getMonth();
+
+		if ( startYear !== endYear ) {
+			return `${ dateI18n( 'M j, Y', startDate ) } – ${ dateI18n( 'M j, Y', endDate ) }`;
+		}
+
+		if ( startMonth !== endMonth ) {
+			return `${ dateI18n( 'M j', startDate ) } – ${ dateI18n( 'M j, Y', endDate ) }`;
+		}
+
+		return `${ dateI18n( 'M', startDate ) } ${ dateI18n( 'j', startDate ) } – ${ dateI18n( 'j, Y', endDate ) }`;
+	}
+
+	return dateI18n( 'F Y', startDate );
 }

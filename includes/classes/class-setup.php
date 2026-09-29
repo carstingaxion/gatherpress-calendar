@@ -13,7 +13,6 @@ namespace GatherPress_Calendar;
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
-use DateTimeImmutable;
 use GatherPress\Core\Event;
 use GatherPress\Core\Traits\Singleton;
 use WP_Block;
@@ -43,28 +42,6 @@ class Setup {
 	const CALENDAR_QUERY_START_DATE = 'gatherpress_calendar_start_date';
 	const CALENDAR_QUERY_END_DATE   = 'gatherpress_calendar_end_date';
 	const CALENDAR_QUERY_HEADING    = 'gatherpress_calendar_heading';
-
-	/**
-	 * Query context key carrying the calendar's resolved target year.
-	 *
-	 * Injected onto the enclosing Query block's `query` attribute (and so
-	 * available via `query` context to every block inside it, e.g. a Month
-	 * Heading placed beside the calendar) so anything needing "whichever
-	 * month the calendar is currently showing" reads the same value instead
-	 * of separately recalculating it.
-	 *
-	 * @since 0.6.0
-	 * @var string
-	 */
-	const CALENDAR_QUERY_YEAR = 'gatherpress_calendar_year';
-
-	/**
-	 * Query context key carrying the calendar's resolved target month.
-	 *
-	 * @since 0.6.0
-	 * @var string
-	 */
-	const CALENDAR_QUERY_MONTH = 'gatherpress_calendar_month';
 
 	/**
 	 * Constructor for the Setup class.
@@ -450,18 +427,9 @@ class Setup {
 
 		$query = $block_instance->context['query'] ?? null;
 
-		if ( is_array( $query ) && ! empty( $query[ self::CALENDAR_QUERY_HEADING ] ) ) {
-			return (string) $query[ self::CALENDAR_QUERY_HEADING ];
-		}
-
-		if ( is_array( $query ) && isset( $query[ self::CALENDAR_QUERY_START_DATE ], $query[ self::CALENDAR_QUERY_END_DATE ] ) ) {
-			$view_type  = (string) ( $query[ self::CALENDAR_QUERY_VIEW_TYPE ] ?? 'month' );
-			$start_date = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ self::CALENDAR_QUERY_START_DATE ], wp_timezone() );
-			$end_date   = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ self::CALENDAR_QUERY_END_DATE ], wp_timezone() );
-
-			if ( $start_date && $end_date ) {
-				return Date_Calculator::format_heading( $view_type, $start_date, $end_date );
-			}
+		if ( is_array( $query ) ) {
+			$range = Date_Calculator::get_range_from_query( $query );
+			return $range['heading'];
 		}
 
 		$now = current_datetime();

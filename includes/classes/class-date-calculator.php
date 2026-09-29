@@ -18,9 +18,8 @@ use DateTimeImmutable;
 /**
  * Date_Calculator Class
  *
- * Handles date-related calculations for month, week, and day calendar views.
- *
- * @since 0.1.0
+ * Single Source of Truth for calendar date ranges, week calculations,
+ * localized headings, and column layouts.
  */
 class Date_Calculator {
 
@@ -54,10 +53,9 @@ class Date_Calculator {
 	 * }
 	 */
 	public static function calculate_date_range( array $attributes, int $page = 1 ): array {
-		$view_type = isset( $attributes['viewType'] ) && is_string( $attributes['viewType'] ) && in_array( $attributes['viewType'], array( 'month', 'week', 'day' ), true )
+		$view_type     = isset( $attributes['viewType'] ) && is_string( $attributes['viewType'] ) && in_array( $attributes['viewType'], array( 'month', 'week', 'day' ), true )
 			? $attributes['viewType']
 			: 'month';
-
 		$selected_date = ! empty( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
 		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
 		$show_weekends = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
@@ -146,12 +144,79 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Get start of the week for a given date and start_of_week setting.
+	 * Resolves a date range from query block context, falling back to calculation.
 	 *
-	 * @since 0.5.0
+	 * @param array<string, mixed> $query              The `query` array from context.
+	 * @param array<string, mixed> $fallback_attributes Block attributes if context is incomplete.
+	 * @param int                  $page               Page number.
 	 *
-	 * @param DateTimeImmutable $date          Given date.
-	 * @param int               $start_of_week Start of week (0 = Sunday, 1 = Monday, etc.).
+	 * @return array<string, mixed> Date range array.
+	 */
+	public static function get_range_from_query( array $query, array $fallback_attributes = array(), int $page = 1 ): array {
+		if ( isset( $query[ Setup::CALENDAR_QUERY_START_DATE ], $query[ Setup::CALENDAR_QUERY_END_DATE ] ) ) {
+			$tz             = wp_timezone();
+			$start_date_obj = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ Setup::CALENDAR_QUERY_START_DATE ], $tz ) ?: current_datetime();
+			$end_date_obj   = DateTimeImmutable::createFromFormat( '!Y-m-d', (string) $query[ Setup::CALENDAR_QUERY_END_DATE ], $tz ) ?: current_datetime();
+			$view_type      = (string) ( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ?? ( $fallback_attributes['viewType'] ?? 'month' ) );
+			$heading        = (string) ( $query[ Setup::CALENDAR_QUERY_HEADING ] ?? self::format_heading( $view_type, $start_date_obj, $end_date_obj ) );
+
+			return array(
+				'view_type'      => $view_type,
+				'start_date'     => (string) $query[ Setup::CALENDAR_QUERY_START_DATE ],
+				'end_date'       => (string) $query[ Setup::CALENDAR_QUERY_END_DATE ],
+				'start_date_obj' => $start_date_obj,
+				'end_date_obj'   => $end_date_obj,
+				'raw_week_start' => $start_date_obj,
+				'target_date'    => $start_date_obj,
+				'year'           => (int) $start_date_obj->format( 'Y' ),
+				'month'          => (int) $start_date_obj->format( 'n' ),
+				'heading'        => $heading,
+			);
+		}
+
+		return self::calculate_date_range( $fallback_attributes, $page );
+	}
+
+	/**
+	 * Compute the grid column count based on viewType and weekend visibility.
+	 *
+	 * @param string $view_type     View type ('month', 'week', 'day').
+	 * @param bool   $show_weekends Weekend visibility.
+	 *
+	 * @return int Grid column count.
+	 */
+	public static function get_columns_count( string $view_type, bool $show_weekends ): int {
+		if ( 'day' === $view_type ) {
+			return 1;
+		}
+
+		return $show_weekends ? 7 : ( 7 - count( self::get_weekend_days() ) );
+	}
+
+	/**
+	 * Resolve localized header day names based on the active view.
+	 *
+	 * @param string            $view_type      View type ('month', 'week', 'day').
+	 * @param DateTimeImmutable $start_date_obj Starting date.
+	 * @param int               $start_of_week  Start of week setting.
+	 * @param bool              $show_weekends  Weekend visibility.
+	 *
+	 * @return list<string> Localized day name labels.
+	 */
+	public static function get_view_day_names( string $view_type, DateTimeImmutable $start_date_obj, int $start_of_week, bool $show_weekends ): array {
+		if ( 'day' === $view_type ) {
+			$day_name = wp_date( 'D', $start_date_obj->getTimestamp() );
+			return array( is_string( $day_name ) ? $day_name : '' );
+		}
+
+		return self::get_day_names( $start_of_week, $show_weekends );
+	}
+
+	/**
+	 * Get start of the week for a given date.
+	 *
+	 * @param DateTimeImmutable $date          Target date.
+	 * @param int               $start_of_week Start of week (0 = Sunday, 1 = Monday).
 	 *
 	 * @return DateTimeImmutable Start of the week date at 00:00:00.
 	 */

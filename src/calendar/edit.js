@@ -24,7 +24,7 @@ import { calculateDateRange, calculateDateQuery } from './edit/utils/date-utils'
 import {
 	generateCalendar,
 	getDefaultActiveDate,
-	getWeekendDays,
+	getColumnsCount,
 } from './edit/utils/calendar-utils';
 import { useStableValue } from '../utils/use-stable-value';
 import { useCalendarData } from './edit/hooks/useCalendarData';
@@ -161,11 +161,9 @@ export default function Edit( {
 		}
 	);
 
-	const workdayCount = 7 - getWeekendDays().length;
-	const columnsCount = 'day' === viewType ? 1 : ( showWeekends ? 7 : workdayCount );
 	const tableStyle = {
 		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
-		'--gatherpress-calendar-columns': columnsCount,
+		'--gatherpress-calendar-columns': getColumnsCount( viewType, showWeekends ),
 	};
 
 	const weekContext = useMemo(
