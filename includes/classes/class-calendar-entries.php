@@ -160,11 +160,17 @@ class Calendar_Entries {
 			return $context;
 		};
 
+		$filter_event_date_link = static function ( string $block_content, array $parsed_block ) use ( $post_id ): string {
+			return self::add_title_to_event_link( $block_content, $parsed_block, $post_id );
+		};
+
 		add_filter( 'render_block_context', $filter_block_context, 1 );
+		add_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10, 2 );
 		$inner_blocks_raw = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
 		/** @var array<int, array<string, mixed>> $inner_blocks */
 		$inner_blocks  = $inner_blocks_raw;
 		$inner_content = $this->render_template( $inner_blocks );
+		remove_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10 );
 		remove_filter( 'render_block_context', $filter_block_context, 1 );
 
 		wp_reset_postdata();
@@ -179,6 +185,62 @@ class Calendar_Entries {
 			esc_attr( $entry_styles['classnames'] ),
 			$style_attribute,
 			$inner_content
+		);
+	}
+
+	/**
+	 * Add the event title to an Event Date link as screen reader text.
+	 *
+	 * In a calendar cell the Event Date link shows only the time, so screen
+	 * readers cannot tell the events of one day apart. In the default template
+	 * the link is also the modal trigger, and GatherPress gives it
+	 * role="button", so this names a link or a button (WCAG 4.1.2, and 2.4.4
+	 * for templates without the modal). This puts a visually hidden title
+	 * inside the link, the same way core/read-more does. Where the time is
+	 * visible, it stays first in the name (WCAG 2.5.3); the Dots style hides
+	 * the time, so there the title is the only useful part of the name.
+	 *
+	 * The title comes from the same post the Event Date block shows, so a
+	 * block with its own `postId` attribute gets that event's title, not
+	 * the title of the calendar entry.
+	 *
+	 * The Event Date block limits its output to a single `<a href>` element,
+	 * so the first `</a>` closes that link. Without a link, or without a
+	 * title, the content is returned unchanged.
+	 *
+	 * @param string              $block_content   Rendered gatherpress/event-date block HTML.
+	 * @param array<mixed, mixed> $parsed_block    Parsed gatherpress/event-date block.
+	 * @param int                 $default_post_id ID of the event this calendar entry renders.
+	 *
+	 * @return string Block HTML with the hidden title in the link.
+	 */
+	private static function add_title_to_event_link( string $block_content, array $parsed_block, int $default_post_id ): string {
+		$link_close = stripos( $block_content, '</a>' );
+
+		if ( false === $link_close ) {
+			return $block_content;
+		}
+
+		// Mirror GatherPress\Core\Blocks\Setup::get_post_id(): a postId attribute wins.
+		$attrs      = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : array();
+		$post_id    = isset( $attrs['postId'] ) && is_numeric( $attrs['postId'] ) && (int) $attrs['postId'] > 0 ? (int) $attrs['postId'] : $default_post_id;
+		$post_title = wp_strip_all_tags( get_the_title( $post_id ) );
+
+		if ( '' === trim( $post_title ) ) {
+			return $block_content;
+		}
+
+		$screen_reader_text = sprintf(
+			/* translators: %s: Event title. Read by screen readers after the event time. */
+			__( ', %s', 'gatherpress-calendar' ),
+			$post_title
+		);
+
+		return substr_replace(
+			$block_content,
+			sprintf( '<span class="screen-reader-text">%s</span>', esc_html( $screen_reader_text ) ),
+			$link_close,
+			0
 		);
 	}
 
