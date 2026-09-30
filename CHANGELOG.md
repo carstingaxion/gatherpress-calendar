@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.5.0...HEAD)
+## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.6.0...HEAD)
+
+## [0.6.0](https://github.com/carstingaxion/gatherpress-calendar/compare/0.5.0...0.6.0) - 2026-09-30
+
+### 🚀 Added
+
+- Reduce UI of GatherPress core query controls. ([#97](https://github.com/carstingaxion/gatherpress-calendar/pull/97))
+- Allow to render n-calendars ([#95](https://github.com/carstingaxion/gatherpress-calendar/pull/95))
 
 ## [0.5.0](https://github.com/carstingaxion/gatherpress-calendar/compare/0.4.2...0.5.0) - 2026-09-29
 
