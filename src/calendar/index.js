@@ -75,9 +75,12 @@ domReady( () => {
 	 * @param {string}   root0.clientId Current block client ID.
 	 * @return {Object} Content object.
 	 */
-	const getCalendarHeadingValues = ( { select, clientId } ) => {
+	const getCalendarHeadingValues = ( {
+		select: registrySelect,
+		clientId,
+	} ) => {
 		const { getBlockParentsByBlockName, getBlock, getBlocks } =
-			select( 'core/block-editor' );
+			registrySelect( 'core/block-editor' );
 
 		let calendarBlock = null;
 
@@ -113,7 +116,7 @@ domReady( () => {
 			showWeekends = true,
 		} = liveCalendar?.attributes || {};
 
-		const site = select( 'core' )?.getSite?.();
+		const site = registrySelect( 'core' )?.getSite?.();
 		const startOfWeek = site?.start_of_week ?? 0;
 
 		const range = calculateDateRange(
