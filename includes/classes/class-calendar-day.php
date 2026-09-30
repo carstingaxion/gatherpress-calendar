@@ -84,7 +84,14 @@ class Calendar_Day {
 		$day_number = isset( $block->context['gatherpress/dayNumber'] ) && is_numeric( $block->context['gatherpress/dayNumber'] ) ? (int) $block->context['gatherpress/dayNumber'] : 0;
 		$classes    = $this->get_day_cell_classes( $block->context );
 
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
+		$extra_attributes = array( 'class' => implode( ' ', $classes ) );
+
+		// Today is shown with color and an outline; say it to screen readers too.
+		if ( ! empty( $block->context['gatherpress/isToday'] ) ) {
+			$extra_attributes['aria-current'] = 'date';
+		}
+
+		$wrapper_attributes = get_block_wrapper_attributes( $extra_attributes );
 		$inner_blocks_raw   = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
 		$inner_blocks       = $this->find_day_inner_blocks( $inner_blocks_raw );
 		$cell_content       = '';
