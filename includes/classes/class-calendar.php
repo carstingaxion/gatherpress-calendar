@@ -93,7 +93,7 @@ class Calendar {
 			? (int) $block->context['queryId']
 			: 0;
 		$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
-		$raw_page = isset( $_GET[ $page_key ] ) && is_scalar( $_GET[ $page_key ] ) ? sanitize_key( wp_unslash( $_GET[ $page_key ] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$raw_page = isset( $_GET[ $page_key ] ) && is_scalar( $_GET[ $page_key ] ) ? sanitize_key( (string) wp_unslash( $_GET[ $page_key ] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$page     = absint( $raw_page );
 		if ( 0 === $page ) {
 			$page = 1;

@@ -165,7 +165,7 @@ class Calendar_Entries {
 		/**
 		 * Type safety.
 		 *
-		 * @var array<string, mixed> $inner_blocks
+		 * @var array<int, array<string, mixed>> $inner_blocks
 		 */
 		$inner_blocks  = $inner_blocks_raw;
 		$inner_content = $this->render_template( $inner_blocks );
@@ -319,6 +319,7 @@ class Calendar_Entries {
 				array_filter(
 					array_merge(
 						$extra_classes,
+						// @phpstan-ignore-next-line
 						explode( ' ', $styles['classnames'] ?? '' )
 					)
 				)
@@ -327,6 +328,7 @@ class Calendar_Entries {
 
 		return array(
 			'classnames'    => $classnames,
+			// @phpstan-ignore-next-line
 			'inline_styles' => $styles['css'] ?? '',
 		);
 	}

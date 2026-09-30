@@ -184,6 +184,7 @@ class Date_Calculator {
 	 *
 	 * @return array{
 	 *     view_type: string,
+	 *     unit_count: int,
 	 *     start_date: string,
 	 *     end_date: string,
 	 *     start_date_obj: DateTimeImmutable,

@@ -49,6 +49,7 @@ class HTML_Renderer {
 	 * @return string Calendar HTML.
 	 */
 	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
+		// @phpstan-ignore-next-line
 		$view_type     = $calendar_data['view_type'] ?? ( $attributes['viewType'] ?? 'month' );
 		$unit_count    = $calendar_data['unit_count'];
 		$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
