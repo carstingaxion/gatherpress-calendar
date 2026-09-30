@@ -14,16 +14,11 @@ import {
 	registerBlockType,
 	registerBlockBindingsSource,
 } from '@wordpress/blocks';
-import { createHigherOrderComponent } from '@wordpress/compose';
 import { addFilter } from '@wordpress/hooks';
-import { Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useSelect } from '@wordpress/data';
-import {
-	store as blockEditorStore,
-	InspectorControls,
-} from '@wordpress/block-editor';
 import domReady from '@wordpress/dom-ready';
+import { select } from '@wordpress/data';
+import { store as blockEditorStore } from '@wordpress/block-editor';
 
 /**
  * Internal dependencies
@@ -80,9 +75,12 @@ domReady( () => {
 	 * @param {string}   root0.clientId Current block client ID.
 	 * @return {Object} Content object.
 	 */
-	const getCalendarHeadingValues = ( { select, clientId } ) => {
+	const getCalendarHeadingValues = ( {
+		select: registrySelect,
+		clientId,
+	} ) => {
 		const { getBlockParentsByBlockName, getBlock, getBlocks } =
-			select( 'core/block-editor' );
+			registrySelect( 'core/block-editor' );
 
 		let calendarBlock = null;
 
@@ -113,17 +111,19 @@ domReady( () => {
 
 		const {
 			viewType = 'month',
+			unitCount = 1,
 			selectedDate = '',
 			dateModifier = 0,
 			showWeekends = true,
 		} = liveCalendar?.attributes || {};
 
-		const site = select( 'core' )?.getSite?.();
+		const site = registrySelect( 'core' )?.getSite?.();
 		const startOfWeek = site?.start_of_week ?? 0;
 
 		const range = calculateDateRange(
 			{
 				viewType,
+				unitCount,
 				selectedDate,
 				dateModifier,
 				showWeekends,
@@ -169,115 +169,38 @@ domReady( () => {
 } );
 
 /**
- * Add calendar notice to Query Loop block inspector controls.
+ * Reduce UI of GatherPress core query controls.
  *
- * This filter wraps the Query Loop block's BlockEdit component to inject
- * a notice when a GatherPress Calendar block is present as a direct child
- * AND the query is for gatherpress_event post type.
+ * Removes controls, that are not needed by a calendar-view, those are espceially:
+ * - Upcoming / Past
+ * - include unfinished events
+ * - Offset number
+ * - Max. count of events to query
  *
- * The notice explains that the calendar will override GatherPress's
- * 'gatherpress_event_query' setting and use date-based filtering instead.
+ * @see https://github.com/GatherPress/gatherpress/blob/main/docs/developer/blocks/slot-fills/README.md#add-or-remove-ui-elements
  *
- * Technical approach:
- * - Uses editor.BlockEdit filter to wrap the Query block component
- * - Checks if selected block is core/query
- * - Checks if query is for gatherpress_event post type
- * - Checks if any direct child is gatherpress/calendar
- * - Injects notice into InspectorControls
- *
- * @since 0.1.0
- */
-const withCalendarNotice = createHigherOrderComponent( ( BlockEdit ) => {
-	return ( props ) => {
-		if ( props.name !== 'core/query' ) {
-			return <BlockEdit { ...props } />;
-		}
-
-		/**
-		 * Check if this Query block:
-		 * 1. Has a calendar child
-		 * 2. Is querying gatherpress_event post type
-		 *
-		 * Queries the block editor store to check if any direct child
-		 * of this block is a GatherPress Calendar block, and if the
-		 * query is specifically for GatherPress events.
-		 */
-		const { hasCalendarChild, isGatherPressQuery } = useSelect(
-			( select ) => {
-				const { getBlock } = select( blockEditorStore );
-				const block = getBlock( props.clientId );
-
-				if (
-					! block ||
-					! block.innerBlocks ||
-					block.innerBlocks.length === 0
-				) {
-					return {
-						hasCalendarChild: false,
-						isGatherPressQuery: false,
-					};
-				}
-
-				const hasCalendar = block.innerBlocks.some(
-					( innerBlock ) => innerBlock.name === metadata.name
-				);
-
-				// Check if the query is for gatherpress_event post type
-				const postType = block.attributes?.query?.postType || 'post';
-				const isGatherPress = postType === 'gatherpress_event';
-
-				return {
-					hasCalendarChild: hasCalendar,
-					isGatherPressQuery: isGatherPress,
-				};
-			},
-			[ props.clientId ]
-		);
-
-		// Only show notice if both conditions are met:
-		// 1. Calendar block is present
-		// 2. Query is for gatherpress_event post type
-		const shouldShowNotice = hasCalendarChild && isGatherPressQuery;
-
-		return (
-			<>
-				{ shouldShowNotice && (
-					<InspectorControls>
-						<Notice status="info" isDismissible={ false }>
-							<p>
-								{ __(
-									'The GatherPress Calendar block is active in this Query Loop. The calendar will use date-based filtering, overriding the "Upcoming or past events" setting.',
-									'gatherpress-calendar'
-								) }
-							</p>
-							<p>
-								{ __(
-									'This ensures the calendar only displays events from the active calendar date range, regardless of whether they are past or upcoming events.',
-									'gatherpress-calendar'
-								) }
-							</p>
-						</Notice>
-					</InspectorControls>
-				) }
-				<BlockEdit { ...props } />
-			</>
-		);
-	};
-}, 'withCalendarNotice' );
-
-/**
- * Register the filter to add calendar notices to Query blocks.
- *
- * This filter runs on every Query block render in the editor,
- * checking for calendar children and the post type before injecting notices.
- *
- * Priority 20 ensures it runs after other Query block modifications.
- *
- * @since 0.1.0
+ * @since 0.6.0
  */
 addFilter(
-	'editor.BlockEdit',
-	'gatherpress-calendar/with-calendar-notice',
-	withCalendarNotice,
-	20
+	'gatherpress.eventQueryControls',
+	'gatherpress-calendar/reduce-query-controls',
+	( controls, { clientId } ) => {
+		const hasCalendar = select( blockEditorStore )
+			.getBlock( clientId )
+			?.innerBlocks.some(
+				( block ) => 'gatherpress/calendar' === block.name
+			);
+
+		return hasCalendar
+			? controls.filter(
+					( { name } ) =>
+						! [
+							'listType',
+							'includeUnfinished',
+							'offset',
+							'count',
+						].includes( name )
+			  )
+			: controls;
+	}
 );
