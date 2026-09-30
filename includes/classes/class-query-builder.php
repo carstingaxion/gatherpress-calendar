@@ -32,7 +32,7 @@ class Query_Builder {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @param WP_Block $block      Block instance.
+	 * @param WP_Block                                                                                                                                                                                                                                        $block      Block instance.
 	 * @param array{ view_type: string, start_date: string, end_date: string, start_date_obj: DateTimeImmutable, end_date_obj: DateTimeImmutable, raw_week_start: DateTimeImmutable, target_date: DateTimeImmutable, year: int, month: int, heading: string } $date_range Resolved date range array.
 	 *
 	 * @return array<string, mixed> WP_Query arguments.
