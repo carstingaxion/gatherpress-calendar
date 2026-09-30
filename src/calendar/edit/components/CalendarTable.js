@@ -1,17 +1,11 @@
-import { useMemo } from '@wordpress/element';
-import { BlockContextProvider } from '@wordpress/block-editor';
-
-import { WeekPreviewRow } from './WeekPreviewRow';
+import { CalendarWeek } from './CalendarWeek';
 
 /**
  * CalendarTable Component
  *
  * Renders the calendar grid as virtual instances of the real
  * gatherpress/calendar-week (and, within it, gatherpress/calendar-day)
- * blocks: one week is rendered live/editable, matching the week that
- * contains the current `activeDate`; every other week is a read-only
- * preview built from the same underlying template blocks. This mirrors
- * what Calendar_Structure_Builder + Calendar_Week::render() do server-side.
+ * blocks. Supports multi-unit layouts (e.g. multi-month display).
  *
  * @since 0.1.0
  *
@@ -65,42 +59,20 @@ export function CalendarTable( {
 						</thead>
 					) }
 					<tbody { ...tbodyProps }>
-						{ unit.weeks.map( ( week, weekIndex ) => {
-							const isActiveWeek = week.some(
-								( day ) => day.date === activeDate
-							);
-
-							const weekContextValue = {
-								...weekContext,
-								'gatherpress/weekIndex': weekIndex,
-								'gatherpress/weekDays': week,
-								'gatherpress/activeDate': activeDate,
-								'gatherpress/setActiveDate': setActiveDate,
-							};
-
-							return (
-								<BlockContextProvider
-									key={ weekIndex }
-									value={ weekContextValue }
-								>
-									{ isActiveWeek ? (
-										liveWeekChildren
-									) : (
-										<WeekPreviewRow
-											week={ week }
-											dayInnerBlocks={ dayInnerBlocks }
-											weekBlockAttributes={
-												weekBlockAttributes
-											}
-											dayBlockAttributes={
-												dayBlockAttributes
-											}
-											onActivateDay={ setActiveDate }
-										/>
-									) }
-								</BlockContextProvider>
-							);
-						} ) }
+						{ unit.weeks.map( ( week, weekIndex ) => (
+							<CalendarWeek
+								key={ weekIndex }
+								week={ week }
+								weekIndex={ weekIndex }
+								activeDate={ activeDate }
+								setActiveDate={ setActiveDate }
+								weekContext={ weekContext }
+								liveWeekChildren={ liveWeekChildren }
+								dayInnerBlocks={ dayInnerBlocks }
+								weekBlockAttributes={ weekBlockAttributes }
+								dayBlockAttributes={ dayBlockAttributes }
+							/>
+						) ) }
 					</tbody>
 				</table>
 			) ) }
