@@ -3,8 +3,13 @@
    ========================================================================== */
 .gatherpress-calendar__day {
 	position: relative;
-	aspect-ratio: 1;
-	min-height: 0;
+
+	/*
+	 * At least as tall as a column is wide, so an empty cell is square. The
+	 * table is the size container, so 100cqi is the table width. A cell
+	 * with more events grows, and the other cells of its row grow with it.
+	 */
+	min-height: calc(100cqi / var(--gatherpress-calendar-columns, 7));
 	display: flex;
 	align-items: center;
 	justify-content: stretch;
@@ -32,7 +37,9 @@
 		outline-offset: -2px;
 
 		.gatherpress-calendar__day-number {
-			color: var(--wp--preset--color--primary, #007cba);
+
+			/* #006ba1 on the #fafafa cell is 5.56:1; #007cba was 4.38:1. */
+			color: var(--wp--preset--color--primary, #006ba1);
 			font-weight: 800;
 		}
 	}

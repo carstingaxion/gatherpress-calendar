@@ -12,7 +12,13 @@ import { __ } from '@wordpress/i18n';
 
 /**
  * The inner template inside gatherpress/calendar-entries:
- * Modal Manager holding the trigger link and the popover modal content.
+ * Modal Manager holding the start time, the linked event title that opens
+ * the modal, and the popover modal content.
+ *
+ * The title is the trigger, so every event shows and announces its name.
+ * The trigger class goes on core/post-title: GatherPress's Modal Manager
+ * binds the element with the class or the tag right after it, and here
+ * that tag is the title's link.
  */
 export const ENTRIES_TEMPLATE = [
 	[
@@ -23,8 +29,31 @@ export const ENTRIES_TEMPLATE = [
 				'gatherpress/event-date',
 				{
 					displayType: 'start',
-					isLink: true,
 					startDateFormat: 'G:i',
+					style: {
+						spacing: {
+							padding: {
+								top: '0',
+								bottom: '0',
+								left: '0',
+								right: '0',
+							},
+							margin: {
+								top: '0',
+								bottom: '0',
+								left: '0',
+								right: '0',
+							},
+						},
+					},
+					fontSize: 'small',
+				},
+			],
+			[
+				'core/post-title',
+				{
+					level: 0,
+					isLink: true,
 					className: 'gatherpress-modal--trigger-open',
 					style: {
 						spacing: {

@@ -4,6 +4,113 @@
  * @package GatherPressCalendar
  * @since 0.4.0
  */
+
+// Select all modal-triggers, that are not part of a modal itself.
+$trigger: ".gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > *";
+
+// The start time of an entry, when it is plain text and not the trigger.
+$start-time: ".wp-block-gatherpress-event-date:not(.gatherpress-modal--trigger-open):not(.wp-block-gatherpress-modal .wp-block-gatherpress-event-date)";
+
+@mixin visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+/*
+ * One colored dot per event is the trigger. The start time and the title
+ * stay in the markup, so screen readers still read them.
+ */
+@mixin dots {
+
+	#{$start-time} {
+
+		@include visually-hidden;
+	}
+
+	.gatherpress-calendar__entry {
+
+		/* Stacked dots are 24px apart, so their tap areas do not overlap. */
+		display: flex;
+		align-items: center;
+		min-height: 24px;
+
+		#{$trigger} {
+			background: var(--wp--preset--color--primary, #007cba);
+		}
+
+		&:nth-child(2) #{$trigger} {
+			background: var(--wp--preset--color--secondary, #e65054);
+		}
+
+		&:nth-child(3) #{$trigger} {
+			background: var(--wp--preset--color--tertiary, #4ab866);
+		}
+
+		&:nth-child(4) #{$trigger} {
+			background: var(--wp--preset--color--vivid-purple, #9b51e0);
+		}
+
+		&:nth-child(5) #{$trigger} {
+			background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
+		}
+
+		&:nth-child(n+6) #{$trigger} {
+			background: var(--wp--preset--color--contrast, #666);
+		}
+
+		#{$trigger} {
+			width: clamp(8px, 2.5vw, 12px);
+			height: clamp(8px, 2.5vw, 12px);
+			min-width: clamp(8px, 2.5vw, 12px);
+			min-height: clamp(8px, 2.5vw, 12px);
+			border-radius: 50%;
+			cursor: pointer;
+			position: relative;
+			transition: transform 0.2s ease, box-shadow 0.2s ease;
+			flex-shrink: 0;
+			display: inline-block;
+			text-decoration: none;
+
+			font-size: 0;
+
+			// The text is only for screen readers; it has no visible color.
+			color: transparent;
+
+			/*
+			 * The dot stays small, but clicks and taps land on a 24px area
+			 * around it (WCAG 2.5.8). A click on ::after goes to the link.
+			 */
+			&::after {
+				content: "";
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				width: 24px;
+				height: 24px;
+				transform: translate(-50%, -50%);
+			}
+
+			&:hover {
+				transform: scale(1.3);
+				box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.2);
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--wp--preset--color--contrast, #007cba);
+				outline-offset: 2px;
+				transform: scale(1.3);
+			}
+		}
+	}
+}
+
 .wp-block-gatherpress-calendar-entries {
 
 	display: flex;
@@ -25,61 +132,46 @@
 		====================================================================== */
 	&.is-style-dots {
 
-		.gatherpress-calendar__entry {
-
-			.gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
-				background: var(--wp--preset--color--primary, #007cba);
-			}
-
-			&:nth-child(2) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
-				background: var(--wp--preset--color--secondary, #e65054);
-			}
-
-			&:nth-child(3) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
-				background: var(--wp--preset--color--tertiary, #4ab866);
-			}
-
-			&:nth-child(4) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
-				background: var(--wp--preset--color--vivid-purple, #9b51e0);
-			}
-
-			&:nth-child(5) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
-				background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
-			}
-
-			&:nth-child(n+6) .gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
-				background: var(--wp--preset--color--contrast, #666);
-			}
-
-
-			// Select all modal-triggers, that are not part of a modal itself.
-			.gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > * {
-				width: clamp(8px, 2.5vw, 12px);
-				height: clamp(8px, 2.5vw, 12px);
-				min-width: clamp(8px, 2.5vw, 12px);
-				min-height: clamp(8px, 2.5vw, 12px);
-				border-radius: 50%;
-				cursor: pointer;
-				position: relative;
-				transition: transform 0.2s ease, box-shadow 0.2s ease;
-				flex-shrink: 0;
-				display: inline-block;
-				text-decoration: none;
-
-				font-size: 0;
-
-				&:hover {
-					transform: scale(1.3);
-					box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.2);
-				}
-
-				&:focus-visible {
-					outline: 2px solid var(--wp--preset--color--contrast, #007cba);
-					outline-offset: 2px;
-					transform: scale(1.3);
-				}
-			}
-		}
+		@include dots;
 	}
 
+	/*
+	 * Text triggers are at least 24px tall, so stacked events are not too
+	 * small to tap (WCAG 2.5.8). The narrow-calendar dots below override this.
+	 */
+	&:not(.is-style-dots) .gatherpress-calendar__entry #{$trigger} {
+		display: inline-block;
+		min-height: 24px;
+		align-content: center;
+	}
+
+}
+
+/*
+ * Wide calendars show the event title. A long title uses at most two lines.
+ * The clamp is on the link, because themes can set the display of the
+ * title block and of its link.
+ */
+@container calendar (width > 600px) {
+
+	.wp-block-gatherpress-calendar-entries:not(.is-style-dots) .gatherpress-calendar__entry .wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) a {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		overflow: hidden;
+		overflow-wrap: anywhere;
+	}
+}
+
+/*
+ * Narrow calendars have no room for the time and the title, so every
+ * style shows dots.
+ */
+@container calendar (width <= 600px) {
+
+	.wp-block-gatherpress-calendar-entries:not(.is-style-dots) {
+
+		@include dots;
+	}
 }
