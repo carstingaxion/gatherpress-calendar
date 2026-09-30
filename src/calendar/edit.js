@@ -197,11 +197,23 @@ export default function Edit( {
 		}
 	);
 
-	const tableGap = getGapCSSValue( attributes.style?.spacing?.blockGap );
+	const blockGap = attributes.style?.spacing?.blockGap;
+	const tableGap = getGapCSSValue( blockGap );
+	// Day cells subtract the column gaps to stay square (calendar-day/style.scss),
+	// so pass one length: the 'left' side of a split gap, and '0px' for '0'.
+	const columnGap = getGapCSSValue(
+		blockGap && 'object' === typeof blockGap
+			? blockGap.left ?? '1px'
+			: blockGap
+	);
 	const tableStyle = {
 		gap: tableGap,
-		// Day cells subtract the gaps to stay square; see calendar-day/style.scss.
-		...( tableGap ? { '--gatherpress-calendar-gap': tableGap } : {} ),
+		...( columnGap
+			? {
+					'--gatherpress-calendar-gap':
+						'0' === columnGap ? '0px' : columnGap,
+			  }
+			: {} ),
 		'--gatherpress-calendar-columns': getColumnsCount(
 			viewType,
 			showWeekends,

@@ -69,11 +69,16 @@ class HTML_Renderer {
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
+		$column_gap   = Style_Processor::get_block_column_gap_value( $attributes );
 		$table_styles = array(
 			sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
 		);
 		if ( '' !== $grid_gap ) {
-			$table_styles[] = sprintf( '--gatherpress-calendar-gap: %1$s; gap: %1$s', esc_attr( $grid_gap ) );
+			$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
+		}
+		// Only the column gap: day cells use it in calc() to stay square.
+		if ( '' !== $column_gap ) {
+			$table_styles[] = sprintf( '--gatherpress-calendar-gap: %s', esc_attr( $column_gap ) );
 		}
 		$table_style = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
 
