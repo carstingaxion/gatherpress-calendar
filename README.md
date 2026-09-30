@@ -39,9 +39,9 @@ core/query
 
 ### 1. Calendar (`gatherpress/calendar`)
 * **Ancestor:** Must be placed inside a `core/query` block.
-* **Views:** Configurable via `viewType` (`month`, `week`, or `day`).
-* **Attributes:** Manages `selectedDate`, `dateModifier`, `showWeekdays`, and `showWeekends`.
-* **Rendering:** Sets up responsive CSS Grid table wrappers, adjusts column counts (7, workday count, or 1 in day view), and applies view modifiers (`.is-view-month`, `.is-view-week`, `.is-view-day`).
+* **Views:** Configurable via viewType (month, week, or day).
+* **Attributes:** Manages unitCount, selectedDate, dateModifier, showWeekdays, and showWeekends.
+* **Rendering:** Sets up responsive CSS Grid table wrappers, adjusts column counts (7, workday count, or N in day view), and applies view modifiers (`.is-view-month`, `.is-view-week`, `.is-view-day`, `.has-multiple-units`).
 * Supports color, spacing, borders, and Interactivity API client-side navigation.
 
 ### 2. Calendar Week (`gatherpress/calendar-week`)
@@ -85,10 +85,10 @@ Binds the day number to text/paragraph blocks inside a day cell.
 ## Query Loop & Pagination Integration
 
 * **Date Range Querying:** Employs inclusive date boundaries (`after` and `before` with `inclusive => true`) within `WP_Query` and REST requests based on `start_date` and `end_date`. This guarantees weeks spanning across month or year boundaries never clip events.
-* **Step-Aware Pagination:** Fully compatible with `core/query-pagination-previous` and `core/query-pagination-next`. Steps through pages by the active unit:
-  * **Month view:** Advances by 1 month.
-  * **Week view:** Advances by 1 week (7 days).
-  * **Day view:** Advances by 1 day.
+* **Step-Aware Pagination:** Fully compatible with `core/query-pagination-previous` and `core/query-pagination-next`. Steps through pages by the active view-type and unit:
+  * **Month view:** Advances by N month.
+  * **Week view:** Advances by N week (7 days).
+  * **Day view:** Advances by N day.
 * **Client Navigation:** Supports WordPress Interactivity API client-side navigation without full-page reloads.
 * **Numeric Pagination Suppression:** Silently suppresses `core/query-pagination-numbers` within calendar queries to prevent invalid page index requests.
 
@@ -100,6 +100,10 @@ Binds the day number to text/paragraph blocks inside a day cell.
 * **GatherPress Events:** Placed using the start timestamp from GatherPress's event table (`datetime_start_gmt`). Conflicting past/upcoming query filters are removed automatically.
 * **Target Navigation Controls:**
   * **Calendar View (`viewType`):** Switch between `month`, `week`, and `day`.
+  * **Number of Units (`unitCount`):** An integer specifying how many consecutive units to render (defaults to 1):
+    -   **Month view:** 1 to 12 months.
+    -   **Week view:** 1 to 5 weeks.
+    -   **Day view:** 1 to 7 days.
   * **Specific Date (`selectedDate`):** Target a specific date (`YYYY-MM-DD` or `YYYY-MM`).
   * **Relative Offset (`dateModifier`):** Relative offset integer that adapts to the active view:
     * In Month view: offset by months (`-1` = last month, `+1` = next month).
@@ -109,6 +113,19 @@ Binds the day number to text/paragraph blocks inside a day cell.
 ---
 
 ## Display & Styling
+
+### Multi-Unit Layouts & Modes
+
+By pairing `viewType` with `unitCount`, the calendar adapts to specialized use cases:
+
+-   **Conference / Festival Mode (`viewType: 'day', unitCount: 3`):**  
+    Renders a single table row with 3 day columns (e.g., Day 1, Day 2, Day 3) starting from selectedDate. Perfect for multi-day conventions, festivals, or weekend retreats.
+    
+-   **Multi-Week Mode (`viewType: 'week', unitCount: 2`):**  
+    Renders a 7-column grid containing 2 consecutive week rows (e.g., a 14-day rolling schedule).
+    
+-   **Multi-Month Mode (`viewType: 'month', unitCount: 3`):**  
+    Renders 3 consecutive monthly tables , flowing side-by-side or stacked using CSS Flexbox.
 
 ### Block Styles
 
