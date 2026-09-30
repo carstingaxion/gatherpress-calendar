@@ -40,9 +40,9 @@ export function isWeekendDay( dayOfWeek ) {
 	return getWeekendDays().includes( dayOfWeek );
 }
 
-export function getColumnsCount( viewType, showWeekends ) {
+export function getColumnsCount( viewType, showWeekends, unitCount = 1 ) {
 	if ( 'day' === viewType ) {
-		return 1;
+		return Math.max( 1, unitCount );
 	}
 	const workdayCount = 7 - getWeekendDays().length;
 	return showWeekends ? 7 : workdayCount;
@@ -283,46 +283,68 @@ export function buildWeeks(
 /**
  * Build single week view without artificial empty padding.
  *
- * @param {Date}    startDateObj Start date of the week.
+ * @param {Date}    weekStartObj Start date of the week.
+ * @param {number}  unitCount    Number of units to show.
  * @param {Object}  postsByDate  Posts grouped by date.
  * @param {boolean} showWeekends Weekend visibility.
  *
  * @return {Array[]} Single-element array containing the week days.
  */
-export function buildWeekView(
-	startDateObj,
+export function buildConsecutiveWeeks(
+	weekStartObj,
+	unitCount,
 	postsByDate = {},
 	showWeekends = true
 ) {
 	const today = dateI18n( DATE_FORMAT, new Date() );
-	const week = [];
-	const baseDate = new Date( startDateObj );
+	const weeks = [];
 
-	for ( let i = 0; i < 7; i++ ) {
-		const dateObj = new Date( baseDate );
-		dateObj.setDate( baseDate.getDate() + i );
+	for ( let w = 0; w < unitCount; w++ ) {
+		const week = [];
+		const currentWeekStart = new Date( weekStartObj );
+		currentWeekStart.setDate( weekStartObj.getDate() + w * 7 );
 
-		if ( ! showWeekends && isWeekendDay( dateObj.getDay() ) ) {
-			continue;
+		for ( let i = 0; i < 7; i++ ) {
+			const dateObj = new Date( currentWeekStart );
+			dateObj.setDate( currentWeekStart.getDate() + i );
+
+			if ( ! showWeekends && isWeekendDay( dateObj.getDay() ) ) {
+				continue;
+			}
+
+			week.push( createDayEntry( dateObj, postsByDate, today ) );
 		}
 
-		week.push( createDayEntry( dateObj, postsByDate, today ) );
+		weeks.push( week );
 	}
 
-	return [ week ];
+	return weeks;
 }
 
 /**
  * Build single day view.
  *
- * @param {Date}   dayObj      Day Date object.
+ * @param {Date}   startDayObj Day Date object.
+ * @param {number} unitCount   Number of units to show.
  * @param {Object} postsByDate Posts grouped by date.
  *
  * @return {Array[]} Single-element array with single-day week.
  */
-export function buildDayView( dayObj, postsByDate = {} ) {
+export function buildConsecutiveDays(
+	startDayObj,
+	unitCount,
+	postsByDate = {}
+) {
 	const today = dateI18n( DATE_FORMAT, new Date() );
-	return [ [ createDayEntry( new Date( dayObj ), postsByDate, today ) ] ];
+	const days = [];
+
+	for ( let i = 0; i < unitCount; i++ ) {
+		const dateObj = new Date( startDayObj );
+		dateObj.setDate( startDayObj.getDate() + i );
+		days.push( createDayEntry( dateObj, postsByDate, today ) );
+	}
+
+	return [ days ];
 }
 
 /**
@@ -343,20 +365,22 @@ export function generateCalendar(
 ) {
 	const postsByDate = groupPostsByDate( posts );
 	const viewType = dateRange.viewType || 'month';
+	const unitCount = Math.max( 1, dateRange.unitCount || 1 );
+	const units = [];
 
 	if ( 'day' === viewType ) {
-		return {
-			dayNames: [
-				dateI18n(
-					'D',
-					dateRange.startDateObj || new Date( dateRange.startDate )
-				),
-			],
-			weeks: buildDayView(
-				dateRange.startDateObj || new Date( dateRange.startDate ),
-				postsByDate
-			),
-		};
+		const startObj =
+			dateRange.startDateObj || new Date( dateRange.startDate );
+		const dayNames = [];
+		for ( let i = 0; i < unitCount; i++ ) {
+			const d = new Date( startObj );
+			d.setDate( startObj.getDate() + i );
+			dayNames.push( dateI18n( 'D', d ) );
+		}
+		const weeks = buildConsecutiveDays( startObj, unitCount, postsByDate );
+		units.push( { dayNames, weeks } );
+
+		return { dayNames, weeks, units, viewType, unitCount };
 	}
 
 	if ( 'week' === viewType ) {
@@ -364,28 +388,48 @@ export function generateCalendar(
 			dateRange.rawWeekStart ||
 			dateRange.startDateObj ||
 			new Date( dateRange.startDate );
-		return {
-			dayNames: getDayNames( startOfWeek, showWeekends ),
-			weeks: buildWeekView( weekStart, postsByDate, showWeekends ),
-		};
+		const dayNames = getDayNames( startOfWeek, showWeekends );
+		const weeks = buildConsecutiveWeeks(
+			weekStart,
+			unitCount,
+			postsByDate,
+			showWeekends
+		);
+		units.push( { dayNames, weeks } );
+
+		return { dayNames, weeks, units, viewType, unitCount };
 	}
 
-	const daysInMonth = new Date(
-		dateRange.year,
-		dateRange.month,
-		0
-	).getDate();
-
-	return {
-		dayNames: getDayNames( startOfWeek, showWeekends ),
-		weeks: buildWeeks(
-			dateRange.year,
-			dateRange.month,
+	// Month view: construct unitCount distinct month objects
+	const startObj = dateRange.startDateObj || new Date( dateRange.startDate );
+	for ( let i = 0; i < unitCount; i++ ) {
+		const monthDate = new Date(
+			startObj.getFullYear(),
+			startObj.getMonth() + i,
+			1
+		);
+		const mYear = monthDate.getFullYear();
+		const mMonth = monthDate.getMonth() + 1;
+		const daysInMonth = new Date( mYear, mMonth, 0 ).getDate();
+		const mWeeks = buildWeeks(
+			mYear,
+			mMonth,
 			startOfWeek,
 			daysInMonth,
 			postsByDate,
 			showWeekends
-		),
+		);
+		const mDayNames = getDayNames( startOfWeek, showWeekends );
+
+		units.push( { dayNames: mDayNames, weeks: mWeeks } );
+	}
+
+	return {
+		dayNames: units[ 0 ].dayNames,
+		weeks: units[ 0 ].weeks,
+		units,
+		viewType,
+		unitCount,
 	};
 }
 
@@ -398,7 +442,10 @@ export function generateCalendar(
  * @return {string} Date string.
  */
 export function getDefaultActiveDate( calendar ) {
-	const days = calendar.weeks.flat();
+	const allWeeks = calendar.units
+		? calendar.units.flatMap( ( u ) => u.weeks )
+		: calendar.weeks;
+	const days = allWeeks.flat();
 	const todayEntry = days.find( ( day ) => ! day.isEmpty && day.isToday );
 
 	if ( todayEntry ) {

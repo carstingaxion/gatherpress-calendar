@@ -16,6 +16,18 @@
 	// max-width: var(--wp--style--global--wide-size, 1200px);
 	margin-inline: auto;
 
+	&.has-multiple-units.is-view-month {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--wp--style--block-gap, 1.5rem);
+
+		> .gatherpress-calendar__table {
+			flex: 1 1 calc((100% / var(--gatherpress-calendar-units, 1)) - var(--wp--style--block-gap, 1.5rem));
+			min-width: 280px;
+			margin-block-start: 0;
+		}
+	}
+
 	/* 7-column Calendar Grid */
 	.gatherpress-calendar__table {
 
@@ -53,4 +65,13 @@
 		}
 	}
 
+	/* Day View adjustments */
+	&.is-view-day {
+
+		th {
+			aspect-ratio: auto;
+			min-height: 140px;
+			padding: 1rem;
+		}
+	}
 }

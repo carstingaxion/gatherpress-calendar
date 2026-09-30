@@ -57,6 +57,7 @@ export default function Edit( {
 } ) {
 	const {
 		viewType = 'month',
+		unitCount = 1,
 		selectedDate = '',
 		dateModifier = 0,
 		showWeekdays = true,
@@ -74,13 +75,14 @@ export default function Edit( {
 				calculateDateQuery(
 					{
 						viewType,
+						unitCount,
 						selectedDate,
 						dateModifier,
 						showWeekends,
 					},
 					0
 				),
-			[ viewType, selectedDate, dateModifier, showWeekends ]
+			[ viewType, unitCount, selectedDate, dateModifier, showWeekends ]
 		)
 	);
 
@@ -89,13 +91,21 @@ export default function Edit( {
 			calculateDateRange(
 				{
 					viewType,
+					unitCount,
 					selectedDate,
 					dateModifier,
 					showWeekends,
 				},
 				startOfWeek
 			),
-		[ viewType, selectedDate, dateModifier, showWeekends, startOfWeek ]
+		[
+			viewType,
+			unitCount,
+			selectedDate,
+			dateModifier,
+			showWeekends,
+			startOfWeek,
+		]
 	);
 
 	const calendar = useMemo(
@@ -138,8 +148,18 @@ export default function Edit( {
 			)
 		);
 
+	const blockClasses = [
+		`is-view-${ viewType }`,
+		unitCount > 1 ? 'has-multiple-units' : '',
+	]
+		.filter( Boolean )
+		.join( ' ' );
+
 	const blockProps = useBlockProps( {
-		className: `is-view-${ viewType }`,
+		className: blockClasses,
+		style: {
+			'--gatherpress-calendar-units': unitCount,
+		},
 	} );
 
 	// The real, live-editable week+day+content InnerBlocks tree. Rendered
@@ -161,7 +181,8 @@ export default function Edit( {
 		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
 		'--gatherpress-calendar-columns': getColumnsCount(
 			viewType,
-			showWeekends
+			showWeekends,
+			unitCount
 		),
 	};
 
@@ -206,6 +227,13 @@ export default function Edit( {
 		} );
 	};
 
+	const handleUnitCountChange = ( value ) => {
+		const count = parseInt( value, 10 );
+		setAttributes( {
+			unitCount: isNaN( count ) || count < 1 ? 1 : count,
+		} );
+	};
+
 	return (
 		<>
 			<InspectorControls>
@@ -224,6 +252,8 @@ export default function Edit( {
 							onViewTypeChange={ ( val ) =>
 								setAttributes( { viewType: val } )
 							}
+							unitCount={ unitCount }
+							onUnitCountChange={ handleUnitCountChange }
 							selectedDate={ selectedDate }
 							dateModifier={ dateModifier }
 							onDateChange={ handleDateChange }

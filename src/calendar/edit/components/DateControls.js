@@ -11,23 +11,33 @@ import { useMemo } from '@wordpress/element';
 import { generateMonthOptions } from '../utils/calendar-utils';
 import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
 
+const MAX_UNITS = {
+	month: 12,
+	week: 5,
+	day: 7,
+};
+
 /**
  * DateControls Component.
  *
- * @param {Object}   props                  Component props.
- * @param {string}   props.viewType         View type ('month', 'week', 'day').
- * @param {Function} props.onViewTypeChange Callback when viewType changes.
- * @param {string}   props.selectedDate     Selected date/month.
- * @param {number}   props.dateModifier     Date offset value.
- * @param {Function} props.onDateChange     Callback when date changes.
- * @param {Function} props.onModifierChange Callback when modifier changes.
- * @param {Function} props.onOpenPicker     Callback to open month picker.
+ * @param {Object}   props                   Component props.
+ * @param {string}   props.viewType          View type ('month', 'week', 'day').
+ * @param {Function} props.onViewTypeChange  Callback when viewType changes.
+ * @param {number}   props.unitCount         Number of units to show.
+ * @param {Function} props.onUnitCountChange Callback when unitCount changes.
+ * @param {string}   props.selectedDate      Selected date/month.
+ * @param {number}   props.dateModifier      Date offset value.
+ * @param {Function} props.onDateChange      Callback when date changes.
+ * @param {Function} props.onModifierChange  Callback when modifier changes.
+ * @param {Function} props.onOpenPicker      Callback to open month picker.
  *
  * @return {Element} Date controls component.
  */
 export function DateControls( {
 	viewType,
 	onViewTypeChange,
+	unitCount,
+	onUnitCountChange,
 	selectedDate,
 	dateModifier,
 	onDateChange,
@@ -37,6 +47,25 @@ export function DateControls( {
 	const monthOptions = useMemo( () => generateMonthOptions(), [] );
 	const offsetHelp = useDateOffsetHelp( dateModifier, viewType );
 
+	const maxUnits = MAX_UNITS[ viewType ] || 12;
+
+	const handleViewTypeChange = ( newViewType ) => {
+		const newMax = MAX_UNITS[ newViewType ] || 12;
+		if ( Number( unitCount ) > newMax ) {
+			onUnitCountChange( newMax );
+		}
+		onViewTypeChange( newViewType );
+	};
+
+	const handleUnitCountChange = ( nextValue ) => {
+		const num = Number( nextValue );
+		if ( ! Number.isNaN( num ) && num > maxUnits ) {
+			onUnitCountChange( maxUnits );
+			return;
+		}
+		onUnitCountChange( nextValue );
+	};
+
 	const stepLabel = useMemo( () => {
 		if ( 'day' === viewType ) {
 			return __( 'Days from current', 'gatherpress-calendar' );
@@ -45,6 +74,16 @@ export function DateControls( {
 			return __( 'Weeks from current', 'gatherpress-calendar' );
 		}
 		return __( 'Months from current', 'gatherpress-calendar' );
+	}, [ viewType ] );
+
+	const unitCountLabel = useMemo( () => {
+		if ( 'day' === viewType ) {
+			return __( 'Number of days to show', 'gatherpress-calendar' );
+		}
+		if ( 'week' === viewType ) {
+			return __( 'Number of weeks to show', 'gatherpress-calendar' );
+		}
+		return __( 'Number of months to show', 'gatherpress-calendar' );
 	}, [ viewType ] );
 
 	const selectionLabel = useMemo( () => {
@@ -96,7 +135,19 @@ export function DateControls( {
 						value: 'day',
 					},
 				] }
-				onChange={ onViewTypeChange }
+				onChange={ handleViewTypeChange }
+			/>
+
+			<NumberControl
+				label={ unitCountLabel }
+				labelPosition="side"
+				type="number"
+				value={ unitCount }
+				onChange={ handleUnitCountChange }
+				min={ 1 }
+				max={ maxUnits }
+				step={ 1 }
+				style={ { marginBottom: '16px' } }
 			/>
 
 			<div

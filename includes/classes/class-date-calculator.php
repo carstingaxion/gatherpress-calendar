@@ -75,19 +75,21 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Computes visible week start, end, and raw week start objects.
+	 * Computes visible week bounds for 1 or more consecutive weeks.
 	 *
 	 * @param DateTimeImmutable $base_date     Target base date.
 	 * @param int               $start_of_week Start of week setting (0-6).
 	 * @param bool              $show_weekends Weekend visibility.
+	 * @param int               $unit_count    Number of weeks.
 	 *
 	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable, 2: DateTimeImmutable} [start, end, raw_start].
 	 */
-	private static function calculate_week_bounds( DateTimeImmutable $base_date, int $start_of_week, bool $show_weekends ): array {
+	private static function calculate_week_bounds( DateTimeImmutable $base_date, int $start_of_week, bool $show_weekends, int $unit_count ): array {
 		$raw_week_start = self::get_week_start( $base_date, $start_of_week );
+		$total_days     = $unit_count * 7;
 		$visible_days   = array();
 
-		for ( $i = 0; $i < 7; $i++ ) {
+		for ( $i = 0; $i < $total_days; $i++ ) {
 			$day_obj    = $raw_week_start->modify( "+{$i} days" );
 			$dow        = (int) $day_obj->format( 'w' );
 			$is_weekend = self::is_weekend_day( $dow );
@@ -102,20 +104,169 @@ class Date_Calculator {
 			$end_date_obj   = $visible_days[ count( $visible_days ) - 1 ]->setTime( 23, 59, 59 );
 		} else {
 			$start_date_obj = $raw_week_start->setTime( 0, 0, 0 );
-			$end_date_obj   = $raw_week_start->modify( '+6 days' )->setTime( 23, 59, 59 );
+			$end_date_obj   = $raw_week_start->modify( sprintf( '+%d days', $total_days - 1 ) )->setTime( 23, 59, 59 );
 		}
 
 		return array( $start_date_obj, $end_date_obj, $raw_week_start );
 	}
 
 	/**
-	 * Calculate the target date range for the calendar based on viewType, selectedDate, dateModifier, and weekend visibility.
+	 * Computes the start date, end date, and raw week start for a given view type.
+	 *
+	 * @param string            $view_type     View type ('month', 'week', 'day').
+	 * @param DateTimeImmutable $base_date     Baseline target date.
+	 * @param int               $unit_count    Number of units.
+	 * @param int               $start_of_week Start of week (0-6).
+	 * @param bool              $show_weekends Whether weekends are visible.
+	 *
+	 * @return array{0: DateTimeImmutable, 1: DateTimeImmutable, 2: DateTimeImmutable} [start, end, raw_start].
+	 */
+	private static function calculate_view_bounds( string $view_type, DateTimeImmutable $base_date, int $unit_count, int $start_of_week, bool $show_weekends ): array {
+		if ( 'week' === $view_type ) {
+			return self::calculate_week_bounds( $base_date, $start_of_week, $show_weekends, $unit_count );
+		}
+
+		if ( 'day' === $view_type ) {
+			$start = $base_date->setTime( 0, 0, 0 );
+			$end   = $base_date->modify( sprintf( '+%d days', $unit_count - 1 ) )->setTime( 23, 59, 59 );
+			return array( $start, $end, $start );
+		}
+
+		// Month view: spans from Month 1's first day to Month N's last day.
+		$start = $base_date->modify( 'first day of this month' )->setTime( 0, 0, 0 );
+		$end   = $base_date->modify( sprintf( '+%d months', $unit_count - 1 ) )->modify( 'last day of this month' )->setTime( 23, 59, 59 );
+
+		return array( $start, $end, $start );
+	}
+
+	/**
+	 * Builds a standardized date range result array.
+	 *
+	 * @param string            $view_type      View type ('month', 'week', 'day').
+	 * @param int               $unit_count     Number of units.
+	 * @param DateTimeImmutable $start_date_obj Start date object.
+	 * @param DateTimeImmutable $end_date_obj   End date object.
+	 * @param DateTimeImmutable $raw_week_start Raw week start date object.
+	 * @param DateTimeImmutable $target_date    Baseline target date object.
+	 * @param string|null       $heading        Optional formatted heading override.
+	 *
+	 * @return array{
+	 *     view_type: string,
+	 *     unit_count: int,
+	 *     start_date: string,
+	 *     end_date: string,
+	 *     start_date_obj: DateTimeImmutable,
+	 *     end_date_obj: DateTimeImmutable,
+	 *     raw_week_start: DateTimeImmutable,
+	 *     target_date: DateTimeImmutable,
+	 *     year: int,
+	 *     month: int,
+	 *     heading: string
+	 * }
+	 */
+	private static function build_range_payload(
+		string $view_type,
+		int $unit_count,
+		DateTimeImmutable $start_date_obj,
+		DateTimeImmutable $end_date_obj,
+		DateTimeImmutable $raw_week_start,
+		DateTimeImmutable $target_date,
+		?string $heading = null
+	): array {
+		return array(
+			'view_type'      => $view_type,
+			'unit_count'     => $unit_count,
+			'start_date'     => $start_date_obj->format( self::DATE_FORMAT ),
+			'end_date'       => $end_date_obj->format( self::DATE_FORMAT ),
+			'start_date_obj' => $start_date_obj,
+			'end_date_obj'   => $end_date_obj,
+			'raw_week_start' => $raw_week_start,
+			'target_date'    => $target_date,
+			'year'           => (int) $target_date->format( 'Y' ),
+			'month'          => (int) $target_date->format( 'n' ),
+			'heading'        => $heading ?? self::format_heading( $view_type, $start_date_obj, $end_date_obj ),
+		);
+	}
+
+	/**
+	 * Resolves and validates the view type from attributes.
+	 *
+	 * @param array<string, mixed> $attributes Attributes array.
+	 * @param string               $fallback   Default view type.
+	 *
+	 * @return string Validated view type ('month', 'week', 'day').
+	 */
+	public static function resolve_view_type( array $attributes, string $fallback = 'month' ): string {
+		$view_type = $attributes['viewType'] ?? $fallback;
+		if ( is_string( $view_type ) && in_array( $view_type, array( 'month', 'week', 'day' ), true ) ) {
+			return $view_type;
+		}
+
+		return 'month';
+	}
+
+	/**
+	 * Resolves clamped unit count for a given view type and attributes.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param string               $view_type  View type.
+	 *
+	 * @return int Clamped unit count.
+	 */
+	public static function resolve_unit_count( array $attributes, string $view_type ): int {
+		$max_units  = self::get_max_unit_count( $view_type );
+		$unit_count = isset( $attributes['unitCount'] ) && is_numeric( $attributes['unitCount'] )
+			? (int) $attributes['unitCount']
+			: 1;
+
+		return min( $max_units, max( 1, $unit_count ) );
+	}
+
+	/**
+	 * Determines whether weekends should be shown based on attributes.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 *
+	 * @return bool True if weekends should be shown.
+	 */
+	public static function show_weekends( array $attributes ): bool {
+		return ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
+	}
+
+	/**
+	 * Retrieves the configured start of week setting as an integer.
+	 *
+	 * @return int Start of week (0 = Sunday, 1 = Monday, etc.).
+	 */
+	public static function get_start_of_week(): int {
+		$start_of_week = get_option( 'start_of_week', 0 );
+
+		return is_numeric( $start_of_week ) ? (int) $start_of_week : 0;
+	}
+
+	/**
+	 * Parses a Y-m-d date string into a DateTimeImmutable, falling back to current datetime.
+	 *
+	 * @param string $date_str Date string in Y-m-d format.
+	 *
+	 * @return DateTimeImmutable Parsed date object.
+	 */
+	private static function parse_date_or_current( string $date_str ): DateTimeImmutable {
+		$tz   = wp_timezone();
+		$date = DateTimeImmutable::createFromFormat( '!Y-m-d', $date_str, $tz );
+
+		return ( $date instanceof DateTimeImmutable ) ? $date : current_datetime();
+	}
+
+	/**
+	 * Calculate the target date range for the calendar based on viewType, unitCount, selectedDate, dateModifier, and weekend visibility.
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
 	 * @param int                  $page       Pagination page offset (1-based, default 1).
 	 *
 	 * @return array{
 	 *     view_type: string,
+	 *     unit_count: int,
 	 *     start_date: string,
 	 *     end_date: string,
 	 *     start_date_obj: DateTimeImmutable,
@@ -128,54 +279,44 @@ class Date_Calculator {
 	 * }
 	 */
 	public static function calculate_date_range( array $attributes, int $page = 1 ): array {
-		$view_type     = isset( $attributes['viewType'] ) && is_string( $attributes['viewType'] ) && in_array( $attributes['viewType'], array( 'month', 'week', 'day' ), true )
-			? $attributes['viewType']
-			: 'month';
+		$view_type     = self::resolve_view_type( $attributes );
+		$unit_count    = self::resolve_unit_count( $attributes, $view_type );
 		$selected_date = isset( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
 		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
-		$show_weekends = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
+		$show_weekends = self::show_weekends( $attributes );
 
-		// Combine user-defined dateModifier with query pagination offset.
-		$offset         = $date_modifier + max( 0, $page - 1 );
-		$base_date      = self::resolve_base_date( $selected_date, $view_type, $offset );
-		$start_of_week  = get_option( 'start_of_week', 0 );
-		$start_of_week  = is_numeric( $start_of_week ) ? (int) $start_of_week : 0;
-		$raw_week_start = null;
+		// Step offset multiplies pagination by unitCount.
+		$offset    = $date_modifier + ( max( 0, $page - 1 ) * $unit_count );
+		$base_date = self::resolve_base_date( $selected_date, $view_type, $offset );
 
-		if ( 'week' === $view_type ) {
-			[ $start_date_obj, $end_date_obj, $raw_week_start ] = self::calculate_week_bounds( $base_date, $start_of_week, $show_weekends );
-		} elseif ( 'day' === $view_type ) {
-			$start_date_obj = $base_date->setTime( 0, 0, 0 );
-			$end_date_obj   = $base_date->setTime( 23, 59, 59 );
-		} else {
-			// Month view.
-			$start_date_obj = $base_date->modify( 'first day of this month' )->setTime( 0, 0, 0 );
-			$end_date_obj   = $base_date->modify( 'last day of this month' )->setTime( 23, 59, 59 );
-		}
+		[ $start_date_obj, $end_date_obj, $raw_week_start ] = self::calculate_view_bounds(
+			$view_type,
+			$base_date,
+			$unit_count,
+			self::get_start_of_week(),
+			$show_weekends
+		);
 
-		return array(
-			'view_type'      => $view_type,
-			'start_date'     => $start_date_obj->format( 'Y-m-d' ),
-			'end_date'       => $end_date_obj->format( 'Y-m-d' ),
-			'start_date_obj' => $start_date_obj,
-			'end_date_obj'   => $end_date_obj,
-			'raw_week_start' => null !== $raw_week_start ? $raw_week_start : $start_date_obj,
-			'target_date'    => $base_date,
-			'year'           => (int) $base_date->format( 'Y' ),
-			'month'          => (int) $base_date->format( 'n' ),
-			'heading'        => self::format_heading( $view_type, $start_date_obj, $end_date_obj ),
+		return self::build_range_payload(
+			$view_type,
+			$unit_count,
+			$start_date_obj,
+			$end_date_obj,
+			$raw_week_start,
+			$base_date
 		);
 	}
 
 	/**
 	 * Resolves a date range from query block context, falling back to calculation.
 	 *
-	 * @param array<string, mixed> $query              The query array from context.
-	 * @param array<string, mixed> $fallback_attributes Block attributes if context is incomplete.
-	 * @param int                  $page               Page number.
+	 * @param array<string, mixed> $query               The query array from context.
+	 * @param array<string, mixed> $fallback_attributes  Block attributes if context is incomplete.
+	 * @param int                  $page                Page number.
 	 *
 	 * @return array{
 	 *     view_type: string,
+	 *     unit_count: int,
 	 *     start_date: string,
 	 *     end_date: string,
 	 *     start_date_obj: DateTimeImmutable,
@@ -191,41 +332,32 @@ class Date_Calculator {
 		$start_date_raw = isset( $query[ Setup::CALENDAR_QUERY_START_DATE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_START_DATE ] ) ? $query[ Setup::CALENDAR_QUERY_START_DATE ] : '';
 		$end_date_raw   = isset( $query[ Setup::CALENDAR_QUERY_END_DATE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_END_DATE ] ) ? $query[ Setup::CALENDAR_QUERY_END_DATE ] : '';
 
-		if ( '' !== $start_date_raw && '' !== $end_date_raw ) {
-			$tz             = wp_timezone();
-			$start_date_obj = DateTimeImmutable::createFromFormat( '!Y-m-d', $start_date_raw, $tz );
-			if ( ! $start_date_obj instanceof DateTimeImmutable ) {
-				$start_date_obj = current_datetime();
-			}
-
-			$end_date_obj = DateTimeImmutable::createFromFormat( '!Y-m-d', $end_date_raw, $tz );
-			if ( ! $end_date_obj instanceof DateTimeImmutable ) {
-				$end_date_obj = current_datetime();
-			}
-
-			$view_type = isset( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] )
-				? $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ]
-				: ( isset( $fallback_attributes['viewType'] ) && is_string( $fallback_attributes['viewType'] ) ? $fallback_attributes['viewType'] : 'month' );
-
-			$heading = isset( $query[ Setup::CALENDAR_QUERY_HEADING ] ) && is_string( $query[ Setup::CALENDAR_QUERY_HEADING ] )
-				? $query[ Setup::CALENDAR_QUERY_HEADING ]
-				: self::format_heading( $view_type, $start_date_obj, $end_date_obj );
-
-			return array(
-				'view_type'      => $view_type,
-				'start_date'     => $start_date_raw,
-				'end_date'       => $end_date_raw,
-				'start_date_obj' => $start_date_obj,
-				'end_date_obj'   => $end_date_obj,
-				'raw_week_start' => $start_date_obj,
-				'target_date'    => $start_date_obj,
-				'year'           => (int) $start_date_obj->format( 'Y' ),
-				'month'          => (int) $start_date_obj->format( 'n' ),
-				'heading'        => $heading,
-			);
+		if ( '' === $start_date_raw || '' === $end_date_raw ) {
+			return self::calculate_date_range( $fallback_attributes, $page );
 		}
 
-		return self::calculate_date_range( $fallback_attributes, $page );
+		$start_date_obj = self::parse_date_or_current( $start_date_raw );
+		$end_date_obj   = self::parse_date_or_current( $end_date_raw );
+
+		$view_type_raw = isset( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ] )
+			? $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ]
+			: ( $fallback_attributes['viewType'] ?? 'month' );
+		$view_type     = self::resolve_view_type( array( 'viewType' => $view_type_raw ) );
+		$unit_count    = self::resolve_unit_count( $fallback_attributes, $view_type );
+
+		$heading = isset( $query[ Setup::CALENDAR_QUERY_HEADING ] ) && is_string( $query[ Setup::CALENDAR_QUERY_HEADING ] )
+			? $query[ Setup::CALENDAR_QUERY_HEADING ]
+			: null;
+
+		return self::build_range_payload(
+			$view_type,
+			$unit_count,
+			$start_date_obj,
+			$end_date_obj,
+			$start_date_obj,
+			$start_date_obj,
+			$heading
+		);
 	}
 
 	/**
@@ -233,12 +365,13 @@ class Date_Calculator {
 	 *
 	 * @param string $view_type     View type ('month', 'week', 'day').
 	 * @param bool   $show_weekends Weekend visibility.
+	 * @param int    $unit_count    Number of units to show.
 	 *
 	 * @return int Grid column count.
 	 */
-	public static function get_columns_count( string $view_type, bool $show_weekends ): int {
+	public static function get_columns_count( string $view_type, bool $show_weekends, int $unit_count = 1 ): int {
 		if ( 'day' === $view_type ) {
-			return 1;
+			return max( 1, $unit_count );
 		}
 
 		return $show_weekends ? 7 : ( 7 - count( self::get_weekend_days() ) );
@@ -251,13 +384,20 @@ class Date_Calculator {
 	 * @param DateTimeImmutable $start_date_obj Starting date.
 	 * @param int               $start_of_week  Start of week setting.
 	 * @param bool              $show_weekends  Weekend visibility.
+	 * @param int               $unit_count     Number of units to show.
 	 *
 	 * @return list<string> Localized day name labels.
 	 */
-	public static function get_view_day_names( string $view_type, DateTimeImmutable $start_date_obj, int $start_of_week, bool $show_weekends ): array {
+	public static function get_view_day_names( string $view_type, DateTimeImmutable $start_date_obj, int $start_of_week, bool $show_weekends, int $unit_count = 1 ): array {
 		if ( 'day' === $view_type ) {
-			$day_name = wp_date( 'D', $start_date_obj->getTimestamp() );
-			return array( is_string( $day_name ) ? $day_name : '' );
+			$day_names = array();
+			for ( $i = 0; $i < $unit_count; $i++ ) {
+				$day_name = wp_date( 'D', $start_date_obj->modify( "+{$i} days" )->getTimestamp() );
+				if ( is_string( $day_name ) ) {
+					$day_names[] = $day_name;
+				}
+			}
+			return $day_names;
 		}
 
 		return self::get_day_names( $start_of_week, $show_weekends );
@@ -290,12 +430,13 @@ class Date_Calculator {
 	 * @return string Formatted heading.
 	 */
 	public static function format_heading( string $view_type, DateTimeImmutable $start_date, DateTimeImmutable $end_date ): string {
-		if ( 'day' === $view_type ) {
+		if ( 'day' === $view_type && $start_date->format( 'Y-m-d' ) === $end_date->format( 'Y-m-d' ) ) {
 			$day_heading = wp_date( 'l, F j, Y', $start_date->getTimestamp() );
 			return is_string( $day_heading ) ? $day_heading : '';
 		}
 
-		if ( 'week' === $view_type ) {
+		// Multi-day or week spans.
+		if ( 'day' === $view_type || 'week' === $view_type ) {
 			if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
 				return sprintf(
 					'%s – %s',
@@ -320,8 +461,25 @@ class Date_Calculator {
 			);
 		}
 
-		$month_heading = wp_date( 'F Y', $start_date->getTimestamp() );
-		return is_string( $month_heading ) ? $month_heading : '';
+		// Month view (single or multi-month).
+		if ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
+			$month_heading = wp_date( 'F Y', $start_date->getTimestamp() );
+			return is_string( $month_heading ) ? $month_heading : '';
+		}
+
+		if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
+			return sprintf(
+				'%s – %s',
+				wp_date( 'M Y', $start_date->getTimestamp() ),
+				wp_date( 'M Y', $end_date->getTimestamp() )
+			);
+		}
+
+		return sprintf(
+			'%s – %s',
+			wp_date( 'F', $start_date->getTimestamp() ),
+			wp_date( 'F Y', $end_date->getTimestamp() )
+		);
 	}
 
 	/**
@@ -439,5 +597,24 @@ class Date_Calculator {
 	public static function get_today(): string {
 		$today = wp_date( self::DATE_FORMAT );
 		return is_string( $today ) ? $today : '';
+	}
+
+	/**
+	 * Get maximum allowed unit count for a given view type.
+	 *
+	 * @since 0.6.0
+	 *
+	 * @param string $view_type View type ('month', 'week', 'day').
+	 *
+	 * @return int Maximum units allowed.
+	 */
+	public static function get_max_unit_count( string $view_type ): int {
+		$max_units = array(
+			'month' => 12,
+			'week'  => 5,
+			'day'   => 7,
+		);
+
+		return $max_units[ $view_type ] ?? 12;
 	}
 }

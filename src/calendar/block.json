@@ -31,6 +31,10 @@
       "enum": [ "month", "week", "day" ],
       "default": "month"
     },
+    "unitCount": {
+      "type": "number",
+      "default": 1
+    },
     "selectedDate": {
       "type": "string",
       "default": ""

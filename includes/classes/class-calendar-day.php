@@ -142,6 +142,48 @@ class Calendar_Day {
 	}
 
 	/**
+	 * Check if a block is a day number block with the gatherpress/calendar-day binding.
+	 *
+	 * @param array<string, mixed> $block Parsed block array.
+	 *
+	 * @return bool True if day number binding block.
+	 */
+	private function is_day_number_block( array $block ): bool {
+		$attrs = $block['attrs'] ?? null;
+		if ( ! is_array( $attrs ) ) {
+			return false;
+		}
+
+		$metadata = $attrs['metadata'] ?? null;
+		if ( ! is_array( $metadata ) ) {
+			return false;
+		}
+
+		$bindings = $metadata['bindings'] ?? null;
+		if ( ! is_array( $bindings ) ) {
+			return false;
+		}
+
+		$content = $bindings['content'] ?? null;
+		if ( ! is_array( $content ) ) {
+			return false;
+		}
+
+		return 'gatherpress/calendar-day' === ( $content['source'] ?? '' );
+	}
+
+	/**
+	 * Check if a block is a calendar entries block.
+	 *
+	 * @param array<string, mixed> $block Parsed block array.
+	 *
+	 * @return bool True if calendar entries block.
+	 */
+	private function is_entries_block( array $block ): bool {
+		return Calendar_Entries::BLOCK_NAME === ( $block['blockName'] ?? '' );
+	}
+
+	/**
 	 * Locate day number and entries inner blocks.
 	 *
 	 * @param array<mixed> $inner_blocks Parsed inner blocks.
@@ -160,19 +202,18 @@ class Calendar_Day {
 				continue;
 			}
 
-			$attrs           = isset( $inner['attrs'] ) && is_array( $inner['attrs'] ) ? $inner['attrs'] : array();
-			$metadata        = isset( $attrs['metadata'] ) && is_array( $attrs['metadata'] ) ? $attrs['metadata'] : array();
-			$bindings        = isset( $metadata['bindings'] ) && is_array( $metadata['bindings'] ) ? $metadata['bindings'] : array();
-			$content_binding = isset( $bindings['content'] ) && is_array( $bindings['content'] ) ? $bindings['content'] : array();
-			$binding_source  = isset( $content_binding['source'] ) && is_string( $content_binding['source'] ) ? $content_binding['source'] : '';
-
-			/** @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_typed */
+			/**
+			 * Type safety.
+			 *
+			 * @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_typed
+			 */
 			$inner_typed = $inner;
 
-			if ( null === $day_number_block && 'gatherpress/calendar-day' === $binding_source ) {
+			if ( null === $day_number_block && $this->is_day_number_block( $inner_typed ) ) {
 				$day_number_block = $inner_typed;
 			}
-			if ( null === $entries_block && 'gatherpress/calendar-entries' === ( $inner['blockName'] ?? '' ) ) {
+
+			if ( null === $entries_block && $this->is_entries_block( $inner_typed ) ) {
 				$entries_block = $inner_typed;
 			}
 		}
