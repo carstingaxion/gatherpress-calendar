@@ -17,6 +17,8 @@ import {
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import domReady from '@wordpress/dom-ready';
+import { select } from '@wordpress/data';
+import { store as blockEditorStore } from '@wordpress/block-editor';
 
 /**
  * Internal dependencies
@@ -177,14 +179,23 @@ domReady( () => {
 addFilter(
 	'gatherpress.eventQueryControls',
 	'gatherpress-calendar/reduce-query-controls',
-	( controls ) =>
-		controls.filter(
-			( { name } ) =>
-				! [
-					'listType',
-					'includeUnfinished',
-					'offset',
-					'count',
-				].includes( name )
-		)
+	( controls, { clientId } ) => {
+		const hasCalendar = select( blockEditorStore )
+			.getBlock( clientId )
+			?.innerBlocks.some(
+				( block ) => 'gatherpress/calendar' === block.name
+			);
+
+		return hasCalendar
+			? controls.filter(
+					( { name } ) =>
+						! [
+							'listType',
+							'includeUnfinished',
+							'offset',
+							'count',
+						].includes( name )
+			  )
+			: controls;
+	}
 );
