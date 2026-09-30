@@ -164,17 +164,25 @@ class Calendar_Entries {
 			return self::add_title_to_event_link( $block_content, $parsed_block, $post_id );
 		};
 
-		add_filter( 'render_block_context', $filter_block_context, 1 );
-		add_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10, 2 );
 		$inner_blocks_raw = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
 		/**
 		 * Type safety.
 		 *
 		 * @var array<int, array<string, mixed>> $inner_blocks
 		 */
-		$inner_blocks  = $inner_blocks_raw;
+		$inner_blocks = $inner_blocks_raw;
+
+		// A template that already shows the title needs no hidden copy of it.
+		$add_hidden_title = ! self::template_shows_post_title( $inner_blocks );
+
+		add_filter( 'render_block_context', $filter_block_context, 1 );
+		if ( $add_hidden_title ) {
+			add_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10, 2 );
+		}
 		$inner_content = $this->render_template( $inner_blocks );
-		remove_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10 );
+		if ( $add_hidden_title ) {
+			remove_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10 );
+		}
 		remove_filter( 'render_block_context', $filter_block_context, 1 );
 
 		wp_reset_postdata();
@@ -208,6 +216,11 @@ class Calendar_Entries {
 	 * block with its own `postId` attribute gets that event's title, not
 	 * the title of the calendar entry.
 	 *
+	 * Only links get the title. A link or button needs a name that says where
+	 * it goes (WCAG 2.4.4, 4.1.2). A date without a link is plain text: it
+	 * shows the same time to everyone, so a hidden title would give screen
+	 * reader users content that the visible calendar does not show.
+	 *
 	 * The Event Date block limits its output to a single `<a href>` element,
 	 * so the first `</a>` closes that link. Without a link, or without a
 	 * title, the content is returned unchanged.
@@ -228,7 +241,18 @@ class Calendar_Entries {
 		// Mirror GatherPress\Core\Blocks\Setup::get_post_id(): a postId attribute wins.
 		$attrs      = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : array();
 		$post_id    = isset( $attrs['postId'] ) && is_numeric( $attrs['postId'] ) && (int) $attrs['postId'] > 0 ? (int) $attrs['postId'] : $default_post_id;
-		$post_title = wp_strip_all_tags( get_the_title( $post_id ) );
+		$post = get_post( $post_id );
+
+		if ( ! $post instanceof WP_Post ) {
+			return $block_content;
+		}
+
+		$post_title = (string) the_title_attribute(
+			array(
+				'post' => $post,
+				'echo' => false,
+			)
+		);
 
 		if ( '' === trim( $post_title ) ) {
 			return $block_content;
@@ -246,6 +270,38 @@ class Calendar_Entries {
 			$link_close,
 			0
 		);
+	}
+
+	/**
+	 * Check whether an entry template shows a Post Title outside the modal.
+	 *
+	 * When it does, the title is already on screen and read by screen
+	 * readers, so a hidden title in the Event Date link would be read twice.
+	 * A Post Title inside gatherpress/modal does not count: the modal stays
+	 * hidden until the trigger opens it.
+	 *
+	 * @param array<mixed> $blocks Parsed blocks of the entry template.
+	 *
+	 * @return bool True if a core/post-title block is outside every modal.
+	 */
+	private static function template_shows_post_title( array $blocks ): bool {
+		foreach ( $blocks as $block ) {
+			if ( ! is_array( $block ) ) {
+				continue;
+			}
+
+			$block_name = $block['blockName'] ?? '';
+			if ( 'core/post-title' === $block_name ) {
+				return true;
+			}
+
+			$inner_blocks = isset( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ? $block['innerBlocks'] : array();
+			if ( 'gatherpress/modal' !== $block_name && self::template_shows_post_title( $inner_blocks ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
