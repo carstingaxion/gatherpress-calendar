@@ -111,6 +111,7 @@ domReady( () => {
 
 		const {
 			viewType = 'month',
+			unitCount = 1,
 			selectedDate = '',
 			dateModifier = 0,
 			showWeekends = true,
@@ -122,6 +123,7 @@ domReady( () => {
 		const range = calculateDateRange(
 			{
 				viewType,
+				unitCount,
 				selectedDate,
 				dateModifier,
 				showWeekends,
