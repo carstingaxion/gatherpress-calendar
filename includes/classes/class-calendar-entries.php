@@ -239,9 +239,9 @@ class Calendar_Entries {
 		}
 
 		// Mirror GatherPress\Core\Blocks\Setup::get_post_id(): a postId attribute wins.
-		$attrs      = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : array();
-		$post_id    = isset( $attrs['postId'] ) && is_numeric( $attrs['postId'] ) && (int) $attrs['postId'] > 0 ? (int) $attrs['postId'] : $default_post_id;
-		$post = get_post( $post_id );
+		$attrs   = isset( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs'] ) ? $parsed_block['attrs'] : array();
+		$post_id = isset( $attrs['postId'] ) && is_numeric( $attrs['postId'] ) && (int) $attrs['postId'] > 0 ? (int) $attrs['postId'] : $default_post_id;
+		$post    = get_post( $post_id );
 
 		if ( ! $post instanceof WP_Post ) {
 			return $block_content;
