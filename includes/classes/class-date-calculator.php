@@ -137,11 +137,12 @@ class Date_Calculator {
 		$max_units     = self::get_max_unit_count( $view_type );
 		$unit_count    = isset( $attributes['unitCount'] ) && is_numeric( $attributes['unitCount'] )
 			? min( $max_units, max( 1, (int) $attributes['unitCount'] ) )
-			: 1;		$selected_date = isset( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
+			: 1;
+		$selected_date = isset( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
 		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
 		$show_weekends = ! isset( $attributes['showWeekends'] ) || ( false !== $attributes['showWeekends'] && 'false' !== $attributes['showWeekends'] );
 
-		// Step offset multiplies pagination by unitCount
+		// Step offset multiplies pagination by unitCount.
 		$offset         = $date_modifier + ( max( 0, $page - 1 ) * $unit_count );
 		$base_date      = self::resolve_base_date( $selected_date, $view_type, $offset );
 		$start_of_week  = get_option( 'start_of_week', 0 );
@@ -149,12 +150,12 @@ class Date_Calculator {
 		$raw_week_start = null;
 
 		if ( 'week' === $view_type ) {
-			list( $start_date_obj, $end_date_obj, $raw_week_start ) = self::calculate_week_bounds( $base_date, $start_of_week, $show_weekends, $unit_count );
+			[ $start_date_obj, $end_date_obj, $raw_week_start ] = self::calculate_week_bounds( $base_date, $start_of_week, $show_weekends, $unit_count );
 		} elseif ( 'day' === $view_type ) {
 			$start_date_obj = $base_date->setTime( 0, 0, 0 );
 			$end_date_obj   = $base_date->modify( sprintf( '+%d days', $unit_count - 1 ) )->setTime( 23, 59, 59 );
 		} else {
-			// Month view: spans from Month 1's first day to Month N's last day
+			// Month view: spans from Month 1's first day to Month N's last day.
 			$start_date_obj = $base_date->modify( 'first day of this month' )->setTime( 0, 0, 0 );
 			$end_date_obj   = $base_date->modify( sprintf( '+%d months', $unit_count - 1 ) )->modify( 'last day of this month' )->setTime( 23, 59, 59 );
 		}
@@ -217,7 +218,7 @@ class Date_Calculator {
 			$unit_count = isset( $fallback_attributes['unitCount'] ) && is_numeric( $fallback_attributes['unitCount'] )
 				? min( $max_units, max( 1, (int) $fallback_attributes['unitCount'] ) )
 				: 1;
-			$heading = isset( $query[ Setup::CALENDAR_QUERY_HEADING ] ) && is_string( $query[ Setup::CALENDAR_QUERY_HEADING ] )
+			$heading    = isset( $query[ Setup::CALENDAR_QUERY_HEADING ] ) && is_string( $query[ Setup::CALENDAR_QUERY_HEADING ] )
 				? $query[ Setup::CALENDAR_QUERY_HEADING ]
 				: self::format_heading( $view_type, $start_date_obj, $end_date_obj );
 
@@ -244,6 +245,7 @@ class Date_Calculator {
 	 *
 	 * @param string $view_type     View type ('month', 'week', 'day').
 	 * @param bool   $show_weekends Weekend visibility.
+	 * @param int    $unit_count    Number of units to show.
 	 *
 	 * @return int Grid column count.
 	 */
@@ -262,6 +264,7 @@ class Date_Calculator {
 	 * @param DateTimeImmutable $start_date_obj Starting date.
 	 * @param int               $start_of_week  Start of week setting.
 	 * @param bool              $show_weekends  Weekend visibility.
+	 * @param int               $unit_count     Number of units to show.
 	 *
 	 * @return list<string> Localized day name labels.
 	 */
@@ -312,7 +315,7 @@ class Date_Calculator {
 			return is_string( $day_heading ) ? $day_heading : '';
 		}
 
-		// Multi-day or week spans
+		// Multi-day or week spans.
 		if ( 'day' === $view_type || 'week' === $view_type ) {
 			if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
 				return sprintf(
@@ -338,7 +341,7 @@ class Date_Calculator {
 			);
 		}
 
-		// Month view (single or multi-month)
+		// Month view (single or multi-month).
 		if ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
 			$month_heading = wp_date( 'F Y', $start_date->getTimestamp() );
 			return is_string( $month_heading ) ? $month_heading : '';
@@ -476,7 +479,7 @@ class Date_Calculator {
 		return is_string( $today ) ? $today : '';
 	}
 
-/**
+	/**
 	 * Get maximum allowed unit count for a given view type.
 	 *
 	 * @since 0.6.0

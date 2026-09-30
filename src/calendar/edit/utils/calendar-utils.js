@@ -330,7 +330,11 @@ export function buildConsecutiveWeeks(
  *
  * @return {Array[]} Single-element array with single-day week.
  */
-export function buildConsecutiveDays( startDayObj, unitCount, postsByDate = {} ) {
+export function buildConsecutiveDays(
+	startDayObj,
+	unitCount,
+	postsByDate = {}
+) {
 	const today = dateI18n( DATE_FORMAT, new Date() );
 	const days = [];
 
@@ -365,7 +369,8 @@ export function generateCalendar(
 	const units = [];
 
 	if ( 'day' === viewType ) {
-		const startObj = dateRange.startDateObj || new Date( dateRange.startDate );
+		const startObj =
+			dateRange.startDateObj || new Date( dateRange.startDate );
 		const dayNames = [];
 		for ( let i = 0; i < unitCount; i++ ) {
 			const d = new Date( startObj );
@@ -384,7 +389,12 @@ export function generateCalendar(
 			dateRange.startDateObj ||
 			new Date( dateRange.startDate );
 		const dayNames = getDayNames( startOfWeek, showWeekends );
-		const weeks = buildConsecutiveWeeks( weekStart, unitCount, postsByDate, showWeekends );
+		const weeks = buildConsecutiveWeeks(
+			weekStart,
+			unitCount,
+			postsByDate,
+			showWeekends
+		);
 		units.push( { dayNames, weeks } );
 
 		return { dayNames, weeks, units, viewType, unitCount };
@@ -393,11 +403,22 @@ export function generateCalendar(
 	// Month view: construct unitCount distinct month objects
 	const startObj = dateRange.startDateObj || new Date( dateRange.startDate );
 	for ( let i = 0; i < unitCount; i++ ) {
-		const monthDate = new Date( startObj.getFullYear(), startObj.getMonth() + i, 1 );
+		const monthDate = new Date(
+			startObj.getFullYear(),
+			startObj.getMonth() + i,
+			1
+		);
 		const mYear = monthDate.getFullYear();
 		const mMonth = monthDate.getMonth() + 1;
 		const daysInMonth = new Date( mYear, mMonth, 0 ).getDate();
-		const mWeeks = buildWeeks( mYear, mMonth, startOfWeek, daysInMonth, postsByDate, showWeekends );
+		const mWeeks = buildWeeks(
+			mYear,
+			mMonth,
+			startOfWeek,
+			daysInMonth,
+			postsByDate,
+			showWeekends
+		);
 		const mDayNames = getDayNames( startOfWeek, showWeekends );
 
 		units.push( { dayNames: mDayNames, weeks: mWeeks } );

@@ -43,18 +43,8 @@ class HTML_Renderer {
 	/**
 	 * Generate complete calendar HTML.
 	 *
-	 * @param array<string, mixed> $attributes Block attributes.
-	 * @param array{
-	 *   heading: string,
-	 *   day_names: list<string>,
-	 *   weeks: list<list<array<string, mixed>>>,
-	 *   view_type: string,
-	 *   unit_count: int,
-	 *   units: list<array{
-	 *     day_names: list<string>,
-	 *     weeks: list<list<array<string, mixed>>>
-	 *   }>
-	 * } $calendar_data Calendar structure.
+	 * @param array<string, mixed>                                                                                                                                                                                                  $attributes Block attributes.
+	 * @param array{ heading: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>, view_type: string, unit_count: int, units: list<array{ day_names: list<string>, weeks: list<list<array<string, mixed>>>}> } $calendar_data Calendar structure.
 	 *
 	 * @return string Calendar HTML.
 	 */
@@ -90,7 +80,7 @@ class HTML_Renderer {
 		?>
 		<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 			<?php
-			// Render each unit's table
+			// Render each unit's table.
 			foreach ( $calendar_data['units'] as $unit ) {
 				?>
 				<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
@@ -157,7 +147,11 @@ class HTML_Renderer {
 
 		foreach ( $inner_blocks as $inner_block ) {
 			if ( is_array( $inner_block ) && ( $inner_block['blockName'] ?? '' ) === $block_name ) {
-				/** @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_block */
+				/**
+				 * Type safety.
+				 *
+				 * @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_block
+				 */
 				return $inner_block;
 			}
 		}

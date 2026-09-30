@@ -25,22 +25,10 @@ class Calendar_Structure_Builder {
 	/**
 	 * Build complete calendar structure.
 	 *
-	 * @param array{
-	 *   view_type: string,
-	 *   unit_count: int,
-	 *   start_date: string,
-	 *   end_date: string,
-	 *   start_date_obj: DateTimeImmutable,
-	 *   end_date_obj: DateTimeImmutable,
-	 *   raw_week_start: DateTimeImmutable,
-	 *   target_date: DateTimeImmutable,
-	 *   year: int,
-	 *   month: int,
-	 *   heading: string
-	 * }                               $date_range    Date range array.
-	 * @param int                      $start_of_week Start of week setting (0-6).
-	 * @param array<string, list<int>> $posts_by_date Posts organized by date.
-	 * @param bool                     $show_weekends Whether to include weekend days.
+	 * @param array{ view_type: string, unit_count: int, start_date: string, end_date: string, start_date_obj: DateTimeImmutable, end_date_obj: DateTimeImmutable, raw_week_start: DateTimeImmutable, target_date: DateTimeImmutable, year: int, month: int, heading: string } $date_range    Date range array.
+	 * @param int                                                                                                                                                                                                                                                              $start_of_week Start of week setting (0-6).
+	 * @param array<string, list<int>>                                                                                                                                                                                                                                         $posts_by_date Posts organized by date.
+	 * @param bool                                                                                                                                                                                                                                                             $show_weekends Whether to include weekend days.
 	 *
 	 * @return array{
 	 *   heading: string,
@@ -74,7 +62,7 @@ class Calendar_Structure_Builder {
 				'weeks'     => $weeks,
 			);
 		} else {
-			// Month view: construct unit_count separate month grids
+			// Month view: construct unit_count separate month grids.
 			for ( $i = 0; $i < $unit_count; $i++ ) {
 				$month_date    = $date_range['start_date_obj']->modify( "+{$i} months" );
 				$m_year        = (int) $month_date->format( 'Y' );
@@ -241,6 +229,7 @@ class Calendar_Structure_Builder {
 	 * Build weeks array for a single week view (continuous days, no isEmpty padding).
 	 *
 	 * @param DateTimeImmutable        $week_start    Start of the week.
+	 * @param int                      $unit_count    Number of units to show.
 	 * @param array<string, list<int>> $posts_by_date Posts by date.
 	 * @param bool                     $show_weekends Whether to include weekend days.
 	 *
@@ -279,7 +268,8 @@ class Calendar_Structure_Builder {
 	/**
 	 * Build single day view.
 	 *
-	 * @param DateTimeImmutable        $day_obj       Target day.
+	 * @param DateTimeImmutable        $start_day_obj Target day.
+	 * @param int                      $unit_count    Number of units to show.
 	 * @param array<string, list<int>> $posts_by_date Posts by date.
 	 *
 	 * @return list<list<array<string, mixed>>>

@@ -155,15 +155,18 @@ export function calculateDateQuery( options = {}, startOfWeek = 0 ) {
  * @return {string} Formatted localized heading string.
  */
 export function formatHeading( viewType, startDate, endDate ) {
-	const startYear = startDate.getFullYear();
-	const endYear = endDate.getFullYear();
-	const startMonth = startDate.getMonth();
-	const endMonth = endDate.getMonth();
 	const isSameDay = startDate.toDateString() === endDate.toDateString();
 
 	if ( 'day' === viewType && isSameDay ) {
 		return dateI18n( 'l, F j, Y', startDate );
 	}
+
+	const startYear = startDate.getFullYear();
+	const endYear = endDate.getFullYear();
+	// eslint-disable-next-line @wordpress/no-unused-vars-before-return
+	const startMonth = startDate.getMonth();
+	// eslint-disable-next-line @wordpress/no-unused-vars-before-return
+	const endMonth = endDate.getMonth();
 
 	if ( 'day' === viewType || 'week' === viewType ) {
 		if ( startYear !== endYear ) {
@@ -198,8 +201,5 @@ export function formatHeading( viewType, startDate, endDate ) {
 		) }`;
 	}
 
-	return `${ dateI18n( 'F', startDate ) } – ${ dateI18n(
-		'F Y',
-		endDate
-	) }`;
+	return `${ dateI18n( 'F', startDate ) } – ${ dateI18n( 'F Y', endDate ) }`;
 }

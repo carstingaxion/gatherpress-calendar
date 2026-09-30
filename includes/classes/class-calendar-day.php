@@ -166,7 +166,11 @@ class Calendar_Day {
 			$content_binding = isset( $bindings['content'] ) && is_array( $bindings['content'] ) ? $bindings['content'] : array();
 			$binding_source  = isset( $content_binding['source'] ) && is_string( $content_binding['source'] ) ? $content_binding['source'] : '';
 
-			/** @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_typed */
+			/**
+			 * Type safety.
+			 *
+			 * @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_typed
+			 */
 			$inner_typed = $inner;
 
 			if ( null === $day_number_block && 'gatherpress/calendar-day' === $binding_source ) {

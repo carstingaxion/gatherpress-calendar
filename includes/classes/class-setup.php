@@ -215,7 +215,11 @@ class Setup {
 			if ( ( $block['blockName'] ?? '' ) === $block_name ) {
 				$attrs = $block['attrs'] ?? null;
 				if ( is_array( $attrs ) ) {
-					/** @var array<string, mixed> $attrs */
+					/**
+					 * Type safety.
+					 *
+					 * @var array<string, mixed> $attrs
+					 */
 					return $attrs;
 				}
 				return array();
@@ -248,7 +252,7 @@ class Setup {
 
 			$query_id = is_numeric( $parsed_block['attrs']['queryId'] ?? null ) ? (int) $parsed_block['attrs']['queryId'] : 0;
 			$page_key = $query_id > 0 ? "query-{$query_id}-page" : 'query-page';
-			$raw_page = isset( $_GET[ $page_key ] ) && is_scalar( $_GET[ $page_key ] ) ? $_GET[ $page_key ] : 1;
+			$raw_page = isset( $_GET[ $page_key ] ) && is_scalar( $_GET[ $page_key ] ) ? sanitize_key( wp_unslash( $_GET[ $page_key ] ) ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$page     = absint( $raw_page );
 			if ( 0 === $page ) {
 				$page = 1;
@@ -420,7 +424,11 @@ class Setup {
 			false
 		);
 
-		/** @var array<string, mixed> $merged_query */
+		/**
+		 * Type safety.
+		 *
+		 * @var array<string, mixed> $merged_query
+		 */
 		$merged_query = array_merge(
 			$query,
 			is_array( $filtered_query_args ) ? $filtered_query_args : $query_args
@@ -474,7 +482,11 @@ class Setup {
 		$query = $block_instance->context['query'] ?? null;
 
 		if ( is_array( $query ) ) {
-			/** @var array<string, mixed> $query_typed */
+			/**
+			 * Type safety.
+			 *
+			 * @var array<string, mixed> $query_typed
+			 */
 			$query_typed = $query;
 			$range       = Date_Calculator::get_range_from_query( $query_typed );
 			return $range['heading'];

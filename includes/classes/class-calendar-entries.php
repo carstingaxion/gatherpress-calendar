@@ -162,7 +162,11 @@ class Calendar_Entries {
 
 		add_filter( 'render_block_context', $filter_block_context, 1 );
 		$inner_blocks_raw = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
-		/** @var array<int, array<string, mixed>> $inner_blocks */
+		/**
+		 * Type safety.
+		 *
+		 * @var array<string, mixed> $inner_blocks
+		 */
 		$inner_blocks  = $inner_blocks_raw;
 		$inner_content = $this->render_template( $inner_blocks );
 		remove_filter( 'render_block_context', $filter_block_context, 1 );
