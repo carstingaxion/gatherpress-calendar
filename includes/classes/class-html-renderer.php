@@ -73,7 +73,7 @@ class HTML_Renderer {
 			sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
 		);
 		if ( '' !== $grid_gap ) {
-			$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
+			$table_styles[] = sprintf( '--gatherpress-calendar-gap: %1$s; gap: %1$s', esc_attr( $grid_gap ) );
 		}
 		$table_style = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
 
@@ -86,7 +86,7 @@ class HTML_Renderer {
 				?>
 				<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 					<?php if ( '' !== $unit['caption'] ) { ?>
-						<caption class="screen-reader-text"><?php echo esc_html( $unit['caption'] ); ?></caption>
+						<caption class="gatherpress-calendar__visually-hidden"><?php echo esc_html( $unit['caption'] ); ?></caption>
 					<?php } ?>
 					<?php
 					// Without "Show Weekdays", the header row is only hidden on screen:

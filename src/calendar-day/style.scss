@@ -1,15 +1,22 @@
 /* ==========================================================================
    Day Cell Layout & Intrinsic Aspect Ratio
    ========================================================================== */
+
+// Set on the table by the block styles and by the block's spacing setting.
+$columns: var(--gatherpress-calendar-columns, 7);
+$gap: var(--gatherpress-calendar-gap, 2px);
+
 .gatherpress-calendar__day {
 	position: relative;
 
 	/*
 	 * At least as tall as a column is wide, so an empty cell is square. The
-	 * table is the size container, so 100cqi is the table width. A cell
-	 * with more events grows, and the other cells of its row grow with it.
+	 * table is the size container, so 100cqi is the table width; the gaps
+	 * between the columns are subtracted. A cell with more events grows,
+	 * and the other cells of its row grow with it.
 	 */
-	min-height: calc(100cqi / var(--gatherpress-calendar-columns, 7));
+	box-sizing: border-box;
+	min-height: calc((100cqi - (#{$columns} - 1) * #{$gap}) / #{$columns});
 	display: flex;
 	align-items: center;
 	justify-content: stretch;
@@ -42,6 +49,14 @@
 			color: var(--wp--preset--color--primary, #006ba1);
 			font-weight: 800;
 		}
+	}
+}
+
+/* Browsers without container units keep square cells the older way. */
+@supports not (min-height: 1cqi) {
+
+	.gatherpress-calendar__day {
+		aspect-ratio: 1;
 	}
 }
 

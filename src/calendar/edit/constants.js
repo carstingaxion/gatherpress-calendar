@@ -11,6 +11,45 @@ import { __ } from '@wordpress/i18n';
  */
 
 /**
+ * The start time of an entry, as plain text.
+ * Shared by ENTRIES_TEMPLATE and the transform in ../transforms.js.
+ */
+export const ENTRY_START_TIME = [
+	'gatherpress/event-date',
+	{
+		displayType: 'start',
+		startDateFormat: 'G:i',
+		style: {
+			spacing: {
+				padding: { top: '0', bottom: '0', left: '0', right: '0' },
+				margin: { top: '0', bottom: '0', left: '0', right: '0' },
+			},
+		},
+		fontSize: 'small',
+	},
+];
+
+/**
+ * The linked event title that opens the modal.
+ * Shared by ENTRIES_TEMPLATE and the transform in ../transforms.js.
+ */
+export const ENTRY_TITLE_TRIGGER = [
+	'core/post-title',
+	{
+		level: 0,
+		isLink: true,
+		className: 'gatherpress-modal--trigger-open',
+		style: {
+			spacing: {
+				padding: { top: '0', bottom: '0', left: '0', right: '0' },
+				margin: { top: '0', bottom: '0', left: '0', right: '0' },
+			},
+		},
+		fontSize: 'small',
+	},
+];
+
+/**
  * The inner template inside gatherpress/calendar-entries:
  * Modal Manager holding the start time, the linked event title that opens
  * the modal, and the popover modal content.
@@ -25,55 +64,8 @@ export const ENTRIES_TEMPLATE = [
 		'gatherpress/modal-manager',
 		{},
 		[
-			[
-				'gatherpress/event-date',
-				{
-					displayType: 'start',
-					startDateFormat: 'G:i',
-					style: {
-						spacing: {
-							padding: {
-								top: '0',
-								bottom: '0',
-								left: '0',
-								right: '0',
-							},
-							margin: {
-								top: '0',
-								bottom: '0',
-								left: '0',
-								right: '0',
-							},
-						},
-					},
-					fontSize: 'small',
-				},
-			],
-			[
-				'core/post-title',
-				{
-					level: 0,
-					isLink: true,
-					className: 'gatherpress-modal--trigger-open',
-					style: {
-						spacing: {
-							padding: {
-								top: '0',
-								bottom: '0',
-								left: '0',
-								right: '0',
-							},
-							margin: {
-								top: '0',
-								bottom: '0',
-								left: '0',
-								right: '0',
-							},
-						},
-					},
-					fontSize: 'small',
-				},
-			],
+			ENTRY_START_TIME,
+			ENTRY_TITLE_TRIGGER,
 			[
 				'gatherpress/modal',
 				{},

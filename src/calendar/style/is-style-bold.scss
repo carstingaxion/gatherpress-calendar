@@ -5,7 +5,8 @@
 .wp-block-gatherpress-calendar.is-style-bold {
 
 	.gatherpress-calendar__table {
-		gap: clamp(2px, 0.5vw, 4px);
+		--gatherpress-calendar-gap: clamp(2px, 0.5vw, 4px);
+		gap: var(--gatherpress-calendar-gap);
 		background: var(--wp--preset--color--contrast, #1e1e1e);
 		border: clamp(2px, 0.5vw, 4px) solid var(--wp--preset--color--contrast, #1e1e1e);
 

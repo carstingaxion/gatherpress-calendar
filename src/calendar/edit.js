@@ -22,6 +22,7 @@ import { CALENDAR_TEMPLATE } from './edit/constants';
 import {
 	calculateDateRange,
 	calculateDateQuery,
+	formatHeading,
 } from './edit/utils/date-utils';
 import {
 	generateCalendar,
@@ -113,6 +114,25 @@ export default function Edit( {
 		[ posts, startOfWeek, dateRange, showWeekends ]
 	);
 
+	// Table captions, as on the front end: the name of each month grid, or
+	// the heading of the week or day range.
+	const captions = useMemo( () => {
+		const start = dateRange.startDateObj || new Date( dateRange.startDate );
+		const end = dateRange.endDateObj || new Date( dateRange.endDate );
+		if ( 'month' !== viewType ) {
+			return [ formatHeading( viewType, start, end ) ];
+		}
+		return ( calendar.units || [ calendar ] ).map( ( unit, index ) => {
+			// The 15th: a timezone offset cannot move it to another month.
+			const mid = new Date(
+				start.getFullYear(),
+				start.getMonth() + index,
+				15
+			);
+			return formatHeading( 'month', mid, mid );
+		} );
+	}, [ viewType, dateRange, calendar ] );
+
 	// Resolve which day is currently "live"/editable: keep the previously
 	// active date if it still exists in this month, otherwise fall back to
 	// today (or the 1st) so the preview always has a live cell to show.
@@ -177,8 +197,11 @@ export default function Edit( {
 		}
 	);
 
+	const tableGap = getGapCSSValue( attributes.style?.spacing?.blockGap );
 	const tableStyle = {
-		gap: getGapCSSValue( attributes.style?.spacing?.blockGap ),
+		gap: tableGap,
+		// Day cells subtract the gaps to stay square; see calendar-day/style.scss.
+		...( tableGap ? { '--gatherpress-calendar-gap': tableGap } : {} ),
 		'--gatherpress-calendar-columns': getColumnsCount(
 			viewType,
 			showWeekends,
@@ -294,6 +317,7 @@ export default function Edit( {
 			<div { ...blockProps }>
 				<CalendarTable
 					calendar={ calendar }
+					captions={ captions }
 					showWeekdays={ showWeekdays }
 					style={ tableStyle }
 					activeDate={ resolvedActiveDate }

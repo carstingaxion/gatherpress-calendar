@@ -154,36 +154,14 @@ class Calendar_Entries {
 		$attributes   = isset( $block->parsed_block['attrs'] ) && is_array( $block->parsed_block['attrs'] ) ? $block->parsed_block['attrs'] : array();
 		$entry_styles = $this->get_entry_styles_and_classes( $attributes );
 
-		$filter_block_context = static function ( array $context ) use ( $post_id, $post_type ): array {
-			$context['postType'] = $post_type;
-			$context['postId']   = $post_id;
-			return $context;
-		};
-
-		$filter_event_date_link = static function ( string $block_content, array $parsed_block ) use ( $post_id ): string {
-			return self::add_title_to_event_link( $block_content, $parsed_block, $post_id );
-		};
-
 		$inner_blocks_raw = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
 		/**
 		 * Type safety.
 		 *
 		 * @var array<int, array<string, mixed>> $inner_blocks
 		 */
-		$inner_blocks = $inner_blocks_raw;
-
-		// A template that already shows the title needs no hidden copy of it.
-		$add_hidden_title = ! self::template_shows_post_title( $inner_blocks );
-
-		add_filter( 'render_block_context', $filter_block_context, 1 );
-		if ( $add_hidden_title ) {
-			add_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10, 2 );
-		}
-		$inner_content = $this->render_template( $inner_blocks );
-		if ( $add_hidden_title ) {
-			remove_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10 );
-		}
-		remove_filter( 'render_block_context', $filter_block_context, 1 );
+		$inner_blocks  = $inner_blocks_raw;
+		$inner_content = $this->render_entry_template( $inner_blocks, $post_id, $post_type );
 
 		wp_reset_postdata();
 		if ( isset( $GLOBALS['post'] ) ) {
@@ -198,6 +176,74 @@ class Calendar_Entries {
 			$style_attribute,
 			$inner_content
 		);
+	}
+
+	/**
+	 * Render the entry template for one event.
+	 *
+	 * While the template renders, filters give its blocks this event's
+	 * context, a placeholder for an empty title, and, when the template shows
+	 * no Post Title, the hidden title in the Event Date link.
+	 *
+	 * @param array<int, array<string, mixed>> $inner_blocks Parsed blocks of the entry template.
+	 * @param int                              $post_id      Event post ID.
+	 * @param string                           $post_type    Event post type.
+	 *
+	 * @return string Rendered HTML.
+	 */
+	private function render_entry_template( array $inner_blocks, int $post_id, string $post_type ): string {
+		$filter_block_context = static function ( array $context ) use ( $post_id, $post_type ): array {
+			$context['postType'] = $post_type;
+			$context['postId']   = $post_id;
+			return $context;
+		};
+
+		$filter_event_date_link = static function ( string $block_content, array $parsed_block ) use ( $post_id ): string {
+			return self::add_title_to_event_link( $block_content, $parsed_block, $post_id );
+		};
+
+		$filter_empty_title = static function ( $title, $id = 0 ) use ( $post_id ) {
+			return self::placeholder_for_empty_title( $title, $id, $post_id );
+		};
+
+		// A template that already shows the title needs no hidden copy of it.
+		$add_hidden_title = ! self::template_shows_post_title( $inner_blocks );
+
+		add_filter( 'render_block_context', $filter_block_context, 1 );
+		add_filter( 'the_title', $filter_empty_title, 10, 2 );
+		if ( $add_hidden_title ) {
+			add_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10, 2 );
+		}
+
+		$inner_content = $this->render_template( $inner_blocks );
+
+		remove_filter( 'render_block_gatherpress/event-date', $filter_event_date_link, 10 );
+		remove_filter( 'the_title', $filter_empty_title, 10 );
+		remove_filter( 'render_block_context', $filter_block_context, 1 );
+
+		return $inner_content;
+	}
+
+	/**
+	 * Give an untitled event a placeholder title.
+	 *
+	 * The core/post-title block renders nothing for an empty title. When the
+	 * title is the modal trigger, an untitled event would have no link to
+	 * open it.
+	 * Other code can call the_title with any types, so the arguments are
+	 * checked, not typed.
+	 *
+	 * @param mixed $title   Title from the_title.
+	 * @param mixed $id      Post ID from the_title.
+	 * @param int   $post_id ID of the event that renders now.
+	 *
+	 * @return mixed The title, or the placeholder for this event's empty title.
+	 */
+	private static function placeholder_for_empty_title( $title, $id, int $post_id ) {
+		$is_this_post = is_numeric( $id ) && (int) $id === $post_id;
+		$is_empty     = ! is_string( $title ) || '' === trim( wp_strip_all_tags( $title ) );
+
+		return $is_this_post && $is_empty ? __( '(no title)', 'gatherpress-calendar' ) : $title;
 	}
 
 	/**
@@ -266,7 +312,7 @@ class Calendar_Entries {
 
 		return substr_replace(
 			$block_content,
-			sprintf( '<span class="screen-reader-text">%s</span>', esc_html( $screen_reader_text ) ),
+			sprintf( '<span class="gatherpress-calendar__visually-hidden">%s</span>', esc_html( $screen_reader_text ) ),
 			$link_close,
 			0
 		);
