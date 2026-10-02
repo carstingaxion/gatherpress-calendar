@@ -4,7 +4,7 @@
 
 // Set on the table by the block styles and by the block's spacing setting.
 $columns: var(--gatherpress-calendar-columns, 7);
-$gap: var(--gatherpress-calendar-gap, 2px);
+$gap: var(--gatherpress-calendar-column-gap, 2px);
 
 .gatherpress-calendar__day {
 	position: relative;

@@ -33,6 +33,25 @@ export const ENTRY_START_TIME = [
  * The linked event title that opens the modal.
  * Shared by ENTRIES_TEMPLATE and the transform in ../transforms.js.
  */
+/**
+ * Attributes of the Modal Manager in an entry: the time above the title,
+ * with no gap between them. The default flex row with the theme's block gap
+ * leaves a large space in a narrow day cell.
+ * Shared by ENTRIES_TEMPLATE and the transform in ../transforms.js.
+ */
+export const ENTRY_MODAL_MANAGER_ATTRIBUTES = {
+	layout: {
+		type: 'flex',
+		orientation: 'vertical',
+		justifyContent: 'center',
+	},
+	style: {
+		spacing: {
+			blockGap: '0',
+		},
+	},
+};
+
 export const ENTRY_TITLE_TRIGGER = [
 	'core/post-title',
 	{
@@ -62,7 +81,7 @@ export const ENTRY_TITLE_TRIGGER = [
 export const ENTRIES_TEMPLATE = [
 	[
 		'gatherpress/modal-manager',
-		{},
+		ENTRY_MODAL_MANAGER_ATTRIBUTES,
 		[
 			ENTRY_START_TIME,
 			ENTRY_TITLE_TRIGGER,

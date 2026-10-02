@@ -7,7 +7,11 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { ENTRY_START_TIME, ENTRY_TITLE_TRIGGER } from './edit/constants';
+import {
+	ENTRY_MODAL_MANAGER_ATTRIBUTES,
+	ENTRY_START_TIME,
+	ENTRY_TITLE_TRIGGER,
+} from './edit/constants';
 
 /**
  * Helper to recursively search an innerBlocks tree for a specific block by name.
@@ -82,11 +86,11 @@ function createCalendarFromTemplate( contentBlocks = [] ) {
 	const startTime = createBlock( ...ENTRY_START_TIME );
 	const trigger = createBlock( ...ENTRY_TITLE_TRIGGER );
 
-	const modalManager = createBlock( 'gatherpress/modal-manager', {}, [
-		startTime,
-		trigger,
-		modal,
-	] );
+	const modalManager = createBlock(
+		'gatherpress/modal-manager',
+		ENTRY_MODAL_MANAGER_ATTRIBUTES,
+		[ startTime, trigger, modal ]
+	);
 
 	const entries = createBlock(
 		'gatherpress/calendar-entries',

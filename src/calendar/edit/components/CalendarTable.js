@@ -52,14 +52,16 @@ export function CalendarTable( {
 					style={ style }
 				>
 					{ captions[ unitIndex ] && (
-						<caption className="gatherpress-calendar__visually-hidden">
+						<caption className="gatherpress--screen-reader-text">
 							{ captions[ unitIndex ] }
 						</caption>
 					) }
 					{ /* Without "Show Weekdays" the row is hidden on screen only, as on the front end. */ }
 					<thead
 						className={
-							showWeekdays ? undefined : 'is-visually-hidden'
+							showWeekdays
+								? undefined
+								: 'gatherpress--screen-reader-text'
 						}
 					>
 						<tr>

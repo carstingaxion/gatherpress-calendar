@@ -7,8 +7,8 @@
 	.gatherpress-calendar__table {
 		background: transparent;
 		border: none;
-		--gatherpress-calendar-gap: 0px;
-		gap: var(--gatherpress-calendar-gap);
+		--gatherpress-calendar-column-gap: 0px;
+		gap: var(--gatherpress-calendar-column-gap);
 
 		th {
 			background: transparent;

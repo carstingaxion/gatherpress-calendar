@@ -78,7 +78,7 @@ class HTML_Renderer {
 		}
 		// Only the column gap: day cells use it in calc() to stay square.
 		if ( '' !== $column_gap ) {
-			$table_styles[] = sprintf( '--gatherpress-calendar-gap: %s', esc_attr( $column_gap ) );
+			$table_styles[] = sprintf( '--gatherpress-calendar-column-gap: %s', esc_attr( $column_gap ) );
 		}
 		$table_style = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
 
@@ -91,13 +91,14 @@ class HTML_Renderer {
 				?>
 				<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 					<?php if ( '' !== $unit['caption'] ) { ?>
-						<caption class="gatherpress-calendar__visually-hidden"><?php echo esc_html( $unit['caption'] ); ?></caption>
+						<caption class="gatherpress--screen-reader-text"><?php echo esc_html( $unit['caption'] ); ?></caption>
 					<?php } ?>
 					<?php
 					// Without "Show Weekdays", the header row is only hidden on screen:
-					// screen readers still read the weekday of each cell.
+					// screen readers still read the weekday of each cell. The class is
+					// GatherPress core's General_Block::SCREEN_READER_CLASS, as on the caption.
 					?>
-					<thead<?php echo $show_weekdays ? '' : ' class="is-visually-hidden"'; ?>>
+					<thead<?php echo $show_weekdays ? '' : ' class="gatherpress--screen-reader-text"'; ?>>
 						<tr>
 							<?php foreach ( $unit['day_names'] as $day_name ) { ?>
 								<th scope="col"><?php echo esc_html( $day_name ); ?></th>

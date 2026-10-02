@@ -8,8 +8,8 @@
 	padding: clamp(1rem, 4vw, 2rem);
 
 	.gatherpress-calendar__table {
-		--gatherpress-calendar-gap: clamp(0.5rem, 1.5vw, 0.75rem);
-		gap: var(--gatherpress-calendar-gap);
+		--gatherpress-calendar-column-gap: clamp(0.5rem, 1.5vw, 0.75rem);
+		gap: var(--gatherpress-calendar-column-gap);
 		background: transparent;
 		border: none;
 		padding: clamp(0.5rem, 1.5vw, 0.75rem);

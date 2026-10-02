@@ -210,7 +210,7 @@ export default function Edit( {
 		gap: tableGap,
 		...( columnGap
 			? {
-					'--gatherpress-calendar-gap':
+					'--gatherpress-calendar-column-gap':
 						'0' === columnGap ? '0px' : columnGap,
 			  }
 			: {} ),
