@@ -1,4 +1,5 @@
 import { useSelect } from '@wordpress/data';
+import { getSettings } from '@wordpress/date';
 import { store as coreStore } from '@wordpress/core-data';
 
 const EMPTY_ARRAY = [];
@@ -62,8 +63,8 @@ export function useCalendarData( query, dateQuery ) {
 			}
 
 			// Get site settings for start_of_week.
-			const site = getSite();
-			const weekStartsOn = site?.start_of_week || 0;
+			const dateSettings = getSettings();
+			const weekStartsOn = dateSettings?.l10n.startOfWeek || 0;
 
 			const records = getEntityRecords(
 				'postType',
