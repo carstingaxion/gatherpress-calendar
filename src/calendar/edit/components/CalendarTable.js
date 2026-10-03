@@ -11,6 +11,7 @@ import { CalendarWeek } from './CalendarWeek';
  *
  * @param {Object}   props                     Component props.
  * @param {Object}   props.calendar            Calendar data structure.
+ * @param {string[]} props.captions            Visually hidden caption of each table.
  * @param {boolean}  props.showWeekdays        Whether to show weekday headers.
  * @param {Object}   props.style               Table style.
  * @param {string}   props.activeDate          Currently live/editable date.
@@ -26,6 +27,7 @@ import { CalendarWeek } from './CalendarWeek';
  */
 export function CalendarTable( {
 	calendar,
+	captions = [],
 	showWeekdays,
 	style,
 	activeDate,
@@ -49,15 +51,27 @@ export function CalendarTable( {
 					className="gatherpress-calendar__table"
 					style={ style }
 				>
-					{ showWeekdays && (
-						<thead>
-							<tr>
-								{ unit.dayNames.map( ( dayName, index ) => (
-									<th key={ index }>{ dayName }</th>
-								) ) }
-							</tr>
-						</thead>
+					{ captions[ unitIndex ] && (
+						<caption className="gatherpress--screen-reader-text">
+							{ captions[ unitIndex ] }
+						</caption>
 					) }
+					{ /* Without "Show Weekdays" the row is hidden on screen only, as on the front end. */ }
+					<thead
+						className={
+							showWeekdays
+								? undefined
+								: 'gatherpress--screen-reader-text'
+						}
+					>
+						<tr>
+							{ unit.dayNames.map( ( dayName, index ) => (
+								<th key={ index } scope="col">
+									{ dayName }
+								</th>
+							) ) }
+						</tr>
+					</thead>
 					<tbody { ...tbodyProps }>
 						{ unit.weeks.map( ( week, weekIndex ) => (
 							<CalendarWeek

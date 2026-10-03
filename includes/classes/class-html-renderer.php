@@ -43,8 +43,8 @@ class HTML_Renderer {
 	/**
 	 * Generate complete calendar HTML.
 	 *
-	 * @param array<string, mixed>                                                                                                                                                                                                  $attributes Block attributes.
-	 * @param array{ heading: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>, view_type: string, unit_count: int, units: list<array{ day_names: list<string>, weeks: list<list<array<string, mixed>>>}> } $calendar_data Calendar structure.
+	 * @param array<string, mixed>                                                                                                                                                                                                                   $attributes Block attributes.
+	 * @param array{ heading: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>, view_type: string, unit_count: int, units: list<array{ caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>}> } $calendar_data Calendar structure.
 	 *
 	 * @return string Calendar HTML.
 	 */
@@ -69,11 +69,16 @@ class HTML_Renderer {
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 
 		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
+		$column_gap   = Style_Processor::get_block_column_gap_value( $attributes );
 		$table_styles = array(
 			sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
 		);
 		if ( '' !== $grid_gap ) {
 			$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
+		}
+		// Only the column gap: day cells use it in calc() to stay square.
+		if ( '' !== $column_gap ) {
+			$table_styles[] = sprintf( '--gatherpress-calendar-column-gap: %s', esc_attr( $column_gap ) );
 		}
 		$table_style = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
 
@@ -85,15 +90,21 @@ class HTML_Renderer {
 			foreach ( $calendar_data['units'] as $unit ) {
 				?>
 				<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-					<?php if ( $show_weekdays ) { ?>
-						<thead>
-							<tr>
-								<?php foreach ( $unit['day_names'] as $day_name ) { ?>
-									<th><?php echo esc_html( $day_name ); ?></th>
-								<?php } ?>
-							</tr>
-						</thead>
+					<?php if ( '' !== $unit['caption'] ) { ?>
+						<caption class="gatherpress--screen-reader-text"><?php echo esc_html( $unit['caption'] ); ?></caption>
 					<?php } ?>
+					<?php
+					// Without "Show Weekdays", the header row is only hidden on screen:
+					// screen readers still read the weekday of each cell. The class is
+					// GatherPress core's General_Block::SCREEN_READER_CLASS, as on the caption.
+					?>
+					<thead<?php echo $show_weekdays ? '' : ' class="gatherpress--screen-reader-text"'; ?>>
+						<tr>
+							<?php foreach ( $unit['day_names'] as $day_name ) { ?>
+								<th scope="col"><?php echo esc_html( $day_name ); ?></th>
+							<?php } ?>
+						</tr>
+					</thead>
 					<tbody>
 						<?php echo wp_kses_post( $this->render_calendar_weeks( $unit['weeks'] ) ); ?>
 					</tbody>

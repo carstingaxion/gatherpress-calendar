@@ -1,3 +1,5 @@
+@use "visually-hidden" as *;
+
 /* ==========================================================================
    Block Container
    ========================================================================== */
@@ -38,8 +40,11 @@
 		border-collapse: collapse;
 		width: 100%;
 		display: grid;
-		grid-template-columns: repeat(var(--gatherpress-calendar-columns, 7), 1fr);
-		gap: 2px; /* Default thin grid line when no spacing is set */
+
+		/* minmax(0, 1fr): content cannot make a column wider than its share. */
+		grid-template-columns: repeat(var(--gatherpress-calendar-columns, 7), minmax(0, 1fr));
+		--gatherpress-calendar-column-gap: 2px; /* Default thin grid line when no spacing is set */
+		gap: var(--gatherpress-calendar-column-gap);
 
 		thead,
 		tbody,
@@ -63,6 +68,16 @@
 			align-items: center;
 			justify-content: center;
 		}
+
+		/*
+		 * "Show Weekdays" off: the header row is hidden on screen, but screen
+		 * readers still read the weekday of each cell.
+		 */
+		thead.gatherpress--screen-reader-text th {
+
+			@include visually-hidden;
+			aspect-ratio: auto;
+		}
 	}
 
 	/* Day View adjustments */
@@ -74,4 +89,15 @@
 			padding: 1rem;
 		}
 	}
+}
+
+/*
+ * GatherPress core defines .gatherpress--screen-reader-text in its utility
+ * stylesheet since 0.36.0. This copy, scoped to the calendar, keeps the
+ * table caption and the hidden event title out of the grid on GatherPress
+ * 0.35. Remove it when the calendar requires GatherPress 0.36 or later.
+ */
+.wp-block-gatherpress-calendar .gatherpress--screen-reader-text {
+
+	@include visually-hidden;
 }

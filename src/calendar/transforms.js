@@ -5,6 +5,15 @@ import { createBlock, cloneBlock } from '@wordpress/blocks';
 import { __ } from '@wordpress/i18n';
 
 /**
+ * Internal dependencies
+ */
+import {
+	ENTRY_MODAL_MANAGER_ATTRIBUTES,
+	ENTRY_START_TIME,
+	ENTRY_TITLE_TRIGGER,
+} from './edit/constants';
+
+/**
  * Helper to recursively search an innerBlocks tree for a specific block by name.
  *
  * @param {Array}  blocks    Array of block objects.
@@ -73,24 +82,15 @@ function createCalendarFromTemplate( contentBlocks = [] ) {
 
 	const modal = createBlock( 'gatherpress/modal', {}, [ modalContent ] );
 
-	const trigger = createBlock( 'gatherpress/event-date', {
-		displayType: 'start',
-		isLink: true,
-		startDateFormat: 'G:i',
-		className: 'gatherpress-modal--trigger-open',
-		style: {
-			spacing: {
-				padding: { top: '0', bottom: '0', left: '0', right: '0' },
-				margin: { top: '0', bottom: '0', left: '0', right: '0' },
-			},
-		},
-		fontSize: 'small',
-	} );
+	// Same blocks as ENTRIES_TEMPLATE; the linked title opens the modal.
+	const startTime = createBlock( ...ENTRY_START_TIME );
+	const trigger = createBlock( ...ENTRY_TITLE_TRIGGER );
 
-	const modalManager = createBlock( 'gatherpress/modal-manager', {}, [
-		trigger,
-		modal,
-	] );
+	const modalManager = createBlock(
+		'gatherpress/modal-manager',
+		ENTRY_MODAL_MANAGER_ATTRIBUTES,
+		[ startTime, trigger, modal ]
+	);
 
 	const entries = createBlock(
 		'gatherpress/calendar-entries',

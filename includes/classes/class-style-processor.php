@@ -57,6 +57,41 @@ class Style_Processor {
 	}
 
 	/**
+	 * Extract the column (horizontal) gap from the blockGap attribute.
+	 *
+	 * The gap can be a single value or a split { top, left } object; the
+	 * column gap is the single value or 'left'. Day cells use it in calc()
+	 * to stay square, so it must be one length: '0' becomes '0px'.
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 *
+	 * @return string One CSS length (e.g., 'var(--wp--preset--spacing--50)' or '20px') or empty string.
+	 */
+	public static function get_block_column_gap_value( array $attributes ): string {
+		$style     = isset( $attributes['style'] ) && is_array( $attributes['style'] ) ? $attributes['style'] : array();
+		$spacing   = isset( $style['spacing'] ) && is_array( $style['spacing'] ) ? $style['spacing'] : array();
+		$block_gap = $spacing['blockGap'] ?? null;
+
+		// Match get_block_gap_value(): it outputs no gap for an empty value.
+		if ( empty( $block_gap ) ) {
+			return '';
+		}
+
+		if ( is_array( $block_gap ) ) {
+			// Same default as get_block_gap_value() for a missing side.
+			$block_gap = isset( $block_gap['left'] ) && is_scalar( $block_gap['left'] ) ? (string) $block_gap['left'] : '1px';
+		}
+
+		if ( ! is_string( $block_gap ) || '' === $block_gap ) {
+			return '';
+		}
+
+		$column_gap = self::resolve_preset_value( $block_gap );
+
+		return '0' === $column_gap ? '0px' : $column_gap;
+	}
+
+	/**
 	 * Resolve Gutenberg 'var:preset|spacing|50' shorthand to standard CSS 'var(...)'.
 	 *
 	 * @param string $value Raw attribute value.

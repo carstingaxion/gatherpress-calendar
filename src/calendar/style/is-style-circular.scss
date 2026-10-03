@@ -9,7 +9,8 @@
 	}
 
 	.gatherpress-calendar__table {
-		gap: clamp(0.5rem, 2vw, 1rem);
+		--gatherpress-calendar-column-gap: clamp(0.5rem, 2vw, 1rem);
+		gap: var(--gatherpress-calendar-column-gap);
 		background: transparent;
 		border: none;
 		padding: clamp(0.5rem, 2vw, 1rem);
@@ -24,6 +25,9 @@
 		}
 
 		td {
+
+			/* Stay a circle when a busy cell makes the row taller. */
+			align-self: center;
 			border-radius: 50%;
 			background: var(--wp--preset--color--base-2, #f0f4f8);
 			border: 2px solid transparent;

@@ -67,8 +67,11 @@ const EventItem = memo( function EventItemComponent( {
 			: 'gatherpress_event';
 
 	const contextValue = useMemo( () => {
+		// The placeholder item on an empty day has no event. Clear the post
+		// context, so blocks like core/post-title do not show the post that
+		// holds the calendar, but their own placeholder.
 		if ( ! postId ) {
-			return {};
+			return { postId: undefined, postType: undefined };
 		}
 		return {
 			postId,

@@ -37,6 +37,7 @@ class Calendar_Structure_Builder {
 	 *   view_type: string,
 	 *   unit_count: int,
 	 *   units: list<array{
+	 *     caption: string,
 	 *     day_names: list<string>,
 	 *     weeks: list<list<array<string, mixed>>>
 	 *   }>
@@ -51,6 +52,7 @@ class Calendar_Structure_Builder {
 			$weeks     = self::build_consecutive_days( $date_range['start_date_obj'], $unit_count, $posts_by_date );
 			$day_names = Date_Calculator::get_view_day_names( $view_type, $date_range['start_date_obj'], $start_of_week, $show_weekends, $unit_count );
 			$units[]   = array(
+				'caption'   => $date_range['heading'],
 				'day_names' => $day_names,
 				'weeks'     => $weeks,
 			);
@@ -58,6 +60,7 @@ class Calendar_Structure_Builder {
 			$weeks     = self::build_consecutive_weeks( $date_range['raw_week_start'], $unit_count, $posts_by_date, $show_weekends );
 			$day_names = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
 			$units[]   = array(
+				'caption'   => $date_range['heading'],
 				'day_names' => $day_names,
 				'weeks'     => $weeks,
 			);
@@ -71,7 +74,9 @@ class Calendar_Structure_Builder {
 				$m_weeks       = self::build_month_weeks( $m_year, $m_month, $start_of_week, $days_in_month, $posts_by_date, $show_weekends );
 				$m_day_names   = Date_Calculator::get_day_names( $start_of_week, $show_weekends );
 
+				// Each month grid gets its own name, like "October 2026".
 				$units[] = array(
+					'caption'   => Date_Calculator::format_heading( 'month', $month_date, $month_date ),
 					'day_names' => $m_day_names,
 					'weeks'     => $m_weeks,
 				);
