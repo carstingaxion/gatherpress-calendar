@@ -79,8 +79,9 @@ export function getDayNames( startOfWeek = 0, showWeekends = true ) {
 	const days = [];
 
 	// Base date: 2024-01-07 is a Sunday (day 0).
-	// We use a fixed date so calculations are consistent.
-	const baseSunday = new Date( '2024-01-07' );
+	// We use a fixed date at noon UTC and format in UTC so timezone shifts
+	// never change the day name.
+	const baseSunday = new Date( '2024-01-07T12:00:00Z' );
 
 	for ( let i = 0; i < 7; i++ ) {
 		// Calculate the day of week (0=Sunday, 6=Saturday).
@@ -91,14 +92,15 @@ export function getDayNames( startOfWeek = 0, showWeekends = true ) {
 			continue;
 		}
 
-		// Create a date for this day of week by adding days to base Sunday.
+		// Create a date for this day of week by adding days to base Sunday in UTC.
 		const dayDate = new Date( baseSunday );
-		dayDate.setDate( baseSunday.getDate() + dayOfWeek );
+		dayDate.setUTCDate( baseSunday.getUTCDate() + dayOfWeek );
 
 		// Get the abbreviated day name using dateI18n for proper localization.
 		// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.).
 		// This respects the site's language setting via WordPress core.
-		days.push( dateI18n( 'D', dayDate ) );
+		// Format in UTC for proper localization without site timezone shift.
+		days.push( dateI18n( 'D', dayDate, 'UTC' ) );
 	}
 
 	return days;
