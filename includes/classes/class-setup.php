@@ -185,6 +185,7 @@ class Setup {
 				'after'     => sanitize_text_field( $start_date ) . ' 00:00:00',
 				'before'    => sanitize_text_field( $end_date ) . ' 23:59:59',
 				'inclusive' => true,
+				'column'    => 'datetime_start',
 			);
 		}
 

@@ -5,11 +5,19 @@
  */
 
 import { dateI18n } from '@wordpress/date';
-import { DATE_FORMAT } from '../constants';
 import { isWeekendDay } from './calendar-utils';
 
+/**
+ * Formats a calendar Date object into YYYY-MM-DD without timezone shifting.
+ *
+ * @param {Date} date Calendar date object.
+ * @return {string} YYYY-MM-DD date string.
+ */
 export function formatDate( date ) {
-	return dateI18n( DATE_FORMAT, date );
+	const year = date.getFullYear();
+	const month = String( date.getMonth() + 1 ).padStart( 2, '0' );
+	const day = String( date.getDate() ).padStart( 2, '0' );
+	return `${ year }-${ month }-${ day }`;
 }
 
 /**
@@ -189,17 +197,21 @@ export function formatHeading( viewType, startDate, endDate ) {
 		) } – ${ dateI18n( 'j, Y', endDate ) }`;
 	}
 
-	// Month view
+	// Month view: format a mid-month date so browser-site timezone differences
+	// cannot shift the formatted month to an adjacent month.
+	const midStart = new Date( startYear, startMonth, 15, 12, 0, 0 );
+	const midEnd = new Date( endYear, endMonth, 15, 12, 0, 0 );
+
 	if ( startYear === endYear && startMonth === endMonth ) {
-		return dateI18n( 'F Y', startDate );
+		return dateI18n( 'F Y', midStart );
 	}
 
 	if ( startYear !== endYear ) {
-		return `${ dateI18n( 'M Y', startDate ) } – ${ dateI18n(
+		return `${ dateI18n( 'M Y', midStart ) } – ${ dateI18n(
 			'M Y',
-			endDate
+			midEnd
 		) }`;
 	}
 
-	return `${ dateI18n( 'F', startDate ) } – ${ dateI18n( 'F Y', endDate ) }`;
+	return `${ dateI18n( 'F', midStart ) } – ${ dateI18n( 'F Y', midEnd ) }`;
 }

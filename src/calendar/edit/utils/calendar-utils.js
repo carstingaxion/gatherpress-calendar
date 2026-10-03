@@ -7,6 +7,7 @@
 import { dateI18n } from '@wordpress/date';
 import { applyFilters } from '@wordpress/hooks';
 import { DATE_FORMAT } from '../constants';
+import { formatDate } from './date-utils';
 
 export const WEEKDAY_SLUGS = [
 	'sunday',
@@ -79,8 +80,9 @@ export function getDayNames( startOfWeek = 0, showWeekends = true ) {
 	const days = [];
 
 	// Base date: 2024-01-07 is a Sunday (day 0).
-	// We use a fixed date so calculations are consistent.
-	const baseSunday = new Date( '2024-01-07' );
+	// We use a fixed date at noon UTC and format in UTC so timezone shifts
+	// never change the day name.
+	const baseSunday = new Date( '2024-01-07T12:00:00Z' );
 
 	for ( let i = 0; i < 7; i++ ) {
 		// Calculate the day of week (0=Sunday, 6=Saturday).
@@ -91,14 +93,15 @@ export function getDayNames( startOfWeek = 0, showWeekends = true ) {
 			continue;
 		}
 
-		// Create a date for this day of week by adding days to base Sunday.
+		// Create a date for this day of week by adding days to base Sunday in UTC.
 		const dayDate = new Date( baseSunday );
-		dayDate.setDate( baseSunday.getDate() + dayOfWeek );
+		dayDate.setUTCDate( baseSunday.getUTCDate() + dayOfWeek );
 
 		// Get the abbreviated day name using dateI18n for proper localization.
 		// 'D' format returns the abbreviated day name (e.g., 'Mon', 'Tue', etc.).
 		// This respects the site's language setting via WordPress core.
-		days.push( dateI18n( 'D', dayDate ) );
+		// Format in UTC for proper localization without site timezone shift.
+		days.push( dateI18n( 'D', dayDate, 'UTC' ) );
 	}
 
 	return days;
@@ -135,7 +138,7 @@ export function generateMonthOptions() {
 	// Generate options for current year and next year.
 	for ( let year = currentYear - 1; year <= currentYear + 1; year++ ) {
 		for ( let month = 1; month <= 12; month++ ) {
-			const date = new Date( year, month - 1, 1 );
+			const date = new Date( year, month - 1, 15, 12, 0, 0 );
 			const value = `${ year }-${ String( month ).padStart( 2, '0' ) }`;
 			const label = dateI18n( 'F Y', date );
 			options.push( { value, label } );
@@ -167,7 +170,22 @@ export function groupPostsByDate( posts = [] ) {
 			return;
 		}
 
-		const dateStr = dateI18n( DATE_FORMAT, new Date( postDate ) );
+		// When post is a gatherpress_event, postDate from meta is a string like:
+		// "2026-09-30 23:30:00" (an event starting at 11:30 PM in its local timezone).
+		// Here is why new Date( postDate ) causes the bug in the editor:
+		// new Date( "2026-09-30 23:30:00" ) creates a JavaScript Date object at 23:30 in the browser's timezone.
+		// dateI18n( DATE_FORMAT, ... ) converts that Date object into the WordPress site's timezone.
+		// If the site is just 1 hour ahead of the browser (or the event's local time), 23:30 becomes 00:30 on 2026-10-01.
+		// As a result, dateStr becomes "2026-10-01". The event gets placed into October 1st in the editor grid instead of September 30th!
+		//
+		// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
+		// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
+		const dateStr =
+			'gatherpress_event' === post.type &&
+			post.meta?.gatherpress_datetime_start
+				? post.meta.gatherpress_datetime_start.slice( 0, 10 )
+				: dateI18n( DATE_FORMAT, new Date( postDate ) );
+
 		if ( ! grouped[ dateStr ] ) {
 			grouped[ dateStr ] = [];
 		}
@@ -187,7 +205,7 @@ export function groupPostsByDate( posts = [] ) {
  */
 function createDayEntry( dateObj, postsByDate, todayStr ) {
 	const dayOfWeek = dateObj.getDay();
-	const dateStr = dateI18n( DATE_FORMAT, dateObj );
+	const dateStr = formatDate( dateObj );
 
 	return {
 		day: dateObj.getDate(),
