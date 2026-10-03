@@ -7,6 +7,8 @@
 import { dateI18n } from '@wordpress/date';
 import { applyFilters } from '@wordpress/hooks';
 import { DATE_FORMAT } from '../constants';
+import { formatDate } from './date-utils';
+
 
 export const WEEKDAY_SLUGS = [
 	'sunday',
@@ -203,7 +205,7 @@ export function groupPostsByDate( posts = [] ) {
  */
 function createDayEntry( dateObj, postsByDate, todayStr ) {
 	const dayOfWeek = dateObj.getDay();
-	const dateStr = dateI18n( DATE_FORMAT, dateObj );
+	const dateStr = formatDate( dateObj );
 
 	return {
 		day: dateObj.getDate(),

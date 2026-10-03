@@ -8,8 +8,17 @@ import { dateI18n } from '@wordpress/date';
 import { DATE_FORMAT } from '../constants';
 import { isWeekendDay } from './calendar-utils';
 
+/**
+ * Formats a calendar Date object into YYYY-MM-DD without timezone shifting.
+ *
+ * @param {Date} date Calendar date object.
+ * @return {string} YYYY-MM-DD date string.
+ */
 export function formatDate( date ) {
-	return dateI18n( DATE_FORMAT, date );
+	const year = date.getFullYear();
+	const month = String( date.getMonth() + 1 ).padStart( 2, '0' );
+	const day = String( date.getDate() ).padStart( 2, '0' );
+	return `${ year }-${ month }-${ day }`;
 }
 
 /**
