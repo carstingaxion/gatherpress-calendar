@@ -188,6 +188,15 @@ class Setup {
 			);
 		}
 
+		// This is useless now, because method only applies to GatherPress events,
+		// but we keep it for #60 which wants to support other post types.
+		$post_type = $parameters['post_type'] ?? 'post';
+		$is_event  = 'gatherpress_event' === $post_type || ( is_array( $post_type ) && in_array( 'gatherpress_event', $post_type, true ) );
+
+		if ( $is_event ) {
+			$args['date_query'][0]['column'] = 'datetime_start';
+		}
+
 		return $args;
 	}
 

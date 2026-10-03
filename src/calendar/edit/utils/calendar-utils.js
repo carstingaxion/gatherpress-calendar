@@ -169,7 +169,21 @@ export function groupPostsByDate( posts = [] ) {
 			return;
 		}
 
-		const dateStr = dateI18n( DATE_FORMAT, new Date( postDate ) );
+		// When post is a gatherpress_event, postDate from meta is a string like:
+		// "2026-09-30 23:30:00" (an event starting at 11:30 PM in its local timezone).
+		// Here is why new Date( postDate ) causes the bug in the editor:
+		// new Date( "2026-09-30 23:30:00" ) creates a JavaScript Date object at 23:30 in the browser's timezone.
+		// dateI18n( DATE_FORMAT, ... ) converts that Date object into the WordPress site's timezone.
+		// If the site is just 1 hour ahead of the browser (or the event's local time), 23:30 becomes 00:30 on 2026-10-01.
+		// As a result, dateStr becomes "2026-10-01". The event gets placed into October 1st in the editor grid instead of September 30th!
+		//
+		// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
+		// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
+		const dateStr =
+			'gatherpress_event' === post.type && post.meta?.gatherpress_datetime_start
+				? post.meta.gatherpress_datetime_start.slice( 0, 10 )
+				: dateI18n( DATE_FORMAT, new Date( postDate ) );
+
 		if ( ! grouped[ dateStr ] ) {
 			grouped[ dateStr ] = [];
 		}
