@@ -9,7 +9,6 @@ import { applyFilters } from '@wordpress/hooks';
 import { DATE_FORMAT } from '../constants';
 import { formatDate } from './date-utils';
 
-
 export const WEEKDAY_SLUGS = [
 	'sunday',
 	'monday',
@@ -182,7 +181,8 @@ export function groupPostsByDate( posts = [] ) {
 		// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
 		// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
 		const dateStr =
-			'gatherpress_event' === post.type && post.meta?.gatherpress_datetime_start
+			'gatherpress_event' === post.type &&
+			post.meta?.gatherpress_datetime_start
 				? post.meta.gatherpress_datetime_start.slice( 0, 10 )
 				: dateI18n( DATE_FORMAT, new Date( postDate ) );
 

@@ -5,7 +5,6 @@
  */
 
 import { dateI18n } from '@wordpress/date';
-import { DATE_FORMAT } from '../constants';
 import { isWeekendDay } from './calendar-utils';
 
 /**
