@@ -137,7 +137,7 @@ export function generateMonthOptions() {
 	// Generate options for current year and next year.
 	for ( let year = currentYear - 1; year <= currentYear + 1; year++ ) {
 		for ( let month = 1; month <= 12; month++ ) {
-			const date = new Date( year, month - 1, 1 );
+			const date = new Date( year, month - 1, 15, 12, 0, 0 );
 			const value = `${ year }-${ String( month ).padStart( 2, '0' ) }`;
 			const label = dateI18n( 'F Y', date );
 			options.push( { value, label } );
