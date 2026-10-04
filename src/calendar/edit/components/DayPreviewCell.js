@@ -22,34 +22,42 @@ import {
 
 /**
  * Clones inner blocks, resolving the Day Number bound block's content to
- * this specific day's number directly, instead of relying on the binding
- * being (re-)evaluated inside the preview's own isolated editor context.
- * Keeps the block's own typography/color so it still looks identical to
- * the live version - just guarantees the correct value shows every time.
+ * this specific day's number directly. On days without posts, filters out
+ * the entries template so fake placeholder times are not shown.
  *
  * @param {Array}  blocks - Real inner blocks to preview.
- * @param {Object} day    - Day data (day, isEmpty).
+ * @param {Object} day    - Day data (day, isEmpty, posts).
  *
  * @return {Array} Inner blocks with the Day Number block's value resolved.
  */
 function withResolvedDayNumber( blocks, day ) {
-	return ( blocks ?? [] ).map( ( block ) => {
-		if ( ! isDayNumberBindingBlock( block ) ) {
-			return block;
-		}
+	const hasPosts = ( day.posts?.length ?? 0 ) > 0;
 
-		return {
-			...block,
-			attributes: {
-				...block.attributes,
-				content: day.isEmpty ? '' : String( day.day ?? '' ),
-				metadata: {
-					...block.attributes?.metadata,
-					bindings: undefined,
+	return ( blocks ?? [] )
+		.filter( ( block ) => {
+			// On days without posts, only keep the day number block.
+			if ( ! hasPosts ) {
+				return isDayNumberBindingBlock( block );
+			}
+			return true;
+		} )
+		.map( ( block ) => {
+			if ( ! isDayNumberBindingBlock( block ) ) {
+				return block;
+			}
+
+			return {
+				...block,
+				attributes: {
+					...block.attributes,
+					content: day.isEmpty ? '' : String( day.day ?? '' ),
+					metadata: {
+						...block.attributes?.metadata,
+						bindings: undefined,
+					},
 				},
-			},
-		};
-	} );
+			};
+		} );
 }
 
 /**
@@ -180,7 +188,9 @@ function DayPreviewCellComponent( {
 						{ day.day }
 					</div>
 				) }
-				<div { ...blockPreviewProps } />
+				{ resolvedBlocks.length > 0 && (
+					<div { ...blockPreviewProps } />
+				) }
 			</td>
 		</BlockContextProvider>
 	);

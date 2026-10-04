@@ -21,5 +21,13 @@
 			outline: 1px solid var(--wp-admin-theme-color, #007cba);
 			outline-offset: -1px;
 		}
+
+		/* Hide placeholder entries on empty days when the day is not being edited */
+		&.is-inactive-empty-day {
+
+			.wp-block-gatherpress-calendar-entries {
+				display: none;
+			}
+		}
 	}
 }
