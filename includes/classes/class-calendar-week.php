@@ -105,12 +105,16 @@ class Calendar_Week {
 
 		$days_html = ob_get_clean();
 
-		$year_month_key     = ( $block->context['gatherpress/year'] ?? '' ) . '-' . ( $block->context['gatherpress/month'] ?? '' ) . '-' . ( $block->context['gatherpress/weekIndex'] ?? 0 );
+		$year       = isset( $block->context['gatherpress/year'] ) && is_numeric( $block->context['gatherpress/year'] ) ? (int) $block->context['gatherpress/year'] : 0;
+		$month      = isset( $block->context['gatherpress/month'] ) && is_numeric( $block->context['gatherpress/month'] ) ? (int) $block->context['gatherpress/month'] : 0;
+		$week_index = isset( $block->context['gatherpress/weekIndex'] ) && is_numeric( $block->context['gatherpress/weekIndex'] ) ? (int) $block->context['gatherpress/weekIndex'] : 0;
+
+		$year_month_key     = sprintf( 'week-%d-%d-%d', $year, $month, $week_index );
 		$classes            = array( 'gatherpress-calendar__week' );
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
 				'class'       => implode( ' ', $classes ),
-				'data-wp-key' => 'week-' . $year_month_key,
+				'data-wp-key' => $year_month_key,
 			)
 		);
 

@@ -104,7 +104,7 @@ class Calendar_Day {
 		// Attach Interactivity API directives so browser time updates cached HTML.
 		if ( ! $is_empty && '' !== $day_date ) {
 			$extra_attributes['data-wp-interactive']        = 'gatherpress/calendar-day';
-			$extra_attributes['data-wp-context']            = wp_json_encode( array( 'date' => $day_date ) );
+			$extra_attributes['data-wp-context']            = (string) wp_json_encode( array( 'date' => $day_date ) );
 			$extra_attributes['data-wp-class--is-today']    = 'callbacks.isToday';
 			$extra_attributes['data-wp-class--is-past']     = 'callbacks.isPast';
 			$extra_attributes['data-wp-class--is-future']   = 'callbacks.isFuture';
