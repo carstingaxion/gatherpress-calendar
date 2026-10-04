@@ -77,7 +77,7 @@ class Calendar_Week {
 		ob_start();
 
 		// Render the days of this week using the Day template block.
-		foreach ( $week_days as $day ) {
+		foreach ( $week_days as $day_index => $day ) {
 			if ( ! is_array( $day ) ) {
 				continue;
 			}
@@ -88,6 +88,7 @@ class Calendar_Week {
 			$day_context = array_merge(
 				$block->context,
 				array(
+					'gatherpress/dayIndex'  => $day_index,
 					'gatherpress/dayDate'   => $day['date'] ?? '',
 					'gatherpress/dayNumber' => $day['day'] ?? 0,
 					'gatherpress/dayPosts'  => $day_posts,
@@ -104,8 +105,14 @@ class Calendar_Week {
 
 		$days_html = ob_get_clean();
 
+		$year_month_key     = ( $block->context['gatherpress/year'] ?? '' ) . '-' . ( $block->context['gatherpress/month'] ?? '' ) . '-' . ( $block->context['gatherpress/weekIndex'] ?? 0 );
 		$classes            = array( 'gatherpress-calendar__week' );
-		$wrapper_attributes = get_block_wrapper_attributes( array( 'class' => implode( ' ', $classes ) ) );
+		$wrapper_attributes = get_block_wrapper_attributes(
+			array(
+				'class'       => implode( ' ', $classes ),
+				'data-wp-key' => 'week-' . $year_month_key,
+			)
+		);
 
 		return sprintf(
 			'<tr %1$s>%2$s</tr>',

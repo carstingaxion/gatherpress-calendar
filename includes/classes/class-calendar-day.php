@@ -75,20 +75,40 @@ class Calendar_Day {
 	 * @return string Rendered HTML.
 	 */
 	public function render_callback( array $attributes, string $content, WP_Block $block ): string {
-		// This is somehow called, when it shouldnt, so I try to guard this, even knowing this is stupid.
 		if ( ! isset( $block->context['gatherpress/isEmpty'] ) ) {
 			return '';
 		}
 
 		$is_empty   = ! empty( $block->context['gatherpress/isEmpty'] );
 		$day_number = isset( $block->context['gatherpress/dayNumber'] ) && is_numeric( $block->context['gatherpress/dayNumber'] ) ? (int) $block->context['gatherpress/dayNumber'] : 0;
+		$day_date   = isset( $block->context['gatherpress/dayDate'] ) && is_string( $block->context['gatherpress/dayDate'] ) ? $block->context['gatherpress/dayDate'] : '';
 		$classes    = $this->get_day_cell_classes( $block->context );
 
-		$extra_attributes = array( 'class' => implode( ' ', $classes ) );
+		// Unique key prevents client navigation morphing from recycling DOM nodes across dates.
+		$weekday  = isset( $block->context['gatherpress/weekday'] ) && is_string( $block->context['gatherpress/weekday'] ) ? $block->context['gatherpress/weekday'] : '';
+		$cell_key = ! $is_empty && '' !== $day_date
+			? 'day-' . $day_date
+			: 'empty-' . ( '' !== $weekday ? $weekday : uniqid() );
 
-		// Today is shown with color and an outline; say it to screen readers too.
-		if ( ! empty( $block->context['gatherpress/isToday'] ) ) {
+		$extra_attributes = array(
+			'class'       => implode( ' ', $classes ),
+			'data-wp-key' => $cell_key,
+		);
+
+		// Accessibility: announce today to screen readers.
+		$today = Date_Calculator::get_today();
+		if ( ! $is_empty && '' !== $day_date && $day_date === $today ) {
 			$extra_attributes['aria-current'] = 'date';
+		}
+
+		// Attach Interactivity API directives so browser time updates cached HTML.
+		if ( ! $is_empty && '' !== $day_date ) {
+			$extra_attributes['data-wp-interactive']        = 'gatherpress/calendar-day';
+			$extra_attributes['data-wp-context']            = wp_json_encode( array( 'date' => $day_date ) );
+			$extra_attributes['data-wp-class--is-today']    = 'callbacks.isToday';
+			$extra_attributes['data-wp-class--is-past']     = 'callbacks.isPast';
+			$extra_attributes['data-wp-class--is-future']   = 'callbacks.isFuture';
+			$extra_attributes['data-wp-bind--aria-current'] = 'callbacks.ariaCurrent';
 		}
 
 		$wrapper_attributes = get_block_wrapper_attributes( $extra_attributes );
@@ -123,9 +143,6 @@ class Calendar_Day {
 		if ( ! empty( $context['gatherpress/dayPosts'] ) ) {
 			$classes[] = 'has-posts';
 		}
-		if ( ! empty( $context['gatherpress/isToday'] ) ) {
-			$classes[] = 'is-today';
-		}
 
 		$weekday    = isset( $context['gatherpress/weekday'] ) && is_string( $context['gatherpress/weekday'] ) ? $context['gatherpress/weekday'] : '';
 		$is_weekend = ! empty( $context['gatherpress/isWeekend'] );
@@ -143,6 +160,18 @@ class Calendar_Day {
 		}
 		if ( '' !== $weekday ) {
 			$classes[] = 'is-' . sanitize_html_class( strtolower( $weekday ) );
+		}
+
+		// Calculate server-side today, past, and future classes.
+		if ( empty( $context['gatherpress/isEmpty'] ) && '' !== $day_date ) {
+			$today = Date_Calculator::get_today();
+			if ( $day_date === $today ) {
+				$classes[] = 'is-today';
+			} elseif ( $day_date < $today ) {
+				$classes[] = 'is-past';
+			} elseif ( $day_date > $today ) {
+				$classes[] = 'is-future';
+			}
 		}
 
 		return $classes;

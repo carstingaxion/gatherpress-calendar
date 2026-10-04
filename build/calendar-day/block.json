@@ -51,9 +51,7 @@
     }
   },
   "supports": {
-    "interactivity": {
-      "clientNavigation": true
-    },
+    "interactivity": true,
     "html": false,
     "reusable": false,
     "customClassName": true,
@@ -99,5 +97,6 @@
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
-  "style": "file:./style-index.css"
+  "style": "file:./style-index.css",
+  "viewScriptModule": "file:./view.js"
 }
