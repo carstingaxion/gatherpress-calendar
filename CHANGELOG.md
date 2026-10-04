@@ -2,7 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.6.0...HEAD)
+## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.7.0...HEAD)
+
+## [0.7.0](https://github.com/carstingaxion/gatherpress-calendar/compare/0.6.0...0.7.0) - 2026-10-04
+
+### 🚀 Added
+
+- Interactivity API for timebased CSS classes ([#110](https://github.com/carstingaxion/gatherpress-calendar/pull/110))
+- Allow to use custom date format for the dayNumber ([#109](https://github.com/carstingaxion/gatherpress-calendar/pull/109))
+- Update block names (query + heading) from unitCount and viewType ([#108](https://github.com/carstingaxion/gatherpress-calendar/pull/108))
+- Show event titles, fit narrow screens, and name the calendar table ([#101](https://github.com/carstingaxion/gatherpress-calendar/pull/101))
+- Add the event title to calendar entry links for screen readers ([#100](https://github.com/carstingaxion/gatherpress-calendar/pull/100))
+
+### 🐛 Fixed
+
+- Dont show fake events on every day, but only when selected (and no real event data exists) ([#106](https://github.com/carstingaxion/gatherpress-calendar/pull/106))
+- Fix wrong dates caused by tz ([#105](https://github.com/carstingaxion/gatherpress-calendar/pull/105))
+
+### Dependency Updates & Maintenance
+
+- Bump the wordpress-packages group across 1 directory with 11 updates ([#104](https://github.com/carstingaxion/gatherpress-calendar/pull/104))
+- Bump brace-expansion ([#99](https://github.com/carstingaxion/gatherpress-calendar/pull/99))
 
 ## [0.6.0](https://github.com/carstingaxion/gatherpress-calendar/compare/0.5.0...0.6.0) - 2026-09-30
 
