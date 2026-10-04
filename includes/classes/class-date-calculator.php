@@ -14,6 +14,7 @@ namespace GatherPress_Calendar;
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
 use DateTimeImmutable;
+use DateTimeZone;
 
 /**
  * Date_Calculator Class
@@ -572,13 +573,13 @@ class Date_Calculator {
 				continue;
 			}
 
-			$base_sunday = strtotime( '2024-01-07' );
+			$base_sunday = strtotime( '2024-01-07 12:00:00 UTC' );
 			// @phpstan-ignore-next-line
 			if ( false === $base_sunday ) {
 				continue;
 			}
 			$day_timestamp = $base_sunday + ( $day_of_week * DAY_IN_SECONDS );
-			$day_name      = wp_date( 'D', $day_timestamp );
+			$day_name      = wp_date( 'D', $day_timestamp, new DateTimeZone( 'UTC' ) );
 			if ( is_string( $day_name ) ) {
 				$day_names[] = $day_name;
 			}
