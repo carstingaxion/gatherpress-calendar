@@ -14,6 +14,7 @@ import {
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
+import { dateI18n } from '@wordpress/date';
 
 import {
 	isDayNumberBindingBlock,
@@ -30,6 +31,7 @@ import {
  *
  * @return {Array} Inner blocks with the Day Number block's value resolved.
  */
+
 function withResolvedDayNumber( blocks, day ) {
 	const hasPosts = ( day.posts?.length ?? 0 ) > 0;
 
@@ -46,11 +48,25 @@ function withResolvedDayNumber( blocks, day ) {
 				return block;
 			}
 
+			const format =
+				block.attributes?.metadata?.bindings?.content?.args?.format ||
+				'';
+			let content = '';
+
+			if ( ! day.isEmpty ) {
+				if ( day.date && format !== '' ) {
+					const dateObj = new Date( `${ day.date }T12:00:00Z` );
+					content = dateI18n( format, dateObj, 'UTC' );
+				} else {
+					content = String( day.day ?? '' );
+				}
+			}
+
 			return {
 				...block,
 				attributes: {
 					...block.attributes,
-					content: day.isEmpty ? '' : String( day.day ?? '' ),
+					content,
 					metadata: {
 						...block.attributes?.metadata,
 						bindings: undefined,

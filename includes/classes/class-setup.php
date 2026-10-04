@@ -13,6 +13,7 @@ namespace GatherPress_Calendar;
 // Exit if accessed directly.
 defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
+use DateTimeZone;
 use GatherPress\Core\Event;
 use GatherPress\Core\Traits\Singleton;
 use WP_Block;
@@ -99,6 +100,7 @@ class Setup {
 				'get_value_callback' => array( $this, 'get_day_number_binding_value' ),
 				'uses_context'       => array(
 					'gatherpress/dayNumber',
+					'gatherpress/dayDate',
 					'gatherpress/isEmpty',
 				),
 			)
@@ -459,6 +461,8 @@ class Setup {
 	/**
 	 * Day number binding value callback.
 	 *
+	 * Supports optional 'format' argument from binding args (e.g. 'j', 'd', 'jS', 'j.', 'D j').
+	 *
 	 * @param array<string, mixed> $source_args    Source arguments.
 	 * @param WP_Block             $block_instance Block instance.
 	 * @param string               $attribute_name Attribute name.
@@ -472,6 +476,19 @@ class Setup {
 
 		if ( ! empty( $block_instance->context['gatherpress/isEmpty'] ) ) {
 			return '';
+		}
+
+		$day_date = $block_instance->context['gatherpress/dayDate'] ?? '';
+		$format   = isset( $source_args['format'] ) && is_string( $source_args['format'] ) ? $source_args['format'] : '';
+
+		if ( '' !== $day_date && is_string( $day_date ) && '' !== $format ) {
+			$timestamp = strtotime( $day_date . ' 12:00:00 UTC' );
+			if ( false !== $timestamp ) {
+				$formatted = wp_date( $format, $timestamp, new DateTimeZone( 'UTC' ) );
+				if ( is_string( $formatted ) ) {
+					return $formatted;
+				}
+			}
 		}
 
 		$day_number = $block_instance->context['gatherpress/dayNumber'] ?? null;

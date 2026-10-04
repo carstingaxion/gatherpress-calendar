@@ -4,6 +4,7 @@
 		'wp-block-editor',
 		'wp-blocks',
 		'wp-components',
+		'wp-compose',
 		'wp-core-data',
 		'wp-data',
 		'wp-date',
@@ -12,5 +13,5 @@
 		'wp-hooks',
 		'wp-i18n'
 	),
-	'version' => 'f667fc531ac45c4e4bdb'
+	'version' => 'd7fa821d54577f1d9acd'
 );

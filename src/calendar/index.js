@@ -18,8 +18,13 @@ import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import domReady from '@wordpress/dom-ready';
 import { select } from '@wordpress/data';
-import { getSettings } from '@wordpress/date';
-import { store as blockEditorStore } from '@wordpress/block-editor';
+import { dateI18n, getSettings } from '@wordpress/date';
+import {
+	InspectorControls,
+	store as blockEditorStore,
+} from '@wordpress/block-editor';
+import { createHigherOrderComponent } from '@wordpress/compose';
+import { PanelBody, SelectControl } from '@wordpress/components';
 
 /**
  * Internal dependencies
@@ -154,11 +159,23 @@ domReady( () => {
 	registerBlockBindingsSource( {
 		name: 'gatherpress/calendar-day',
 		label: __( 'Calendar Day Number', 'gatherpress-calendar' ),
-		usesContext: [ 'gatherpress/dayNumber', 'gatherpress/isEmpty' ],
-		getValues( { context } ) {
+		usesContext: [
+			'gatherpress/dayNumber',
+			'gatherpress/dayDate',
+			'gatherpress/isEmpty',
+		],
+		getValues( { context, args } ) {
 			if ( context?.[ 'gatherpress/isEmpty' ] ) {
 				return { content: '' };
 			}
+			const dayDate = context?.[ 'gatherpress/dayDate' ];
+			const format = args?.format || '';
+
+			if ( dayDate && format !== '' ) {
+				const dateObj = new Date( `${ dayDate }T12:00:00Z` );
+				return { content: dateI18n( format, dateObj, 'UTC' ) };
+			}
+
 			const dayNumber = context?.[ 'gatherpress/dayNumber' ];
 			return {
 				content:
@@ -169,6 +186,108 @@ domReady( () => {
 		},
 	} );
 } );
+
+// Add InspectorControls for blocks bound to gatherpress/calendar-day:
+const withDayNumberBindingControls = createHigherOrderComponent(
+	( BlockEdit ) => {
+		return ( props ) => {
+			const { attributes, setAttributes } = props;
+			const binding = attributes?.metadata?.bindings?.content;
+
+			if ( binding?.source !== 'gatherpress/calendar-day' ) {
+				return <BlockEdit { ...props } />;
+			}
+
+			const currentFormat = binding?.args?.format || '';
+
+			const updateFormat = ( newFormat ) => {
+				setAttributes( {
+					metadata: {
+						...attributes.metadata,
+						bindings: {
+							...attributes.metadata.bindings,
+							content: {
+								...binding,
+								args: {
+									...binding.args,
+									format: newFormat,
+								},
+							},
+						},
+					},
+				} );
+			};
+
+			return (
+				<>
+					<BlockEdit { ...props } />
+					<InspectorControls>
+						<PanelBody
+							title={ __(
+								'Day Number Settings',
+								'gatherpress-calendar'
+							) }
+							initialOpen={ true }
+						>
+							<SelectControl
+								label={ __(
+									'Date Format',
+									'gatherpress-calendar'
+								) }
+								value={ currentFormat }
+								options={ [
+									{
+										label: __(
+											'Default (1, 2, 3…)',
+											'gatherpress-calendar'
+										),
+										value: 'j',
+									},
+									{
+										label: __(
+											'Leading zero (01, 02, 03…)',
+											'gatherpress-calendar'
+										),
+										value: 'd',
+									},
+									{
+										label: __(
+											'Ordinal (1st, 2nd, 3rd…)',
+											'gatherpress-calendar'
+										),
+										value: 'jS',
+									},
+									{
+										label: __(
+											'Dot suffix (1., 2., 3…)',
+											'gatherpress-calendar'
+										),
+										value: 'j.',
+									},
+									{
+										label: __(
+											'Weekday and day (Mon 1…)',
+											'gatherpress-calendar'
+										),
+										value: 'D j',
+									},
+								] }
+								onChange={ updateFormat }
+							/>
+						</PanelBody>
+					</InspectorControls>
+				</>
+			);
+		};
+	},
+	'withDayNumberBindingControls'
+);
+
+addFilter(
+	'editor.BlockEdit',
+	'gatherpress-calendar/day-number-binding-controls',
+	withDayNumberBindingControls
+);
 
 /**
  * Reduce UI of GatherPress core query controls.
