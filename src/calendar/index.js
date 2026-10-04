@@ -18,6 +18,7 @@ import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import domReady from '@wordpress/dom-ready';
 import { select } from '@wordpress/data';
+import { getSettings } from '@wordpress/date';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 
 /**
@@ -117,8 +118,9 @@ domReady( () => {
 			showWeekends = true,
 		} = liveCalendar?.attributes || {};
 
-		const site = registrySelect( 'core' )?.getSite?.();
-		const startOfWeek = site?.start_of_week ?? 0;
+		// Get site settings for start_of_week.
+		const dateSettings = getSettings();
+		const startOfWeek = dateSettings?.l10n.startOfWeek || 0;
 
 		const range = calculateDateRange(
 			{
