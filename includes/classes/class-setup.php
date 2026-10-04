@@ -481,7 +481,7 @@ class Setup {
 		$day_date = $block_instance->context['gatherpress/dayDate'] ?? '';
 		$format   = isset( $source_args['format'] ) && is_string( $source_args['format'] ) ? $source_args['format'] : '';
 
-		if ( '' !== $day_date && '' !== $format ) {
+		if ( '' !== $day_date && is_string( $day_date ) && '' !== $format ) {
 			$timestamp = strtotime( $day_date . ' 12:00:00 UTC' );
 			if ( false !== $timestamp ) {
 				$formatted = wp_date( $format, $timestamp, new DateTimeZone( 'UTC' ) );
