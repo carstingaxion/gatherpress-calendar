@@ -4,7 +4,7 @@
  * Updates today, past, and future classes on calendar day cells
  * based on the visitor's local browser time to support static page caches.
  *
- * @package GatherPressCalendar
+ * @package
  */
 
 import { store, getContext } from '@wordpress/interactivity';
