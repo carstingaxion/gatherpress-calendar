@@ -15,8 +15,8 @@ import {
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
-import { useState, useMemo } from '@wordpress/element';
-import { useSelect } from '@wordpress/data';
+import { useEffect, useState, useMemo } from '@wordpress/element';
+import { useSelect, useDispatch } from '@wordpress/data';
 
 import { CALENDAR_TEMPLATE } from './edit/constants';
 import {
@@ -25,6 +25,8 @@ import {
 	formatHeading,
 } from './edit/utils/date-utils';
 import {
+	findHeadingBlock,
+	getCalendarBlockName,
 	generateCalendar,
 	getDefaultActiveDate,
 	getColumnsCount,
@@ -113,6 +115,87 @@ export default function Edit( {
 		() => generateCalendar( posts, startOfWeek, dateRange, showWeekends ),
 		[ posts, startOfWeek, dateRange, showWeekends ]
 	);
+
+	// Locate parent Query block and the bound heading block, keeping their existing metadata.
+	const {
+		parentQueryClientId,
+		parentQueryMetadata,
+		headingClientId,
+		headingMetadata,
+	} = useSelect(
+		( select ) => {
+			const { getBlockParentsByBlockName, getBlock } =
+				select( blockEditorStore );
+
+			const parents = getBlockParentsByBlockName(
+				clientId,
+				'core/query'
+			);
+			const parentId = parents?.[ parents.length - 1 ];
+			const parentBlock = parentId ? getBlock( parentId ) : null;
+
+			const headingBlock = parentBlock?.innerBlocks
+				? findHeadingBlock( parentBlock.innerBlocks )
+				: null;
+
+			return {
+				parentQueryClientId: parentId ?? null,
+				parentQueryMetadata: parentBlock?.attributes?.metadata,
+				headingClientId: headingBlock?.clientId ?? null,
+				headingMetadata: headingBlock?.attributes?.metadata,
+			};
+		},
+		[ clientId ]
+	);
+
+	const { updateBlockAttributes } = useDispatch( blockEditorStore );
+
+	const targetQueryName = useMemo(
+		() => getCalendarBlockName( viewType, unitCount ),
+		[ viewType, unitCount ]
+	);
+
+	const targetHeadingName = useMemo(
+		() =>
+			getCalendarBlockName(
+				viewType,
+				unitCount,
+				__( 'Heading', 'gatherpress-calendar' )
+			),
+		[ viewType, unitCount ]
+	);
+
+	// Sync names while preserving existing metadata (such as bindings).
+	useEffect( () => {
+		if (
+			parentQueryClientId &&
+			parentQueryMetadata?.name !== targetQueryName
+		) {
+			updateBlockAttributes( parentQueryClientId, {
+				metadata: {
+					...parentQueryMetadata,
+					name: targetQueryName,
+				},
+			} );
+		}
+
+		if ( headingClientId && headingMetadata?.name !== targetHeadingName ) {
+			updateBlockAttributes( headingClientId, {
+				metadata: {
+					...headingMetadata,
+					name: targetHeadingName,
+				},
+			} );
+		}
+	}, [
+		parentQueryClientId,
+		parentQueryMetadata,
+		targetQueryName,
+		headingClientId,
+		headingMetadata,
+		targetHeadingName,
+		updateBlockAttributes,
+	] );
 
 	// Table captions, as on the front end: the name of each month grid, or
 	// the heading of the week or day range.
