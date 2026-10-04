@@ -3,7 +3,7 @@
  *
  * @package
  */
-
+import { __, _x, sprintf } from '@wordpress/i18n';
 import { dateI18n } from '@wordpress/date';
 import { select } from '@wordpress/data';
 
@@ -475,4 +475,71 @@ export function getDefaultActiveDate( calendar ) {
 
 	const firstDay = days.find( ( day ) => ! day.isEmpty );
 	return firstDay ? firstDay.date : '';
+}
+
+/**
+ * Resolves the calendar block name based on viewType and unitCount.
+ *
+ * @param {string} viewType  View type: 'month' | 'week' | 'day'.
+ * @param {number} unitCount Number of units.
+ * @param {string} name      Block name.
+ * @return {string} Formatted name (e.g. "Month Calendar" or "3 Month Calendar").
+ */
+export function getCalendarBlockName(
+	viewType = 'month',
+	unitCount = 1,
+	name = 'Calendar'
+) {
+	const count = Number( unitCount ) || 1;
+
+	const viewLabels = {
+		month: __( 'Month', 'gatherpress-calendar' ),
+		week: __( 'Week', 'gatherpress-calendar' ),
+		day: __( 'Day', 'gatherpress-calendar' ),
+	};
+
+	const label = viewLabels[ viewType ] || viewLabels.month;
+
+	if ( count > 1 ) {
+		return sprintf(
+			/* translators: %1$d: unit count, %2$s: view type label (Month, Week, Day), %3$s: block name. */
+			_x(
+				'%1$d %2$s %3$s',
+				'Calendar block name',
+				'gatherpress-calendar'
+			),
+			count,
+			label,
+			name
+		);
+	}
+
+	return sprintf(
+		/* translators: %1$s: view type label (Month, Week, Day), %2$s: block name. */
+		_x( '%1$s %2$s', 'Calendar block name', 'gatherpress-calendar' ),
+		label,
+		name
+	);
+}
+
+/**
+ * Recursively find the block bound to the calendar heading source.
+ *
+ * @param {Array} blocks Array of parsed blocks to search.
+ * @return {Object|null} Matching heading block or null.
+ */
+export function findHeadingBlock( blocks = [] ) {
+	for ( const block of blocks ) {
+		const source = block.attributes?.metadata?.bindings?.content?.source;
+		if ( 'gatherpress/calendar-heading' === source ) {
+			return block;
+		}
+		if ( block.innerBlocks && block.innerBlocks.length ) {
+			const found = findHeadingBlock( block.innerBlocks );
+			if ( found ) {
+				return found;
+			}
+		}
+	}
+	return null;
 }
