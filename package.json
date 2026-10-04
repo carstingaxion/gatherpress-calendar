@@ -18,6 +18,9 @@
         "url": "https://github.com/carstingaxion/gatherpress-calendar/issues"
     },
     "main": "build/index.js",
+    "dependencies": {
+        "@wordpress/interactivity": "^6.56.0"
+    },
     "devDependencies": {
         "@wordpress/block-editor": "^18.0.0",
         "@wordpress/blocks": "^16.1.0",
@@ -33,7 +36,7 @@
         "@wordpress/scripts": "^36.0.0"
     },
     "scripts": {
-        "build": "wp-scripts build",
+        "build": "wp-scripts build --experimental-modules",
         "check-engines": "wp-scripts check-engines",
         "check-licenses": "wp-scripts check-licenses",
         "format": "wp-scripts format",
@@ -53,6 +56,6 @@
         "lint:pkg-json": "wp-scripts lint-pkg-json",
         "packages-update": "wp-scripts packages-update",
         "plugin-zip": "wp-scripts plugin-zip",
-        "start": "wp-scripts start"
+        "start": "wp-scripts start --experimental-modules"
     }
 }

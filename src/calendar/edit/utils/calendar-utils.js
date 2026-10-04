@@ -209,13 +209,18 @@ export function groupPostsByDate( posts = [] ) {
 function createDayEntry( dateObj, postsByDate, todayStr ) {
 	const dayOfWeek = dateObj.getDay();
 	const dateStr = formatDate( dateObj );
+	const isToday = dateStr === todayStr;
+	const isPast = dateStr < todayStr;
+	const isFuture = dateStr > todayStr;
 
 	return {
 		day: dateObj.getDate(),
 		date: dateStr,
 		posts: postsByDate?.[ dateStr ] ?? [],
 		isEmpty: false,
-		isToday: dateStr === todayStr,
+		isToday,
+		isPast,
+		isFuture,
 		dayOfWeek,
 		weekday: WEEKDAY_SLUGS[ dayOfWeek ],
 		isWeekend: isWeekendDay( dayOfWeek ),

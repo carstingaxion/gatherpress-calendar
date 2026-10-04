@@ -148,16 +148,20 @@ function DayPreviewCellComponent( {
 	// console.log(layoutProps.className);
 	// console.log(layoutProps.style);
 	// console.groupEnd();
+	const isPast = ! day.isEmpty && ! day.isToday && day.isPast;
+	const isFuture = ! day.isEmpty && ! day.isToday && day.isFuture;
+
 	const classNames = [
 		'gatherpress-calendar__day',
 		day.isEmpty ? 'is-empty' : '',
 		day.isToday ? 'is-today' : '',
+		isPast ? 'is-past' : '',
+		isFuture ? 'is-future' : '',
 		day.posts?.length > 0 ? 'has-posts' : '',
 		day.isWeekend ? 'is-weekend' : '',
 		day.weekday ? `is-${ day.weekday }` : '',
 		colorProps.className,
 		borderProps.className,
-		// layoutProps.className,
 	]
 		.filter( Boolean )
 		.join( ' ' );
