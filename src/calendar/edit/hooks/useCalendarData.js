@@ -21,7 +21,7 @@ export function useCalendarData( query, dateQuery ) {
 				return { posts: [], startOfWeek: 0 };
 			}
 
-			const { getEntityRecords, getSite } = select( coreStore );
+			const { getEntityRecords } = select( coreStore );
 
 			// Create a clean query object.
 			const cleanQuery = { ...query };

@@ -121,12 +121,12 @@ class Setup {
 	 *
 	 * @since 0.7.0
 	 *
-	 * @param array<string, mixed>    $settings Default editor settings.
+	 * @param array<string, mixed> $settings Default editor settings.
 	 *
 	 * @return array<string, mixed> Filtered editor settings.
 	 */
 	public function block_editor_settings_all( array $settings ): array {
-		$settings['gatherpress'] = array();
+		$settings['gatherpress']                = array();
 		$settings['gatherpress']['weekendDays'] = Date_Calculator::get_weekend_days();
 		return $settings;
 	}
