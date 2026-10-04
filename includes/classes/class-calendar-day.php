@@ -79,45 +79,20 @@ class Calendar_Day {
 			return '';
 		}
 
-		$is_empty   = ! empty( $block->context['gatherpress/isEmpty'] );
-		$day_number = isset( $block->context['gatherpress/dayNumber'] ) && is_numeric( $block->context['gatherpress/dayNumber'] ) ? (int) $block->context['gatherpress/dayNumber'] : 0;
-		$day_date   = isset( $block->context['gatherpress/dayDate'] ) && is_string( $block->context['gatherpress/dayDate'] ) ? $block->context['gatherpress/dayDate'] : '';
-		$classes    = $this->get_day_cell_classes( $block->context );
+		$is_empty     = ! empty( $block->context['gatherpress/isEmpty'] );
+		$day_number   = is_numeric( $block->context['gatherpress/dayNumber'] ?? null ) ? (int) $block->context['gatherpress/dayNumber'] : 0;
+		$day_date     = is_string( $block->context['gatherpress/dayDate'] ?? null ) ? $block->context['gatherpress/dayDate'] : '';
+		$weekday      = is_string( $block->context['gatherpress/weekday'] ?? null ) ? $block->context['gatherpress/weekday'] : '';
+		$cell_classes = $this->get_day_cell_classes( $block->context );
 
-		// Unique key prevents client navigation morphing from recycling DOM nodes across dates.
-		$weekday  = isset( $block->context['gatherpress/weekday'] ) && is_string( $block->context['gatherpress/weekday'] ) ? $block->context['gatherpress/weekday'] : '';
-		$cell_key = ! $is_empty && '' !== $day_date
-			? 'day-' . $day_date
-			: 'empty-' . ( '' !== $weekday ? $weekday : uniqid() );
-
-		$extra_attributes = array(
-			'class'       => implode( ' ', $classes ),
-			'data-wp-key' => $cell_key,
-		);
-
-		// Accessibility: announce today to screen readers.
-		$today = Date_Calculator::get_today();
-		if ( ! $is_empty && '' !== $day_date && $day_date === $today ) {
-			$extra_attributes['aria-current'] = 'date';
-		}
-
-		// Attach Interactivity API directives so browser time updates cached HTML.
-		if ( ! $is_empty && '' !== $day_date ) {
-			$extra_attributes['data-wp-interactive']        = 'gatherpress/calendar-day';
-			$extra_attributes['data-wp-context']            = (string) wp_json_encode( array( 'date' => $day_date ) );
-			$extra_attributes['data-wp-class--is-today']    = 'callbacks.isToday';
-			$extra_attributes['data-wp-class--is-past']     = 'callbacks.isPast';
-			$extra_attributes['data-wp-class--is-future']   = 'callbacks.isFuture';
-			$extra_attributes['data-wp-bind--aria-current'] = 'callbacks.ariaCurrent';
-		}
-
+		$extra_attributes   = $this->build_cell_attributes( $cell_classes, $day_date, $is_empty, $weekday );
 		$wrapper_attributes = get_block_wrapper_attributes( $extra_attributes );
-		$inner_blocks_raw   = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
-		$inner_blocks       = $this->find_day_inner_blocks( $inner_blocks_raw );
 		$cell_content       = '';
 
 		if ( ! $is_empty && $day_number > 0 ) {
-			$cell_content = $this->render_day_cell_content( $block->context, $inner_blocks['day_number'], $inner_blocks['entries'] );
+			$inner_blocks_raw = is_array( $block->parsed_block['innerBlocks'] ?? null ) ? $block->parsed_block['innerBlocks'] : array();
+			$inner_blocks     = $this->find_day_inner_blocks( $inner_blocks_raw );
+			$cell_content     = $this->render_day_cell_content( $block->context, $inner_blocks['day_number'], $inner_blocks['entries'] );
 		}
 
 		return sprintf(
@@ -125,6 +100,46 @@ class Calendar_Day {
 			$wrapper_attributes,
 			$cell_content
 		);
+	}
+
+	/**
+	 * Build cell attributes including key and interactivity directives.
+	 *
+	 * @param string[] $classes  CSS classes list.
+	 * @param string   $day_date YYYY-MM-DD date string.
+	 * @param bool     $is_empty Whether the cell is empty padding.
+	 * @param string   $weekday  Weekday slug.
+	 *
+	 * @return array<string, string> Attributes for wrapper.
+	 */
+	private function build_cell_attributes( array $classes, string $day_date, bool $is_empty, string $weekday ): array {
+		$cell_key = ! $is_empty && '' !== $day_date
+			? 'day-' . $day_date
+			: 'empty-' . ( '' !== $weekday ? $weekday : uniqid() );
+
+		$attributes = array(
+			'class'       => implode( ' ', $classes ),
+			'data-wp-key' => $cell_key,
+		);
+
+		if ( $is_empty || '' === $day_date ) {
+			return $attributes;
+		}
+
+		if ( $day_date === Date_Calculator::get_today() ) {
+			$attributes['aria-current'] = 'date';
+		}
+
+		$context_json = wp_json_encode( array( 'date' => $day_date ) );
+
+		$attributes['data-wp-interactive']        = 'gatherpress/calendar-day';
+		$attributes['data-wp-context']            = is_string( $context_json ) ? $context_json : '{}';
+		$attributes['data-wp-class--is-today']    = 'callbacks.isToday';
+		$attributes['data-wp-class--is-past']     = 'callbacks.isPast';
+		$attributes['data-wp-class--is-future']   = 'callbacks.isFuture';
+		$attributes['data-wp-bind--aria-current'] = 'callbacks.ariaCurrent';
+
+		return $attributes;
 	}
 
 	/**
@@ -140,13 +155,40 @@ class Calendar_Day {
 		if ( ! empty( $context['gatherpress/isEmpty'] ) ) {
 			$classes[] = 'is-empty';
 		}
+
 		if ( ! empty( $context['gatherpress/dayPosts'] ) ) {
 			$classes[] = 'has-posts';
 		}
 
-		$weekday    = isset( $context['gatherpress/weekday'] ) && is_string( $context['gatherpress/weekday'] ) ? $context['gatherpress/weekday'] : '';
+		[ $weekday, $is_weekend ] = $this->resolve_weekday_and_weekend( $context );
+
+		if ( $is_weekend ) {
+			$classes[] = 'is-weekend';
+		}
+
+		if ( '' !== $weekday ) {
+			$classes[] = 'is-' . sanitize_html_class( strtolower( $weekday ) );
+		}
+
+		if ( empty( $context['gatherpress/isEmpty'] ) ) {
+			$day_date = is_string( $context['gatherpress/dayDate'] ?? null ) ? $context['gatherpress/dayDate'] : '';
+			$classes  = array_merge( $classes, $this->get_temporal_classes( $day_date ) );
+		}
+
+		return $classes;
+	}
+
+	/**
+	 * Resolve weekday slug and weekend status.
+	 *
+	 * @param array<mixed> $context Block context.
+	 *
+	 * @return array{0: string, 1: bool} Weekday slug and is_weekend flag.
+	 */
+	private function resolve_weekday_and_weekend( array $context ): array {
+		$weekday    = is_string( $context['gatherpress/weekday'] ?? null ) ? $context['gatherpress/weekday'] : '';
 		$is_weekend = ! empty( $context['gatherpress/isWeekend'] );
-		$day_date   = isset( $context['gatherpress/dayDate'] ) && is_string( $context['gatherpress/dayDate'] ) ? $context['gatherpress/dayDate'] : '';
+		$day_date   = is_string( $context['gatherpress/dayDate'] ?? null ) ? $context['gatherpress/dayDate'] : '';
 
 		if ( '' === $weekday && '' !== $day_date ) {
 			$ts         = strtotime( $day_date );
@@ -155,26 +197,30 @@ class Calendar_Day {
 			$is_weekend = Date_Calculator::is_weekend_day( $dow );
 		}
 
-		if ( $is_weekend ) {
-			$classes[] = 'is-weekend';
-		}
-		if ( '' !== $weekday ) {
-			$classes[] = 'is-' . sanitize_html_class( strtolower( $weekday ) );
+		return array( $weekday, $is_weekend );
+	}
+
+	/**
+	 * Resolve temporal CSS classes (is-today, past, future).
+	 *
+	 * @param string $day_date YYYY-MM-DD date string.
+	 *
+	 * @return list<string> Temporal classes.
+	 */
+	private function get_temporal_classes( string $day_date ): array {
+		if ( '' === $day_date ) {
+			return array();
 		}
 
-		// Calculate server-side today, past, and future classes.
-		if ( empty( $context['gatherpress/isEmpty'] ) && '' !== $day_date ) {
-			$today = Date_Calculator::get_today();
-			if ( $day_date === $today ) {
-				$classes[] = 'is-today';
-			} elseif ( $day_date < $today ) {
-				$classes[] = 'is-past';
-			} elseif ( $day_date > $today ) {
-				$classes[] = 'is-future';
-			}
+		$today = Date_Calculator::get_today();
+
+		if ( $day_date === $today ) {
+			return array( 'is-today' );
 		}
 
-		return $classes;
+		return $day_date < $today
+			? array( 'is-past', 'past' )
+			: array( 'is-future', 'future' );
 	}
 
 	/**
