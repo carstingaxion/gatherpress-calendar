@@ -6,6 +6,8 @@
 
 import { dateI18n } from '@wordpress/date';
 import { applyFilters } from '@wordpress/hooks';
+import { select } from '@wordpress/data';
+
 import { DATE_FORMAT } from '../constants';
 import { formatDate } from './date-utils';
 
@@ -33,8 +35,10 @@ export const WEEKDAY_SLUGS = [
  * @return {number[]} Array of weekend day integers (0 = Sunday, 6 = Saturday).
  */
 export function getWeekendDays() {
-	const defaultWeekends = [ 0, 6 ];
-	return applyFilters( 'gatherpress.calendar.weekendDays', defaultWeekends );
+	const settings = select( 'core/editor' )?.getEditorSettings?.();
+	return Array.isArray( settings?.gatherpress?.weekendDays )
+			? settings.gatherpress.weekendDays
+			: [ 0, 6 ];
 }
 
 export function isWeekendDay( dayOfWeek ) {

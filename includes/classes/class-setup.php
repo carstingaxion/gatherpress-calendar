@@ -61,6 +61,7 @@ class Setup {
 	 */
 	protected function setup_hooks(): void {
 		add_action( 'init', array( $this, 'block_init' ) );
+		add_filter( 'block_editor_settings_all', array( $this, 'block_editor_settings_all' ) );
 		add_filter( 'rest_gatherpress_event_query', array( $this, 'rest_gatherpress_event_query' ), 20, 2 );
 		add_filter( 'render_block_data', array( $this, 'allow_core_pagination' ), 10, 3 );
 		add_filter( 'render_block_context', array( $this, 'disable_query_pagination_numbers' ), 10, 2 );
@@ -111,6 +112,23 @@ class Setup {
 				'uses_context'       => array( 'query' ),
 			)
 		);
+	}
+
+	/**
+	 * Pass calendar settings into the official block editor settings store.
+	 *
+	 * Guarantees settings are accessible inside iframed editor canvases.
+	 *
+	 * @since 0.7.0
+	 *
+	 * @param array<string, mixed>    $settings Default editor settings.
+	 *
+	 * @return array<string, mixed> Filtered editor settings.
+	 */
+	public function block_editor_settings_all( array $settings ): array {
+		$settings['gatherpress'] = array();
+		$settings['gatherpress']['weekendDays'] = Date_Calculator::get_weekend_days();
+		return $settings;
 	}
 
 	/**
