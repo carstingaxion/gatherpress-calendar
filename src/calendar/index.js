@@ -202,7 +202,7 @@ addFilter(
 							'offset',
 							'count',
 						].includes( name )
-			  )
+				)
 			: controls;
 	}
 );

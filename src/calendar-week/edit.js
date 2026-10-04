@@ -94,7 +94,7 @@ export default memo( function Edit( { context, clientId } ) {
 						'gatherpress/isToday': !! activeDay.isToday,
 						'gatherpress/weekday': activeDay.weekday ?? '',
 						'gatherpress/isWeekend': !! activeDay.isWeekend,
-				  }
+					}
 				: {},
 		[ activeDay ]
 	);

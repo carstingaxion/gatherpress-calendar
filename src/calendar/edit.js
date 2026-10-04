@@ -203,7 +203,7 @@ export default function Edit( {
 	// so pass one length: the 'left' side of a split gap, and '0px' for '0'.
 	const columnGap = getGapCSSValue(
 		blockGap && 'object' === typeof blockGap
-			? blockGap.left ?? '1px'
+			? ( blockGap.left ?? '1px' )
 			: blockGap
 	);
 	const tableStyle = {
@@ -212,7 +212,7 @@ export default function Edit( {
 			? {
 					'--gatherpress-calendar-column-gap':
 						'0' === columnGap ? '0px' : columnGap,
-			  }
+				}
 			: {} ),
 		'--gatherpress-calendar-columns': getColumnsCount(
 			viewType,
