@@ -61,15 +61,20 @@ export default memo( function Edit( { context, clientId } ) {
 		[ dayDate, dayNumber, posts, isEmpty, isToday, weekday, isWeekend ]
 	);
 
-	// If a real Day Number block (a paragraph bound to the calendar-day
-	// binding source) already exists among this day's own inner blocks,
-	// it renders the day number itself - skip the plain fallback below to
-	// avoid showing the number twice, and mirror its own text alignment.
-	const { hasDayNumberBlock } = useSelect(
+	// Check whether this day cell or any of its inner blocks are currently selected,
+	// and whether a bound Day Number block exists in the template.
+	const { isDayActive, hasDayNumberBlock } = useSelect(
 		( select ) => {
-			const blocks = select( blockEditorStore ).getBlocks( clientId );
+			const { isBlockSelected, hasSelectedInnerBlock, getBlocks } =
+				select( blockEditorStore );
+
 			return {
-				hasDayNumberBlock: !! findDayNumberBlock( blocks ),
+				isDayActive:
+					isBlockSelected( clientId ) ||
+					hasSelectedInnerBlock( clientId, true ),
+				hasDayNumberBlock: !! findDayNumberBlock(
+					getBlocks( clientId )
+				),
 			};
 		},
 		[ clientId ]
@@ -82,6 +87,7 @@ export default memo( function Edit( { context, clientId } ) {
 		posts.length > 0 ? 'has-posts' : '',
 		isWeekend ? 'is-weekend' : '',
 		weekday ? `is-${ weekday }` : '',
+		! isDayActive && posts.length === 0 ? 'is-inactive-empty-day' : '',
 	]
 		.filter( Boolean )
 		.join( ' ' );
