@@ -132,7 +132,7 @@ class Setup {
 		if ( ! isset( $settings['gatherpress'] ) || ! is_array( $settings['gatherpress'] ) ) {
 			$settings['gatherpress'] = array();
 		}
-		$settings['gatherpress']['weekendDays'] = Date_Calculator::get_weekend_days();
+		$settings['gatherpress']['weekendDays']  = Date_Calculator::get_weekend_days();
 		$settings['gatherpress']['postsPerPage'] = Query_Builder::get_posts_per_page();
 		return $settings;
 	}
@@ -233,11 +233,6 @@ class Setup {
 
 		// Safety check: only proceed if this is explicitly a calendar query.
 		if ( empty( $parameters[ self::CALENDAR_QUERY_PARAM ] ) ) {
-			// // If not a calendar query, ensure posts_per_page cannot exceed the standard 100 ceiling.
-			// if ( isset( $args['posts_per_page'] ) && $args['posts_per_page'] > 100 ) {
-			// 	$args['posts_per_page'] = 100;
-			// }
-
 			return $args;
 		}
 

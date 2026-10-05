@@ -51,6 +51,7 @@ class Query_Builder {
 		 */
 		$posts_per_page = apply_filters( 'gatherpress_calendar_posts_per_page', $default_posts_per_page );
 
+		// @phpstan-ignore-next-line
 		return is_numeric( $posts_per_page ) ? max( 1, (int) $posts_per_page ) : $default_posts_per_page;
 	}
 
