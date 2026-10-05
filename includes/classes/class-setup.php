@@ -132,6 +132,7 @@ class Setup {
 			$settings['gatherpress'] = array();
 		}
 		$settings['gatherpress']['weekendDays'] = Date_Calculator::get_weekend_days();
+		$settings['gatherpress']['postsPerPage'] = Query_Builder::get_posts_per_page();
 		return $settings;
 	}
 

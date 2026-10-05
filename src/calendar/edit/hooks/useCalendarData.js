@@ -2,6 +2,8 @@ import { useSelect } from '@wordpress/data';
 import { getSettings } from '@wordpress/date';
 import { store as coreStore } from '@wordpress/core-data';
 
+import { getPostsPerPage } from '../utils/calendar-utils';
+
 const EMPTY_ARRAY = [];
 
 /**
@@ -28,7 +30,7 @@ export function useCalendarData( query, dateQuery ) {
 
 			// Build REST API query arguments.
 			const queryArgs = {
-				per_page: 100,
+				per_page: getPostsPerPage(),
 				_embed: 'wp:term',
 			};
 

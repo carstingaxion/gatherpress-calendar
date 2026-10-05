@@ -28,6 +28,33 @@ use WP_Block;
 class Query_Builder {
 
 	/**
+	 * Retrieves the maximum number of posts to query for calendar display.
+	 *
+	 * This filter allows sites to adapt the number of posts fetched
+	 * for calendar rendering to match their specific performance and event volume needs.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @return int Number of posts to query.
+	 */
+	public static function get_posts_per_page(): int {
+		$default_posts_per_page = 500;
+
+		/**
+		 * Filters the maximum number of posts queried for calendar display.
+		 *
+		 * Defaults to 500.
+		 *
+		 * @since 0.8.0
+		 *
+		 * @param int $default_posts_per_page Default number of posts to query.
+		 */
+		$posts_per_page = apply_filters( 'gatherpress_calendar_posts_per_page', $default_posts_per_page );
+
+		return is_numeric( $posts_per_page ) ? max( 1, (int) $posts_per_page ) : $default_posts_per_page;
+	}
+
+	/**
 	 * Build query arguments from block context and resolved date range.
 	 *
 	 * @since 0.1.0
@@ -55,7 +82,7 @@ class Query_Builder {
 		$query_args[ Setup::CALENDAR_QUERY_VIEW_TYPE ]  = $date_range['view_type'];
 		$query_args[ Setup::CALENDAR_QUERY_START_DATE ] = $date_range['start_date'];
 		$query_args[ Setup::CALENDAR_QUERY_END_DATE ]   = $date_range['end_date'];
-		$query_args['posts_per_page']                   = 99;
+		$query_args['posts_per_page']                   = self::get_posts_per_page();
 
 		$post_type = $query_args['post_type'] ?? 'post';
 		$is_event  = 'gatherpress_event' === $post_type || ( is_array( $post_type ) && in_array( 'gatherpress_event', $post_type, true ) );

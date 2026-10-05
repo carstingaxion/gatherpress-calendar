@@ -151,6 +151,14 @@ add_filter( 'gatherpress_calendar_weekend_days', function() {
 } );
 ```
 
+* **Filterable Query Limit:** Filter `gatherpress_calendar_posts_per_page` allows customizing the maximum number of posts queried for calendar display defaults to `500`):
+
+```php
+add_filter( 'gatherpress_calendar_posts_per_page', function() {
+    return 1000;
+} );
+```
+
 ### Responsive Behavior
 
 * Uses CSS Container Queries (`@container calendar (max-width: 400px)`) to hide weekday headers and scale cell contents automatically in narrow containers.
