@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.7.0...HEAD)
+## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.7.1...HEAD)
+
+## [0.7.1](https://github.com/carstingaxion/gatherpress-calendar/compare/0.7.0...0.7.1) - 2026-10-05
+
+### Fixes
+
+- overwriting GatherPress core editor settings (#114) Props to @mattcowan
 
 ## [0.7.0](https://github.com/carstingaxion/gatherpress-calendar/compare/0.6.0...0.7.0) - 2026-10-04
 
