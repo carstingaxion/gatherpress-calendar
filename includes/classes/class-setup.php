@@ -128,7 +128,9 @@ class Setup {
 	 * @return array<string, mixed> Filtered editor settings.
 	 */
 	public function block_editor_settings_all( array $settings ): array {
-		$settings['gatherpress']                = array();
+		if ( ! isset( $settings['gatherpress'] ) || ! is_array( $settings['gatherpress'] ) ) {
+			$settings['gatherpress'] = array();
+		}
 		$settings['gatherpress']['weekendDays'] = Date_Calculator::get_weekend_days();
 		return $settings;
 	}
