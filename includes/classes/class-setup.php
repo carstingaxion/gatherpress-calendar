@@ -62,8 +62,9 @@ class Setup {
 	 */
 	protected function setup_hooks(): void {
 		add_action( 'init', array( $this, 'block_init' ) );
+		add_action( 'init', array( $this, 'register_calendar_rest_hooks' ), 20 );
+		add_action( 'rest_api_init', array( $this, 'register_calendar_rest_hooks' ), 10 );
 		add_filter( 'block_editor_settings_all', array( $this, 'block_editor_settings_all' ) );
-		add_filter( 'rest_gatherpress_event_query', array( $this, 'rest_gatherpress_event_query' ), 20, 2 );
 		add_filter( 'render_block_data', array( $this, 'allow_core_pagination' ), 10, 3 );
 		add_filter( 'render_block_context', array( $this, 'disable_query_pagination_numbers' ), 10, 2 );
 		add_filter( 'query_vars', array( $this, 'query_vars' ) );
@@ -137,6 +138,59 @@ class Setup {
 	}
 
 	/**
+	 * Retrieves all post types supported by the calendar.
+	 *
+	 * Supports the default 'post' post type alongside any post type
+	 * registering 'gatherpress-event-date' support (e.g. 'gatherpress_event').
+	 *
+	 * @return string[] Array of post type slugs.
+	 */
+	public static function get_calendar_post_types(): array {
+		$event_types = get_post_types_by_support( 'gatherpress-event-date' );
+
+		return array_values( array_unique( array_merge( array( 'post' ), $event_types ) ) );
+	}
+
+	/**
+	 * Registers REST query and schema collection hooks for all supported post types.
+	 *
+	 * @return void
+	 */
+	public function register_calendar_rest_hooks(): void {
+		foreach ( self::get_calendar_post_types() as $post_type ) {
+			if ( ! has_filter( "rest_{$post_type}_collection_params", array( $this, 'filter_rest_collection_params' ) ) ) {
+				add_filter( "rest_{$post_type}_collection_params", array( $this, 'filter_rest_collection_params' ), 10 );
+			}
+
+			if ( ! has_filter( "rest_{$post_type}_query", array( $this, 'rest_gatherpress_event_query' ) ) ) {
+				add_filter( "rest_{$post_type}_query", array( $this, 'rest_gatherpress_event_query' ), 20, 2 );
+			}
+		}
+	}
+
+	/**
+	 * Increases the REST API per_page maximum limit to match the calendar's configured query limit
+	 * only when requested for calendar display.
+	 *
+	 * @param array<string, mixed> $query_params Endpoint collection parameters.
+	 *
+	 * @return array<string, mixed> Filtered collection parameters.
+	 */
+	public function filter_rest_collection_params( array $query_params ): array {
+		// Safety check: only raise the maximum if this request explicitly includes our calendar marker.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( empty( $_GET[ self::CALENDAR_QUERY_PARAM ] ) && empty( $_REQUEST[ self::CALENDAR_QUERY_PARAM ] ) ) {
+			return $query_params;
+		}
+
+		if ( isset( $query_params['per_page'] ) && is_array( $query_params['per_page'] ) ) {
+			$query_params['per_page']['maximum'] = max( 100, Query_Builder::get_posts_per_page() );
+		}
+
+		return $query_params;
+	}
+
+	/**
 	 * Modify GatherPress event queries to support month-based filtering.
 	 *
 	 * When the calendar block adds year/month parameters to a REST API request
@@ -177,14 +231,23 @@ class Setup {
 	public function rest_gatherpress_event_query( array $args, WP_REST_Request $request ): array {
 		$parameters = $request->get_params();
 
-		// Only proceed if this is a calendar query (identified by our marker)
-		// AND it has year/month parameters for date filtering.
-		if ( ! isset( $parameters[ self::CALENDAR_QUERY_PARAM ] ) ) {
+		// Safety check: only proceed if this is explicitly a calendar query.
+		if ( empty( $parameters[ self::CALENDAR_QUERY_PARAM ] ) ) {
+			// // If not a calendar query, ensure posts_per_page cannot exceed the standard 100 ceiling.
+			// if ( isset( $args['posts_per_page'] ) && $args['posts_per_page'] > 100 ) {
+			// 	$args['posts_per_page'] = 100;
+			// }
+
 			return $args;
 		}
 
-		// Remove GatherPress's past/upcoming filter since we're doing specific date range filtering.
-		unset( $args[ Event\Query::EVENT_QUERY_PARAM ] );
+		$post_type = is_string( $args['post_type'] ?? null ) ? $args['post_type'] : 'post';
+		$is_event  = post_type_supports( $post_type, 'gatherpress-event-date' );
+
+		// Remove GatherPress's past/upcoming filter if this is an event type.
+		if ( $is_event ) {
+			unset( $args[ Event\Query::EVENT_QUERY_PARAM ] );
+		}
 
 		// Initialize date_query if it doesn't exist.
 		if ( ! isset( $args['date_query'] ) || ! is_array( $args['date_query'] ) ) {
@@ -204,12 +267,18 @@ class Setup {
 			: ( isset( $parameters['before'] ) && is_string( $parameters['before'] ) ? $parameters['before'] : '' );
 
 		if ( '' !== $start_date && '' !== $end_date ) {
-			$args['date_query'][0] = array(
+			$date_clause = array(
 				'after'     => sanitize_text_field( $start_date ) . ' 00:00:00',
 				'before'    => sanitize_text_field( $end_date ) . ' 23:59:59',
 				'inclusive' => true,
-				'column'    => 'datetime_start',
 			);
+
+			// Events query by datetime_start; standard posts use post_date (default).
+			if ( $is_event ) {
+				$date_clause['column'] = 'datetime_start';
+			}
+
+			$args['date_query'][0] = $date_clause;
 		}
 
 		return $args;

@@ -85,7 +85,8 @@ class Query_Builder {
 		$query_args['posts_per_page']                   = self::get_posts_per_page();
 
 		$post_type = $query_args['post_type'] ?? 'post';
-		$is_event  = 'gatherpress_event' === $post_type || ( is_array( $post_type ) && in_array( 'gatherpress_event', $post_type, true ) );
+		$is_event  = ( is_string( $post_type ) && post_type_supports( $post_type, 'gatherpress-event-date' ) )
+			|| ( is_array( $post_type ) && in_array( 'gatherpress_event', $post_type, true ) );
 
 		// Inclusive date range prevents boundary clipping across weeks and multi-month periods.
 		$date_clause = array(
