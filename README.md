@@ -62,6 +62,7 @@ core/query
 * **Parent:** `gatherpress/calendar-week`.
 * **Rendering:** Renders individual day cells (`<td>`).
 * **Context Provided:** `gatherpress/dayDate`, `gatherpress/dayNumber`, `gatherpress/dayPosts`, `gatherpress/isEmpty`, `gatherpress/isToday`, `gatherpress/weekday`, `gatherpress/isWeekend`.
+* **Inner Blocks:** Days with posts render all inner blocks in order. Days without posts only render the bound day number.
 * Supports native layout controls (Flex), colors, borders, drop shadows, spacing, and typography.
 
 ### 4. Calendar Entries (`gatherpress/calendar-entries`)
@@ -70,6 +71,25 @@ core/query
 * **Rendering:** Iterates over `gatherpress/dayPosts` (similar to `core/post-template`).
 * Renders its inner blocks once per post, injecting `postId` and `postType` context into each entry.
 * Supports Flex and Grid layout controls, block gap, colors, borders, shadows, and spacing.
+
+### Day Modal Variation
+
+The **Event Calendar (Day Modal)** query variation lists the events of a day in a modal instead of inside the day cell. It uses the GatherPress Modal Manager blocks:
+
+```text
+gatherpress/calendar-day
+├── core/paragraph (bound to day number)
+└── gatherpress/modal-manager
+    ├── core/buttons (.gatherpress-calendar__day-trigger)
+    │   └── core/button (opens the modal, text bound to the date)
+    └── gatherpress/modal
+        └── gatherpress/modal-content
+            ├── core/heading (bound to the date)
+            ├── gatherpress/calendar-entries
+            └── core/buttons (Close)
+```
+
+On the front end, the trigger button covers the whole day cell. Its text is the date, which screen readers read as the button name; it is hidden on screen.
 
 ---
 
@@ -88,7 +108,7 @@ Binds the active calendar heading to a `core/heading` or `core/paragraph` block 
 
 ### `gatherpress/calendar-day`
 
-Binds the day number to a paragraph block inside a day cell.
+Binds the day number to a paragraph or heading block (`content`) or a button block (`text`) inside a day cell.
 
 * **Context used:** `gatherpress/dayNumber`,`gatherpress/dayDate`, `gatherpress/isEmpty`.
 * **Custom Date Formatting:** Accepts an optional format argument in block bindings metadata (configurable in the editor inspector) supporting standard date formats such as:

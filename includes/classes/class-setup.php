@@ -543,6 +543,10 @@ class Setup {
 	 * Day number binding value callback.
 	 *
 	 * Supports optional 'format' argument from binding args (e.g. 'j', 'd', 'jS', 'j.', 'D j').
+	 * Binds paragraph and heading 'content', and button 'text' (used as the
+	 * accessible name of the day modal trigger).
+	 *
+	 * @since 0.8.0 Supports the 'text' attribute.
 	 *
 	 * @param array<string, mixed> $source_args    Source arguments.
 	 * @param WP_Block             $block_instance Block instance.
@@ -551,7 +555,7 @@ class Setup {
 	 * @return string|null
 	 */
 	public function get_day_number_binding_value( array $source_args, WP_Block $block_instance, string $attribute_name ): ?string {
-		if ( 'content' !== $attribute_name ) {
+		if ( ! in_array( $attribute_name, array( 'content', 'text' ), true ) ) {
 			return null;
 		}
 

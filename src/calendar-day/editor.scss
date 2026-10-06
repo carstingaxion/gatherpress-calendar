@@ -22,10 +22,11 @@
 			outline-offset: -1px;
 		}
 
-		/* Hide placeholder entries on empty days when the day is not being edited */
+		/* Hide placeholder entries and the day modal on idle empty days */
 		&.is-inactive-empty-day {
 
-			.wp-block-gatherpress-calendar-entries {
+			.wp-block-gatherpress-calendar-entries,
+			.wp-block-gatherpress-modal-manager {
 				display: none;
 			}
 		}

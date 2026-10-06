@@ -80,3 +80,43 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	display: inline;
 	z-index: 1;
 }
+
+/* ==========================================================================
+   Day Modal Trigger
+   ========================================================================== */
+
+/*
+ * In the "Event Calendar (Day Modal)" variation, the button covers the whole
+ * day cell. Its text is the date: pushed out of the box and clipped, so only
+ * screen readers read it. Front end only, the button stays editable.
+ */
+.gatherpress-calendar__day-trigger:not(.block-editor-block-list__block) {
+	display: contents;
+
+	.wp-block-button {
+		display: contents;
+	}
+
+	.wp-block-button__link {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		margin: 0;
+		padding: 0;
+		border: 1px solid transparent;
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
+		cursor: pointer;
+		overflow: hidden;
+		white-space: nowrap;
+		text-indent: 100%;
+
+		&:focus-visible {
+			outline: 2px solid var(--wp--preset--color--contrast, #1e1e1e);
+
+			/* Inside the today outline, so both stay visible. */
+			outline-offset: -5px;
+		}
+	}
+}

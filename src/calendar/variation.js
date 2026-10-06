@@ -7,9 +7,12 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { QUERY_VARIATION_INNER_BLOCKS } from './edit/constants';
+import {
+	QUERY_VARIATION_INNER_BLOCKS,
+	QUERY_VARIATION_DAY_MODAL_INNER_BLOCKS,
+} from './edit/constants';
 
-registerBlockVariation( 'core/query', {
+const variation = {
 	name: 'gatherpress-calendar',
 	title: __( 'Event Calendar', 'gatherpress-calendar' ),
 	description: __(
@@ -45,4 +48,17 @@ registerBlockVariation( 'core/query', {
 	},
 	innerBlocks: QUERY_VARIATION_INNER_BLOCKS,
 	scope: [ 'inserter' ],
+};
+
+registerBlockVariation( 'core/query', variation );
+
+registerBlockVariation( 'core/query', {
+	...variation,
+	name: 'gatherpress-calendar-day-modal',
+	title: __( 'Event Calendar (Day Modal)', 'gatherpress-calendar' ),
+	description: __(
+		'Show GatherPress events in a monthly calendar. Clicking a day opens a modal with its events.',
+		'gatherpress-calendar'
+	),
+	innerBlocks: QUERY_VARIATION_DAY_MODAL_INNER_BLOCKS,
 } );

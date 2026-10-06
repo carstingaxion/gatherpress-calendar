@@ -69,6 +69,48 @@ export const ENTRY_TITLE_TRIGGER = [
 ];
 
 /**
+ * Attributes of the Modal Content block in a calendar modal.
+ */
+const MODAL_CONTENT_ATTRIBUTES = {
+	style: {
+		dimensions: { maxWidth: '400px' },
+		spacing: {
+			padding: {
+				top: 'var:preset|spacing|30',
+				bottom: 'var:preset|spacing|30',
+				left: 'var:preset|spacing|30',
+				right: 'var:preset|spacing|30',
+			},
+		},
+	},
+	backgroundColor: 'base',
+};
+
+/**
+ * The centered Close button at the bottom of a calendar modal.
+ */
+const MODAL_CLOSE_BUTTONS = [
+	'core/buttons',
+	{
+		align: 'center',
+		layout: {
+			type: 'flex',
+			justifyContent: 'center',
+		},
+	},
+	[
+		[
+			'core/button',
+			{
+				tagName: 'button',
+				className: 'gatherpress-modal--trigger-close',
+				text: __( 'Close', 'gatherpress-calendar' ),
+			},
+		],
+	],
+];
+
+/**
  * The inner template inside gatherpress/calendar-entries:
  * Modal Manager holding the start time, the linked event title that opens
  * the modal, and the popover modal content.
@@ -91,20 +133,7 @@ export const ENTRIES_TEMPLATE = [
 				[
 					[
 						'gatherpress/modal-content',
-						{
-							style: {
-								dimensions: { maxWidth: '400px' },
-								spacing: {
-									padding: {
-										top: 'var:preset|spacing|30',
-										bottom: 'var:preset|spacing|30',
-										left: 'var:preset|spacing|30',
-										right: 'var:preset|spacing|30',
-									},
-								},
-							},
-							backgroundColor: 'base',
-						},
+						MODAL_CONTENT_ATTRIBUTES,
 						[
 							[
 								'core/group',
@@ -164,36 +193,44 @@ export const ENTRIES_TEMPLATE = [
 								],
 							],
 							[ 'core/post-excerpt', {} ],
-							[
-								'core/buttons',
-								{
-									align: 'center',
-									layout: {
-										type: 'flex',
-										justifyContent: 'center',
-									},
-								},
-								[
-									[
-										'core/button',
-										{
-											tagName: 'button',
-											className:
-												'gatherpress-modal--trigger-close',
-											text: __(
-												'Close',
-												'gatherpress-calendar'
-											),
-										},
-									],
-								],
-							],
+							MODAL_CLOSE_BUTTONS,
 						],
 					],
 				],
 			],
 		],
 	],
+];
+
+/**
+ * The Day Number paragraph, bound to the day of its cell.
+ */
+const DAY_NUMBER = [
+	'core/paragraph',
+	{
+		metadata: {
+			bindings: {
+				content: {
+					source: 'gatherpress/calendar-day',
+				},
+			},
+			name: 'Day Number',
+		},
+		style: {
+			spacing: {
+				margin: {
+					top: '0',
+					bottom: '0',
+					left: '0',
+					right: '0',
+				},
+			},
+		},
+		fontSize: 'small',
+		placeholder: 'DD',
+		content: 'DD',
+		className: 'gatherpress-calendar__day-number',
+	},
 ];
 
 /**
@@ -205,33 +242,7 @@ export const DAY_TEMPLATE = [
 		'gatherpress/calendar-day',
 		{},
 		[
-			[
-				'core/paragraph',
-				{
-					metadata: {
-						bindings: {
-							content: {
-								source: 'gatherpress/calendar-day',
-							},
-						},
-						name: 'Day Number',
-					},
-					style: {
-						spacing: {
-							margin: {
-								top: '0',
-								bottom: '0',
-								left: '0',
-								right: '0',
-							},
-						},
-					},
-					fontSize: 'small',
-					placeholder: 'DD',
-					content: 'DD',
-					className: 'gatherpress-calendar__day-number',
-				},
-			],
+			DAY_NUMBER,
 			[
 				'gatherpress/calendar-entries',
 				{
@@ -253,6 +264,127 @@ export const DAY_TEMPLATE = [
 	],
 ];
 
+const DAY_MODAL_DATE_FORMAT =
+	/* translators: Date format of the day in the day modal, see https://www.php.net/manual/datetime.format.php */
+	__( 'l, F j, Y', 'gatherpress-calendar' );
+
+/**
+ * The day template of the "Event Calendar (Day Modal)" variation:
+ * Day Number + one Modal Manager per day. Its button covers the whole cell
+ * and opens a modal with the date and every entry of that day.
+ *
+ * The button text is bound to the date, so every trigger has its own
+ * accessible name. The text is hidden on screen by the day styles.
+ */
+export const DAY_MODAL_TEMPLATE = [
+	[
+		'gatherpress/calendar-day',
+		{},
+		[
+			DAY_NUMBER,
+			[
+				'gatherpress/modal-manager',
+				{},
+				[
+					[
+						'core/buttons',
+						{ className: 'gatherpress-calendar__day-trigger' },
+						[
+							[
+								'core/button',
+								{
+									tagName: 'button',
+									className:
+										'gatherpress-modal--trigger-open',
+									text: __(
+										'Show events',
+										'gatherpress-calendar'
+									),
+									metadata: {
+										bindings: {
+											text: {
+												source: 'gatherpress/calendar-day',
+												args: {
+													format: DAY_MODAL_DATE_FORMAT,
+												},
+											},
+										},
+									},
+								},
+							],
+						],
+					],
+					[
+						'gatherpress/modal',
+						{
+							metadata: {
+								name: __(
+									'Day Events',
+									'gatherpress-calendar'
+								),
+							},
+						},
+						[
+							[
+								'gatherpress/modal-content',
+								MODAL_CONTENT_ATTRIBUTES,
+								[
+									[
+										'core/heading',
+										{
+											level: 3,
+											metadata: {
+												bindings: {
+													content: {
+														source: 'gatherpress/calendar-day',
+														args: {
+															format: DAY_MODAL_DATE_FORMAT,
+														},
+													},
+												},
+											},
+										},
+									],
+									[
+										'gatherpress/calendar-entries',
+										{
+											layout: { type: 'default' },
+											className: 'is-style-default',
+										},
+										[
+											[
+												'core/group',
+												{
+													layout: {
+														type: 'flex',
+														flexWrap: 'nowrap',
+													},
+												},
+												[
+													ENTRY_START_TIME,
+													[
+														'core/post-title',
+														{
+															level: 0,
+															isLink: true,
+															fontSize: 'small',
+														},
+													],
+												],
+											],
+										],
+									],
+									MODAL_CLOSE_BUTTONS,
+								],
+							],
+						],
+					],
+				],
+			],
+		],
+	],
+];
+
 /**
  * The inner template inside gatherpress/calendar:
  * Week container holding the day template.
@@ -262,10 +394,14 @@ export const CALENDAR_TEMPLATE = [
 ];
 
 /**
- * The complete InnerBlocks tree for the core/query block variation:
+ * The complete InnerBlocks tree for a core/query block variation:
  * Bound Month Heading + Pagination (Previous/Next Month) + Calendar Block.
+ *
+ * @param {Array} dayTemplate Day template of the calendar.
+ *
+ * @return {Array} Inner blocks of the variation.
  */
-export const QUERY_VARIATION_INNER_BLOCKS = [
+const getQueryVariationInnerBlocks = ( dayTemplate ) => [
 	[
 		'core/heading',
 		{
@@ -317,9 +453,15 @@ export const QUERY_VARIATION_INNER_BLOCKS = [
 				},
 			},
 		},
-		CALENDAR_TEMPLATE,
+		[ [ 'gatherpress/calendar-week', {}, dayTemplate ] ],
 	],
 ];
+
+export const QUERY_VARIATION_INNER_BLOCKS =
+	getQueryVariationInnerBlocks( DAY_TEMPLATE );
+
+export const QUERY_VARIATION_DAY_MODAL_INNER_BLOCKS =
+	getQueryVariationInnerBlocks( DAY_MODAL_TEMPLATE );
 
 /**
  * The date format used throughout the component.
