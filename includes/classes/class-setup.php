@@ -609,8 +609,9 @@ class Setup {
 			return $range['heading'];
 		}
 
-		$now          = current_datetime();
-		$date_heading = wp_date( 'F Y', $now->getTimestamp() );
+		$now = current_datetime();
+		/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+		$date_heading = wp_date( _x( 'F Y', 'Calendar heading: single month', 'gatherpress-calendar' ), $now->getTimestamp() );
 
 		return is_string( $date_heading ) ? $date_heading : null;
 	}

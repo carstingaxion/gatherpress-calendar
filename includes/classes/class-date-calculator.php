@@ -431,55 +431,52 @@ class Date_Calculator {
 	 * @return string Formatted heading.
 	 */
 	public static function format_heading( string $view_type, DateTimeImmutable $start_date, DateTimeImmutable $end_date ): string {
+		$start = $start_date->getTimestamp();
+		$end   = $end_date->getTimestamp();
+
 		if ( 'day' === $view_type && $start_date->format( 'Y-m-d' ) === $end_date->format( 'Y-m-d' ) ) {
-			$day_heading = wp_date( 'l, F j, Y', $start_date->getTimestamp() );
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$day_heading = wp_date( _x( 'l, F j, Y', 'Calendar heading: single day', 'gatherpress-calendar' ), $start );
 			return is_string( $day_heading ) ? $day_heading : '';
 		}
 
-		// Multi-day or week spans.
 		if ( 'day' === $view_type || 'week' === $view_type ) {
 			if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
-				return sprintf(
-					'%s – %s',
-					wp_date( 'M j, Y', $start_date->getTimestamp() ),
-					wp_date( 'M j, Y', $end_date->getTimestamp() )
-				);
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				$start_format = _x( 'M j, Y', 'Calendar heading: start of date range across years', 'gatherpress-calendar' );
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
+			} elseif ( $start_date->format( 'n' ) !== $end_date->format( 'n' ) ) {
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				$start_format = _x( 'M j', 'Calendar heading: start of date range across months', 'gatherpress-calendar' );
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
+			} else {
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				$start_format = _x( 'M j', 'Calendar heading: start of date range within a month', 'gatherpress-calendar' );
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				$end_format = _x( 'j, Y', 'Calendar heading: end of date range within a month', 'gatherpress-calendar' );
 			}
-
-			if ( $start_date->format( 'n' ) !== $end_date->format( 'n' ) ) {
-				return sprintf(
-					'%s – %s',
-					wp_date( 'M j', $start_date->getTimestamp() ),
-					wp_date( 'M j, Y', $end_date->getTimestamp() )
-				);
-			}
-
-			return sprintf(
-				'%s %s – %s',
-				wp_date( 'M', $start_date->getTimestamp() ),
-				wp_date( 'j', $start_date->getTimestamp() ),
-				wp_date( 'j, Y', $end_date->getTimestamp() )
-			);
-		}
-
-		// Month view (single or multi-month).
-		if ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
-			$month_heading = wp_date( 'F Y', $start_date->getTimestamp() );
+		} elseif ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$month_heading = wp_date( _x( 'F Y', 'Calendar heading: single month', 'gatherpress-calendar' ), $start );
 			return is_string( $month_heading ) ? $month_heading : '';
-		}
-
-		if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
-			return sprintf(
-				'%s – %s',
-				wp_date( 'M Y', $start_date->getTimestamp() ),
-				wp_date( 'M Y', $end_date->getTimestamp() )
-			);
+		} elseif ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$start_format = _x( 'M Y', 'Calendar heading: month range across years', 'gatherpress-calendar' );
+			$end_format   = $start_format;
+		} else {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$start_format = _x( 'F', 'Calendar heading: start of month range within a year', 'gatherpress-calendar' );
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$end_format = _x( 'F Y', 'Calendar heading: end of month range within a year', 'gatherpress-calendar' );
 		}
 
 		return sprintf(
-			'%s – %s',
-			wp_date( 'F', $start_date->getTimestamp() ),
-			wp_date( 'F Y', $end_date->getTimestamp() )
+			/* translators: %1$s: start date, %2$s: end date. */
+			_x( '%1$s – %2$s', 'Calendar heading: date range', 'gatherpress-calendar' ),
+			wp_date( $start_format, $start ),
+			wp_date( $end_format, $end )
 		);
 	}
 
