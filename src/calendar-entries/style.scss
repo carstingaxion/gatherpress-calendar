@@ -31,28 +31,32 @@ $start-time: ".wp-block-gatherpress-event-date:not(.gatherpress-modal--trigger-o
 		align-items: center;
 		min-height: 24px;
 
+		/*
+		 * The text color of the block sets the dot color.
+		 * Without it, the dots take turns through the palette.
+		 */
 		#{$trigger} {
-			background: var(--wp--preset--color--primary, #007cba);
+			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--primary, #007cba));
 		}
 
 		&:nth-child(2) #{$trigger} {
-			background: var(--wp--preset--color--secondary, #e65054);
+			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--secondary, #e65054));
 		}
 
 		&:nth-child(3) #{$trigger} {
-			background: var(--wp--preset--color--tertiary, #4ab866);
+			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--tertiary, #4ab866));
 		}
 
 		&:nth-child(4) #{$trigger} {
-			background: var(--wp--preset--color--vivid-purple, #9b51e0);
+			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--vivid-purple, #9b51e0));
 		}
 
 		&:nth-child(5) #{$trigger} {
-			background: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
+			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--vivid-cyan-blue, #0693e3));
 		}
 
 		&:nth-child(n+6) #{$trigger} {
-			background: var(--wp--preset--color--contrast, #666);
+			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--contrast, #666));
 		}
 
 		#{$trigger} {

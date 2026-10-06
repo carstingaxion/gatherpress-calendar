@@ -159,6 +159,12 @@ By pairing `viewType` with `unitCount`, the calendar adapts to specialized use c
   * `default` (Classic list/template layout)
   * `dots` (Colored status indicators)
 
+#### Dot colors
+
+By default, the dots take turns through the theme palette. Set a **Text** color on the Calendar Entries block to give all dots that color instead. The text in the event popover uses this color too. Themes can also set the `--gatherpress-calendar-dot-color` custom property on `.gatherpress-calendar__entry`.
+
+With the [GatherPress Taxonomy Colors](https://github.com/carstingaxion/gatherpress-taxonomy-colors) plugin active, each entry on the front end gets the term colors of its own event. Pick one of its color slots as the Text color, for example "Topic Color (Primary)", and every dot shows the color of its event's topic.
+
 ### Day Cell CSS Classes
 
 Individual day cells (`<td>`) dynamically receive state and temporal CSS classes for fine-grained styling:

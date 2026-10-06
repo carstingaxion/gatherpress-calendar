@@ -93,6 +93,7 @@ const EventItem = memo( function EventItemComponent( {
 
 	const style = {
 		...colorProps.style,
+		'--gatherpress-calendar-dot-color': colorProps.style?.color,
 		...borderProps.style,
 		// ...spacingProps.style,
 		...shadowProps.style,
