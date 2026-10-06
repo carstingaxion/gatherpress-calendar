@@ -9,6 +9,7 @@ import { select } from '@wordpress/data';
 
 import { DATE_FORMAT } from '../constants';
 import { formatDate } from './date-utils';
+import { isEventPostType } from '../../../utils/post-types';
 
 export const WEEKDAY_SLUGS = [
 	'sunday',
@@ -178,16 +179,16 @@ export function groupPostsByDate( posts = [] ) {
 	}
 
 	posts.forEach( ( post ) => {
-		const postDate =
-			'gatherpress_event' === post.type
-				? post.meta?.gatherpress_datetime_start
-				: post.date;
+		const isEvent = isEventPostType( post.type );
+		const postDate = isEvent
+			? post.meta?.gatherpress_datetime_start
+			: post.date;
 
 		if ( ! postDate ) {
 			return;
 		}
 
-		// When post is a gatherpress_event, postDate from meta is a string like:
+		// When post supports gatherpress-event-date, postDate from meta is a string like:
 		// "2026-09-30 23:30:00" (an event starting at 11:30 PM in its local timezone).
 		// Here is why new Date( postDate ) causes the bug in the editor:
 		// new Date( "2026-09-30 23:30:00" ) creates a JavaScript Date object at 23:30 in the browser's timezone.
@@ -198,8 +199,7 @@ export function groupPostsByDate( posts = [] ) {
 		// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
 		// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
 		const dateStr =
-			'gatherpress_event' === post.type &&
-			post.meta?.gatherpress_datetime_start
+			isEvent && post.meta?.gatherpress_datetime_start
 				? post.meta.gatherpress_datetime_start.slice( 0, 10 )
 				: dateI18n( DATE_FORMAT, new Date( postDate ) );
 
