@@ -19,6 +19,7 @@
     "gatherpress/month",
     "gatherpress/weekIndex",
     "gatherpress/weekDays",
+    "gatherpress/weekNumber",
     "gatherpress/activeDate",
     "gatherpress/setActiveDate",
     "gatherpress/showWeekends"

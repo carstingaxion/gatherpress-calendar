@@ -1,4 +1,5 @@
 import { memo } from '@wordpress/element';
+import { __, sprintf } from '@wordpress/i18n';
 import {
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalUseColorProps as useColorProps,
@@ -19,6 +20,7 @@ import { DayPreviewCell } from './DayPreviewCell';
  *
  * @param {Object}   props                     - Component props.
  * @param {Array}    props.week                - This week's day data entries.
+ * @param {number}   props.weekNumber          - ISO week number, 0 for none.
  * @param {Array}    props.dayInnerBlocks      - The real day template's inner blocks, for previews.
  * @param {Object}   props.weekBlockAttributes - The real calendar-week block's own attributes, for style parity.
  * @param {Object}   props.dayBlockAttributes  - The real calendar-day block's own attributes, for style parity.
@@ -28,6 +30,7 @@ import { DayPreviewCell } from './DayPreviewCell';
  */
 function WeekPreviewRowComponent( {
 	week,
+	weekNumber,
 	dayInnerBlocks,
 	weekBlockAttributes,
 	dayBlockAttributes,
@@ -47,6 +50,15 @@ function WeekPreviewRowComponent( {
 
 	return (
 		<tr className={ classNames } style={ style }>
+			{ weekNumber > 0 && (
+				<th scope="row" className="gatherpress--screen-reader-text">
+					{ sprintf(
+						/* translators: %d: ISO 8601 week number. */
+						__( 'Week %d', 'gatherpress-calendar' ),
+						weekNumber
+					) }
+				</th>
+			) }
 			{ week.map( ( day, dayIndex ) => (
 				<DayPreviewCell
 					key={ day.date ?? `empty-${ dayIndex }` }

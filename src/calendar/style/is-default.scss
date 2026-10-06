@@ -71,9 +71,11 @@
 
 		/*
 		 * "Show Weekdays" off: the header row is hidden on screen, but screen
-		 * readers still read the weekday of each cell.
+		 * readers still read the weekday of each cell. The week number headers
+		 * are hidden the same way and must not take a grid cell.
 		 */
-		thead.gatherpress--screen-reader-text th {
+		thead.gatherpress--screen-reader-text th,
+		tr th.gatherpress--screen-reader-text {
 
 			@include visually-hidden;
 			aspect-ratio: auto;

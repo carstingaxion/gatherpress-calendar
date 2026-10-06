@@ -5,7 +5,7 @@
  * @since 0.8.0
  */
 
-import { dateI18n } from '@wordpress/date';
+import { dateI18n, format } from '@wordpress/date';
 
 import { DATE_FORMAT } from '../constants';
 import { formatDate } from './date-utils';
@@ -230,6 +230,35 @@ export function buildConsecutiveDays(
 }
 
 /**
+ * Get the ISO 8601 week number of a calendar row.
+ *
+ * Mirrors Date_Calculator::get_week_number(). A row that does not start on
+ * Monday spans two ISO weeks, and its fourth day is always in the one that
+ * holds most of the row.
+ *
+ * @since 0.8.0
+ *
+ * @param {Array}  week        Day entries of the row.
+ * @param {number} startOfWeek Start of week (0-6).
+ *
+ * @return {number} Week number, or 0 when the row has no dated day.
+ */
+export function getWeekNumber( week, startOfWeek = 0 ) {
+	const day = week.find( ( entry ) => entry.date );
+	if ( ! day ) {
+		return 0;
+	}
+
+	const [ year, month, dayOfMonth ] = day.date.split( '-' ).map( Number );
+	const offset = ( day.dayOfWeek - startOfWeek + 7 ) % 7;
+
+	// format() keeps the local date, dateI18n() would shift it to the site timezone.
+	return Number(
+		format( 'W', new Date( year, month - 1, dayOfMonth - offset + 3 ) )
+	);
+}
+
+/**
  * Generate calendar structure for any viewType.
  *
  * @param {Array<Object>} posts        Posts from the query.
@@ -277,7 +306,12 @@ export function generateCalendar(
 			postsByDate,
 			showWeekends
 		);
-		units.push( { dayNames, weeks } );
+		// Only several week rows need a week number to tell them apart.
+		const weekNumbers =
+			unitCount > 1
+				? weeks.map( ( week ) => getWeekNumber( week, startOfWeek ) )
+				: undefined;
+		units.push( { dayNames, weeks, weekNumbers } );
 
 		return { dayNames, weeks, units, viewType, unitCount };
 	}
@@ -303,7 +337,13 @@ export function generateCalendar(
 		);
 		const mDayNames = getDayNames( startOfWeek, showWeekends );
 
-		units.push( { dayNames: mDayNames, weeks: mWeeks } );
+		units.push( {
+			dayNames: mDayNames,
+			weeks: mWeeks,
+			weekNumbers: mWeeks.map( ( week ) =>
+				getWeekNumber( week, startOfWeek )
+			),
+		} );
 	}
 
 	return {

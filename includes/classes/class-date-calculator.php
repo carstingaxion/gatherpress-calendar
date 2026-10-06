@@ -420,6 +420,36 @@ class Date_Calculator {
 	}
 
 	/**
+	 * Get the ISO 8601 week number of a calendar row.
+	 *
+	 * A row that does not start on Monday spans two ISO weeks. Its fourth day
+	 * is always in the ISO week that holds most of the row, so that one is used.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param array<mixed> $week_days     Day entries of the row.
+	 * @param int          $start_of_week Start of week (0 = Sunday, 1 = Monday).
+	 *
+	 * @return int Week number, or 0 when the row has no dated day.
+	 */
+	public static function get_week_number( array $week_days, int $start_of_week ): int {
+		foreach ( $week_days as $day ) {
+			if ( ! is_array( $day ) || ! is_string( $day['date'] ?? null ) || '' === $day['date'] ) {
+				continue;
+			}
+
+			$date = DateTimeImmutable::createFromFormat( '!Y-m-d', $day['date'], wp_timezone() );
+			if ( ! $date instanceof DateTimeImmutable ) {
+				return 0;
+			}
+
+			return (int) self::get_week_start( $date, $start_of_week )->modify( '+3 days' )->format( 'W' );
+		}
+
+		return 0;
+	}
+
+	/**
 	 * Format calendar heading based on view type and date range.
 	 *
 	 * @since 0.5.0

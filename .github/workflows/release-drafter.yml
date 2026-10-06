@@ -19,6 +19,7 @@ permissions:
 
 jobs:
   call-workflow-release-drafter:
+    if: github.event.pull_request.head.repo.fork != true
     uses: figuren-theater/.github/.github/workflows/release-drafter.yml@main
     secrets:
       BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
