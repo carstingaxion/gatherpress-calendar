@@ -13,7 +13,12 @@ A set of WordPress blocks that renders Query Loop results in monthly, weekly, or
 
 ---
 
-![Gradient block style with colorful background](.wordpress-org/screenshot-6.gif)
+> [!WARNING]
+> This project is under active development. The blocks currently do not handle schema deprecations, and all functionality is planned to be merged directly into GatherPress core.
+
+---
+
+![Gradient block style with colorful background](.wordpress-org/screenshot-2.gif)
 
 ## Description
 
@@ -29,6 +34,7 @@ The calendar is divided into modular nested blocks configured inside WordPress's
 
 ```text
 core/query
+├── core/heading (bound to the selected date-range)
 └── gatherpress/calendar
     └── gatherpress/calendar-week
         └── gatherpress/calendar-day
@@ -38,24 +44,28 @@ core/query
 ```
 
 ### 1. Calendar (`gatherpress/calendar`)
+
 * **Ancestor:** Must be placed inside a `core/query` block.
-* **Views:** Configurable via viewType (month, week, or day).
-* **Attributes:** Manages unitCount, selectedDate, dateModifier, showWeekdays, and showWeekends.
+* **Views:** Configurable via `viewType` (month, week, or day).
+* **Attributes:** `viewType`, `unitCount`, `selectedDate`, `dateModifier`, `showWeekdays`, and `showWeekends`.
 * **Rendering:** Sets up responsive CSS Grid table wrappers, adjusts column counts (7, workday count, or N in day view), and applies view modifiers (`.is-view-month`, `.is-view-week`, `.is-view-day`, `.has-multiple-units`).
 * Supports color, spacing, borders, and Interactivity API client-side navigation.
 
 ### 2. Calendar Week (`gatherpress/calendar-week`)
+
 * **Parent:** `gatherpress/calendar`.
 * **Rendering:** Renders week table rows (`<tr>`) formatted to flow cleanly inside CSS Grid via `display: contents`.
 * Operates in all views: outputs multi-week grids in month view, a single continuous row in week view, and a single cell row in day view.
 
 ### 3. Calendar Day (`gatherpress/calendar-day`)
+
 * **Parent:** `gatherpress/calendar-week`.
 * **Rendering:** Renders individual day cells (`<td>`).
 * **Context Provided:** `gatherpress/dayDate`, `gatherpress/dayNumber`, `gatherpress/dayPosts`, `gatherpress/isEmpty`, `gatherpress/isToday`, `gatherpress/weekday`, `gatherpress/isWeekend`.
 * Supports native layout controls (Flex), colors, borders, drop shadows, spacing, and typography.
 
 ### 4. Calendar Entries (`gatherpress/calendar-entries`)
+
 * **Parent:** `gatherpress/calendar-day`.
 * **Rendering:** Iterates over `gatherpress/dayPosts` (similar to `core/post-template`).
 * Renders its inner blocks once per post, injecting `postId` and `postType` context into each entry.
@@ -68,6 +78,7 @@ core/query
 The plugin registers two core Block Bindings sources:
 
 ### `gatherpress/calendar-heading`
+
 Binds the active calendar heading to a `core/heading` or `core/paragraph` block placed anywhere inside the same Query Loop.
 * **Context used:** `query`.
 * **Dynamic Formatting:**
@@ -76,9 +87,17 @@ Binds the active calendar heading to a `core/heading` or `core/paragraph` block 
   * **Day view:** Full date string (e.g., `Monday, September 14, 2026`).
 
 ### `gatherpress/calendar-day`
-Binds the day number to text/paragraph blocks inside a day cell.
-* **Context used:** `gatherpress/dayNumber`, `gatherpress/isEmpty`.
-* Outputs the numeric day of the month automatically without custom markup.
+
+Binds the day number to a paragraph block inside a day cell.
+
+* **Context used:** `gatherpress/dayNumber`,`gatherpress/dayDate`, `gatherpress/isEmpty`.
+* **Custom Date Formatting:** Accepts an optional format argument in block bindings metadata (configurable in the editor inspector) supporting standard date formats such as:
+
+    -   Default (j): 1, 2, 3...
+    -   Leading Zero (d): 01, 02, 03...
+    -   Ordinal (jS): 1st, 2nd, 3rd...
+    -   Dot Suffix (j.): 1., 2., 3....
+    -   Weekday & Day (D j): Mon 1, Tue 2...
 
 ---
 
@@ -89,6 +108,9 @@ Binds the day number to text/paragraph blocks inside a day cell.
   * **Month view:** Advances by N month.
   * **Week view:** Advances by N week (7 days).
   * **Day view:** Advances by N day.
+* **Automatic Label & Name Syncing:**
+    -   Pagination button labels react automatically to changes in `viewType` and `unitCount` (e.g., "Previous Month" / "Next Month", "Previous 3 Months" / "Next 3 Months", "Previous Day" / "Next Day"). Editors can still customize labels manually; changes only reset when the view type or unit count changes.
+    -   Synchronizes the names of `core/query` and `calendar-heading` blocks in the editor list view (e.g., "3 Month Calendar", "3 Month Heading").
 * **Client Navigation:** Supports WordPress Interactivity API client-side navigation without full-page reloads.
 * **Numeric Pagination Suppression:** Silently suppresses `core/query-pagination-numbers` within calendar queries to prevent invalid page index requests.
 
@@ -97,7 +119,7 @@ Binds the day number to text/paragraph blocks inside a day cell.
 ## Date Resolution & Post Types
 
 * **Standard Posts & Custom Post Types:** Placed according to publication date (`post_date`).
-* **GatherPress Events:** Placed using the start timestamp from GatherPress's event table (`datetime_start_gmt`). Conflicting past/upcoming query filters are removed automatically.
+* **GatherPress Events & Post Types supporting `gatherpress-event-date`:** Placed using the start timestamp from GatherPress's event table (`datetime_start`). Conflicting past/upcoming query filters are removed automatically.
 * **Target Navigation Controls:**
   * **Calendar View (`viewType`):** Switch between `month`, `week`, and `day`.
   * **Number of Units (`unitCount`):** An integer specifying how many consecutive units to render (defaults to 1):
@@ -109,8 +131,6 @@ Binds the day number to text/paragraph blocks inside a day cell.
     * In Month view: offset by months (`-1` = last month, `+1` = next month).
     * In Week view: offset by weeks (`-1` = last week, `+1` = next week).
     * In Day view: offset by days (`-1` = yesterday, `+1` = tomorrow).
-
----
 
 ## Display & Styling
 
@@ -138,6 +158,21 @@ By pairing `viewType` with `unitCount`, the calendar adapts to specialized use c
 * **`gatherpress/calendar-entries`:**
   * `default` (Classic list/template layout)
   * `dots` (Colored status indicators)
+
+### Day Cell CSS Classes
+
+Individual day cells (`<td>`) dynamically receive state and temporal CSS classes for fine-grained styling:
+
+| Class Name | Description |
+| --- | --- |
+| `.gatherpress-calendar__day` | Base class present on every day cell. |
+| `.is-empty` | Inactive padding cells preceding the 1st or following the last day of a month. |
+| `.has-posts` | Applied when one or more posts/events occur on that day. |
+| `.is-weekend` | Applied to days classified as weekend days. |
+| `.is-{weekday}` | Weekday slug for the day (e.g., `.is-sunday`, `.is-monday`, `.is-tuesday`, etc.). |
+| `.is-today` | Today's date (also sets `aria-current="date"`). Updated in real time via the Interactivity API. |
+| `.is-past` | Dates in the past relative to the visitor's current date. |
+| `.is-future` | Dates in the future relative to the visitor's current date. |
 
 ### Weekday & Weekend Configuration
 
@@ -175,19 +210,13 @@ add_filter( 'gatherpress_calendar_posts_per_page', function() {
 5. In the block settings sidebar, select your preferred view (**Month**, **Week**, or **Day**).
 6. Customize inner blocks inside the day cell's template to format event entries.
 
-![Calendar configuration in the block editor](.wordpress-org/screenshot-2.png)
+![Calendar configuration in the block editor](.wordpress-org/screenshot-1.png)
 
 
 ## Screenshots
 
-1. Classic calendar style showing GatherPress events
-2. Calendar configuration in the block editor
-3. Minimal block style with clean design
-4. Bold block style with high contrast
-5. Circular block style with rounded cells
-6. Gradient block style with colorful background
-7. Popover showing event details on mobile
-8. Template configuration interface in editor
+1. Calendar configuration in the block editor
+2. Gradient block style with colorful background
 
 ## Changelog
 
