@@ -114,7 +114,11 @@ class HTML_Renderer {
 						</tr>
 					</thead>
 					<tbody>
-						<?php echo wp_kses_post( $this->render_calendar_weeks( $unit['weeks'], $render_week_numbers ) ); ?>
+						<?php
+						// Rendered blocks escape their own output. wp_kses_post() here removed
+						// aria-modal from modals, and SVG, form and iframe markup (#132).
+						echo $this->render_calendar_weeks( $unit['weeks'], $render_week_numbers ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						?>
 					</tbody>
 				</table>
 			<?php } ?>
@@ -154,7 +158,7 @@ class HTML_Renderer {
 	 * @param list<list<array<string, mixed>>> $weeks               Weeks array.
 	 * @param bool                             $render_week_numbers Whether rows get a week number header.
 	 *
-	 * @return string Weeks HTML.
+	 * @return string Weeks HTML, as the week blocks render it.
 	 */
 	private function render_calendar_weeks( array $weeks, bool $render_week_numbers = false ): string {
 		ob_start();
