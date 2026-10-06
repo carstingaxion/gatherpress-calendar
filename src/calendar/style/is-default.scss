@@ -30,6 +30,17 @@
 		}
 	}
 
+	/*
+	 * Months, weeks or days without events, faded by the block's
+	 * "unitsWithoutEventsOpacity" setting. Week rows use display: contents,
+	 * so a week is faded through its day cells.
+	 */
+	&.is-view-month > .gatherpress-calendar__table:not(.has-posts),
+	&.is-view-week .gatherpress-calendar__week:not(.has-posts) .gatherpress-calendar__day,
+	&.is-view-day .gatherpress-calendar__day:not(.has-posts) {
+		opacity: var(--gatherpress-calendar-units-without-events-opacity, 1);
+	}
+
 	/* 7-column Calendar Grid */
 	.gatherpress-calendar__table {
 

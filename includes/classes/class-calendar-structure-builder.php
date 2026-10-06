@@ -25,10 +25,11 @@ class Calendar_Structure_Builder {
 	/**
 	 * Build complete calendar structure.
 	 *
-	 * @param array{ view_type: string, unit_count: int, start_date: string, end_date: string, start_date_obj: DateTimeImmutable, end_date_obj: DateTimeImmutable, raw_week_start: DateTimeImmutable, target_date: DateTimeImmutable, year: int, month: int, heading: string } $date_range    Date range array.
-	 * @param int                                                                                                                                                                                                                                                              $start_of_week Start of week setting (0-6).
-	 * @param array<string, list<int>>                                                                                                                                                                                                                                         $posts_by_date Posts organized by date.
-	 * @param bool                                                                                                                                                                                                                                                             $show_weekends Whether to include weekend days.
+	 * @param array{ view_type: string, unit_count: int, start_date: string, end_date: string, start_date_obj: DateTimeImmutable, end_date_obj: DateTimeImmutable, raw_week_start: DateTimeImmutable, target_date: DateTimeImmutable, year: int, month: int, heading: string } $date_range                Date range array.
+	 * @param int                                                                                                                                                                                                                                                              $start_of_week             Start of week setting (0-6).
+	 * @param array<string, list<int>>                                                                                                                                                                                                                                         $posts_by_date             Posts organized by date.
+	 * @param bool                                                                                                                                                                                                                                                             $show_weekends             Whether to include weekend days.
+	 * @param bool                                                                                                                                                                                                                                                             $show_units_without_events Whether to keep months, weeks or days that have no posts.
 	 *
 	 * @return array{
 	 *   heading: string,
@@ -43,7 +44,7 @@ class Calendar_Structure_Builder {
 	 *   }>
 	 * }
 	 */
-	public static function build_structure( array $date_range, int $start_of_week, array $posts_by_date, bool $show_weekends = true ): array {
+	public static function build_structure( array $date_range, int $start_of_week, array $posts_by_date, bool $show_weekends = true, bool $show_units_without_events = true ): array {
 		$view_type  = $date_range['view_type'];
 		$unit_count = max( 1, $date_range['unit_count'] );
 		$units      = array();
@@ -84,6 +85,21 @@ class Calendar_Structure_Builder {
 
 			$weeks     = $units[0]['weeks'];
 			$day_names = $units[0]['day_names'];
+		}
+
+		if ( ! $show_units_without_events ) {
+			$units     = self::remove_units_without_posts( $view_type, $units );
+			$weeks     = $units[0]['weeks'] ?? array();
+			$day_names = $units[0]['day_names'] ?? array();
+
+			// Count what is left, so the columns and the layout match the visible units.
+			if ( 'month' === $view_type ) {
+				$unit_count = count( $units );
+			} elseif ( 'week' === $view_type ) {
+				$unit_count = count( $weeks );
+			} else {
+				$unit_count = count( $weeks[0] ?? array() );
+			}
 		}
 
 		return array(
@@ -294,5 +310,91 @@ class Calendar_Structure_Builder {
 		}
 
 		return array( $days );
+	}
+
+	/**
+	 * Remove the units that have no posts.
+	 *
+	 * A unit is a month table in month view, a week row in week view and a
+	 * day cell in day view. In day view the header name of a removed day is
+	 * removed too, so the columns still line up.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param string                                                                                         $view_type View type ('month', 'week', 'day').
+	 * @param list<array{caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>}> $units     Units to filter.
+	 *
+	 * @return list<array{caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>}> Units that have posts.
+	 */
+	private static function remove_units_without_posts( string $view_type, array $units ): array {
+		if ( 'month' === $view_type ) {
+			return array_values(
+				array_filter(
+					$units,
+					static fn( array $unit ): bool => self::has_posts( array_merge( ...$unit['weeks'] ) )
+				)
+			);
+		}
+
+		$kept = array();
+		foreach ( $units as $unit ) {
+			if ( 'week' === $view_type ) {
+				$unit['weeks'] = array_values( array_filter( $unit['weeks'], array( self::class, 'has_posts' ) ) );
+			} else {
+				$unit = self::remove_days_without_posts( $unit );
+			}
+
+			if ( array() !== $unit['weeks'] ) {
+				$kept[] = $unit;
+			}
+		}
+
+		return $kept;
+	}
+
+	/**
+	 * Remove the day cells that have no posts from a day view unit.
+	 *
+	 * The header names are removed with their days, so the columns still line up.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param array{caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>} $unit Day view unit, with all days in one row.
+	 *
+	 * @return array{caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>} Unit without the days that have no posts.
+	 */
+	private static function remove_days_without_posts( array $unit ): array {
+		$days      = array();
+		$day_names = array();
+		foreach ( $unit['weeks'][0] ?? array() as $index => $day ) {
+			if ( self::has_posts( array( $day ) ) ) {
+				$days[]      = $day;
+				$day_names[] = $unit['day_names'][ $index ] ?? '';
+			}
+		}
+
+		$unit['weeks']     = array() === $days ? array() : array( $days );
+		$unit['day_names'] = $day_names;
+
+		return $unit;
+	}
+
+	/**
+	 * Whether any of the given days has posts.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param array<mixed> $days Day entries.
+	 *
+	 * @return bool True when at least one day has posts.
+	 */
+	public static function has_posts( array $days ): bool {
+		foreach ( $days as $day ) {
+			if ( is_array( $day ) && ! empty( $day['posts'] ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

@@ -1,6 +1,7 @@
 import { _x } from '@wordpress/i18n';
 
 import { CalendarWeek } from './CalendarWeek';
+import { hasPosts } from '../utils/grid-builder';
 
 /**
  * CalendarTable Component
@@ -50,7 +51,11 @@ export function CalendarTable( {
 			{ units.map( ( unit, unitIndex ) => (
 				<table
 					key={ unitIndex }
-					className="gatherpress-calendar__table"
+					className={
+						hasPosts( unit.weeks.flat() )
+							? 'gatherpress-calendar__table has-posts'
+							: 'gatherpress-calendar__table'
+					}
 					style={ style }
 				>
 					{ captions[ unitIndex ] && (

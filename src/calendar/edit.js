@@ -13,7 +13,12 @@ import {
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
-import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
+import {
+	Placeholder,
+	PanelBody,
+	RangeControl,
+	ToggleControl,
+} from '@wordpress/components';
 import { useState, useMemo } from '@wordpress/element';
 
 import { CALENDAR_TEMPLATE } from './edit/constants';
@@ -62,6 +67,8 @@ export default function Edit( {
 		dateModifier = 0,
 		showWeekdays = true,
 		showWeekends = true,
+		showUnitsWithoutEvents = true,
+		unitsWithoutEventsOpacity = 100,
 	} = attributes;
 
 	const { query } = context;
@@ -112,8 +119,15 @@ export default function Edit( {
 	);
 
 	const calendar = useMemo(
-		() => generateCalendar( posts, startOfWeek, dateRange, showWeekends ),
-		[ posts, startOfWeek, dateRange, showWeekends ]
+		() =>
+			generateCalendar(
+				posts,
+				startOfWeek,
+				dateRange,
+				showWeekends,
+				showUnitsWithoutEvents
+			),
+		[ posts, startOfWeek, dateRange, showWeekends, showUnitsWithoutEvents ]
 	);
 
 	// Table captions, as on the front end: the name of each month grid, or
@@ -128,7 +142,7 @@ export default function Edit( {
 			// The 15th: a timezone offset cannot move it to another month.
 			const mid = new Date(
 				start.getFullYear(),
-				start.getMonth() + index,
+				start.getMonth() + ( unit.monthOffset ?? index ),
 				15
 			);
 			return formatHeading( 'month', mid, mid );
@@ -152,9 +166,10 @@ export default function Edit( {
 	const { dayInnerBlocks, dayBlockAttributes, weekBlockAttributes } =
 		useCalendarDayTemplate( clientId );
 
+	// The visible units, as hiding units without events changes the count.
 	const blockClasses = [
 		`is-view-${ viewType }`,
-		unitCount > 1 ? 'has-multiple-units' : '',
+		calendar.unitCount > 1 ? 'has-multiple-units' : '',
 	]
 		.filter( Boolean )
 		.join( ' ' );
@@ -162,7 +177,16 @@ export default function Edit( {
 	const blockProps = useBlockProps( {
 		className: blockClasses,
 		style: {
-			'--gatherpress-calendar-units': unitCount,
+			'--gatherpress-calendar-units': calendar.unitCount,
+			// Not before posts load or without any events, as everything would fade.
+			...( calendar.hasPosts && unitsWithoutEventsOpacity < 100
+				? {
+						'--gatherpress-calendar-units-without-events-opacity': `${ Math.max(
+							0,
+							unitsWithoutEventsOpacity
+						) }%`,
+					}
+				: {} ),
 		},
 	} );
 
@@ -202,7 +226,7 @@ export default function Edit( {
 		'--gatherpress-calendar-columns': getColumnsCount(
 			viewType,
 			showWeekends,
-			unitCount
+			calendar.unitCount
 		),
 	};
 
@@ -245,6 +269,12 @@ export default function Edit( {
 		setAttributes( {
 			dateModifier: isNaN( numValue ) ? 0 : numValue,
 		} );
+	};
+
+	const unitsWithoutEventsLabels = {
+		month: __( 'Show Months Without Events', 'gatherpress-calendar' ),
+		week: __( 'Show Weeks Without Events', 'gatherpress-calendar' ),
+		day: __( 'Show Days Without Events', 'gatherpress-calendar' ),
 	};
 
 	const handleUnitCountChange = ( value ) => {
@@ -305,6 +335,40 @@ export default function Edit( {
 							}
 							help={ __(
 								'Display weekend days in the calendar grid.',
+								'gatherpress-calendar'
+							) }
+						/>
+					) }
+					<ToggleControl
+						label={ unitsWithoutEventsLabels[ viewType ] }
+						checked={ showUnitsWithoutEvents }
+						onChange={ ( value ) =>
+							setAttributes( { showUnitsWithoutEvents: value } )
+						}
+						help={ __(
+							'When off, they are hidden in the calendar.',
+							'gatherpress-calendar'
+						) }
+					/>
+					{ showUnitsWithoutEvents && (
+						<RangeControl
+							__next40pxDefaultSize
+							label={ __(
+								'Opacity Without Events',
+								'gatherpress-calendar'
+							) }
+							value={ unitsWithoutEventsOpacity }
+							onChange={ ( value ) =>
+								setAttributes( {
+									unitsWithoutEventsOpacity: value ?? 100,
+								} )
+							}
+							min={ 0 }
+							max={ 100 }
+							allowReset
+							resetFallbackValue={ 100 }
+							help={ __(
+								'Lower values fade them out. 100 shows them like the others.',
 								'gatherpress-calendar'
 							) }
 						/>

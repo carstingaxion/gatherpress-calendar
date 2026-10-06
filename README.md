@@ -47,7 +47,7 @@ core/query
 
 * **Ancestor:** Must be placed inside a `core/query` block.
 * **Views:** Configurable via `viewType` (month, week, or day).
-* **Attributes:** `viewType`, `unitCount`, `selectedDate`, `dateModifier`, `showWeekdays`, and `showWeekends`.
+* **Attributes:** `viewType`, `unitCount`, `selectedDate`, `dateModifier`, `showWeekdays`, `showWeekends`, `showUnitsWithoutEvents`, and `unitsWithoutEventsOpacity`.
 * **Rendering:** Sets up responsive CSS Grid table wrappers, adjusts column counts (7, workday count, or N in day view), and applies view modifiers (`.is-view-month`, `.is-view-week`, `.is-view-day`, `.has-multiple-units`).
 * Supports color, spacing, borders, and Interactivity API client-side navigation.
 
@@ -178,6 +178,8 @@ Individual day cells (`<td>`) dynamically receive state and temporal CSS classes
 
 * **`showWeekdays` (boolean):** Toggles table header row (`<th>`) visibility.
 * **`showWeekends` (boolean):** Toggles weekend columns in month and week views.
+* **`showUnitsWithoutEvents` (boolean):** Toggles the units that have no events: months in month view, weeks in week view, and days in day view. Defaults to `true`. When `false`, these units are left out of the front end. The editor keeps them when no unit has events, so the day template can still be edited.
+* **`unitsWithoutEventsOpacity` (number):** Opacity in percent (`0` to `100`) of the units that have no events, when they are shown. Defaults to `100`. Month tables and week rows with events get the `.has-posts` class, like day cells.
 * **Filterable Weekend Days:** Filter `gatherpress_calendar_weekend_days` allows customizing which days are treated as weekends (defaults to `0` [Sunday] and `6` [Saturday]):
 
 ```php

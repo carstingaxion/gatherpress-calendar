@@ -54,6 +54,14 @@
     "showWeekends": {
       "type": "boolean",
       "default": true
+    },
+    "showUnitsWithoutEvents": {
+      "type": "boolean",
+      "default": true
+    },
+    "unitsWithoutEventsOpacity": {
+      "type": "number",
+      "default": 100
     }
   },
   "supports": {

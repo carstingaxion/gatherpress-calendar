@@ -67,7 +67,7 @@ class HTML_Renderer {
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
 				'class'                      => implode( ' ', $classes ),
-				'style'                      => sprintf( '--gatherpress-calendar-units: %d;', $unit_count ),
+				'style'                      => $this->get_wrapper_style( $attributes, $unit_count ),
 				'data-wp-interactive'        => 'gatherpress/calendar',
 				'data-wp-key'                => 'calendar-' . ( is_string( $start_date ) ? $start_date : '' ),
 				'data-wp-init'               => 'callbacks.focusAfterNavigation',
@@ -99,7 +99,7 @@ class HTML_Renderer {
 			// Render each unit's table.
 			foreach ( $calendar_data['units'] as $unit ) {
 				?>
-				<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+				<table class="<?php echo esc_attr( $this->get_table_class( $unit['weeks'] ) ); ?>" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 					<?php if ( '' !== $unit['caption'] ) { ?>
 						<caption class="gatherpress--screen-reader-text"><?php echo esc_html( $unit['caption'] ); ?></caption>
 					<?php } ?>
@@ -121,6 +121,41 @@ class HTML_Renderer {
 		</div>
 		<?php
 		return (string) ob_get_clean();
+	}
+
+	/**
+	 * Build the inline style of the calendar wrapper.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param int                  $unit_count Number of rendered units.
+	 *
+	 * @return string Inline CSS declarations.
+	 */
+	private function get_wrapper_style( array $attributes, int $unit_count ): string {
+		$style = sprintf( '--gatherpress-calendar-units: %d;', $unit_count );
+
+		// Fades the months, weeks or days that have no posts (see is-default.scss).
+		$opacity = isset( $attributes['unitsWithoutEventsOpacity'] ) && is_numeric( $attributes['unitsWithoutEventsOpacity'] ) ? (int) $attributes['unitsWithoutEventsOpacity'] : 100;
+		if ( $opacity < 100 ) {
+			$style .= sprintf( ' --gatherpress-calendar-units-without-events-opacity: %d%%;', max( 0, $opacity ) );
+		}
+
+		return $style;
+	}
+
+	/**
+	 * Get the classes of a unit's table.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param list<list<array<string, mixed>>> $weeks Weeks of the unit.
+	 *
+	 * @return string Table classes, with "has-posts" when a day has posts.
+	 */
+	private function get_table_class( array $weeks ): string {
+		return Calendar_Structure_Builder::has_posts( array_merge( ...$weeks ) ) ? 'gatherpress-calendar__table has-posts' : 'gatherpress-calendar__table';
 	}
 
 	/**
