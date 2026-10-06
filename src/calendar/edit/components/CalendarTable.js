@@ -1,3 +1,5 @@
+import { _x } from '@wordpress/i18n';
+
 import { CalendarWeek } from './CalendarWeek';
 
 /**
@@ -65,6 +67,18 @@ export function CalendarTable( {
 						}
 					>
 						<tr>
+							{ unit.weekNumbers && (
+								<th
+									scope="col"
+									className="gatherpress--screen-reader-text"
+								>
+									{ _x(
+										'Week',
+										'week number column header',
+										'gatherpress-calendar'
+									) }
+								</th>
+							) }
 							{ unit.dayNames.map( ( dayName, index ) => (
 								<th key={ index } scope="col">
 									{ dayName }
@@ -78,6 +92,9 @@ export function CalendarTable( {
 								key={ weekIndex }
 								week={ week }
 								weekIndex={ weekIndex }
+								weekNumber={
+									unit.weekNumbers?.[ weekIndex ] ?? 0
+								}
 								activeDate={ activeDate }
 								setActiveDate={ setActiveDate }
 								weekContext={ weekContext }
