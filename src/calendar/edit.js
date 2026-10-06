@@ -15,7 +15,7 @@ import {
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
-import { useEffect, useState, useMemo } from '@wordpress/element';
+import { useEffect, useState, useMemo, useRef } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 
 import { CALENDAR_TEMPLATE } from './edit/constants';
@@ -26,7 +26,9 @@ import {
 } from './edit/utils/date-utils';
 import {
 	findHeadingBlock,
+	findBlockByName,
 	getCalendarBlockName,
+	getPaginationLabel,
 	generateCalendar,
 	getDefaultActiveDate,
 	getColumnsCount,
@@ -116,12 +118,14 @@ export default function Edit( {
 		[ posts, startOfWeek, dateRange, showWeekends ]
 	);
 
-	// Locate parent Query block and the bound heading block, keeping their existing metadata.
+	// Locate parent Query block, heading block, and pagination blocks.
 	const {
 		parentQueryClientId,
 		parentQueryMetadata,
 		headingClientId,
 		headingMetadata,
+		paginationPrevClientId,
+		paginationNextClientId,
 	} = useSelect(
 		( select ) => {
 			const { getBlockParentsByBlockName, getBlock } =
@@ -138,11 +142,27 @@ export default function Edit( {
 				? findHeadingBlock( parentBlock.innerBlocks )
 				: null;
 
+			const prevBlock = parentBlock?.innerBlocks
+				? findBlockByName(
+						parentBlock.innerBlocks,
+						'core/query-pagination-previous'
+					)
+				: null;
+
+			const nextBlock = parentBlock?.innerBlocks
+				? findBlockByName(
+						parentBlock.innerBlocks,
+						'core/query-pagination-next'
+					)
+				: null;
+
 			return {
 				parentQueryClientId: parentId ?? null,
 				parentQueryMetadata: parentBlock?.attributes?.metadata,
 				headingClientId: headingBlock?.clientId ?? null,
 				headingMetadata: headingBlock?.attributes?.metadata,
+				paginationPrevClientId: prevBlock?.clientId ?? null,
+				paginationNextClientId: nextBlock?.clientId ?? null,
 			};
 		},
 		[ clientId ]
@@ -165,8 +185,22 @@ export default function Edit( {
 		[ viewType, unitCount ]
 	);
 
-	// Sync names while preserving existing metadata (such as bindings).
+	const targetPrevLabel = useMemo(
+		() => getPaginationLabel( 'previous', viewType, unitCount ),
+		[ viewType, unitCount ]
+	);
+
+	const targetNextLabel = useMemo(
+		() => getPaginationLabel( 'next', viewType, unitCount ),
+		[ viewType, unitCount ]
+	);
+
+	// Track previous view configuration so names and labels are only reset when config changes.
+	const prevConfigRef = useRef( { viewType, unitCount } );
+
 	useEffect( () => {
+		// Hard overwrite the parent Query block's name,
+		// so the Query block is always named after the calendar it contains.
 		if (
 			parentQueryClientId &&
 			parentQueryMetadata?.name !== targetQueryName
@@ -179,12 +213,35 @@ export default function Edit( {
 			} );
 		}
 
-		if ( headingClientId && headingMetadata?.name !== targetHeadingName ) {
+		// Only overwrite block names and pagination labels when unitCount or viewType changes.
+		const hasConfigChanged =
+			prevConfigRef.current.viewType !== viewType ||
+			prevConfigRef.current.unitCount !== unitCount;
+
+		if ( ! hasConfigChanged ) {
+			return;
+		}
+
+		prevConfigRef.current = { viewType, unitCount };
+
+		if ( headingClientId ) {
 			updateBlockAttributes( headingClientId, {
 				metadata: {
 					...headingMetadata,
 					name: targetHeadingName,
 				},
+			} );
+		}
+
+		if ( paginationPrevClientId ) {
+			updateBlockAttributes( paginationPrevClientId, {
+				label: targetPrevLabel,
+			} );
+		}
+
+		if ( paginationNextClientId ) {
+			updateBlockAttributes( paginationNextClientId, {
+				label: targetNextLabel,
 			} );
 		}
 	}, [
@@ -194,6 +251,12 @@ export default function Edit( {
 		headingClientId,
 		headingMetadata,
 		targetHeadingName,
+		viewType,
+		unitCount,
+		targetPrevLabel,
+		targetNextLabel,
+		paginationPrevClientId,
+		paginationNextClientId,
 		updateBlockAttributes,
 	] );
 
