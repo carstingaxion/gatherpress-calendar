@@ -1,5 +1,6 @@
 import { useMemo, memo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
+import { __, sprintf } from '@wordpress/i18n';
 import {
 	BlockContextProvider,
 	useBlockProps,
@@ -38,6 +39,7 @@ export default memo( function Edit( { context, clientId } ) {
 		[ rawWeekDays ]
 	);
 
+	const weekNumber = context?.[ 'gatherpress/weekNumber' ] ?? 0;
 	const activeDate = context?.[ 'gatherpress/activeDate' ] ?? '';
 	const setActiveDate = context?.[ 'gatherpress/setActiveDate' ] ?? NOOP;
 
@@ -101,6 +103,15 @@ export default memo( function Edit( { context, clientId } ) {
 
 	return (
 		<tr { ...innerBlocksWrapperProps }>
+			{ weekNumber > 0 && (
+				<th scope="row" className="gatherpress--screen-reader-text">
+					{ sprintf(
+						/* translators: %d: ISO 8601 week number. */
+						__( 'Week %d', 'gatherpress-calendar' ),
+						weekNumber
+					) }
+				</th>
+			) }
 			{ weekDays.map( ( day, dayIndex ) =>
 				dayIndex === activeDayIndex ? (
 					<BlockContextProvider

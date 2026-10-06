@@ -71,6 +71,21 @@ class Calendar_Week {
 		$today        = Date_Calculator::get_today();
 		$day_template = HTML_Renderer::get_inner_template_block( $block, Calendar_Day::BLOCK_NAME );
 		$days_html    = $this->render_days( $week_days, $block, $day_template, $today );
+		$week_number  = is_numeric( $block->context['gatherpress/weekNumber'] ?? null ) ? (int) $block->context['gatherpress/weekNumber'] : 0;
+
+		// Hidden row header, so screen readers announce the week when moving between rows.
+		if ( $week_number > 0 ) {
+			$days_html = sprintf(
+				'<th scope="row" class="gatherpress--screen-reader-text">%s</th>',
+				esc_html(
+					sprintf(
+						/* translators: %d: ISO 8601 week number. */
+						__( 'Week %d', 'gatherpress-calendar' ),
+						$week_number
+					)
+				)
+			) . $days_html;
+		}
 
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
