@@ -53,6 +53,42 @@ class Query_Builder {
 
 		// @phpstan-ignore-next-line
 		return is_numeric( $posts_per_page ) ? max( 1, (int) $posts_per_page ) : $default_posts_per_page;
+  }
+
+  /**
+	 * Highest page number a calendar accepts from the URL.
+	 *
+	 * Date_Calculator multiplies the page by unitCount. A very large page
+	 * overflows that integer and causes a fatal TypeError.
+	 *
+	 * @since 0.8.0
+	 */
+	const MAX_PAGE = 10000;
+
+	/**
+	 * Get the requested page number of a core/query block.
+	 *
+	 * Reads the same URL parameter, and casts it the same way, as core's Query
+	 * Pagination blocks: `query-{$query_id}-page` when the Query block has a
+	 * queryId (0 included), and `query-page` when it has none.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param mixed $query_id The Query block's queryId, or null when it has none.
+	 *
+	 * @return int Page number, from 1 to MAX_PAGE.
+	 */
+	public static function get_requested_page( $query_id ): int {
+		$page_key = is_numeric( $query_id ) ? 'query-' . (int) $query_id . '-page' : 'query-page';
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( ! isset( $_GET[ $page_key ] ) || ! is_scalar( $_GET[ $page_key ] ) ) {
+			return 1;
+		}
+
+		$page = (int) $_GET[ $page_key ]; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		return min( self::MAX_PAGE, max( 1, $page ) );
 	}
 
 	/**
@@ -66,9 +102,7 @@ class Query_Builder {
 	 * @return array<string, mixed> WP_Query arguments.
 	 */
 	public static function build_query_args( WP_Block $block, array $date_range ): array {
-		$query_id   = isset( $block->context['queryId'] ) && is_int( $block->context['queryId'] ) ? $block->context['queryId'] : 0;
-		$page_param = 'query-' . $query_id . '-page';
-		$page       = isset( $_GET[ $page_param ] ) && is_numeric( $_GET[ $page_param ] ) ? max( 1, (int) $_GET[ $page_param ] ) : 1; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$page = self::get_requested_page( $block->context['queryId'] ?? null );
 
 		/**
 		 * Type safety.

@@ -60,10 +60,18 @@ class HTML_Renderer {
 			$classes[] = 'has-multiple-units';
 		}
 
+		// A new key per date range makes client-side navigation mount a new
+		// wrapper, so its init callback runs once for each new month. The
+		// callback moves focus to the month heading (see src/calendar/view.js).
+		$start_date         = $this->block->context['gatherpress/startDate'] ?? '';
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
-				'class' => implode( ' ', $classes ),
-				'style' => sprintf( '--gatherpress-calendar-units: %d;', $unit_count ),
+				'class'                      => implode( ' ', $classes ),
+				'style'                      => sprintf( '--gatherpress-calendar-units: %d;', $unit_count ),
+				'data-wp-interactive'        => 'gatherpress/calendar',
+				'data-wp-key'                => 'calendar-' . ( is_string( $start_date ) ? $start_date : '' ),
+				'data-wp-init'               => 'callbacks.focusAfterNavigation',
+				'data-wp-on-document--click' => 'actions.rememberPagination',
 			)
 		);
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
