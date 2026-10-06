@@ -10,13 +10,11 @@ import {
 	useBlockProps,
 	useInnerBlocksProps,
 	InspectorControls,
-	store as blockEditorStore,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
-import { useEffect, useState, useMemo, useRef } from '@wordpress/element';
-import { useSelect, useDispatch } from '@wordpress/data';
+import { useState, useMemo } from '@wordpress/element';
 
 import { CALENDAR_TEMPLATE } from './edit/constants';
 import {
@@ -25,16 +23,13 @@ import {
 	formatHeading,
 } from './edit/utils/date-utils';
 import {
-	findHeadingBlock,
-	findBlockByName,
-	getCalendarBlockName,
-	getPaginationLabel,
 	generateCalendar,
 	getDefaultActiveDate,
 	getColumnsCount,
 } from './edit/utils/calendar-utils';
-import { useStableValue } from '../utils/use-stable-value';
+import { useCalendarSync } from './edit/hooks/useCalendarSync';
 import { useCalendarData } from './edit/hooks/useCalendarData';
+import { useCalendarDayTemplate } from './edit/hooks/useCalendarDayTemplate';
 import { MonthPicker } from './edit/components/MonthPicker';
 import { DateControls } from './edit/components/DateControls';
 import { CalendarTable } from './edit/components/CalendarTable';
@@ -72,6 +67,9 @@ export default function Edit( {
 	const { query } = context;
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 	const [ activeDate, setActiveDate ] = useState( '' );
+
+	// Synchronize parent Query block name, Heading name, and pagination labels.
+	useCalendarSync( { clientId, viewType, unitCount } );
 
 	const { posts, startOfWeek } = useCalendarData(
 		query,
@@ -118,148 +116,6 @@ export default function Edit( {
 		[ posts, startOfWeek, dateRange, showWeekends ]
 	);
 
-	// Locate parent Query block, heading block, and pagination blocks.
-	const {
-		parentQueryClientId,
-		parentQueryMetadata,
-		headingClientId,
-		headingMetadata,
-		paginationPrevClientId,
-		paginationNextClientId,
-	} = useSelect(
-		( select ) => {
-			const { getBlockParentsByBlockName, getBlock } =
-				select( blockEditorStore );
-
-			const parents = getBlockParentsByBlockName(
-				clientId,
-				'core/query'
-			);
-			const parentId = parents?.[ parents.length - 1 ];
-			const parentBlock = parentId ? getBlock( parentId ) : null;
-
-			const headingBlock = parentBlock?.innerBlocks
-				? findHeadingBlock( parentBlock.innerBlocks )
-				: null;
-
-			const prevBlock = parentBlock?.innerBlocks
-				? findBlockByName(
-						parentBlock.innerBlocks,
-						'core/query-pagination-previous'
-					)
-				: null;
-
-			const nextBlock = parentBlock?.innerBlocks
-				? findBlockByName(
-						parentBlock.innerBlocks,
-						'core/query-pagination-next'
-					)
-				: null;
-
-			return {
-				parentQueryClientId: parentId ?? null,
-				parentQueryMetadata: parentBlock?.attributes?.metadata,
-				headingClientId: headingBlock?.clientId ?? null,
-				headingMetadata: headingBlock?.attributes?.metadata,
-				paginationPrevClientId: prevBlock?.clientId ?? null,
-				paginationNextClientId: nextBlock?.clientId ?? null,
-			};
-		},
-		[ clientId ]
-	);
-
-	const { updateBlockAttributes } = useDispatch( blockEditorStore );
-
-	const targetQueryName = useMemo(
-		() => getCalendarBlockName( viewType, unitCount ),
-		[ viewType, unitCount ]
-	);
-
-	const targetHeadingName = useMemo(
-		() =>
-			getCalendarBlockName(
-				viewType,
-				unitCount,
-				__( 'Heading', 'gatherpress-calendar' )
-			),
-		[ viewType, unitCount ]
-	);
-
-	const targetPrevLabel = useMemo(
-		() => getPaginationLabel( 'previous', viewType, unitCount ),
-		[ viewType, unitCount ]
-	);
-
-	const targetNextLabel = useMemo(
-		() => getPaginationLabel( 'next', viewType, unitCount ),
-		[ viewType, unitCount ]
-	);
-
-	// Track previous view configuration so names and labels are only reset when config changes.
-	const prevConfigRef = useRef( { viewType, unitCount } );
-
-	useEffect( () => {
-		// Hard overwrite the parent Query block's name,
-		// so the Query block is always named after the calendar it contains.
-		if (
-			parentQueryClientId &&
-			parentQueryMetadata?.name !== targetQueryName
-		) {
-			updateBlockAttributes( parentQueryClientId, {
-				metadata: {
-					...parentQueryMetadata,
-					name: targetQueryName,
-				},
-			} );
-		}
-
-		// Only overwrite block names and pagination labels when unitCount or viewType changes.
-		const hasConfigChanged =
-			prevConfigRef.current.viewType !== viewType ||
-			prevConfigRef.current.unitCount !== unitCount;
-
-		if ( ! hasConfigChanged ) {
-			return;
-		}
-
-		prevConfigRef.current = { viewType, unitCount };
-
-		if ( headingClientId ) {
-			updateBlockAttributes( headingClientId, {
-				metadata: {
-					...headingMetadata,
-					name: targetHeadingName,
-				},
-			} );
-		}
-
-		if ( paginationPrevClientId ) {
-			updateBlockAttributes( paginationPrevClientId, {
-				label: targetPrevLabel,
-			} );
-		}
-
-		if ( paginationNextClientId ) {
-			updateBlockAttributes( paginationNextClientId, {
-				label: targetNextLabel,
-			} );
-		}
-	}, [
-		parentQueryClientId,
-		parentQueryMetadata,
-		targetQueryName,
-		headingClientId,
-		headingMetadata,
-		targetHeadingName,
-		viewType,
-		unitCount,
-		targetPrevLabel,
-		targetNextLabel,
-		paginationPrevClientId,
-		paginationNextClientId,
-		updateBlockAttributes,
-	] );
-
 	// Table captions, as on the front end: the name of each month grid, or
 	// the heading of the week or day range.
 	const captions = useMemo( () => {
@@ -290,29 +146,11 @@ export default function Edit( {
 		return getDefaultActiveDate( calendar );
 	}, [ calendar, activeDate ] );
 
-	// Locate the real week/day template blocks so previews can clone their
+	// Retrieve the real week/day template blocks so previews can clone their
 	// actual inner content (Day Number, Post Title, Event Date, etc.) and
 	// mirror their own color/border styling (e.g. a custom background).
 	const { dayInnerBlocks, dayBlockAttributes, weekBlockAttributes } =
-		useStableValue(
-			useSelect(
-				( select ) => {
-					const { getBlocks } = select( blockEditorStore );
-					const weekBlock = getBlocks( clientId )[ 0 ];
-					const dayBlock = weekBlock
-						? getBlocks( weekBlock.clientId )[ 0 ]
-						: null;
-					return {
-						dayInnerBlocks: dayBlock
-							? getBlocks( dayBlock.clientId )
-							: [],
-						dayBlockAttributes: dayBlock?.attributes ?? {},
-						weekBlockAttributes: weekBlock?.attributes ?? {},
-					};
-				},
-				[ clientId ]
-			)
-		);
+		useCalendarDayTemplate( clientId );
 
 	const blockClasses = [
 		`is-view-${ viewType }`,
@@ -352,6 +190,7 @@ export default function Edit( {
 			? ( blockGap.left ?? '1px' )
 			: blockGap
 	);
+
 	const tableStyle = {
 		gap: tableGap,
 		...( columnGap
