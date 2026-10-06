@@ -53,16 +53,16 @@ class Query_Builder {
 
 		// @phpstan-ignore-next-line
 		return is_numeric( $posts_per_page ) ? max( 1, (int) $posts_per_page ) : $default_posts_per_page;
-  }
+	}
 
-  /**
-	 * Highest page number a calendar accepts from the URL.
-	 *
-	 * Date_Calculator multiplies the page by unitCount. A very large page
-	 * overflows that integer and causes a fatal TypeError.
-	 *
-	 * @since 0.8.0
-	 */
+	/**
+		* Highest page number a calendar accepts from the URL.
+		*
+		* Date_Calculator multiplies the page by unitCount. A very large page
+		* overflows that integer and causes a fatal TypeError.
+		*
+		* @since 0.8.0
+		*/
 	const MAX_PAGE = 10000;
 
 	/**

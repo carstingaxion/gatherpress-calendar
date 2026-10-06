@@ -162,8 +162,8 @@ class Setup {
 				add_filter( "rest_{$post_type}_collection_params", array( $this, 'filter_rest_collection_params' ), 10 );
 			}
 
-			if ( ! has_filter( "rest_{$post_type}_query", array( $this, 'rest_gatherpress_event_query' ) ) ) {
-				add_filter( "rest_{$post_type}_query", array( $this, 'rest_gatherpress_event_query' ), 20, 2 );
+			if ( ! has_filter( "rest_{$post_type}_query", array( $this, 'rest_post_type_query' ) ) ) {
+				add_filter( "rest_{$post_type}_query", array( $this, 'rest_post_type_query' ), 20, 2 );
 			}
 		}
 	}
@@ -188,6 +188,50 @@ class Setup {
 		}
 
 		return $query_params;
+	}
+
+	/**
+	 * Resolves a date string parameter from REST query parameters with a fallback key.
+	 *
+	 * @param array<string, mixed> $parameters REST parameters.
+	 * @param string               $primary    Primary parameter key (e.g. 'start_date').
+	 * @param string               $fallback   Fallback parameter key (e.g. 'after').
+	 *
+	 * @return string Sanitized date string or empty string.
+	 */
+	private function resolve_rest_date_param( array $parameters, string $primary, string $fallback ): string {
+		$value = $parameters[ $primary ] ?? $parameters[ $fallback ] ?? '';
+
+		return is_string( $value ) ? sanitize_text_field( $value ) : '';
+	}
+
+	/**
+	 * Builds the date query clause for calendar REST requests.
+	 *
+	 * @param array<string, mixed> $parameters REST parameters.
+	 * @param bool                 $is_event   Whether the queried post type supports events.
+	 *
+	 * @return array<string, mixed>|null Date query clause array or null if dates are missing.
+	 */
+	private function build_rest_date_clause( array $parameters, bool $is_event ): ?array {
+		$start_date = $this->resolve_rest_date_param( $parameters, 'start_date', 'after' );
+		$end_date   = $this->resolve_rest_date_param( $parameters, 'end_date', 'before' );
+
+		if ( '' === $start_date || '' === $end_date ) {
+			return null;
+		}
+
+		$clause = array(
+			'after'     => $start_date . ' 00:00:00',
+			'before'    => $end_date . ' 23:59:59',
+			'inclusive' => true,
+		);
+
+		if ( $is_event ) {
+			$clause['column'] = 'datetime_start';
+		}
+
+		return $clause;
 	}
 
 	/**
@@ -228,7 +272,7 @@ class Setup {
 	 * // 3. Add date_query for year=2025, month=1
 	 * // 4. Result: Only events from January 2025
 	 */
-	public function rest_gatherpress_event_query( array $args, WP_REST_Request $request ): array {
+	public function rest_post_type_query( array $args, WP_REST_Request $request ): array {
 		$parameters = $request->get_params();
 
 		// Safety check: only proceed if this is explicitly a calendar query.
@@ -239,38 +283,15 @@ class Setup {
 		$post_type = is_string( $args['post_type'] ?? null ) ? $args['post_type'] : 'post';
 		$is_event  = post_type_supports( $post_type, 'gatherpress-event-date' );
 
-		// Remove GatherPress's past/upcoming filter if this is an event type.
 		if ( $is_event ) {
 			unset( $args[ Event\Query::EVENT_QUERY_PARAM ] );
 		}
 
-		// Initialize date_query if it doesn't exist.
-		if ( ! isset( $args['date_query'] ) || ! is_array( $args['date_query'] ) ) {
-			$args['date_query'] = array();
-		}
+		$date_clause = $this->build_rest_date_clause( $parameters, $is_event );
 
-		// @phpstan-ignore-next-line
-		$start_date = isset( $parameters['start_date'] ) && is_string( $parameters['start_date'] )
-			? $parameters['start_date']
-			// @phpstan-ignore-next-line
-			: ( isset( $parameters['after'] ) && is_string( $parameters['after'] ) ? $parameters['after'] : '' );
-
-		// @phpstan-ignore-next-line
-		$end_date = isset( $parameters['end_date'] ) && is_string( $parameters['end_date'] )
-			? $parameters['end_date']
-			// @phpstan-ignore-next-line
-			: ( isset( $parameters['before'] ) && is_string( $parameters['before'] ) ? $parameters['before'] : '' );
-
-		if ( '' !== $start_date && '' !== $end_date ) {
-			$date_clause = array(
-				'after'     => sanitize_text_field( $start_date ) . ' 00:00:00',
-				'before'    => sanitize_text_field( $end_date ) . ' 23:59:59',
-				'inclusive' => true,
-			);
-
-			// Events query by datetime_start; standard posts use post_date (default).
-			if ( $is_event ) {
-				$date_clause['column'] = 'datetime_start';
+		if ( null !== $date_clause ) {
+			if ( ! is_array( $args['date_query'] ?? null ) ) {
+				$args['date_query'] = array();
 			}
 
 			$args['date_query'][0] = $date_clause;
