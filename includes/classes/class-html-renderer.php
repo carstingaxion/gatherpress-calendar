@@ -76,7 +76,7 @@ class HTML_Renderer {
 		);
 		$show_weekdays      = isset( $attributes['showWeekdays'] ) && is_bool( $attributes['showWeekdays'] ) ? $attributes['showWeekdays'] : true;
 		// Only views with several week rows need to tell the rows apart.
-		$show_week_numbers = 'month' === $view_type || ( 'week' === $view_type && $unit_count > 1 );
+		$render_week_numbers = 'month' === $view_type || ( 'week' === $view_type && $unit_count > 1 );
 
 		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
 		$column_gap   = Style_Processor::get_block_column_gap_value( $attributes );
@@ -110,11 +110,11 @@ class HTML_Renderer {
 					?>
 					<thead<?php echo $show_weekdays ? '' : ' class="gatherpress--screen-reader-text"'; ?>>
 						<tr>
-							<?php echo $this->render_header_cells( $unit['day_names'], $show_week_numbers ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							<?php echo $this->render_header_cells( $unit['day_names'], $render_week_numbers ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</tr>
 					</thead>
 					<tbody>
-						<?php echo wp_kses_post( $this->render_calendar_weeks( $unit['weeks'], $show_week_numbers ) ); ?>
+						<?php echo wp_kses_post( $this->render_calendar_weeks( $unit['weeks'], $render_week_numbers ) ); ?>
 					</tbody>
 				</table>
 			<?php } ?>
@@ -128,16 +128,16 @@ class HTML_Renderer {
 	 *
 	 * @since 0.8.0
 	 *
-	 * @param string[] $day_names         Weekday names.
-	 * @param bool     $show_week_numbers Whether rows get a week number header.
+	 * @param string[] $day_names           Weekday names.
+	 * @param bool     $render_week_numbers Whether rows get a week number header.
 	 *
 	 * @return string Escaped header cells HTML.
 	 */
-	private function render_header_cells( array $day_names, bool $show_week_numbers ): string {
+	private function render_header_cells( array $day_names, bool $render_week_numbers ): string {
 		$cells = '';
 
 		// Header for the hidden week number column, so the row headers line up.
-		if ( $show_week_numbers ) {
+		if ( $render_week_numbers ) {
 			$cells .= sprintf( '<th scope="col" class="gatherpress--screen-reader-text">%s</th>', esc_html_x( 'Week', 'week number column header', 'gatherpress-calendar' ) );
 		}
 
@@ -151,12 +151,12 @@ class HTML_Renderer {
 	/**
 	 * Render calendar weeks by delegating to gatherpress/calendar-week blocks.
 	 *
-	 * @param list<list<array<string, mixed>>> $weeks             Weeks array.
-	 * @param bool                             $show_week_numbers Whether rows get a week number header.
+	 * @param list<list<array<string, mixed>>> $weeks               Weeks array.
+	 * @param bool                             $render_week_numbers Whether rows get a week number header.
 	 *
 	 * @return string Weeks HTML.
 	 */
-	private function render_calendar_weeks( array $weeks, bool $show_week_numbers = false ): string {
+	private function render_calendar_weeks( array $weeks, bool $render_week_numbers = false ): string {
 		ob_start();
 
 		$week_template = self::get_inner_template_block( $this->block, Calendar_Week::BLOCK_NAME );
@@ -168,7 +168,7 @@ class HTML_Renderer {
 				array(
 					'gatherpress/weekIndex'  => $week_index,
 					'gatherpress/weekDays'   => $week_days,
-					'gatherpress/weekNumber' => $show_week_numbers ? Date_Calculator::get_week_number( $week_days, $start_of_week ) : 0,
+					'gatherpress/weekNumber' => $render_week_numbers ? Date_Calculator::get_week_number( $week_days, $start_of_week ) : 0,
 				)
 			);
 
