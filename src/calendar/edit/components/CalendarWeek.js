@@ -18,6 +18,7 @@ import { WeekPreviewRow } from './WeekPreviewRow';
  * @param {Object}   props                     Component props.
  * @param {Array}    props.week                Week day entries.
  * @param {number}   props.weekIndex           Index of this week in the unit.
+ * @param {number}   props.weekNumber          ISO week number, 0 for none.
  * @param {string}   props.activeDate          Currently live/editable date.
  * @param {Function} props.setActiveDate       Setter for active date.
  * @param {Object}   props.weekContext         Base context shared by all weeks.
@@ -31,6 +32,7 @@ import { WeekPreviewRow } from './WeekPreviewRow';
 export function CalendarWeek( {
 	week,
 	weekIndex,
+	weekNumber,
 	activeDate,
 	setActiveDate,
 	weekContext,
@@ -48,10 +50,11 @@ export function CalendarWeek( {
 			...weekContext,
 			'gatherpress/weekIndex': weekIndex,
 			'gatherpress/weekDays': week,
+			'gatherpress/weekNumber': weekNumber,
 			'gatherpress/activeDate': activeDate,
 			'gatherpress/setActiveDate': setActiveDate,
 		} ),
-		[ weekContext, weekIndex, week, activeDate, setActiveDate ]
+		[ weekContext, weekIndex, week, weekNumber, activeDate, setActiveDate ]
 	);
 
 	return (
@@ -61,6 +64,7 @@ export function CalendarWeek( {
 			) : (
 				<WeekPreviewRow
 					week={ week }
+					weekNumber={ weekNumber }
 					dayInnerBlocks={ dayInnerBlocks }
 					weekBlockAttributes={ weekBlockAttributes }
 					dayBlockAttributes={ dayBlockAttributes }
