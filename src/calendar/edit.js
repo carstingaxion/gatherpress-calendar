@@ -15,7 +15,7 @@ import {
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
-import { useEffect, useState, useMemo } from '@wordpress/element';
+import { useEffect, useState, useMemo, useRef } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 
 import { CALENDAR_TEMPLATE } from './edit/constants';
@@ -125,9 +125,7 @@ export default function Edit( {
 		headingClientId,
 		headingMetadata,
 		paginationPrevClientId,
-		paginationPrevLabel,
 		paginationNextClientId,
-		paginationNextLabel,
 	} = useSelect(
 		( select ) => {
 			const { getBlockParentsByBlockName, getBlock } =
@@ -164,9 +162,7 @@ export default function Edit( {
 				headingClientId: headingBlock?.clientId ?? null,
 				headingMetadata: headingBlock?.attributes?.metadata,
 				paginationPrevClientId: prevBlock?.clientId ?? null,
-				paginationPrevLabel: prevBlock?.attributes?.label,
 				paginationNextClientId: nextBlock?.clientId ?? null,
-				paginationNextLabel: nextBlock?.attributes?.label,
 			};
 		},
 		[ clientId ]
@@ -199,8 +195,12 @@ export default function Edit( {
 		[ viewType, unitCount ]
 	);
 
-	// Sync names and pagination labels while preserving existing attributes.
+	// Track previous view configuration so names and labels are only reset when config changes.
+	const prevConfigRef = useRef( { viewType, unitCount } );
+
 	useEffect( () => {
+		// Hard overwrite the parent Query block's name,
+		// so the Query block is always named after the calendar it contains.
 		if (
 			parentQueryClientId &&
 			parentQueryMetadata?.name !== targetQueryName
@@ -213,7 +213,18 @@ export default function Edit( {
 			} );
 		}
 
-		if ( headingClientId && headingMetadata?.name !== targetHeadingName ) {
+		// Only overwrite block names and pagination labels when unitCount or viewType changes.
+		const hasConfigChanged =
+			prevConfigRef.current.viewType !== viewType ||
+			prevConfigRef.current.unitCount !== unitCount;
+
+		if ( ! hasConfigChanged ) {
+			return;
+		}
+
+		prevConfigRef.current = { viewType, unitCount };
+
+		if ( headingClientId ) {
 			updateBlockAttributes( headingClientId, {
 				metadata: {
 					...headingMetadata,
@@ -222,19 +233,13 @@ export default function Edit( {
 			} );
 		}
 
-		if (
-			paginationPrevClientId &&
-			paginationPrevLabel !== targetPrevLabel
-		) {
+		if ( paginationPrevClientId ) {
 			updateBlockAttributes( paginationPrevClientId, {
 				label: targetPrevLabel,
 			} );
 		}
 
-		if (
-			paginationNextClientId &&
-			paginationNextLabel !== targetNextLabel
-		) {
+		if ( paginationNextClientId ) {
 			updateBlockAttributes( paginationNextClientId, {
 				label: targetNextLabel,
 			} );
@@ -246,12 +251,12 @@ export default function Edit( {
 		headingClientId,
 		headingMetadata,
 		targetHeadingName,
-		paginationPrevClientId,
-		paginationPrevLabel,
+		viewType,
+		unitCount,
 		targetPrevLabel,
-		paginationNextClientId,
-		paginationNextLabel,
 		targetNextLabel,
+		paginationPrevClientId,
+		paginationNextClientId,
 		updateBlockAttributes,
 	] );
 
