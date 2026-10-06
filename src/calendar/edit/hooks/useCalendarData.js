@@ -70,7 +70,7 @@ export function useCalendarData( query, dateQuery ) {
 
 			const records = getEntityRecords(
 				'postType',
-				query?.postType || 'gatherpress_event',
+				query?.postType || 'post',
 				queryArgs
 			);
 
