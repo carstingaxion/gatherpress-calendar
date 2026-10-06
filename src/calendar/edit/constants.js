@@ -264,17 +264,21 @@ export const DAY_TEMPLATE = [
 	],
 ];
 
-const DAY_MODAL_DATE_FORMAT =
-	/* translators: Date format of the day in the day modal, see https://www.php.net/manual/datetime.format.php */
-	__( 'l, F j, Y', 'gatherpress-calendar' );
+/**
+ * Named formats of the day binding, see Setup::get_day_number_binding_value().
+ * PHP translates them when the page renders, so the saved content holds the
+ * name and not a date format of the editor's locale.
+ */
+export const DAY_MODAL_HEADING_FORMAT = 'dayModalHeading';
+export const DAY_MODAL_TRIGGER_FORMAT = 'dayModalTrigger';
 
 /**
  * The day template of the "Event Calendar (Day Modal)" variation:
  * Day Number + one Modal Manager per day. Its button covers the whole cell
  * and opens a modal with the date and every entry of that day.
  *
- * The button text is bound to the date, so every trigger has its own
- * accessible name. The text is hidden on screen by the day styles.
+ * The button text is bound to "Events on <date>", so every trigger has its
+ * own accessible name. The text is hidden on screen by the day styles.
  */
 export const DAY_MODAL_TEMPLATE = [
 	[
@@ -305,7 +309,7 @@ export const DAY_MODAL_TEMPLATE = [
 											text: {
 												source: 'gatherpress/calendar-day',
 												args: {
-													format: DAY_MODAL_DATE_FORMAT,
+													format: DAY_MODAL_TRIGGER_FORMAT,
 												},
 											},
 										},
@@ -316,14 +320,7 @@ export const DAY_MODAL_TEMPLATE = [
 					],
 					[
 						'gatherpress/modal',
-						{
-							metadata: {
-								name: __(
-									'Day Events',
-									'gatherpress-calendar'
-								),
-							},
-						},
+						{},
 						[
 							[
 								'gatherpress/modal-content',
@@ -338,7 +335,7 @@ export const DAY_MODAL_TEMPLATE = [
 													content: {
 														source: 'gatherpress/calendar-day',
 														args: {
-															format: DAY_MODAL_DATE_FORMAT,
+															format: DAY_MODAL_HEADING_FORMAT,
 														},
 													},
 												},

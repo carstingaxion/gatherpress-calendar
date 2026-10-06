@@ -87,8 +87,9 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 /*
  * In the "Event Calendar (Day Modal)" variation, the button covers the whole
- * day cell. Its text is the date: pushed out of the box and clipped, so only
- * screen readers read it. Front end only, the button stays editable.
+ * day cell. Its text is "Events on <date>": pushed out of the box and
+ * clipped, so only screen readers read it. Front end only, the button stays
+ * editable.
  */
 .gatherpress-calendar__day-trigger:not(.block-editor-block-list__block) {
 	display: contents;

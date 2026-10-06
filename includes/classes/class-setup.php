@@ -543,10 +543,12 @@ class Setup {
 	 * Day number binding value callback.
 	 *
 	 * Supports optional 'format' argument from binding args (e.g. 'j', 'd', 'jS', 'j.', 'D j').
+	 * The named formats 'dayModalHeading' (date) and 'dayModalTrigger' ("Events on <date>")
+	 * are translated here, when the page renders, and not stored in the post content.
 	 * Binds paragraph and heading 'content', and button 'text' (used as the
 	 * accessible name of the day modal trigger).
 	 *
-	 * @since 0.8.0 Supports the 'text' attribute.
+	 * @since 0.8.0 Supports the 'text' attribute and the named day modal formats.
 	 *
 	 * @param array<string, mixed> $source_args    Source arguments.
 	 * @param WP_Block             $block_instance Block instance.
@@ -569,8 +571,8 @@ class Setup {
 		if ( '' !== $day_date && is_string( $day_date ) && '' !== $format ) {
 			$timestamp = strtotime( $day_date . ' 12:00:00 UTC' );
 			if ( false !== $timestamp ) {
-				$formatted = wp_date( $format, $timestamp, new DateTimeZone( 'UTC' ) );
-				if ( is_string( $formatted ) ) {
+				$formatted = $this->format_day_date( $format, $timestamp );
+				if ( null !== $formatted ) {
 					return $formatted;
 				}
 			}
@@ -579,6 +581,41 @@ class Setup {
 		$day_number = $block_instance->context['gatherpress/dayNumber'] ?? null;
 
 		return ( is_numeric( $day_number ) || is_string( $day_number ) ) ? (string) $day_number : null;
+	}
+
+	/**
+	 * Formats the date of a day for the day number binding.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param string $format    PHP date format, or one of the named formats
+	 *                          'dayModalHeading' and 'dayModalTrigger'.
+	 * @param int    $timestamp Timestamp of the day, at noon UTC.
+	 *
+	 * @return string|null Formatted date, or null if it could not be formatted.
+	 */
+	private function format_day_date( string $format, int $timestamp ): ?string {
+		$timezone = new DateTimeZone( 'UTC' );
+
+		if ( 'dayModalHeading' !== $format && 'dayModalTrigger' !== $format ) {
+			$formatted = wp_date( $format, $timestamp, $timezone );
+
+			return is_string( $formatted ) ? $formatted : null;
+		}
+
+		/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+		$date = wp_date( _x( 'l, F j, Y', 'Day modal: date', 'gatherpress-calendar' ), $timestamp, $timezone );
+
+		if ( ! is_string( $date ) ) {
+			return null;
+		}
+
+		if ( 'dayModalHeading' === $format ) {
+			return $date;
+		}
+
+		/* translators: %s: Date of the day, for example "Monday, October 5, 2026". */
+		return sprintf( _x( 'Events on %s', 'Day modal: name of the button', 'gatherpress-calendar' ), $date );
 	}
 
 	/**
@@ -613,8 +650,9 @@ class Setup {
 			return $range['heading'];
 		}
 
-		$now          = current_datetime();
-		$date_heading = wp_date( 'F Y', $now->getTimestamp() );
+		$now = current_datetime();
+		/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+		$date_heading = wp_date( _x( 'F Y', 'Calendar heading: single month', 'gatherpress-calendar' ), $now->getTimestamp() );
 
 		return is_string( $date_heading ) ? $date_heading : null;
 	}

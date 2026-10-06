@@ -16,6 +16,16 @@ import { PanelBody, SelectControl } from '@wordpress/components';
 
 import { calculateDateRange, formatHeading } from './edit/utils/date-utils';
 import { findBlockByName } from './edit/utils/block-sync-utils';
+import {
+	DAY_MODAL_HEADING_FORMAT,
+	DAY_MODAL_TRIGGER_FORMAT,
+} from './edit/constants';
+
+// Named formats are translated by PHP, they are not day number formats.
+const NAMED_DAY_FORMATS = [
+	DAY_MODAL_HEADING_FORMAT,
+	DAY_MODAL_TRIGGER_FORMAT,
+];
 
 domReady( () => {
 	if ( typeof registerBlockBindingsSource !== 'function' ) {
@@ -145,7 +155,10 @@ const withDayNumberBindingControls = createHigherOrderComponent(
 			const { attributes, setAttributes } = props;
 			const binding = attributes?.metadata?.bindings?.content;
 
-			if ( binding?.source !== 'gatherpress/calendar-day' ) {
+			if (
+				binding?.source !== 'gatherpress/calendar-day' ||
+				NAMED_DAY_FORMATS.includes( binding?.args?.format )
+			) {
 				return <BlockEdit { ...props } />;
 			}
 

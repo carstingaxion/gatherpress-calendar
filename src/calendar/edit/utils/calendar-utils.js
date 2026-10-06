@@ -7,6 +7,7 @@
 
 import { dateI18n } from '@wordpress/date';
 import { select } from '@wordpress/data';
+import { _x } from '@wordpress/i18n';
 
 // Re-export decomposed helpers so existing imports remain backward-compatible:
 export * from './grid-builder';
@@ -173,7 +174,11 @@ export function generateMonthOptions() {
 		for ( let month = 1; month <= 12; month++ ) {
 			const date = new Date( year, month - 1, 15, 12, 0, 0 );
 			const value = `${ year }-${ String( month ).padStart( 2, '0' ) }`;
-			const label = dateI18n( 'F Y', date );
+			const label = dateI18n(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				_x( 'F Y', 'Month picker option', 'gatherpress-calendar' ),
+				date
+			);
 			options.push( { value, label } );
 		}
 	}

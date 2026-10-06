@@ -5,6 +5,7 @@
  */
 
 import { dateI18n } from '@wordpress/date';
+import { _x, sprintf } from '@wordpress/i18n';
 import { isWeekendDay } from './calendar-utils';
 
 /**
@@ -166,52 +167,118 @@ export function formatHeading( viewType, startDate, endDate ) {
 	const isSameDay = startDate.toDateString() === endDate.toDateString();
 
 	if ( 'day' === viewType && isSameDay ) {
-		return dateI18n( 'l, F j, Y', startDate );
+		return dateI18n(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			_x(
+				'l, F j, Y',
+				'Calendar heading: single day',
+				'gatherpress-calendar'
+			),
+			startDate
+		);
 	}
 
 	const startYear = startDate.getFullYear();
 	const endYear = endDate.getFullYear();
-	// eslint-disable-next-line @wordpress/no-unused-vars-before-return
 	const startMonth = startDate.getMonth();
-	// eslint-disable-next-line @wordpress/no-unused-vars-before-return
 	const endMonth = endDate.getMonth();
+
+	let start = startDate;
+	let end = endDate;
+	let startFormat;
+	let endFormat;
 
 	if ( 'day' === viewType || 'week' === viewType ) {
 		if ( startYear !== endYear ) {
-			return `${ dateI18n( 'M j, Y', startDate ) } – ${ dateI18n(
+			startFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
 				'M j, Y',
-				endDate
-			) }`;
+				'Calendar heading: start of date range across years',
+				'gatherpress-calendar'
+			);
+			endFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				'M j, Y',
+				'Calendar heading: end of date range',
+				'gatherpress-calendar'
+			);
+		} else if ( startMonth !== endMonth ) {
+			startFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				'M j',
+				'Calendar heading: start of date range across months',
+				'gatherpress-calendar'
+			);
+			endFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				'M j, Y',
+				'Calendar heading: end of date range',
+				'gatherpress-calendar'
+			);
+		} else {
+			startFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				'M j',
+				'Calendar heading: start of date range within a month',
+				'gatherpress-calendar'
+			);
+			endFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				'j, Y',
+				'Calendar heading: end of date range within a month',
+				'gatherpress-calendar'
+			);
+		}
+	} else {
+		// Month view: format a mid-month date so browser-site timezone differences
+		// cannot shift the formatted month to an adjacent month.
+		start = new Date( startYear, startMonth, 15, 12, 0, 0 );
+		end = new Date( endYear, endMonth, 15, 12, 0, 0 );
+
+		if ( startYear === endYear && startMonth === endMonth ) {
+			return dateI18n(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				_x(
+					'F Y',
+					'Calendar heading: single month',
+					'gatherpress-calendar'
+				),
+				start
+			);
 		}
 
-		if ( startMonth !== endMonth ) {
-			return `${ dateI18n( 'M j', startDate ) } – ${ dateI18n(
-				'M j, Y',
-				endDate
-			) }`;
+		if ( startYear !== endYear ) {
+			startFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				'M Y',
+				'Calendar heading: month range across years',
+				'gatherpress-calendar'
+			);
+			endFormat = startFormat;
+		} else {
+			startFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				'F',
+				'Calendar heading: start of month range within a year',
+				'gatherpress-calendar'
+			);
+			endFormat = _x(
+				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+				'F Y',
+				'Calendar heading: end of month range within a year',
+				'gatherpress-calendar'
+			);
 		}
-
-		return `${ dateI18n( 'M', startDate ) } ${ dateI18n(
-			'j',
-			startDate
-		) } – ${ dateI18n( 'j, Y', endDate ) }`;
 	}
 
-	// Month view: format a mid-month date so browser-site timezone differences
-	// cannot shift the formatted month to an adjacent month.
-	const midStart = new Date( startYear, startMonth, 15, 12, 0, 0 );
-	const midEnd = new Date( endYear, endMonth, 15, 12, 0, 0 );
-
-	if ( startYear === endYear && startMonth === endMonth ) {
-		return dateI18n( 'F Y', midStart );
-	}
-
-	if ( startYear !== endYear ) {
-		return `${ dateI18n( 'M Y', midStart ) } – ${ dateI18n(
-			'M Y',
-			midEnd
-		) }`;
-	}
-
-	return `${ dateI18n( 'F', midStart ) } – ${ dateI18n( 'F Y', midEnd ) }`;
+	return sprintf(
+		/* translators: %1$s: start date, %2$s: end date. */
+		_x(
+			'%1$s – %2$s',
+			'Calendar heading: date range',
+			'gatherpress-calendar'
+		),
+		dateI18n( startFormat, start ),
+		dateI18n( endFormat, end )
+	);
 }

@@ -81,7 +81,7 @@ gatherpress/calendar-day
 ├── core/paragraph (bound to day number)
 └── gatherpress/modal-manager
     ├── core/buttons (.gatherpress-calendar__day-trigger)
-    │   └── core/button (opens the modal, text bound to the date)
+    │   └── core/button (opens the modal, text bound to "Events on <date>")
     └── gatherpress/modal
         └── gatherpress/modal-content
             ├── core/heading (bound to the date)
@@ -89,7 +89,7 @@ gatherpress/calendar-day
             └── core/buttons (Close)
 ```
 
-On the front end, the trigger button covers the whole day cell. Its text is the date, which screen readers read as the button name; it is hidden on screen.
+On the front end, the trigger button covers the whole day cell. Its text is `Events on <date>` (for example `Events on Monday, October 5, 2026`), which screen readers read as the button name; it is hidden on screen.
 
 ---
 
@@ -118,6 +118,8 @@ Binds the day number to a paragraph or heading block (`content`) or a button blo
     -   Ordinal (jS): 1st, 2nd, 3rd...
     -   Dot Suffix (j.): 1., 2., 3....
     -   Weekday & Day (D j): Mon 1, Tue 2...
+
+    The Day Modal variation uses two named formats, `dayModalHeading` (the date) and `dayModalTrigger` (`Events on <date>`). They are translated when the page renders, so the saved content does not hold the date format of the editor's language.
 
 ---
 
