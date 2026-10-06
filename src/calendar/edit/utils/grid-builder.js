@@ -557,6 +557,118 @@ export function getWeekNumber( week, startOfWeek = 0 ) {
 }
 
 /**
+ * Whether any of the given days has posts.
+ *
+ * @since 0.8.0
+ *
+ * @param {Array} days Day entries.
+ *
+ * @return {boolean} True when at least one day has posts.
+ */
+export function hasPosts( days = [] ) {
+	return days.some( ( day ) => day.posts?.length > 0 );
+}
+
+/**
+ * Remove the units that have no posts.
+ *
+ * Mirrors Calendar_Structure_Builder::remove_units_without_posts(). A unit is
+ * a month table in month view, a week row in week view and a day cell in day
+ * view. In day view the header name of a removed day is removed too, so the
+ * columns still line up.
+ *
+ * @since 0.8.0
+ *
+ * @param {string} viewType View type.
+ * @param {Array}  units    Units to filter.
+ *
+ * @return {Array} Units that have posts.
+ */
+export function removeUnitsWithoutPosts( viewType, units ) {
+	if ( 'month' === viewType ) {
+		return units.filter( ( unit ) => hasPosts( unit.weeks.flat() ) );
+	}
+
+	return units
+		.map( ( unit ) => {
+			if ( 'week' === viewType ) {
+				return {
+					...unit,
+					weeks: unit.weeks.filter( ( week ) => hasPosts( week ) ),
+				};
+			}
+
+			const days = unit.weeks[ 0 ] ?? [];
+			const keep = days.map( ( day ) => hasPosts( [ day ] ) );
+			const visibleDays = days.filter( ( day, index ) => keep[ index ] );
+			return {
+				...unit,
+				dayNames: unit.dayNames.filter(
+					( name, index ) => keep[ index ]
+				),
+				weeks: visibleDays.length ? [ visibleDays ] : [],
+			};
+		} )
+		.filter( ( unit ) => unit.weeks.length > 0 );
+}
+
+/**
+ * Whether any of the given days has posts.
+ *
+ * @since 0.8.0
+ *
+ * @param {Array} days Day entries.
+ *
+ * @return {boolean} True when at least one day has posts.
+ */
+export function hasPosts( days = [] ) {
+	return days.some( ( day ) => day.posts?.length > 0 );
+}
+
+/**
+ * Remove the units that have no posts.
+ *
+ * Mirrors Calendar_Structure_Builder::remove_units_without_posts(). A unit is
+ * a month table in month view, a week row in week view and a day cell in day
+ * view. In day view the header name of a removed day is removed too, so the
+ * columns still line up.
+ *
+ * @since 0.8.0
+ *
+ * @param {string} viewType View type.
+ * @param {Array}  units    Units to filter.
+ *
+ * @return {Array} Units that have posts.
+ */
+export function removeUnitsWithoutPosts( viewType, units ) {
+	if ( 'month' === viewType ) {
+		return units.filter( ( unit ) => hasPosts( unit.weeks.flat() ) );
+	}
+
+	return units
+		.map( ( unit ) => {
+			if ( 'week' === viewType ) {
+				return {
+					...unit,
+					weeks: unit.weeks.filter( ( week ) => hasPosts( week ) ),
+				};
+			}
+
+			const days = unit.weeks[ 0 ] ?? [];
+			const keep = days.map( ( day ) => hasPosts( [ day ] ) );
+			const visibleDays = days.filter( ( day, index ) => keep[ index ] );
+			return {
+				...unit,
+				dayNames: unit.dayNames.filter(
+					( name, index ) => keep[ index ]
+				),
+				weeks: visibleDays.length ? [ visibleDays ] : [],
+			};
+		} )
+		.filter( ( unit ) => unit.weeks.length > 0 );
+}
+
+/**
  * Calculate maximum ribbon slot index across a week's days.
  *
  * @param {Array<Object>} weekDays   Array of day descriptors.
@@ -581,56 +693,40 @@ function getWeekNumRibbonSlots( weekDays, isTimeGrid ) {
 /**
  * Generate calendar structure for any viewType, calculating week-level ribbon slots.
  *
- * @param {Array<Object>} posts          Posts from the query.
- * @param {number}        startOfWeek    Start of week (0-6).
- * @param {Object}        dateRange      Resolved date range.
- * @param {boolean}       showWeekends   Weekend visibility.
+ * @param {Array<Object>} posts                    Posts from the query.
+ * @param {number}        startOfWeek              Start of week (0-6).
+ * @param {Object}        dateRange                Resolved date range.
+ * @param {boolean}       showWeekends             Weekend visibility.
  * @param {Object}        timeGridConfig Time grid configuration.
+ * @param {boolean}       showUnitsWithoutEvents Whether to keep months, weeks or days that have no posts.
  *
- * @return {Object} Calendar data structure.
+ * @return {Object} Calendar data structure, with hasPosts true when any unit has posts.
  */
 export function generateCalendar(
 	posts = [],
 	startOfWeek = 0,
 	dateRange,
 	showWeekends = true,
-	timeGridConfig = {}
+	timeGridConfig = {},
+	showUnitsWithoutEvents = true
 ) {
 	const postsByDate = groupPostsByDate( posts, timeGridConfig );
 	const viewType = dateRange.viewType || 'month';
-	const unitCount = Math.max( 1, dateRange.unitCount || 1 );
+	const requestedCount = Math.max( 1, dateRange.unitCount || 1 );
+	const startObj = dateRange.startDateObj || new Date( dateRange.startDate );
 	const isTimeGrid = Boolean( timeGridConfig?.enabled );
 
 	if ( 'day' === viewType ) {
-		const startObj =
-			dateRange.startDateObj || new Date( dateRange.startDate );
 		const dayNames = [];
-		for ( let i = 0; i < unitCount; i++ ) {
+		for ( let i = 0; i < requestedCount; i++ ) {
 			const d = new Date( startObj );
 			d.setDate( startObj.getDate() + i );
 			dayNames.push( dateI18n( 'D', d ) );
 		}
 		const weeks = buildConsecutiveDays( startObj, unitCount, postsByDate );
-		const numRibbonSlots = getWeekNumRibbonSlots(
-			weeks[ 0 ] || [],
-			isTimeGrid
-		);
-		const units = [
-			{
-				dayNames,
-				weeks,
-				numRibbonSlots,
-			},
-		];
+		units.push( { dayNames, weeks } );
 
-		return {
-			dayNames,
-			weeks,
-			units,
-			viewType,
-			unitCount,
-			numRibbonSlots,
-		};
+		return { dayNames, weeks, units, viewType, unitCount };
 	}
 
 	if ( 'week' === viewType ) {
@@ -641,43 +737,22 @@ export function generateCalendar(
 		const dayNames = getDayNames( startOfWeek, showWeekends );
 		const weeks = buildConsecutiveWeeks(
 			weekStart,
-			unitCount,
+			requestedCount,
 			postsByDate,
 			showWeekends
 		);
-		const numRibbonSlots = getWeekNumRibbonSlots(
-			weeks[ 0 ] || [],
-			isTimeGrid
-		);
 		// Only several week rows need a week number to tell them apart.
-		const units = [
-			{
-				dayNames,
-				weeks,
-				weekNumbers:
-					unitCount > 1
-						? weeks.map( ( week ) =>
-								getWeekNumber( week, startOfWeek )
-							)
-						: undefined,
-				numRibbonSlots,
-			},
-		];
+		const weekNumbers =
+			unitCount > 1
+				? weeks.map( ( week ) => getWeekNumber( week, startOfWeek ) )
+				: undefined;
+		units.push( { dayNames, weeks, weekNumbers } );
 
-		return {
-			dayNames,
-			weeks,
-			units,
-			viewType,
-			unitCount,
-			numRibbonSlots,
-		};
+		return { dayNames, weeks, units, viewType, unitCount };
 	}
 
 	// Month view: construct unitCount distinct month objects
 	const startObj = dateRange.startDateObj || new Date( dateRange.startDate );
-	const units = [];
-
 	for ( let i = 0; i < unitCount; i++ ) {
 		const monthDate = new Date(
 			startObj.getFullYear(),
@@ -703,17 +778,17 @@ export function generateCalendar(
 			weekNumbers: mWeeks.map( ( week ) =>
 				getWeekNumber( week, startOfWeek )
 			),
-			numRibbonSlots: 0,
 		} );
 	}
 
 	return {
-		dayNames: units[ 0 ].dayNames,
-		weeks: units[ 0 ].weeks,
-		units,
+		dayNames,
+		weeks,
+		units: visibleUnits,
 		viewType,
 		unitCount,
 		numRibbonSlots: 0,
+		hasPosts: anyPosts,
 	};
 }
 
