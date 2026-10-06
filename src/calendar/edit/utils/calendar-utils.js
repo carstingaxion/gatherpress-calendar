@@ -40,6 +40,20 @@ export function getWeekendDays() {
 		: [ 0, 6 ];
 }
 
+/**
+ * Retrieves the maximum number of posts to query for calendar display in the editor.
+ * Defaults to 500.
+ *
+ * @return {number} Maximum number of posts to query.
+ */
+export function getPostsPerPage() {
+	const settings = select( 'core/editor' )?.getEditorSettings?.();
+	const postsPerPage = Number( settings?.gatherpress?.postsPerPage );
+	return ! Number.isNaN( postsPerPage ) && postsPerPage > 0
+		? postsPerPage
+		: 500;
+}
+
 export function isWeekendDay( dayOfWeek ) {
 	return getWeekendDays().includes( dayOfWeek );
 }

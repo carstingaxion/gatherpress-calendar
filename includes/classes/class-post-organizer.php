@@ -73,7 +73,7 @@ class Post_Organizer {
 	private static function get_post_date( int $post_id ): string {
 		$post_type = get_post_type( $post_id );
 
-		if ( 'gatherpress_event' === $post_type ) {
+		if ( is_string( $post_type ) && post_type_supports( $post_type, 'gatherpress-event-date' ) ) {
 			$event     = new Event\Event( $post_id );
 			$date      = isset( $event->get_datetime()['datetime_start'] ) && is_string( $event->get_datetime()['datetime_start'] ) ? $event->get_datetime()['datetime_start'] : '';
 			$post_date = substr( $date, 0, 10 );
