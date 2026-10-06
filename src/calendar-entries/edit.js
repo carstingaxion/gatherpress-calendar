@@ -52,6 +52,7 @@ const EventItem = memo( function EventItemComponent( {
 	innerBlocksProps,
 	innerBlocks,
 	parentAttributes,
+	defaultPostType = 'post',
 } ) {
 	// Safely resolve postId.
 	let postId;
@@ -62,9 +63,7 @@ const EventItem = memo( function EventItemComponent( {
 	}
 
 	const postType =
-		typeof post === 'object' && post?.type
-			? post.type
-			: 'gatherpress_event';
+		typeof post === 'object' && post?.type ? post.type : defaultPostType;
 
 	const contextValue = useMemo( () => {
 		// The placeholder item on an empty day has no event. Clear the post
@@ -122,6 +121,7 @@ const EventItem = memo( function EventItemComponent( {
 export default function Edit( { attributes, clientId, context } ) {
 	const dayPosts = context?.[ 'gatherpress/dayPosts' ] ?? EMPTY_ARRAY;
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
+	const defaultPostType = context?.postType || 'post';
 	const blockGap = attributes?.style?.spacing?.blockGap;
 
 	const blockProps = useBlockProps( {
@@ -166,6 +166,7 @@ export default function Edit( { attributes, clientId, context } ) {
 					innerBlocksProps={ innerBlocksProps }
 					innerBlocks={ innerBlocks }
 					parentAttributes={ attributes }
+					defaultPostType={ defaultPostType }
 				/>
 			) ) }
 		</div>

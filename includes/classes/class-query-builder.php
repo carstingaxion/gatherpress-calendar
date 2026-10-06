@@ -92,6 +92,33 @@ class Query_Builder {
 	}
 
 	/**
+	 * Checks whether a given post type (or list of post types) supports event dates.
+	 *
+	 * When an array is provided, returns true only if all post types support 'gatherpress-event-date'.
+	 *
+	 * @param mixed $post_type Post type slug or array of slugs.
+	 *
+	 * @return bool True if all post types support 'gatherpress-event-date'.
+	 */
+	public static function is_event_post_type( $post_type ): bool {
+		if ( is_string( $post_type ) ) {
+			return post_type_supports( $post_type, 'gatherpress-event-date' );
+		}
+
+		if ( is_array( $post_type ) && ! empty( $post_type ) ) {
+			foreach ( $post_type as $type ) {
+				if ( ! is_string( $type ) || ! post_type_supports( $type, 'gatherpress-event-date' ) ) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Build query arguments from block context and resolved date range.
 	 *
 	 * @since 0.1.0
@@ -120,8 +147,7 @@ class Query_Builder {
 		$query_args['posts_per_page']                   = self::get_posts_per_page();
 
 		$post_type = $query_args['post_type'] ?? 'post';
-		$is_event  = ( is_string( $post_type ) && post_type_supports( $post_type, 'gatherpress-event-date' ) )
-			|| ( is_array( $post_type ) && in_array( 'gatherpress_event', $post_type, true ) );
+		$is_event  = self::is_event_post_type( $post_type );
 
 		// Inclusive date range prevents boundary clipping across weeks and multi-month periods.
 		$date_clause = array(

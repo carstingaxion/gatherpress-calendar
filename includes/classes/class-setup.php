@@ -141,7 +141,7 @@ class Setup {
 	 * Retrieves all post types supported by the calendar.
 	 *
 	 * Supports the default 'post' post type alongside any post type
-	 * registering 'gatherpress-event-date' support (e.g. 'gatherpress_event').
+	 * registering 'gatherpress-event-date' support.
 	 *
 	 * @return string[] Array of post type slugs.
 	 */
