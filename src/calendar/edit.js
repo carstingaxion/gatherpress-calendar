@@ -26,7 +26,9 @@ import {
 } from './edit/utils/date-utils';
 import {
 	findHeadingBlock,
+	findBlockByName,
 	getCalendarBlockName,
+	getPaginationLabel,
 	generateCalendar,
 	getDefaultActiveDate,
 	getColumnsCount,
@@ -116,12 +118,16 @@ export default function Edit( {
 		[ posts, startOfWeek, dateRange, showWeekends ]
 	);
 
-	// Locate parent Query block and the bound heading block, keeping their existing metadata.
+	// Locate parent Query block, heading block, and pagination blocks.
 	const {
 		parentQueryClientId,
 		parentQueryMetadata,
 		headingClientId,
 		headingMetadata,
+		paginationPrevClientId,
+		paginationPrevLabel,
+		paginationNextClientId,
+		paginationNextLabel,
 	} = useSelect(
 		( select ) => {
 			const { getBlockParentsByBlockName, getBlock } =
@@ -138,11 +144,29 @@ export default function Edit( {
 				? findHeadingBlock( parentBlock.innerBlocks )
 				: null;
 
+			const prevBlock = parentBlock?.innerBlocks
+				? findBlockByName(
+						parentBlock.innerBlocks,
+						'core/query-pagination-previous'
+					)
+				: null;
+
+			const nextBlock = parentBlock?.innerBlocks
+				? findBlockByName(
+						parentBlock.innerBlocks,
+						'core/query-pagination-next'
+					)
+				: null;
+
 			return {
 				parentQueryClientId: parentId ?? null,
 				parentQueryMetadata: parentBlock?.attributes?.metadata,
 				headingClientId: headingBlock?.clientId ?? null,
 				headingMetadata: headingBlock?.attributes?.metadata,
+				paginationPrevClientId: prevBlock?.clientId ?? null,
+				paginationPrevLabel: prevBlock?.attributes?.label,
+				paginationNextClientId: nextBlock?.clientId ?? null,
+				paginationNextLabel: nextBlock?.attributes?.label,
 			};
 		},
 		[ clientId ]
@@ -165,7 +189,17 @@ export default function Edit( {
 		[ viewType, unitCount ]
 	);
 
-	// Sync names while preserving existing metadata (such as bindings).
+	const targetPrevLabel = useMemo(
+		() => getPaginationLabel( 'previous', viewType, unitCount ),
+		[ viewType, unitCount ]
+	);
+
+	const targetNextLabel = useMemo(
+		() => getPaginationLabel( 'next', viewType, unitCount ),
+		[ viewType, unitCount ]
+	);
+
+	// Sync names and pagination labels while preserving existing attributes.
 	useEffect( () => {
 		if (
 			parentQueryClientId &&
@@ -187,6 +221,24 @@ export default function Edit( {
 				},
 			} );
 		}
+
+		if (
+			paginationPrevClientId &&
+			paginationPrevLabel !== targetPrevLabel
+		) {
+			updateBlockAttributes( paginationPrevClientId, {
+				label: targetPrevLabel,
+			} );
+		}
+
+		if (
+			paginationNextClientId &&
+			paginationNextLabel !== targetNextLabel
+		) {
+			updateBlockAttributes( paginationNextClientId, {
+				label: targetNextLabel,
+			} );
+		}
 	}, [
 		parentQueryClientId,
 		parentQueryMetadata,
@@ -194,6 +246,12 @@ export default function Edit( {
 		headingClientId,
 		headingMetadata,
 		targetHeadingName,
+		paginationPrevClientId,
+		paginationPrevLabel,
+		targetPrevLabel,
+		paginationNextClientId,
+		paginationNextLabel,
+		targetNextLabel,
 		updateBlockAttributes,
 	] );
 

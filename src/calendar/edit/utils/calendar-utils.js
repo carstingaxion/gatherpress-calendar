@@ -3,7 +3,7 @@
  *
  * @package
  */
-import { __, _x, sprintf } from '@wordpress/i18n';
+import { __, _n, _x, sprintf } from '@wordpress/i18n';
 import { dateI18n } from '@wordpress/date';
 import { select } from '@wordpress/data';
 
@@ -542,6 +542,54 @@ export function getCalendarBlockName(
 }
 
 /**
+ * Resolves the pagination block label based on direction, viewType, and unitCount.
+ * Omits the number when unitCount is 1 (e.g. "Previous Month", "Next 3 Months").
+ *
+ * @param {string} direction 'previous' | 'next'.
+ * @param {string} viewType  'month' | 'week' | 'day'.
+ * @param {number} unitCount Number of units.
+ * @return {string} Localized label.
+ */
+export function getPaginationLabel(
+	direction = 'next',
+	viewType = 'month',
+	unitCount = 1
+) {
+	const count = Number( unitCount ) || 1;
+
+	const directionLabels = {
+		next: __( 'Next', 'gatherpress-calendar' ),
+		previous: __( 'Previous', 'gatherpress-calendar' ),
+	};
+
+	const unitLabels = {
+		month: _n( 'Month', 'Months', count, 'gatherpress-calendar' ),
+		week: _n( 'Week', 'Weeks', count, 'gatherpress-calendar' ),
+		day: _n( 'Day', 'Days', count, 'gatherpress-calendar' ),
+	};
+
+	const directionLabel = directionLabels[ direction ] || directionLabels.next;
+	const unitLabel = unitLabels[ viewType ] || unitLabels.month;
+
+	if ( count > 1 ) {
+		return sprintf(
+			/* translators: %1$s: direction label (Next, Previous), %2$d: unit count, %3$s: unit label (Months, Weeks, Days). */
+			_x( '%1$s %2$d %3$s', 'Pagination label', 'gatherpress-calendar' ),
+			directionLabel,
+			count,
+			unitLabel
+		);
+	}
+
+	return sprintf(
+		/* translators: %1$s: direction label (Next, Previous), %2$s: unit label (Month, Week, Day). */
+		_x( '%1$s %2$s', 'Pagination label', 'gatherpress-calendar' ),
+		directionLabel,
+		unitLabel
+	);
+}
+
+/**
  * Recursively find the block bound to the calendar heading source.
  *
  * @param {Array} blocks Array of parsed blocks to search.
@@ -555,6 +603,28 @@ export function findHeadingBlock( blocks = [] ) {
 		}
 		if ( block.innerBlocks && block.innerBlocks.length ) {
 			const found = findHeadingBlock( block.innerBlocks );
+			if ( found ) {
+				return found;
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Recursively find a block by name within an array of blocks.
+ *
+ * @param {Array}  blocks    Array of parsed blocks.
+ * @param {string} blockName Block name to search for.
+ * @return {Object|null} Matching block or null.
+ */
+export function findBlockByName( blocks = [], blockName ) {
+	for ( const block of blocks ) {
+		if ( block.name === blockName ) {
+			return block;
+		}
+		if ( block.innerBlocks && block.innerBlocks.length ) {
+			const found = findBlockByName( block.innerBlocks, blockName );
 			if ( found ) {
 				return found;
 			}
