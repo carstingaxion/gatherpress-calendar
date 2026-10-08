@@ -5,7 +5,7 @@
  * to expose "Filter by current {source}" in the Calendar inspector panel.
  *
  * @package
- * @since 0.9.0
+ * @since 0.8.0
  */
 
 import { useSelect, useDispatch } from '@wordpress/data';
