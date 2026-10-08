@@ -96,7 +96,7 @@ store( 'gatherpress/calendar', {
 			}
 
 			const target =
-				region.querySelector( '.gatherpress-calendar__month' ) ??
+				region.querySelector( '.gatherpress-calendar__heading' ) ??
 				ref.querySelector( 'table' );
 			if ( ! target ) {
 				return;

@@ -1,6 +1,5 @@
 /**
- * Hook to synchronize parent Query Loop block name, Heading block name,
- * and Previous/Next pagination button labels when view configuration changes.
+ * Hook to synchronize parent Query Loop, Heading, and Pagination names/labels.
  *
  * @package
  * @since 0.8.0
@@ -15,6 +14,7 @@ import {
 	findHeadingBlock,
 	findBlockByName,
 	getCalendarBlockName,
+	getPaginationContainerName,
 	getPaginationLabel,
 } from '../utils/block-sync-utils';
 
@@ -32,8 +32,12 @@ export function useCalendarSync( { clientId, viewType, unitCount } ) {
 		parentQueryMetadata,
 		headingClientId,
 		headingMetadata,
+		paginationContainerClientId,
+		paginationContainerMetadata,
 		paginationPrevClientId,
+		paginationPrevMetadata,
 		paginationNextClientId,
+		paginationNextMetadata,
 	} = useSelect(
 		( select ) => {
 			const { getBlockParentsByBlockName, getBlock } =
@@ -48,6 +52,13 @@ export function useCalendarSync( { clientId, viewType, unitCount } ) {
 
 			const headingBlock = parentBlock?.innerBlocks
 				? findHeadingBlock( parentBlock.innerBlocks )
+				: null;
+
+			const paginationBlock = parentBlock?.innerBlocks
+				? findBlockByName(
+						parentBlock.innerBlocks,
+						'core/query-pagination'
+					)
 				: null;
 
 			const prevBlock = parentBlock?.innerBlocks
@@ -69,8 +80,13 @@ export function useCalendarSync( { clientId, viewType, unitCount } ) {
 				parentQueryMetadata: parentBlock?.attributes?.metadata,
 				headingClientId: headingBlock?.clientId ?? null,
 				headingMetadata: headingBlock?.attributes?.metadata,
+				paginationContainerClientId: paginationBlock?.clientId ?? null,
+				paginationContainerMetadata:
+					paginationBlock?.attributes?.metadata,
 				paginationPrevClientId: prevBlock?.clientId ?? null,
+				paginationPrevMetadata: prevBlock?.attributes?.metadata,
 				paginationNextClientId: nextBlock?.clientId ?? null,
+				paginationNextMetadata: nextBlock?.attributes?.metadata,
 			};
 		},
 		[ clientId ]
@@ -90,6 +106,11 @@ export function useCalendarSync( { clientId, viewType, unitCount } ) {
 				unitCount,
 				__( 'Heading', 'gatherpress-calendar' )
 			),
+		[ viewType, unitCount ]
+	);
+
+	const targetPaginationContainerName = useMemo(
+		() => getPaginationContainerName( viewType, unitCount ),
 		[ viewType, unitCount ]
 	);
 
@@ -141,15 +162,32 @@ export function useCalendarSync( { clientId, viewType, unitCount } ) {
 			} );
 		}
 
+		if ( paginationContainerClientId ) {
+			updateBlockAttributes( paginationContainerClientId, {
+				metadata: {
+					...paginationContainerMetadata,
+					name: targetPaginationContainerName,
+				},
+			} );
+		}
+
 		if ( paginationPrevClientId ) {
 			updateBlockAttributes( paginationPrevClientId, {
 				label: targetPrevLabel,
+				metadata: {
+					...paginationPrevMetadata,
+					name: targetPrevLabel,
+				},
 			} );
 		}
 
 		if ( paginationNextClientId ) {
 			updateBlockAttributes( paginationNextClientId, {
 				label: targetNextLabel,
+				metadata: {
+					...paginationNextMetadata,
+					name: targetNextLabel,
+				},
 			} );
 		}
 	}, [
@@ -159,12 +197,17 @@ export function useCalendarSync( { clientId, viewType, unitCount } ) {
 		headingClientId,
 		headingMetadata,
 		targetHeadingName,
+		paginationContainerClientId,
+		paginationContainerMetadata,
+		targetPaginationContainerName,
 		viewType,
 		unitCount,
 		targetPrevLabel,
 		targetNextLabel,
 		paginationPrevClientId,
+		paginationPrevMetadata,
 		paginationNextClientId,
+		paginationNextMetadata,
 		updateBlockAttributes,
 	] );
 }
