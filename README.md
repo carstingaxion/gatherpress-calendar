@@ -24,8 +24,6 @@ A set of WordPress blocks that renders Query Loop results in monthly, weekly, or
 
 GatherPress Calendar is a WordPress block that renders Query Loop results as a monthly, weekly, or daily calendar. It integrates with the WordPress Query Loop block to display posts organized by their publication date (or event date for GatherPress events) in a structured, accessible calendar grid.
 
-https://github.com/user-attachments/assets/7089ef0c-e2aa-417a-a3fb-a5861315869b
-
 ---
 
 ## Block Architecture
@@ -93,11 +91,39 @@ Binds the day number to a paragraph block inside a day cell.
 * **Context used:** `gatherpress/dayNumber`,`gatherpress/dayDate`, `gatherpress/isEmpty`.
 * **Custom Date Formatting:** Accepts an optional format argument in block bindings metadata (configurable in the editor inspector) supporting standard date formats such as:
 
-    -   Default (j): 1, 2, 3...
-    -   Leading Zero (d): 01, 02, 03...
-    -   Ordinal (jS): 1st, 2nd, 3rd...
-    -   Dot Suffix (j.): 1., 2., 3....
-    -   Weekday & Day (D j): Mon 1, Tue 2...
+    -   Default (`j`): 1, 2, 3...
+    -   Leading Zero (`d`): 01, 02, 03...
+    -   Ordinal (`jS`): 1st, 2nd, 3rd...
+    -   Dot Suffix (`j.`): 1., 2., 3....
+    -   Weekday & Day (`D j`): Mon 1, Tue 2...
+
+---
+
+## Date Range Sources & Event Anchoring
+
+![Allow to define the date range via an event (or season)](.wordpress-org/screenshot-3.gif)
+
+The calendar can anchor its date boundaries to a specific event, season, conference, or any post supporting `gatherpress-event-date` via the `dateRangeSource` attribute:
+
+-   **Default (`dateRangeSource`: `'default'`):**  
+    Standard rolling calendar behavior anchored to the viewer's current date, `selectedDate`, or relative `dateModifier` offsets.
+-   **Current Post (`dateRangeSource`: `'context'`):**  
+    Derives boundaries from the current post context (context.postId and context.postType).
+    -   Active on single event templates, season templates, starter patterns, or within Query Loops.
+    -   Automatically gated so the option is only available when the host post type declares `gatherpress-event-date` support.
+    -   In the editor, subscribes directly to GatherPress's `gatherpress/datetime` data store, so date changes in the inspector update the calendar and heading on the canvas without saving.
+-   **Specific Post (`dateRangeSource`: `'selected'`):**  
+    Anchors boundaries to an explicit post chosen in the block inspector.
+    -   If multiple post types declare `gatherpress-event-date` support (e.g., `gatherpress_event`, `gatherpress_seasons`, `my_conference`), a post type selector is displayed first. If only one post type exists, the selector is hidden.
+    -   A search-enabled combobox lists matching published posts without filtering out past dates.
+
+### Automatic Duration Span & Presets
+
+When anchored to an event post (`context` or `selected`):
+
+-   **Automatic Unit Calculation:** The block calculates the duration between start and end dates and sets `unitCount` to fit the post's span (e.g., a 7-month season sets 7 monthly tables; a 3-day conference sets 3 day columns).
+-   **View Type Presets:** When a source post is chosen, `viewType` automatically presets based on event duration while remaining author-configurable.
+-   **Streamlined UI:** Redundant manual controls (Number of units to show, Change Month, Specific Date, and Date Offset) are hidden when anchored to an event post to prevent contradictory date bounds.
 
 ---
 
@@ -217,6 +243,7 @@ add_filter( 'gatherpress_calendar_posts_per_page', function() {
 
 1. Calendar configuration in the block editor
 2. Gradient block style with colorful background
+3. Allow to define the date range via an event (or season)
 
 ## Changelog
 

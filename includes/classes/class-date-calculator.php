@@ -15,6 +15,8 @@ defined( 'ABSPATH' ) || exit; // @codeCoverageIgnore
 
 use DateTimeImmutable;
 use DateTimeZone;
+use GatherPress\Core\Event;
+use WP_Block;
 
 /**
  * Date_Calculator Class
@@ -190,6 +192,117 @@ class Date_Calculator {
 	}
 
 	/**
+	 * Retrieves start and end date strings from a post supporting gatherpress-event-date.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param int $post_id Post ID to inspect.
+	 *
+	 * @return array{start: string, end: string}|null Start and end Y-m-d date strings or null.
+	 */
+	public static function get_post_event_dates( int $post_id ): ?array {
+		if ( $post_id <= 0 ) {
+			return null;
+		}
+
+		$post_type = get_post_type( $post_id );
+		if ( ! is_string( $post_type ) || ! post_type_supports( $post_type, 'gatherpress-event-date' ) ) {
+			return null;
+		}
+
+		$event     = new Event\Event( $post_id );
+		$datetimes = $event->get_datetime();
+		$start_raw = isset( $datetimes['datetime_start'] ) && is_string( $datetimes['datetime_start'] ) ? $datetimes['datetime_start'] : '';
+		$end_raw   = isset( $datetimes['datetime_end'] ) && is_string( $datetimes['datetime_end'] ) ? $datetimes['datetime_end'] : '';
+
+		if ( '' === $start_raw ) {
+			return null;
+		}
+
+		$start_date = substr( $start_raw, 0, 10 );
+		$end_date   = '' !== $end_raw ? substr( $end_raw, 0, 10 ) : $start_date;
+
+		if ( $end_date < $start_date ) {
+			$end_date = $start_date;
+		}
+
+		return array(
+			'start' => $start_date,
+			'end'   => $end_date,
+		);
+	}
+
+	/**
+	 * Calculates the number of calendar units spanned by an event's date range.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param string $view_type      View type ('month', 'week', 'day').
+	 * @param string $start_date_str Start date string (Y-m-d).
+	 * @param string $end_date_str   End date string (Y-m-d).
+	 *
+	 * @return int Number of units.
+	 */
+	public static function calculate_post_span_units( string $view_type, string $start_date_str, string $end_date_str ): int {
+		$start_obj = self::parse_date_or_current( $start_date_str );
+		$end_obj   = self::parse_date_or_current( $end_date_str );
+
+		if ( 'day' === $view_type ) {
+			$days_diff = (int) $start_obj->diff( $end_obj )->days + 1;
+			return max( 1, min( self::get_max_unit_count( 'day' ), $days_diff ) );
+		}
+
+		if ( 'week' === $view_type ) {
+			$raw_start  = self::get_week_start( $start_obj, self::get_start_of_week() );
+			$raw_end    = self::get_week_start( $end_obj, self::get_start_of_week() );
+			$weeks_diff = (int) round( abs( $raw_end->getTimestamp() - $raw_start->getTimestamp() ) / ( 7 * DAY_IN_SECONDS ) ) + 1;
+			return max( 1, min( self::get_max_unit_count( 'week' ), $weeks_diff ) );
+		}
+
+		$start_year  = (int) $start_obj->format( 'Y' );
+		$start_month = (int) $start_obj->format( 'n' );
+		$end_year    = (int) $end_obj->format( 'Y' );
+		$end_month   = (int) $end_obj->format( 'n' );
+		$months_diff = ( ( $end_year - $start_year ) * 12 ) + ( $end_month - $start_month ) + 1;
+
+		return max( 1, min( self::get_max_unit_count( 'month' ), $months_diff ) );
+	}
+
+	/**
+	 * Resolves the effective source post ID based on dateRangeSource and context.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param array<string, mixed> $attributes Block attributes.
+	 * @param WP_Block|null        $block      Optional block instance.
+	 *
+	 * @return int Target post ID or 0 if default source.
+	 */
+	public static function resolve_source_post_id( array $attributes, ?WP_Block $block = null ): int {
+		$source = isset( $attributes['dateRangeSource'] ) && is_string( $attributes['dateRangeSource'] )
+			? $attributes['dateRangeSource']
+			: 'default';
+
+		if ( 'selected' === $source ) {
+			return isset( $attributes['postId'] ) && is_numeric( $attributes['postId'] )
+				? (int) $attributes['postId']
+				: 0;
+		}
+
+		if ( 'context' === $source ) {
+			$context_post_id = $block instanceof WP_Block ? ( $block->context['postId'] ?? null ) : null;
+			if ( is_numeric( $context_post_id ) && (int) $context_post_id > 0 ) {
+				return (int) $context_post_id;
+			}
+
+			$current_id = get_the_ID();
+			return false !== $current_id && $current_id > 0 ? (int) $current_id : 0;
+		}
+
+		return 0;
+	}
+
+	/**
 	 * Resolves and validates the view type from attributes.
 	 *
 	 * @param array<string, mixed> $attributes Attributes array.
@@ -260,10 +373,11 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Calculate the target date range for the calendar based on viewType, unitCount, selectedDate, dateModifier, and weekend visibility.
+	 * Calculate the target date range for the calendar.
 	 *
-	 * @param array<string, mixed> $attributes Block attributes.
-	 * @param int                  $page       Pagination page offset (1-based, default 1).
+	 * @param array<string, mixed> $attributes     Block attributes.
+	 * @param int                  $page           Pagination page offset.
+	 * @param int                  $source_post_id Optional explicit source post ID.
 	 *
 	 * @return array{
 	 *     view_type: string,
@@ -279,13 +393,23 @@ class Date_Calculator {
 	 *     heading: string
 	 * }
 	 */
-	public static function calculate_date_range( array $attributes, int $page = 1 ): array {
+	public static function calculate_date_range( array $attributes, int $page = 1, int $source_post_id = 0 ): array {
 		$view_type     = self::resolve_view_type( $attributes );
-		$unit_count    = self::resolve_unit_count( $attributes, $view_type );
-		$selected_date = isset( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
-		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
 		$show_weekends = self::show_weekends( $attributes );
+		$start_of_week = self::get_start_of_week();
 
+		$target_post_id = $source_post_id > 0 ? $source_post_id : self::resolve_source_post_id( $attributes );
+		$post_dates     = $target_post_id > 0 ? self::get_post_event_dates( $target_post_id ) : null;
+
+		if ( null !== $post_dates ) {
+			$unit_count    = self::calculate_post_span_units( $view_type, $post_dates['start'], $post_dates['end'] );
+			$selected_date = $post_dates['start'];
+		} else {
+			$unit_count    = self::resolve_unit_count( $attributes, $view_type );
+			$selected_date = isset( $attributes['selectedDate'] ) && is_string( $attributes['selectedDate'] ) ? $attributes['selectedDate'] : '';
+		}
+
+		$date_modifier = isset( $attributes['dateModifier'] ) && is_numeric( $attributes['dateModifier'] ) ? (int) $attributes['dateModifier'] : 0;
 		// Step offset multiplies pagination by unitCount.
 		$offset    = $date_modifier + ( max( 0, $page - 1 ) * $unit_count );
 		$base_date = self::resolve_base_date( $selected_date, $view_type, $offset );
@@ -294,7 +418,7 @@ class Date_Calculator {
 			$view_type,
 			$base_date,
 			$unit_count,
-			self::get_start_of_week(),
+			$start_of_week,
 			$show_weekends
 		);
 
@@ -314,6 +438,7 @@ class Date_Calculator {
 	 * @param array<string, mixed> $query               The query array from context.
 	 * @param array<string, mixed> $fallback_attributes  Block attributes if context is incomplete.
 	 * @param int                  $page                Page number.
+	 * @param int                  $source_post_id      Optional source post ID.
 	 *
 	 * @return array{
 	 *     view_type: string,
@@ -329,12 +454,12 @@ class Date_Calculator {
 	 *     heading: string
 	 * } Date range array.
 	 */
-	public static function get_range_from_query( array $query, array $fallback_attributes = array(), int $page = 1 ): array {
+	public static function get_range_from_query( array $query, array $fallback_attributes = array(), int $page = 1, int $source_post_id = 0 ): array {
 		$start_date_raw = isset( $query[ Setup::CALENDAR_QUERY_START_DATE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_START_DATE ] ) ? $query[ Setup::CALENDAR_QUERY_START_DATE ] : '';
 		$end_date_raw   = isset( $query[ Setup::CALENDAR_QUERY_END_DATE ] ) && is_string( $query[ Setup::CALENDAR_QUERY_END_DATE ] ) ? $query[ Setup::CALENDAR_QUERY_END_DATE ] : '';
 
 		if ( '' === $start_date_raw || '' === $end_date_raw ) {
-			return self::calculate_date_range( $fallback_attributes, $page );
+			return self::calculate_date_range( $fallback_attributes, $page, $source_post_id );
 		}
 
 		$start_date_obj = self::parse_date_or_current( $start_date_raw );
@@ -344,7 +469,19 @@ class Date_Calculator {
 			? $query[ Setup::CALENDAR_QUERY_VIEW_TYPE ]
 			: ( $fallback_attributes['viewType'] ?? 'month' );
 		$view_type     = self::resolve_view_type( array( 'viewType' => $view_type_raw ) );
-		$unit_count    = self::resolve_unit_count( $fallback_attributes, $view_type );
+
+		$target_post_id = $source_post_id > 0 ? $source_post_id : self::resolve_source_post_id( $fallback_attributes );
+		$post_dates     = $target_post_id > 0 ? self::get_post_event_dates( $target_post_id ) : null;
+
+		if ( null !== $post_dates ) {
+			$unit_count = self::calculate_post_span_units( $view_type, $post_dates['start'], $post_dates['end'] );
+		} else {
+			$unit_count = self::resolve_unit_count( $fallback_attributes, $view_type );
+		}
+
+		$raw_week_start = 'week' === $view_type
+			? self::get_week_start( $start_date_obj, self::get_start_of_week() )
+			: $start_date_obj;
 
 		$heading = isset( $query[ Setup::CALENDAR_QUERY_HEADING ] ) && is_string( $query[ Setup::CALENDAR_QUERY_HEADING ] )
 			? $query[ Setup::CALENDAR_QUERY_HEADING ]
@@ -355,7 +492,7 @@ class Date_Calculator {
 			$unit_count,
 			$start_date_obj,
 			$end_date_obj,
-			$start_date_obj,
+			$raw_week_start,
 			$start_date_obj,
 			$heading
 		);

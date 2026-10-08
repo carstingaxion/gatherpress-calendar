@@ -9,13 +9,22 @@ import { registerBlockBindingsSource } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import domReady from '@wordpress/dom-ready';
-import { dateI18n, getSettings } from '@wordpress/date';
+import { dateI18n } from '@wordpress/date';
 import { InspectorControls } from '@wordpress/block-editor';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { PanelBody, SelectControl } from '@wordpress/components';
 
-import { calculateDateRange, formatHeading } from './edit/utils/date-utils';
+import {
+	calculateDateRange,
+	calculatePostSpanUnits,
+	formatHeading,
+} from './edit/utils/date-utils';
+import { getStartOfWeek } from './edit/utils/calendar-utils';
 import { findBlockByName } from './edit/utils/block-sync-utils';
+import {
+	resolveSourceEventDates,
+	isPostDateSource,
+} from './edit/utils/source-utils';
 
 domReady( () => {
 	if ( typeof registerBlockBindingsSource !== 'function' ) {
@@ -24,6 +33,9 @@ domReady( () => {
 
 	/**
 	 * Callback to get heading content for bound heading blocks in the editor.
+	 *
+	 * Subscribes to the calendar block's settings and current post dates,
+	 * formatting the active date range.
 	 *
 	 * @param {Object}   root0          Parameters object.
 	 * @param {Function} root0.select   Block editor select function.
@@ -43,7 +55,7 @@ domReady( () => {
 			'core/query'
 		);
 
-		// 1. Search inside the same parent Query block
+		// 1. Search inside the same parent Query block.
 		if ( parentQueryIds && parentQueryIds.length ) {
 			const parentQuery = getBlock(
 				parentQueryIds[ parentQueryIds.length - 1 ]
@@ -56,7 +68,7 @@ domReady( () => {
 			}
 		}
 
-		// 2. Fallback: search all blocks in the editor canvas
+		// 2. Fallback: search all blocks in the editor canvas.
 		if ( ! calendarBlock ) {
 			calendarBlock = findBlockByName(
 				getBlocks(),
@@ -64,7 +76,7 @@ domReady( () => {
 			);
 		}
 
-		// Establish reactive subscription to calendar attributes
+		// Establish reactive subscription to calendar attributes.
 		const liveCalendar = calendarBlock
 			? getBlock( calendarBlock.clientId )
 			: null;
@@ -75,17 +87,40 @@ domReady( () => {
 			selectedDate = '',
 			dateModifier = 0,
 			showWeekends = true,
+			dateRangeSource = 'default',
+			postId = 0,
+			sourcePostType = '',
 		} = liveCalendar?.attributes || {};
 
-		const dateSettings = getSettings();
-		const startOfWeek = dateSettings?.l10n.startOfWeek || 0;
+		const startOfWeek = getStartOfWeek();
+
+		const sourceDates = resolveSourceEventDates( registrySelect, {
+			dateRangeSource,
+			postId,
+			sourcePostType,
+		} );
+
+		let effectiveSelectedDate = selectedDate;
+		let effectiveUnitCount = unitCount;
+
+		if ( sourceDates.hasPost ) {
+			effectiveSelectedDate = sourceDates.startDate;
+			effectiveUnitCount = calculatePostSpanUnits(
+				viewType,
+				sourceDates.startDate,
+				sourceDates.endDate,
+				startOfWeek
+			);
+		}
+
+		const isPostAnchored = isPostDateSource( dateRangeSource );
 
 		const range = calculateDateRange(
 			{
 				viewType,
-				unitCount,
-				selectedDate,
-				dateModifier,
+				unitCount: effectiveUnitCount,
+				selectedDate: effectiveSelectedDate,
+				dateModifier: isPostAnchored ? 0 : dateModifier,
 				showWeekends,
 			},
 			startOfWeek

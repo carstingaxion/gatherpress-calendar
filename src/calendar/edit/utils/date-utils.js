@@ -9,6 +9,23 @@ import { _x, sprintf } from '@wordpress/i18n';
 import { isWeekendDay } from './calendar-utils';
 
 /**
+ * Normalizes a Date object to 12:00:00 noon to prevent midnight timezone shifts.
+ *
+ * @param {Date} date Calendar date object.
+ * @return {Date} Date object set to noon.
+ */
+function atNoon( date ) {
+	return new Date(
+		date.getFullYear(),
+		date.getMonth(),
+		date.getDate(),
+		12,
+		0,
+		0
+	);
+}
+
+/**
  * Formats a calendar Date object into YYYY-MM-DD without timezone shifting.
  *
  * @param {Date} date Calendar date object.
@@ -39,12 +56,20 @@ export function calculateTargetDate( {
 
 	if ( selectedDate && /^\d{4}-\d{2}-\d{2}$/.test( selectedDate ) ) {
 		const [ year, month, day ] = selectedDate.split( '-' ).map( Number );
-		targetDate = new Date( year, month - 1, day );
+		targetDate = new Date( year, month - 1, day, 12, 0, 0 );
 	} else if ( selectedDate && /^\d{4}-\d{2}$/.test( selectedDate ) ) {
 		const [ year, month ] = selectedDate.split( '-' ).map( Number );
-		targetDate = new Date( year, month - 1, 1 );
+		targetDate = new Date( year, month - 1, 1, 12, 0, 0 );
 	} else {
-		targetDate = new Date();
+		const now = new Date();
+		targetDate = new Date(
+			now.getFullYear(),
+			now.getMonth(),
+			now.getDate(),
+			12,
+			0,
+			0
+		);
 	}
 
 	if ( 'month' === viewType ) {
@@ -66,19 +91,80 @@ export function calculateTargetDate( {
 }
 
 /**
+ * Calculates the number of calendar units spanned by an event's date range.
+ *
+ * @param {string} viewType     View type ('month', 'week', 'day').
+ * @param {string} startDateStr Start date (YYYY-MM-DD).
+ * @param {string} endDateStr   End date (YYYY-MM-DD).
+ * @param {number} startOfWeek  Start of week (0-6).
+ *
+ * @return {number} Clamped unit count.
+ */
+export function calculatePostSpanUnits(
+	viewType,
+	startDateStr,
+	endDateStr,
+	startOfWeek = 0
+) {
+	if ( ! startDateStr || ! endDateStr ) {
+		return 1;
+	}
+
+	const [ sY, sM, sD ] = startDateStr.split( '-' ).map( Number );
+	const [ eY, eM, eD ] = endDateStr.split( '-' ).map( Number );
+	const startObj = new Date( sY, sM - 1, sD, 12, 0, 0 );
+	const endObj = new Date( eY, eM - 1, eD, 12, 0, 0 );
+
+	if ( 'day' === viewType ) {
+		const daysDiff = Math.max(
+			1,
+			Math.round( ( endObj - startObj ) / ( 1000 * 60 * 60 * 24 ) ) + 1
+		);
+		return Math.min( 7, daysDiff );
+	}
+
+	if ( 'week' === viewType ) {
+		const currentDow = startObj.getDay();
+		const diff = ( currentDow - startOfWeek + 7 ) % 7;
+		const rawWeekStart = new Date( startObj );
+		rawWeekStart.setDate( startObj.getDate() - diff );
+
+		const endDow = endObj.getDay();
+		const endDiff = ( endDow - startOfWeek + 7 ) % 7;
+		const rawWeekEnd = new Date( endObj );
+		rawWeekEnd.setDate( endObj.getDate() - endDiff );
+
+		const weeksDiff = Math.max(
+			1,
+			Math.round(
+				( rawWeekEnd - rawWeekStart ) / ( 1000 * 60 * 60 * 24 * 7 )
+			) + 1
+		);
+		return Math.min( 5, weeksDiff );
+	}
+
+	const monthsDiff =
+		( endObj.getFullYear() - startObj.getFullYear() ) * 12 +
+		( endObj.getMonth() - startObj.getMonth() ) +
+		1;
+
+	return Math.max( 1, Math.min( 12, monthsDiff ) );
+}
+
+/**
  * Calculate range and boundaries for a given date selection.
  *
- * @param {Object} options     Options containing viewType, selectedDate, showWeekends, etc.
+ * @param {Object} options     Options containing viewType, selectedDate, unitCount, dateModifier, etc.
  * @param {number} startOfWeek Start of week index (0-6).
  *
  * @return {Object} Range object.
  */
 export function calculateDateRange( options = {}, startOfWeek = 0 ) {
-	const targetDate = calculateTargetDate( options );
 	const viewType = options.viewType || 'month';
-	const unitCount = Math.max( 1, options.unitCount || 1 );
 	const showWeekends =
 		options.showWeekends !== false && options.showWeekends !== 'false';
+	const unitCount = Math.max( 1, options.unitCount || 1 );
+	const targetDate = calculateTargetDate( options );
 
 	let startDate;
 	let endDate;
@@ -115,8 +201,8 @@ export function calculateDateRange( options = {}, startOfWeek = 0 ) {
 	} else {
 		const year = targetDate.getFullYear();
 		const month = targetDate.getMonth();
-		startDate = new Date( year, month, 1 );
-		endDate = new Date( year, month + unitCount, 0 );
+		startDate = new Date( year, month, 1, 12, 0, 0 );
+		endDate = new Date( year, month + unitCount, 0, 12, 0, 0 );
 	}
 
 	return {
@@ -174,17 +260,18 @@ export function formatHeading( viewType, startDate, endDate ) {
 				'Calendar heading: single day',
 				'gatherpress-calendar'
 			),
-			startDate
+			atNoon( startDate )
 		);
 	}
 
-	const startYear = startDate.getFullYear();
-	const endYear = endDate.getFullYear();
-	const startMonth = startDate.getMonth();
-	const endMonth = endDate.getMonth();
+	let start = atNoon( startDate );
+	let end = atNoon( endDate );
 
-	let start = startDate;
-	let end = endDate;
+	const startYear = start.getFullYear();
+	const endYear = end.getFullYear();
+	const startMonth = start.getMonth();
+	const endMonth = end.getMonth();
+
 	let startFormat;
 	let endFormat;
 
