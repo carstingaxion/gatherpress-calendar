@@ -7,6 +7,7 @@
 import { dateI18n } from '@wordpress/date';
 import { _x, sprintf } from '@wordpress/i18n';
 import { isWeekendDay } from './calendar-utils';
+import { getDatetimeSeparator } from './source-utils';
 
 /**
  * Normalizes a Date object to 12:00:00 noon to prevent midnight timezone shifts.
@@ -358,14 +359,17 @@ export function formatHeading( viewType, startDate, endDate ) {
 		}
 	}
 
+	const separator = getDatetimeSeparator();
+
 	return sprintf(
-		/* translators: %1$s: start date, %2$s: end date. */
+		/* translators: %1$s: start date, %2$s: separator, %3$s: end date. */
 		_x(
-			'%1$s – %2$s',
+			'%1$s %2$s %3$s',
 			'Calendar heading: date range',
 			'gatherpress-calendar'
 		),
 		dateI18n( startFormat, start ),
+		separator,
 		dateI18n( endFormat, end )
 	);
 }

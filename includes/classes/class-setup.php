@@ -132,9 +132,11 @@ class Setup {
 		if ( ! isset( $settings['gatherpress'] ) || ! is_array( $settings['gatherpress'] ) ) {
 			$settings['gatherpress'] = array();
 		}
+
 		$settings['gatherpress']['weekendDays']  = Date_Calculator::get_weekend_days();
 		$settings['gatherpress']['postsPerPage'] = Query_Builder::get_posts_per_page();
 		$settings['gatherpress']['startOfWeek']  = Date_Calculator::get_start_of_week();
+
 		return $settings;
 	}
 

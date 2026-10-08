@@ -5,11 +5,38 @@
  * @since 0.9.0
  */
 
+import { select as wpSelect } from '@wordpress/data';
+import { _x } from '@wordpress/i18n';
 import { store as coreStore } from '@wordpress/core-data';
 
 export const DATE_SOURCE_DEFAULT = 'default';
 export const DATE_SOURCE_CONTEXT = 'context';
 export const DATE_SOURCE_SELECTED = 'selected';
+
+/**
+ * Retrieves the datetime separator published by GatherPress core.
+ *
+ * Falls back to the calendar's localized default if not configured.
+ *
+ * @return {string} Separator string.
+ */
+export function getDatetimeSeparator() {
+	const editorSettings = wpSelect( 'core/editor' )?.getEditorSettings?.();
+	const configSeparator =
+		editorSettings?.gatherpress?.config?.datetimeSeparator;
+
+	if (
+		typeof configSeparator === 'string' &&
+		configSeparator.trim() !== ''
+	) {
+		return configSeparator.trim();
+	}
+	return _x(
+		'–',
+		'Calendar heading date range separator',
+		'gatherpress-calendar'
+	);
+}
 
 /**
  * Normalizes any date source attribute value into canonical form.

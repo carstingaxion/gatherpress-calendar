@@ -22,6 +22,7 @@ import {
 	calculateDateQuery,
 	formatHeading,
 } from './edit/utils/date-utils';
+import { getDatetimeSeparator } from './edit/utils/source-utils';
 import {
 	generateCalendar,
 	getDefaultActiveDate,
@@ -295,6 +296,8 @@ export default function Edit( {
 		} );
 	};
 
+	const separator = getDatetimeSeparator();
+
 	return (
 		<>
 			<InspectorControls>
@@ -319,7 +322,7 @@ export default function Edit( {
 							onUnitCountChange={ handleUnitCountChange }
 							selectedDate={
 								hasPostDates
-									? `${ dateRange.startDate } – ${ dateRange.endDate }`
+									? `${ dateRange.startDate } ${ separator } ${ dateRange.endDate }`
 									: selectedDate
 							}
 							dateModifier={ dateModifier }
