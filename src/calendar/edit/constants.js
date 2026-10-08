@@ -264,8 +264,7 @@ export const QUERY_VARIATION_INNER_BLOCKS = [
 		'core/heading',
 		{
 			level: 2,
-			className:
-				'gatherpress-calendar__heading has-text-align-center',
+			className: 'gatherpress-calendar__heading has-text-align-center',
 			typography: {
 				textAlign: 'center',
 			},

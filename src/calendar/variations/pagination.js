@@ -4,7 +4,7 @@
  * Registers calendar variations of core/query-pagination,
  * core/query-pagination-previous, and core/query-pagination-next.
  *
- * @package GatherPressCalendar
+ * @package
  * @since 0.9.0
  */
 

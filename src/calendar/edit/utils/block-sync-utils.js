@@ -103,7 +103,10 @@ export function getCalendarBlockName(
  * @param {number} unitCount Number of units.
  * @return {string} Localized block name (e.g. "Month Pagination", "3 Month Pagination").
  */
-export function getPaginationContainerName( viewType = 'month', unitCount = 1 ) {
+export function getPaginationContainerName(
+	viewType = 'month',
+	unitCount = 1
+) {
 	return getCalendarBlockName(
 		viewType,
 		unitCount,
