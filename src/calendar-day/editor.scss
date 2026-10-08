@@ -5,6 +5,8 @@
  * @since 0.4.0
  */
 
+@use "../calendar/style/visually-hidden" as *;
+
 .editor-styles-wrapper {
 
 	.gatherpress-calendar__day {
@@ -22,10 +24,20 @@
 			outline-offset: -1px;
 		}
 
-		/* Hide placeholder entries on empty days when the day is not being edited */
+		/*
+		 * The day modal button is hidden like on the front end, so the cell
+		 * shows only the day number. Select the button in List View to edit it.
+		 */
+		.gatherpress-calendar__day-trigger .wp-block-button__link {
+
+			@include visually-hidden;
+		}
+
+		/* Hide placeholder entries and the day modal on idle empty days */
 		&.is-inactive-empty-day {
 
-			.wp-block-gatherpress-calendar-entries {
+			.wp-block-gatherpress-calendar-entries,
+			.wp-block-gatherpress-modal-manager {
 				display: none;
 			}
 		}

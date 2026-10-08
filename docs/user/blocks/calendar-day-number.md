@@ -10,7 +10,17 @@ When placed in inactive or padding cells (`isEmpty: true`), the source outputs a
 
 ## Supported Blocks
 
-- `core/paragraph`
+- `core/paragraph` and `core/heading`: `content`
+- `core/button`: `text` and `url`
+
+The `url` of a button is the archive of the day, for example the day modal trigger of the "Day Modal" calendar design. It lets the trigger work without JavaScript.
+
+### Named Formats
+
+Two formats are names instead of date formats. They are translated when the page renders:
+
+- `dayModalHeading`: the full date, for example "Monday, October 5, 2026".
+- `dayModalTrigger`: "Events on Monday, October 5, 2026", the name of the day modal trigger.
 
 ## Attribute Binding
 
