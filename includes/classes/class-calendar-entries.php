@@ -185,14 +185,15 @@ class Calendar_Entries {
 			$GLOBALS['post'] = $this->original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		}
 
-		$inline_styles   = $this->get_term_color_styles( $post_id ) . $entry_styles['inline_styles'];
-		$style_attribute = '' !== $inline_styles ? sprintf( ' style="%s"', esc_attr( $inline_styles ) ) : '';
+		$style_attribute = '' !== $entry_styles['inline_styles'] ? sprintf( ' style="%s"', esc_attr( $entry_styles['inline_styles'] ) ) : '';
 
+		// The post ID class lets other plugins find the event of an entry, as they do for Query Loop items.
 		return sprintf(
-			'<div class="%1$s"%2$s>%3$s</div>',
+			'<div class="%1$s post-%4$d"%2$s>%3$s</div>',
 			esc_attr( $entry_styles['classnames'] ),
 			$style_attribute,
-			$inner_content
+			$inner_content,
+			$post_id
 		);
 	}
 
@@ -618,37 +619,6 @@ class Calendar_Entries {
 			'classnames'    => $classnames,
 			'inline_styles' => $inline_styles,
 		);
-	}
-
-	/**
-	 * Builds the term color properties of one event.
-	 *
-	 * The Taxonomy Colors plugin scopes term colors only to core/post-template
-	 * items. Without this, calendar entries use the term colors of the page.
-	 *
-	 * @param int $post_id Event post ID.
-	 *
-	 * @return string CSS custom properties, or an empty string.
-	 */
-	private function get_term_color_styles( int $post_id ): string {
-		if ( ! class_exists( '\GatherpressTaxonomyColors\Term_Color_Resolver' ) ) {
-			return '';
-		}
-
-		// @phpstan-ignore-next-line
-		$colors = \GatherpressTaxonomyColors\Term_Color_Resolver::get_instance()->resolve_term_colors_for_post( $post_id );
-		$styles = '';
-
-		foreach ( (array) $colors as $slot => $hex ) {
-			$slot = sanitize_key( (string) $slot );
-			$hex  = is_string( $hex ) ? sanitize_hex_color( $hex ) : '';
-			if ( '' === $slot || empty( $hex ) ) {
-				continue;
-			}
-			$styles .= sprintf( '--flavor--%1$s:%2$s;--wp--preset--color--%1$s:%2$s;', $slot, $hex );
-		}
-
-		return $styles;
 	}
 
 	/**
