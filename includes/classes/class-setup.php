@@ -33,7 +33,7 @@ class Setup {
 	use Singleton;
 
 	/**
-	 * Query parameter name for queries containing calendars.
+	 * Query parameter names for queries containing calendars.
 	 *
 	 * @since 0.34.0
 	 * @var string
@@ -69,6 +69,7 @@ class Setup {
 		add_filter( 'render_block_context', array( $this, 'disable_query_pagination_numbers' ), 10, 2 );
 		add_filter( 'query_vars', array( $this, 'query_vars' ) );
 		add_filter( 'query_loop_block_query_vars', array( $this, 'query_loop_block_query_vars' ), 10, 2 );
+		add_action( 'pre_get_posts', array( $this, 'filter_day_archive_query' ), 9 );
 	}
 
 	/**
@@ -103,6 +104,7 @@ class Setup {
 					'gatherpress/dayNumber',
 					'gatherpress/dayDate',
 					'gatherpress/isEmpty',
+					'gatherpress/dayPosts',
 				),
 			)
 		);
@@ -112,7 +114,7 @@ class Setup {
 			array(
 				'label'              => _x( 'Calendar Heading', 'Block Bindings Source', 'gatherpress-calendar' ),
 				'get_value_callback' => array( $this, 'get_heading_binding_value' ),
-				'uses_context'       => array( 'query' ),
+				'uses_context'       => array( 'query', 'postId', 'postType' ),
 			)
 		);
 	}
@@ -120,7 +122,7 @@ class Setup {
 	/**
 	 * Pass calendar settings into the official block editor settings store.
 	 *
-	 * Guarantees settings are accessible inside iframed editor canvases.
+	 * Guarantees start of week and limits are identical in the editor canvas.
 	 *
 	 * @since 0.7.0
 	 *
@@ -132,8 +134,11 @@ class Setup {
 		if ( ! isset( $settings['gatherpress'] ) || ! is_array( $settings['gatherpress'] ) ) {
 			$settings['gatherpress'] = array();
 		}
+
 		$settings['gatherpress']['weekendDays']  = Date_Calculator::get_weekend_days();
 		$settings['gatherpress']['postsPerPage'] = Query_Builder::get_posts_per_page();
+		$settings['gatherpress']['startOfWeek']  = Date_Calculator::get_start_of_week();
+
 		return $settings;
 	}
 
@@ -322,16 +327,13 @@ class Setup {
 			 * @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<int, array<string, mixed>>, innerHTML?: string, innerContent?: array<mixed>} $block
 			 */
 			if ( ( $block['blockName'] ?? '' ) === $block_name ) {
+				/**
+				 * Type safety.
+				 *
+				 * @var array<string, mixed>|null $attrs
+				 */
 				$attrs = $block['attrs'] ?? null;
-				if ( is_array( $attrs ) ) {
-					/**
-					 * Type safety.
-					 *
-					 * @var array<string, mixed> $attrs
-					 */
-					return $attrs;
-				}
-				return array();
+				return is_array( $attrs ) ? $attrs : array();
 			}
 			// @phpstan-ignore-next-line
 			if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
@@ -348,10 +350,11 @@ class Setup {
 	 * Injects calendar pagination arguments onto the parent core/query block.
 	 *
 	 * @param array<string, mixed> $parsed_block Parsed query block data.
+	 * @param WP_Block|null        $parent_block Parent block instance.
 	 *
 	 * @return array<string, mixed> Updated block data.
 	 */
-	private function paginate_query_block( array $parsed_block ): array {
+	private function paginate_query_block( array $parsed_block, ?WP_Block $parent_block = null ): array {
 		$inner_blocks = isset( $parsed_block['innerBlocks'] ) && is_array( $parsed_block['innerBlocks'] ) ? $parsed_block['innerBlocks'] : array();
 		// @phpstan-ignore-next-line
 		$calendar_attrs = self::gatherpress_find_inner_block_attrs( 'gatherpress/calendar', $inner_blocks );
@@ -359,8 +362,9 @@ class Setup {
 		if ( null !== $calendar_attrs && is_array( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs']['query'] ) ) {
 			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_PARAM ] = true;
 
-			$page  = Query_Builder::get_requested_page( $parsed_block['attrs']['queryId'] ?? null );
-			$range = Date_Calculator::calculate_date_range( $calendar_attrs, $page );
+			$page           = Query_Builder::get_requested_page( $parsed_block['attrs']['queryId'] ?? null );
+			$source_post_id = Date_Calculator::resolve_source_post_id( $calendar_attrs, $parent_block );
+			$range          = Date_Calculator::calculate_date_range( $calendar_attrs, $page, $source_post_id );
 
 			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_VIEW_TYPE ]  = $range['view_type'];
 			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_START_DATE ] = $range['start_date'];
@@ -415,7 +419,7 @@ class Setup {
 		$block_name = $parsed_block['blockName'] ?? '';
 
 		if ( 'core/query' === $block_name ) {
-			return $this->paginate_query_block( $parsed_block );
+			return $this->paginate_query_block( $parsed_block, $parent_block );
 		}
 
 		if ( 'gatherpress/calendar' === $block_name ) {
@@ -546,9 +550,10 @@ class Setup {
 	 * The named formats 'dayModalHeading' (date) and 'dayModalTrigger' ("Events on <date>")
 	 * are translated here, when the page renders, and not stored in the post content.
 	 * Binds paragraph and heading 'content', and button 'text' (used as the
-	 * accessible name of the day modal trigger).
+	 * accessible name of the day modal trigger). Button 'url' is the archive
+	 * of the day, so the day modal trigger also works without JavaScript.
 	 *
-	 * @since 0.8.0 Supports the 'text' attribute and the named day modal formats.
+	 * @since 0.8.0 Supports the 'text' and 'url' attributes and the named day modal formats.
 	 *
 	 * @param array<string, mixed> $source_args    Source arguments.
 	 * @param WP_Block             $block_instance Block instance.
@@ -557,12 +562,16 @@ class Setup {
 	 * @return string|null
 	 */
 	public function get_day_number_binding_value( array $source_args, WP_Block $block_instance, string $attribute_name ): ?string {
-		if ( ! in_array( $attribute_name, array( 'content', 'text' ), true ) ) {
+		if ( ! in_array( $attribute_name, array( 'content', 'text', 'url' ), true ) ) {
 			return null;
 		}
 
 		if ( ! empty( $block_instance->context['gatherpress/isEmpty'] ) ) {
 			return '';
+		}
+
+		if ( 'url' === $attribute_name ) {
+			return $this->get_day_archive_url( $block_instance->context );
 		}
 
 		$day_date = $block_instance->context['gatherpress/dayDate'] ?? '';
@@ -619,6 +628,92 @@ class Setup {
 	}
 
 	/**
+	 * URL of the archive with the posts of one day.
+	 *
+	 * The day modal trigger links here, so it works without JavaScript.
+	 * With JavaScript, GatherPress opens the modal instead.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param array<mixed> $context Day context with the date and the post IDs of the day.
+	 *
+	 * @return string|null Archive URL, or null without posts.
+	 */
+	private function get_day_archive_url( array $context ): ?string {
+		$day_date   = $context['gatherpress/dayDate'] ?? null;
+		$day_posts  = $context['gatherpress/dayPosts'] ?? null;
+		$first_post = is_array( $day_posts ) ? reset( $day_posts ) : null;
+
+		if ( ! is_string( $day_date ) || ! is_numeric( $first_post ) ) {
+			return null;
+		}
+
+		// ponytail: links the archive of the first post's type; a query with mixed post types links one archive only.
+		$post_type = get_post_type( (int) $first_post );
+
+		if ( ! is_string( $post_type ) ) {
+			return null;
+		}
+
+		// Posts have their own date archive, it filters by post date like the calendar.
+		if ( 'post' === $post_type ) {
+			return get_day_link( (int) substr( $day_date, 0, 4 ), (int) substr( $day_date, 5, 2 ), (int) substr( $day_date, 8, 2 ) );
+		}
+
+		// A post type without an archive page still has a query archive on the front page.
+		$url = get_post_type_archive_link( $post_type );
+		$url = is_string( $url ) ? $url : add_query_arg( 'post_type', $post_type, home_url( '/' ) );
+
+		$args = array(
+			self::CALENDAR_QUERY_START_DATE => $day_date,
+			self::CALENDAR_QUERY_END_DATE   => $day_date,
+		);
+
+		// Without it, GatherPress redirects the event archive and drops the dates.
+		if ( Query_Builder::is_event_post_type( $post_type ) ) {
+			$args[ Event\Query::EVENT_QUERY_PARAM ] = 'all';
+		}
+
+		return add_query_arg( $args, $url );
+	}
+
+	/**
+	 * Limits a front end archive to the dates in its URL.
+	 *
+	 * Used by the link of the day modal trigger, see get_day_archive_url().
+	 * Runs before GatherPress (priority 10), which reads the date query of
+	 * event post types.
+	 *
+	 * @since 0.8.0
+	 *
+	 * @param WP_Query $query The query.
+	 *
+	 * @return void
+	 */
+	public function filter_day_archive_query( WP_Query $query ): void {
+		if ( is_admin() || ! $query->is_main_query() || ! ( $query->is_archive() || $query->is_home() ) ) {
+			return;
+		}
+
+		$dates = array(
+			'start_date' => $query->get( self::CALENDAR_QUERY_START_DATE ),
+			'end_date'   => $query->get( self::CALENDAR_QUERY_END_DATE ),
+		);
+
+		foreach ( $dates as $date ) {
+			if ( ! is_string( $date ) || 1 !== preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) {
+				return;
+			}
+		}
+
+		$clause = $this->build_rest_date_clause( $dates, Query_Builder::is_event_post_type( $query->get( 'post_type' ) ) );
+
+		if ( null !== $clause ) {
+			$query->set( 'date_query', array( $clause ) );
+		}
+	}
+
+	/**
 	 * Calendar heading binding value callback. Supports month, week, and day views.
 	 *
 	 * Reads the same core Query pagination that `allow_core_pagination()`
@@ -640,13 +735,14 @@ class Setup {
 		$query = $block_instance->context['query'] ?? null;
 
 		if ( is_array( $query ) ) {
+			$source_post_id = Date_Calculator::resolve_source_post_id( array(), $block_instance );
 			/**
 			 * Type safety.
 			 *
 			 * @var array<string, mixed> $query_typed
 			 */
 			$query_typed = $query;
-			$range       = Date_Calculator::get_range_from_query( $query_typed );
+			$range       = Date_Calculator::get_range_from_query( $query_typed, array(), 1, $source_post_id );
 			return $range['heading'];
 		}
 

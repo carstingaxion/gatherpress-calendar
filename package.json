@@ -1,6 +1,6 @@
 {
     "name": "gatherpress-calendar",
-    "version": "0.7.1",
+    "version": "0.8.0",
     "description": "A calendar block that displays Query Loop results in a monthly calendar format. Works with any post type, with specialized support for GatherPress events.",
     "author": "Carsten Bach",
     "license": "GPL-2.0-or-later",
@@ -29,6 +29,7 @@
         "@wordpress/core-data": "^8.1.0",
         "@wordpress/data": "^10.56.0",
         "@wordpress/date": "^5.56.0",
+        "@wordpress/dependency-extraction-webpack-plugin": "^6.57.0",
         "@wordpress/dom-ready": "^4.56.0",
         "@wordpress/element": "^8.8.0",
         "@wordpress/hooks": "^4.56.0",

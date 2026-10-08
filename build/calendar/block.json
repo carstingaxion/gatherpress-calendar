@@ -19,7 +19,9 @@
     "queryContext",
     "displayLayout",
     "templateSlug",
-    "previewPostType"
+    "previewPostType",
+    "postId",
+    "postType"
   ],
   "providesContext": {
     "gatherpress/viewType": "viewType",
@@ -54,6 +56,23 @@
     "showWeekends": {
       "type": "boolean",
       "default": true
+    },
+    "dateRangeSource": {
+      "type": "string",
+      "enum": [
+        "default",
+        "context",
+        "selected"
+      ],
+      "default": "default"
+    },
+    "postId": {
+      "type": "number",
+      "default": 0
+    },
+    "sourcePostType": {
+      "type": "string",
+      "default": ""
     }
   },
   "supports": {

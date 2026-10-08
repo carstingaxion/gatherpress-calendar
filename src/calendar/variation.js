@@ -12,8 +12,20 @@ import {
 	QUERY_VARIATION_DAY_MODAL_INNER_BLOCKS,
 } from './edit/constants';
 
-const variation = {
-	name: 'gatherpress-calendar',
+const NAME = 'gatherpress-calendar';
+
+/**
+ * The "Event Calendar" in the inserter.
+ *
+ * Intentionally no `innerBlocks`: core/query then shows its placeholder on
+ * insert, and "Start blank" lists the calendar designs registered below,
+ * like the "Event Query Loop" of GatherPress.
+ *
+ * GatherPress sets the same `namespace` on every event query, so the
+ * class name is needed to tell a calendar apart from its "Event Query Loop".
+ */
+registerBlockVariation( 'core/query', {
+	name: NAME,
 	title: __( 'Event Calendar', 'gatherpress-calendar' ),
 	description: __(
 		'Show GatherPress events in a monthly calendar format.',
@@ -27,9 +39,9 @@ const variation = {
 		__( 'query', 'gatherpress-calendar' ),
 	],
 	attributes: {
-		// namespace: 'gatherpress-event-query',
+		namespace: 'gatherpress-event-query',
+		className: 'gatherpress-calendar-query',
 		enhancedPagination: true,
-		// className: 'gatherpress-event-query',
 		query: {
 			perPage: 5,
 			pages: 0,
@@ -46,19 +58,46 @@ const variation = {
 			include_unfinished: 1,
 		},
 	},
-	innerBlocks: QUERY_VARIATION_INNER_BLOCKS,
+	// ponytail: className must match exactly, so an extra CSS class makes the
+	// block an "Event Query Loop" again. A function isActive cannot win over
+	// the earlier GatherPress match, see getActiveBlockVariation().
+	isActive: [ 'namespace', 'className' ],
 	scope: [ 'inserter' ],
-};
-
-registerBlockVariation( 'core/query', variation );
-
-registerBlockVariation( 'core/query', {
-	...variation,
-	name: 'gatherpress-calendar-day-modal',
-	title: __( 'Event Calendar (Day Modal)', 'gatherpress-calendar' ),
-	description: __(
-		'Show GatherPress events in a monthly calendar. Clicking a day opens a modal with its events.',
-		'gatherpress-calendar'
-	),
-	innerBlocks: QUERY_VARIATION_DAY_MODAL_INNER_BLOCKS,
 } );
+
+/*
+ * The calendar designs in the "Start blank" picker. The `namespace` array
+ * connects them to the "Event Calendar" variation, so they only show there.
+ * Core only uses their `innerBlocks`.
+ */
+const DESIGNS = [
+	{
+		name: 'event-modal',
+		title: __( 'Event Modals', 'gatherpress-calendar' ),
+		description: __(
+			'Each event shows in its day and opens its own modal.',
+			'gatherpress-calendar'
+		),
+		icon: 'calendar-alt',
+		innerBlocks: QUERY_VARIATION_INNER_BLOCKS,
+	},
+	{
+		name: 'day-modal',
+		title: __( 'Day Modal', 'gatherpress-calendar' ),
+		description: __(
+			'Clicking a day opens a modal with its events.',
+			'gatherpress-calendar'
+		),
+		icon: 'calendar',
+		innerBlocks: QUERY_VARIATION_DAY_MODAL_INNER_BLOCKS,
+	},
+];
+
+DESIGNS.forEach( ( { name, ...design } ) =>
+	registerBlockVariation( 'core/query', {
+		...design,
+		name: `${ NAME }-${ name }`,
+		attributes: { namespace: [ NAME ] },
+		scope: [ 'block' ],
+	} )
+);

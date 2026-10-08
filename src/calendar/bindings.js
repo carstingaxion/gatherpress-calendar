@@ -9,23 +9,22 @@ import { registerBlockBindingsSource } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import domReady from '@wordpress/dom-ready';
-import { dateI18n, getSettings } from '@wordpress/date';
 import { InspectorControls } from '@wordpress/block-editor';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { PanelBody, SelectControl } from '@wordpress/components';
 
-import { calculateDateRange, formatHeading } from './edit/utils/date-utils';
+import {
+	calculateDateRange,
+	calculatePostSpanUnits,
+	formatHeading,
+} from './edit/utils/date-utils';
+import { getStartOfWeek } from './edit/utils/calendar-utils';
 import { findBlockByName } from './edit/utils/block-sync-utils';
 import {
-	DAY_MODAL_HEADING_FORMAT,
-	DAY_MODAL_TRIGGER_FORMAT,
-} from './edit/constants';
-
-// Named formats are translated by PHP, they are not day number formats.
-const NAMED_DAY_FORMATS = [
-	DAY_MODAL_HEADING_FORMAT,
-	DAY_MODAL_TRIGGER_FORMAT,
-];
+	resolveSourceEventDates,
+	isPostDateSource,
+} from './edit/utils/source-utils';
+import { formatDayValue, NAMED_DAY_FORMATS } from '../utils/day-number';
 
 domReady( () => {
 	if ( typeof registerBlockBindingsSource !== 'function' ) {
@@ -34,6 +33,9 @@ domReady( () => {
 
 	/**
 	 * Callback to get heading content for bound heading blocks in the editor.
+	 *
+	 * Subscribes to the calendar block's settings and current post dates,
+	 * formatting the active date range.
 	 *
 	 * @param {Object}   root0          Parameters object.
 	 * @param {Function} root0.select   Block editor select function.
@@ -53,7 +55,7 @@ domReady( () => {
 			'core/query'
 		);
 
-		// 1. Search inside the same parent Query block
+		// 1. Search inside the same parent Query block.
 		if ( parentQueryIds && parentQueryIds.length ) {
 			const parentQuery = getBlock(
 				parentQueryIds[ parentQueryIds.length - 1 ]
@@ -66,7 +68,7 @@ domReady( () => {
 			}
 		}
 
-		// 2. Fallback: search all blocks in the editor canvas
+		// 2. Fallback: search all blocks in the editor canvas.
 		if ( ! calendarBlock ) {
 			calendarBlock = findBlockByName(
 				getBlocks(),
@@ -74,7 +76,7 @@ domReady( () => {
 			);
 		}
 
-		// Establish reactive subscription to calendar attributes
+		// Establish reactive subscription to calendar attributes.
 		const liveCalendar = calendarBlock
 			? getBlock( calendarBlock.clientId )
 			: null;
@@ -85,17 +87,40 @@ domReady( () => {
 			selectedDate = '',
 			dateModifier = 0,
 			showWeekends = true,
+			dateRangeSource = 'default',
+			postId = 0,
+			sourcePostType = '',
 		} = liveCalendar?.attributes || {};
 
-		const dateSettings = getSettings();
-		const startOfWeek = dateSettings?.l10n.startOfWeek || 0;
+		const startOfWeek = getStartOfWeek();
+
+		const sourceDates = resolveSourceEventDates( registrySelect, {
+			dateRangeSource,
+			postId,
+			sourcePostType,
+		} );
+
+		let effectiveSelectedDate = selectedDate;
+		let effectiveUnitCount = unitCount;
+
+		if ( sourceDates.hasPost ) {
+			effectiveSelectedDate = sourceDates.startDate;
+			effectiveUnitCount = calculatePostSpanUnits(
+				viewType,
+				sourceDates.startDate,
+				sourceDates.endDate,
+				startOfWeek
+			);
+		}
+
+		const isPostAnchored = isPostDateSource( dateRangeSource );
 
 		const range = calculateDateRange(
 			{
 				viewType,
-				unitCount,
-				selectedDate,
-				dateModifier,
+				unitCount: effectiveUnitCount,
+				selectedDate: effectiveSelectedDate,
+				dateModifier: isPostAnchored ? 0 : dateModifier,
 				showWeekends,
 			},
 			startOfWeek
@@ -125,25 +150,25 @@ domReady( () => {
 			'gatherpress/dayDate',
 			'gatherpress/isEmpty',
 		],
-		getValues( { context, args } ) {
-			if ( context?.[ 'gatherpress/isEmpty' ] ) {
-				return { content: '' };
-			}
-			const dayDate = context?.[ 'gatherpress/dayDate' ];
-			const format = args?.format || '';
+		// One value per bound attribute: 'content', or 'text' and 'url' of the
+		// day modal button. The day archive URL is only known on the server.
+		getValues( { context, bindings } ) {
+			const values = {};
 
-			if ( dayDate && format !== '' ) {
-				const dateObj = new Date( `${ dayDate }T12:00:00Z` );
-				return { content: dateI18n( format, dateObj, 'UTC' ) };
+			for ( const [ attribute, binding ] of Object.entries(
+				bindings ?? {}
+			) ) {
+				values[ attribute ] =
+					context?.[ 'gatherpress/isEmpty' ] || 'url' === attribute
+						? ''
+						: formatDayValue(
+								context?.[ 'gatherpress/dayDate' ],
+								context?.[ 'gatherpress/dayNumber' ],
+								binding?.args?.format
+							);
 			}
 
-			const dayNumber = context?.[ 'gatherpress/dayNumber' ];
-			return {
-				content:
-					null !== dayNumber && undefined !== dayNumber
-						? String( dayNumber )
-						: '',
-			};
+			return values;
 		},
 	} );
 } );

@@ -1,5 +1,6 @@
 <?php return array(
 	'dependencies' => array(
+		'gatherpress-query-controls',
 		'react-jsx-runtime',
 		'wp-block-editor',
 		'wp-blocks',
@@ -13,5 +14,5 @@
 		'wp-hooks',
 		'wp-i18n'
 	),
-	'version' => '63e24f4c3f04ac29f654'
+	'version' => '569eaf05bace18b776d5'
 );

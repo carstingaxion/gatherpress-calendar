@@ -5,6 +5,8 @@
  * @since 0.4.0
  */
 
+@use "../calendar/style/visually-hidden" as *;
+
 .editor-styles-wrapper {
 
 	.gatherpress-calendar__day {
@@ -20,6 +22,15 @@
 		&:hover:not(:focus-within) {
 			outline: 1px solid var(--wp-admin-theme-color, #007cba);
 			outline-offset: -1px;
+		}
+
+		/*
+		 * The day modal button is hidden like on the front end, so the cell
+		 * shows only the day number. Select the button in List View to edit it.
+		 */
+		.gatherpress-calendar__day-trigger .wp-block-button__link {
+
+			@include visually-hidden;
 		}
 
 		/* Hide placeholder entries and the day modal on idle empty days */

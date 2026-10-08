@@ -86,7 +86,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
    ========================================================================== */
 
 /*
- * In the "Event Calendar (Day Modal)" variation, the button covers the whole
+ * In the "Day Modal" calendar design, the button covers the whole
  * day cell. Its text is "Events on <date>": pushed out of the box and
  * clipped, so only screen readers read it. Front end only, the button stays
  * editable.
@@ -112,6 +112,10 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 		overflow: hidden;
 		white-space: nowrap;
 		text-indent: 100%;
+
+		&:hover {
+			background: color-mix(in srgb, var(--wp--preset--color--primary, #007cba) 8%, transparent);
+		}
 
 		&:focus-visible {
 			outline: 2px solid var(--wp--preset--color--contrast, #1e1e1e);

@@ -1,14 +1,4 @@
-import { __ } from '@wordpress/i18n';
-
-/**
- * Default template for inner blocks.
- *
- * Defines the initial blocks that appear when the calendar is first added.
- * Users can modify this template by adding, removing, or reordering blocks.
- *
- * @type {Array<Array>}
- * @since 0.1.0
- */
+import { __, _x } from '@wordpress/i18n';
 
 /**
  * The start time of an entry, as plain text.
@@ -208,14 +198,10 @@ export const ENTRIES_TEMPLATE = [
 const DAY_NUMBER = [
 	'core/paragraph',
 	{
-		metadata: {
-			bindings: {
-				content: {
-					source: 'gatherpress/calendar-day',
-				},
-			},
-			name: 'Day Number',
-		},
+		className: 'gatherpress-calendar__day-number',
+		fontSize: 'small',
+		placeholder: 'DD',
+		content: 'DD',
 		style: {
 			spacing: {
 				margin: {
@@ -226,10 +212,18 @@ const DAY_NUMBER = [
 				},
 			},
 		},
-		fontSize: 'small',
-		placeholder: 'DD',
-		content: 'DD',
-		className: 'gatherpress-calendar__day-number',
+		metadata: {
+			bindings: {
+				content: {
+					source: 'gatherpress/calendar-day',
+				},
+			},
+			name: _x(
+				'Day Number',
+				'Block variation name',
+				'gatherpress-calendar'
+			),
+		},
 	},
 ];
 
@@ -273,12 +267,14 @@ export const DAY_MODAL_HEADING_FORMAT = 'dayModalHeading';
 export const DAY_MODAL_TRIGGER_FORMAT = 'dayModalTrigger';
 
 /**
- * The day template of the "Event Calendar (Day Modal)" variation:
+ * The day template of the "Day Modal" calendar design:
  * Day Number + one Modal Manager per day. Its button covers the whole cell
  * and opens a modal with the date and every entry of that day.
  *
  * The button text is bound to "Events on <date>", so every trigger has its
  * own accessible name. The text is hidden on screen by the day styles.
+ * The button links to the archive of the day, so it also works without
+ * JavaScript. With JavaScript, GatherPress opens the modal instead.
  */
 export const DAY_MODAL_TEMPLATE = [
 	[
@@ -297,7 +293,6 @@ export const DAY_MODAL_TEMPLATE = [
 							[
 								'core/button',
 								{
-									tagName: 'button',
 									className:
 										'gatherpress-modal--trigger-open',
 									text: __(
@@ -311,6 +306,9 @@ export const DAY_MODAL_TEMPLATE = [
 												args: {
 													format: DAY_MODAL_TRIGGER_FORMAT,
 												},
+											},
+											url: {
+												source: 'gatherpress/calendar-day',
 											},
 										},
 									},
@@ -403,40 +401,68 @@ const getQueryVariationInnerBlocks = ( dayTemplate ) => [
 		'core/heading',
 		{
 			level: 2,
+			className: 'gatherpress-calendar__heading has-text-align-center',
+			typography: {
+				textAlign: 'center',
+			},
 			metadata: {
 				bindings: {
 					content: {
 						source: 'gatherpress/calendar-heading',
 					},
 				},
-				name: 'Month Heading',
+				name: _x(
+					'Calendar Heading',
+					'Query template heading block name',
+					'gatherpress-calendar'
+				),
 			},
-			typography: {
-				textAlign: 'center',
-			},
-			className: 'gatherpress-calendar__month has-text-align-center',
 		},
 	],
 	[
 		'core/query-pagination',
 		{
+			className: 'gatherpress-calendar-pagination',
 			paginationArrow: 'chevron',
 			layout: {
 				type: 'flex',
 				justifyContent: 'space-between',
+			},
+			metadata: {
+				name: _x(
+					'Calendar Pagination',
+					'Query template pagination block name',
+					'gatherpress-calendar'
+				),
 			},
 		},
 		[
 			[
 				'core/query-pagination-previous',
 				{
+					className: 'gatherpress-calendar-pagination-previous',
 					label: __( 'Previous Month', 'gatherpress-calendar' ),
+					metadata: {
+						name: _x(
+							'Previous Calendar Period',
+							'Query template previous pagination block name',
+							'gatherpress-calendar'
+						),
+					},
 				},
 			],
 			[
 				'core/query-pagination-next',
 				{
+					className: 'gatherpress-calendar-pagination-next',
 					label: __( 'Next Month', 'gatherpress-calendar' ),
+					metadata: {
+						name: _x(
+							'Next Calendar Period',
+							'Query template next pagination block name',
+							'gatherpress-calendar'
+						),
+					},
 				},
 			],
 		],

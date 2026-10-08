@@ -258,6 +258,7 @@ class Calendar_Day {
 	 *
 	 * Days with posts render every top-level inner block in template order.
 	 * Days without posts render only the day number, like the editor preview.
+	 * Without a Day Number block in the template, no day number is added.
 	 *
 	 * @param array<mixed> $context      Day context.
 	 * @param array<mixed> $inner_blocks Parsed inner blocks.
@@ -265,9 +266,8 @@ class Calendar_Day {
 	 * @return string Rendered HTML.
 	 */
 	private function render_day_cell_content( array $context, array $inner_blocks ): string {
-		$has_posts      = ! empty( $context['gatherpress/dayPosts'] );
-		$has_day_number = false;
-		$html           = '';
+		$has_posts = ! empty( $context['gatherpress/dayPosts'] );
+		$html      = '';
 
 		foreach ( $inner_blocks as $inner ) {
 			if ( ! is_array( $inner ) ) {
@@ -279,18 +279,11 @@ class Calendar_Day {
 			 *
 			 * @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>} $inner_typed
 			 */
-			$inner_typed    = $inner;
-			$is_day_number  = $this->is_day_number_block( $inner_typed );
-			$has_day_number = $has_day_number || $is_day_number;
+			$inner_typed = $inner;
 
-			if ( $has_posts || $is_day_number ) {
+			if ( $has_posts || $this->is_day_number_block( $inner_typed ) ) {
 				$html .= ( new WP_Block( $inner_typed, $context ) )->render();
 			}
-		}
-
-		if ( ! $has_day_number ) {
-			$day_number = isset( $context['gatherpress/dayNumber'] ) && is_numeric( $context['gatherpress/dayNumber'] ) ? (int) $context['gatherpress/dayNumber'] : 0;
-			$html       = sprintf( '<p class="gatherpress-calendar__day-number">%s</p>', esc_html( (string) $day_number ) ) . $html;
 		}
 
 		return $html;

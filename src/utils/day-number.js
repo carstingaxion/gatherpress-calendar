@@ -8,7 +8,69 @@
  * @since 0.4.0
  */
 
+import { dateI18n } from '@wordpress/date';
+import { _x, sprintf } from '@wordpress/i18n';
+
+import {
+	DAY_MODAL_HEADING_FORMAT,
+	DAY_MODAL_TRIGGER_FORMAT,
+} from '../calendar/edit/constants';
+
 const DAY_NUMBER_BINDING_SOURCE = 'gatherpress/calendar-day';
+
+/**
+ * Named formats of the day binding. They are not day number formats.
+ */
+export const NAMED_DAY_FORMATS = [
+	DAY_MODAL_HEADING_FORMAT,
+	DAY_MODAL_TRIGGER_FORMAT,
+];
+
+/**
+ * Formats the value of the day binding, like Setup::format_day_date() in PHP.
+ *
+ * @since 0.8.0
+ *
+ * @param {string} dayDate   Date of the day, YYYY-MM-DD.
+ * @param {number} dayNumber Day of the month.
+ * @param {string} format    PHP date format or a named format. Empty for the day number.
+ *
+ * @return {string} Value of the binding.
+ */
+export function formatDayValue( dayDate, dayNumber, format = '' ) {
+	if ( ! dayDate || ! format ) {
+		return null !== dayNumber && undefined !== dayNumber
+			? String( dayNumber )
+			: '';
+	}
+
+	const dateObj = new Date( `${ dayDate }T12:00:00Z` );
+
+	if ( ! NAMED_DAY_FORMATS.includes( format ) ) {
+		return dateI18n( format, dateObj, 'UTC' );
+	}
+
+	const date = dateI18n(
+		/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+		_x( 'l, F j, Y', 'Day modal: date', 'gatherpress-calendar' ),
+		dateObj,
+		'UTC'
+	);
+
+	if ( DAY_MODAL_HEADING_FORMAT === format ) {
+		return date;
+	}
+
+	return sprintf(
+		/* translators: %s: Date of the day, for example "Monday, October 5, 2026". */
+		_x(
+			'Events on %s',
+			'Day modal: name of the button',
+			'gatherpress-calendar'
+		),
+		date
+	);
+}
 
 /**
  * Whether a block's `content` attribute is bound to the Day Number source.

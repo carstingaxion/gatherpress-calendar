@@ -97,6 +97,24 @@ export function getCalendarBlockName(
 }
 
 /**
+ * Resolves the pagination container block name in List View.
+ *
+ * @param {string} viewType  'month' | 'week' | 'day'.
+ * @param {number} unitCount Number of units.
+ * @return {string} Localized block name (e.g. "Month Pagination", "3 Month Pagination").
+ */
+export function getPaginationContainerName(
+	viewType = 'month',
+	unitCount = 1
+) {
+	return getCalendarBlockName(
+		viewType,
+		unitCount,
+		_x( 'Pagination', 'Pagination block name', 'gatherpress-calendar' )
+	);
+}
+
+/**
  * Resolves the pagination block label based on direction, viewType, and unitCount.
  * Omits the number when unitCount is 1 (e.g. "Previous Month", "Next 3 Months").
  *
