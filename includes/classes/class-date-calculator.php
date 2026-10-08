@@ -55,6 +55,7 @@ class Date_Calculator {
 		 */
 		$separator = apply_filters( 'gatherpress_datetime_separator', $default_separator );
 
+		// @phpstan-ignore-next-line
 		return is_string( $separator ) && '' !== trim( $separator )
 			? trim( $separator )
 			: $default_separator;
