@@ -9,13 +9,22 @@ import { registerBlockBindingsSource } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import domReady from '@wordpress/dom-ready';
-import { dateI18n, getSettings } from '@wordpress/date';
+import { dateI18n } from '@wordpress/date';
 import { InspectorControls } from '@wordpress/block-editor';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { PanelBody, SelectControl } from '@wordpress/components';
 
-import { calculateDateRange, formatHeading } from './edit/utils/date-utils';
+import {
+	calculateDateRange,
+	calculatePostSpanUnits,
+	formatHeading,
+} from './edit/utils/date-utils';
+import { getStartOfWeek } from './edit/utils/calendar-utils';
 import { findBlockByName } from './edit/utils/block-sync-utils';
+import {
+	getLiveEventDates,
+	toDateString,
+} from './edit/hooks/useSourcePostDates';
 
 domReady( () => {
 	if ( typeof registerBlockBindingsSource !== 'function' ) {
@@ -24,6 +33,9 @@ domReady( () => {
 
 	/**
 	 * Callback to get heading content for bound heading blocks in the editor.
+	 *
+	 * Subscribes to the calendar block's settings and current post dates,
+	 * formatting the active date range.
 	 *
 	 * @param {Object}   root0          Parameters object.
 	 * @param {Function} root0.select   Block editor select function.
@@ -43,7 +55,7 @@ domReady( () => {
 			'core/query'
 		);
 
-		// 1. Search inside the same parent Query block
+		// 1. Search inside the same parent Query block.
 		if ( parentQueryIds && parentQueryIds.length ) {
 			const parentQuery = getBlock(
 				parentQueryIds[ parentQueryIds.length - 1 ]
@@ -56,7 +68,7 @@ domReady( () => {
 			}
 		}
 
-		// 2. Fallback: search all blocks in the editor canvas
+		// 2. Fallback: search all blocks in the editor canvas.
 		if ( ! calendarBlock ) {
 			calendarBlock = findBlockByName(
 				getBlocks(),
@@ -64,7 +76,7 @@ domReady( () => {
 			);
 		}
 
-		// Establish reactive subscription to calendar attributes
+		// Establish reactive subscription to calendar attributes.
 		const liveCalendar = calendarBlock
 			? getBlock( calendarBlock.clientId )
 			: null;
@@ -75,17 +87,78 @@ domReady( () => {
 			selectedDate = '',
 			dateModifier = 0,
 			showWeekends = true,
+			dateRangeSource = 'default',
+			postId = 0,
+			sourcePostType = '',
 		} = liveCalendar?.attributes || {};
 
-		const dateSettings = getSettings();
-		const startOfWeek = dateSettings?.l10n.startOfWeek || 0;
+		const startOfWeek = getStartOfWeek();
+
+		const isContext = 'context' === dateRangeSource;
+		const isSelected = 'selected' === dateRangeSource;
+
+		let effectiveSelectedDate = selectedDate;
+		let effectiveUnitCount = unitCount;
+
+		if ( isContext ) {
+			const liveDates = getLiveEventDates( registrySelect );
+			if ( liveDates ) {
+				effectiveSelectedDate = liveDates.startDate;
+				effectiveUnitCount = calculatePostSpanUnits(
+					viewType,
+					liveDates.startDate,
+					liveDates.endDate,
+					startOfWeek
+				);
+			}
+		} else if ( isSelected && Number( postId ) > 0 ) {
+			const targetId = Number( postId );
+			const targetType = sourcePostType || 'gatherpress_event';
+			const currentEditorId =
+				registrySelect( 'core/editor' )?.getCurrentPostId?.();
+
+			if ( targetId === currentEditorId ) {
+				const liveDates = getLiveEventDates( registrySelect );
+				if ( liveDates ) {
+					effectiveSelectedDate = liveDates.startDate;
+					effectiveUnitCount = calculatePostSpanUnits(
+						viewType,
+						liveDates.startDate,
+						liveDates.endDate,
+						startOfWeek
+					);
+				}
+			} else {
+				const record = registrySelect( 'core' ).getEntityRecord(
+					'postType',
+					targetType,
+					targetId
+				);
+				const sDate = toDateString(
+					record?.meta?.gatherpress_datetime_start
+				);
+				const eDate =
+					toDateString( record?.meta?.gatherpress_datetime_end ) ||
+					sDate;
+
+				if ( sDate ) {
+					effectiveSelectedDate = sDate;
+					effectiveUnitCount = calculatePostSpanUnits(
+						viewType,
+						sDate,
+						eDate,
+						startOfWeek
+					);
+				}
+			}
+		}
 
 		const range = calculateDateRange(
 			{
 				viewType,
-				unitCount,
-				selectedDate,
-				dateModifier,
+				unitCount: effectiveUnitCount,
+				selectedDate: effectiveSelectedDate,
+				dateModifier: isContext || isSelected ? 0 : dateModifier,
 				showWeekends,
 			},
 			startOfWeek
