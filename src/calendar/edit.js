@@ -309,6 +309,8 @@ export default function Edit( {
 						/>
 					) : (
 						<DateControls
+							clientId={ clientId }
+							context={ context }
 							viewType={ viewType }
 							onViewTypeChange={ ( val ) =>
 								setAttributes( { viewType: val } )

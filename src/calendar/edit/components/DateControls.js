@@ -13,11 +13,13 @@ import {
 	TextControl,
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
+/* eslint-enable @wordpress/no-unsafe-wp-apis */
 import { useMemo } from '@wordpress/element';
 
 import { generateMonthOptions } from '../utils/calendar-utils';
 import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
 import { SourcePostControls } from './SourcePostControls';
+import { ShadowSourceFilterControls } from './ShadowSourceFilterControls';
 import {
 	DATE_SOURCE_DEFAULT,
 	isPostDateSource,
@@ -35,6 +37,8 @@ const MAX_UNITS = {
  * DateControls Component.
  *
  * @param {Object}   props                   Component props.
+ * @param {string}   props.clientId          Calendar block client ID.
+ * @param {Object}   props.context           Block context dictionary.
  * @param {string}   props.viewType          View type ('month', 'week', 'day').
  * @param {Function} props.onViewTypeChange  Callback when viewType changes.
  * @param {number}   props.unitCount         Number of units to show.
@@ -57,6 +61,8 @@ const MAX_UNITS = {
  * @return {Element} Date controls component.
  */
 export function DateControls( {
+	clientId,
+	context = {},
 	viewType,
 	onViewTypeChange,
 	unitCount,
@@ -196,6 +202,14 @@ export function DateControls( {
 				sourcePostType={ sourcePostType }
 				onPostTypeChange={ onPostTypeChange }
 				hasCurrentSupport={ hasCurrentSupport }
+			/>
+
+			<ShadowSourceFilterControls
+				clientId={ clientId }
+				context={ context }
+				dateRangeSource={ dateRangeSource }
+				postId={ postId }
+				sourcePostType={ sourcePostType }
 			/>
 
 			<SelectControl
