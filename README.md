@@ -24,8 +24,6 @@ A set of WordPress blocks that renders Query Loop results in monthly, weekly, or
 
 GatherPress Calendar is a WordPress block that renders Query Loop results as a monthly, weekly, or daily calendar. It integrates with the WordPress Query Loop block to display posts organized by their publication date (or event date for GatherPress events) in a structured, accessible calendar grid.
 
-https://github.com/user-attachments/assets/7089ef0c-e2aa-417a-a3fb-a5861315869b
-
 ---
 
 ## Block Architecture
@@ -102,6 +100,8 @@ Binds the day number to a paragraph block inside a day cell.
 ---
 
 ## Date Range Sources & Event Anchoring
+
+![Allow to define the date range via an event (or season)](.wordpress-org/screenshot-3.gif)
 
 The calendar can anchor its date boundaries to a specific event, season, conference, or any post supporting `gatherpress-event-date` via the `dateRangeSource` attribute:
 
@@ -243,6 +243,7 @@ add_filter( 'gatherpress_calendar_posts_per_page', function() {
 
 1. Calendar configuration in the block editor
 2. Gradient block style with colorful background
+3. Allow to define the date range via an event (or season)
 
 ## Changelog
 
