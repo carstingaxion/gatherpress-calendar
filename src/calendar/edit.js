@@ -182,7 +182,7 @@ export default function Edit( {
 			Math.round( ( endObj - startObj ) / ( 1000 * 60 * 60 * 24 ) ) + 1;
 
 		let recommendedView = 'month';
-		if ( durationDays <= 3 ) {
+		if ( durationDays <= 7 ) {
 			recommendedView = 'day';
 		} else if ( durationDays <= 28 ) {
 			recommendedView = 'week';
