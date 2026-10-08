@@ -1,4 +1,24 @@
 /* Keep week rows flowing cleanly in CSS Grid layout */
 .gatherpress-calendar__week {
 	display: contents;
+
+	/*
+	 * Zebra style: apply an overlay tint via ::before on child day cells.
+	 *
+	 * Resolves the custom CSS variable if set via the block UI, falling back to currentColor.
+	 * Sits on top of any author-configured cell background without being overwritten.
+	 */
+	&.is-style-zebra:nth-of-type(even) > .gatherpress-calendar__day:not(.is-empty) {
+		position: relative;
+
+		&::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: var(--gatherpress-calendar-zebra-color, currentColor);
+			opacity: 0.05;
+			pointer-events: none;
+			z-index: 0;
+		}
+	}
 }

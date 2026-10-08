@@ -87,9 +87,16 @@ class Calendar_Week {
 			) . $days_html;
 		}
 
+		$style_rules = array();
+		$zebra_color = $attributes['zebraColor'] ?? '';
+		if ( is_string( $zebra_color ) && '' !== trim( $zebra_color ) ) {
+			$style_rules[] = sprintf( '--gatherpress-calendar-zebra-color: %s', esc_attr( trim( $zebra_color ) ) );
+		}
+
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
 				'class'       => 'gatherpress-calendar__week',
+				'style'       => ! empty( $style_rules ) ? implode( '; ', $style_rules ) : null,
 				'data-wp-key' => $this->get_row_key( $block->context ),
 			)
 		);
