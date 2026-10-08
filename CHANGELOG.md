@@ -2,7 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.7.1...HEAD)
+## [Unreleased](https://github.com/carstingaxion/gatherpress-calendar/compare/0.8.0...HEAD)
+
+## [0.8.0](https://github.com/carstingaxion/gatherpress-calendar/compare/0.7.1...0.8.0) - 2026-10-08
+
+### 🚀 Added
+
+- Support separator filter ([#141](https://github.com/carstingaxion/gatherpress-calendar/pull/141))
+- Feature/named variations ([#140](https://github.com/carstingaxion/gatherpress-calendar/pull/140))
+- Allow to define the date range via an event ([#139](https://github.com/carstingaxion/gatherpress-calendar/pull/139))
+- fix(i18n): make calendar heading date formats translatable ([#125](https://github.com/carstingaxion/gatherpress-calendar/pull/125))
+- feat(calendar): announce ISO week number in multi-week views ([#123](https://github.com/carstingaxion/gatherpress-calendar/pull/123))
+- Remove all hard post type deps in favor of supports ([#122](https://github.com/carstingaxion/gatherpress-calendar/pull/122))
+- Update README from actual plugin code and add a Warning about non-existent block deprecations ([#119](https://github.com/carstingaxion/gatherpress-calendar/pull/119))
+- Auto-update labels of pagination blocks based on attributes ([#118](https://github.com/carstingaxion/gatherpress-calendar/pull/118))
+- Allow customizing the maximum number of posts queried for each calendar ([#116](https://github.com/carstingaxion/gatherpress-calendar/pull/116))
+
+### 🐛 Fixed
+
+- Keep aria-modal and SVG markup in calendar weeks ([#133](https://github.com/carstingaxion/gatherpress-calendar/pull/133))
+- fix(entries): restore the page post after a nested calendar ([#130](https://github.com/carstingaxion/gatherpress-calendar/pull/130))
+- SOC & DRY ([#124](https://github.com/carstingaxion/gatherpress-calendar/pull/124))
+- Fix month navigation for queryId 0 and move focus to the new month ([#115](https://github.com/carstingaxion/gatherpress-calendar/pull/115))
+
+### Dependency Updates & Maintenance
+
+- Bump shell-quote from 1.10.0 to 1.12.0 ([#138](https://github.com/carstingaxion/gatherpress-calendar/pull/138))
+- Bump compression from 1.8.1 to 1.8.2 ([#127](https://github.com/carstingaxion/gatherpress-calendar/pull/127))
+- Bump proxy-addr from 2.0.7 to 2.0.8 ([#126](https://github.com/carstingaxion/gatherpress-calendar/pull/126))
+- Bump source-map-js from 1.2.1 to 1.2.2 ([#128](https://github.com/carstingaxion/gatherpress-calendar/pull/128))
 
 ## [0.7.1](https://github.com/carstingaxion/gatherpress-calendar/compare/0.7.0...0.7.1) - 2026-10-05
 
