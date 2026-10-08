@@ -16,6 +16,8 @@ import save from './save';
 import metadata from './block.json';
 import transforms from './transforms';
 import './variation';
+import './variations/pagination';
+import './variations/bound-blocks';
 import './bindings';
 
 /**

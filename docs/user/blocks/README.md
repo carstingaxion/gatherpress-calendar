@@ -22,19 +22,34 @@ These sources bind standard WordPress blocks to live calendar data without custo
 
 ---
 
+## Block Variations
+
+GatherPress Calendar registers block variations on core blocks for clean naming, inserter categorization, and List View representation:
+
+### Bound Block Variations
+- **Calendar Heading (`core/heading`):** Heading preconfigured with the `gatherpress/calendar-heading` binding, level 2, center alignment, and class `gatherpress-calendar-heading`.
+- **Calendar Day Number (`core/paragraph`):** Paragraph preconfigured with the `gatherpress/calendar-day` binding, small font size, and class `gatherpress-calendar__day-number`.
+
+### Pagination Variations
+- **Calendar Pagination (`core/query-pagination`):** Navigation container configured with flex spacing and class `gatherpress-calendar-pagination`.
+- **Previous Calendar Period (`core/query-pagination-previous`):** Steps backward by the calendar's active span, styled with class `gatherpress-calendar-pagination-previous`.
+- **Next Calendar Period (`core/query-pagination-next`):** Steps forward by the calendar's active span, styled with class `gatherpress-calendar-pagination-next`.
+
+---
+
 ## Block Hierarchy
 
 The calendar blocks nest inside a standard WordPress Query Loop block:
 
 ```text
-core/query
-├── core/heading (bound to gatherpress/calendar-heading)
-├── core/query-pagination
-│   ├── core/query-pagination-previous
-│   └── core/query-pagination-next
+core/query (Event Calendar variation)
+├── core/heading (Calendar Heading variation)
+├── core/query-pagination (Calendar Pagination variation)
+│   ├── core/query-pagination-previous (Previous Calendar Period variation)
+│   └── core/query-pagination-next (Next Calendar Period variation)
 └── gatherpress/calendar
     └── gatherpress/calendar-week
         └── gatherpress/calendar-day
-            ├── core/paragraph (bound to gatherpress/calendar-day)
+            ├── core/paragraph (Calendar Day Number variation)
             └── gatherpress/calendar-entries
                 └── [Event Template Blocks] (e.g. Post Title, Event Date, Modal Manager)

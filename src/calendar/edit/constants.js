@@ -1,14 +1,4 @@
-import { __ } from '@wordpress/i18n';
-
-/**
- * Default template for inner blocks.
- *
- * Defines the initial blocks that appear when the calendar is first added.
- * Users can modify this template by adding, removing, or reordering blocks.
- *
- * @type {Array<Array>}
- * @since 0.1.0
- */
+import { __, _x } from '@wordpress/i18n';
 
 /**
  * The start time of an entry, as plain text.
@@ -208,14 +198,10 @@ export const DAY_TEMPLATE = [
 			[
 				'core/paragraph',
 				{
-					metadata: {
-						bindings: {
-							content: {
-								source: 'gatherpress/calendar-day',
-							},
-						},
-						name: 'Day Number',
-					},
+					className: 'gatherpress-calendar__day-number',
+					fontSize: 'small',
+					placeholder: 'DD',
+					content: 'DD',
 					style: {
 						spacing: {
 							margin: {
@@ -226,10 +212,18 @@ export const DAY_TEMPLATE = [
 							},
 						},
 					},
-					fontSize: 'small',
-					placeholder: 'DD',
-					content: 'DD',
-					className: 'gatherpress-calendar__day-number',
+					metadata: {
+						bindings: {
+							content: {
+								source: 'gatherpress/calendar-day',
+							},
+						},
+						name: _x(
+							'Day Number',
+							'Block variation name',
+							'gatherpress-calendar'
+						),
+					},
 				},
 			],
 			[
@@ -270,40 +264,69 @@ export const QUERY_VARIATION_INNER_BLOCKS = [
 		'core/heading',
 		{
 			level: 2,
+			className:
+				'gatherpress-calendar__heading has-text-align-center',
+			typography: {
+				textAlign: 'center',
+			},
 			metadata: {
 				bindings: {
 					content: {
 						source: 'gatherpress/calendar-heading',
 					},
 				},
-				name: 'Month Heading',
+				name: _x(
+					'Calendar Heading',
+					'Query template heading block name',
+					'gatherpress-calendar'
+				),
 			},
-			typography: {
-				textAlign: 'center',
-			},
-			className: 'gatherpress-calendar__month has-text-align-center',
 		},
 	],
 	[
 		'core/query-pagination',
 		{
+			className: 'gatherpress-calendar-pagination',
 			paginationArrow: 'chevron',
 			layout: {
 				type: 'flex',
 				justifyContent: 'space-between',
+			},
+			metadata: {
+				name: _x(
+					'Calendar Pagination',
+					'Query template pagination block name',
+					'gatherpress-calendar'
+				),
 			},
 		},
 		[
 			[
 				'core/query-pagination-previous',
 				{
+					className: 'gatherpress-calendar-pagination-previous',
 					label: __( 'Previous Month', 'gatherpress-calendar' ),
+					metadata: {
+						name: _x(
+							'Previous Calendar Period',
+							'Query template previous pagination block name',
+							'gatherpress-calendar'
+						),
+					},
 				},
 			],
 			[
 				'core/query-pagination-next',
 				{
+					className: 'gatherpress-calendar-pagination-next',
 					label: __( 'Next Month', 'gatherpress-calendar' ),
+					metadata: {
+						name: _x(
+							'Next Calendar Period',
+							'Query template next pagination block name',
+							'gatherpress-calendar'
+						),
+					},
 				},
 			],
 		],
