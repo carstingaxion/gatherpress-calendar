@@ -33,7 +33,7 @@ class Setup {
 	use Singleton;
 
 	/**
-	 * Query parameter name for queries containing calendars.
+	 * Query parameter names for queries containing calendars.
 	 *
 	 * @since 0.34.0
 	 * @var string
@@ -112,7 +112,7 @@ class Setup {
 			array(
 				'label'              => _x( 'Calendar Heading', 'Block Bindings Source', 'gatherpress-calendar' ),
 				'get_value_callback' => array( $this, 'get_heading_binding_value' ),
-				'uses_context'       => array( 'query' ),
+				'uses_context'       => array( 'query', 'postId', 'postType' ),
 			)
 		);
 	}
@@ -120,7 +120,7 @@ class Setup {
 	/**
 	 * Pass calendar settings into the official block editor settings store.
 	 *
-	 * Guarantees settings are accessible inside iframed editor canvases.
+	 * Guarantees start of week and limits are identical in the editor canvas.
 	 *
 	 * @since 0.7.0
 	 *
@@ -132,8 +132,11 @@ class Setup {
 		if ( ! isset( $settings['gatherpress'] ) || ! is_array( $settings['gatherpress'] ) ) {
 			$settings['gatherpress'] = array();
 		}
+
 		$settings['gatherpress']['weekendDays']  = Date_Calculator::get_weekend_days();
 		$settings['gatherpress']['postsPerPage'] = Query_Builder::get_posts_per_page();
+		$settings['gatherpress']['startOfWeek']  = Date_Calculator::get_start_of_week();
+
 		return $settings;
 	}
 
@@ -322,16 +325,13 @@ class Setup {
 			 * @var array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<int, array<string, mixed>>, innerHTML?: string, innerContent?: array<mixed>} $block
 			 */
 			if ( ( $block['blockName'] ?? '' ) === $block_name ) {
+				/**
+				 * Type safety.
+				 *
+				 * @var array<string, mixed>|null $attrs
+				 */
 				$attrs = $block['attrs'] ?? null;
-				if ( is_array( $attrs ) ) {
-					/**
-					 * Type safety.
-					 *
-					 * @var array<string, mixed> $attrs
-					 */
-					return $attrs;
-				}
-				return array();
+				return is_array( $attrs ) ? $attrs : array();
 			}
 			// @phpstan-ignore-next-line
 			if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
@@ -348,10 +348,11 @@ class Setup {
 	 * Injects calendar pagination arguments onto the parent core/query block.
 	 *
 	 * @param array<string, mixed> $parsed_block Parsed query block data.
+	 * @param WP_Block|null        $parent_block Parent block instance.
 	 *
 	 * @return array<string, mixed> Updated block data.
 	 */
-	private function paginate_query_block( array $parsed_block ): array {
+	private function paginate_query_block( array $parsed_block, ?WP_Block $parent_block = null ): array {
 		$inner_blocks = isset( $parsed_block['innerBlocks'] ) && is_array( $parsed_block['innerBlocks'] ) ? $parsed_block['innerBlocks'] : array();
 		// @phpstan-ignore-next-line
 		$calendar_attrs = self::gatherpress_find_inner_block_attrs( 'gatherpress/calendar', $inner_blocks );
@@ -359,8 +360,9 @@ class Setup {
 		if ( null !== $calendar_attrs && is_array( $parsed_block['attrs'] ) && is_array( $parsed_block['attrs']['query'] ) ) {
 			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_PARAM ] = true;
 
-			$page  = Query_Builder::get_requested_page( $parsed_block['attrs']['queryId'] ?? null );
-			$range = Date_Calculator::calculate_date_range( $calendar_attrs, $page );
+			$page           = Query_Builder::get_requested_page( $parsed_block['attrs']['queryId'] ?? null );
+			$source_post_id = Date_Calculator::resolve_source_post_id( $calendar_attrs, $parent_block );
+			$range          = Date_Calculator::calculate_date_range( $calendar_attrs, $page, $source_post_id );
 
 			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_VIEW_TYPE ]  = $range['view_type'];
 			$parsed_block['attrs']['query'][ self::CALENDAR_QUERY_START_DATE ] = $range['start_date'];
@@ -415,7 +417,7 @@ class Setup {
 		$block_name = $parsed_block['blockName'] ?? '';
 
 		if ( 'core/query' === $block_name ) {
-			return $this->paginate_query_block( $parsed_block );
+			return $this->paginate_query_block( $parsed_block, $parent_block );
 		}
 
 		if ( 'gatherpress/calendar' === $block_name ) {
@@ -599,13 +601,14 @@ class Setup {
 		$query = $block_instance->context['query'] ?? null;
 
 		if ( is_array( $query ) ) {
+			$source_post_id = Date_Calculator::resolve_source_post_id( array(), $block_instance );
 			/**
 			 * Type safety.
 			 *
 			 * @var array<string, mixed> $query_typed
 			 */
 			$query_typed = $query;
-			$range       = Date_Calculator::get_range_from_query( $query_typed );
+			$range       = Date_Calculator::get_range_from_query( $query_typed, array(), 1, $source_post_id );
 			return $range['heading'];
 		}
 

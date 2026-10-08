@@ -40,6 +40,19 @@ export function useCalendarData( query, dateQuery ) {
 				queryArgs.end_date = dateQuery.endDate;
 			}
 
+			// Forward shadow source filter parameters to scope events by source.
+			if ( cleanQuery.shadow_filter ) {
+				queryArgs.shadow_filter = cleanQuery.shadow_filter;
+			}
+			if ( cleanQuery.gatherpress_shadow_source_post_id ) {
+				queryArgs.gatherpress_shadow_source_post_id =
+					cleanQuery.gatherpress_shadow_source_post_id;
+			}
+			if ( cleanQuery.gatherpress_shadow_source_post_type ) {
+				queryArgs.gatherpress_shadow_source_post_type =
+					cleanQuery.gatherpress_shadow_source_post_type;
+			}
+
 			// Add taxonomy query if present.
 			if ( cleanQuery.taxQuery ) {
 				Object.keys( cleanQuery.taxQuery ).forEach( ( taxonomy ) => {

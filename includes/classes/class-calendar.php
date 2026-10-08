@@ -89,7 +89,8 @@ class Calendar {
 			return '';
 		}
 
-		$page = Query_Builder::get_requested_page( $block->context['queryId'] ?? null );
+		$page           = Query_Builder::get_requested_page( $block->context['queryId'] ?? null );
+		$source_post_id = Date_Calculator::resolve_source_post_id( $attributes, $block );
 
 		/**
 		 * Type safety.
@@ -97,7 +98,7 @@ class Calendar {
 		 * @var array<string, mixed> $query_typed
 		 */
 		$query_typed = $query;
-		$date_range  = Date_Calculator::get_range_from_query( $query_typed, $attributes, $page );
+		$date_range  = Date_Calculator::get_range_from_query( $query_typed, $attributes, $page, $source_post_id );
 
 		// Propagate context tree for child blocks.
 		$block->context['gatherpress/viewType']     = $date_range['view_type'];

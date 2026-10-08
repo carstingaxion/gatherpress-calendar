@@ -39,13 +39,6 @@ class Calendar_Entries {
 	const BLOCK_NAME = 'gatherpress/calendar-entries';
 
 	/**
-	 * Original global post backup.
-	 *
-	 * @var WP_Post|null
-	 */
-	private ?WP_Post $original_post = null;
-
-	/**
 	 * ID of the event whose entry renders now; 0 between entries.
 	 *
 	 * The public filter methods below read it, so they can be static and
@@ -151,7 +144,8 @@ class Calendar_Entries {
 			return '';
 		}
 
-		$this->original_post = ( isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof WP_Post ) ? $GLOBALS['post'] : null;
+		// A local copy, so an entry template that renders a calendar cannot overwrite it.
+		$original_post = ( isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof WP_Post ) ? $GLOBALS['post'] : null;
 
 		if ( isset( $GLOBALS['post'] ) ) {
 			$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
@@ -182,7 +176,7 @@ class Calendar_Entries {
 
 		wp_reset_postdata();
 		if ( isset( $GLOBALS['post'] ) ) {
-			$GLOBALS['post'] = $this->original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			$GLOBALS['post'] = $original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		}
 
 		$style_attribute = '' !== $entry_styles['inline_styles'] ? sprintf( ' style="%s"', esc_attr( $entry_styles['inline_styles'] ) ) : '';

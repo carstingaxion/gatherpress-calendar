@@ -261,7 +261,7 @@ export function getWeekNumber( week, startOfWeek = 0 ) {
 /**
  * Whether any of the given days has posts.
  *
- * @since 0.8.0
+ * @since 0.9.0
  *
  * @param {Array} days Day entries.
  *
@@ -279,7 +279,7 @@ export function hasPosts( days = [] ) {
  * view. In day view the header name of a removed day is removed too, so the
  * columns still line up.
  *
- * @since 0.8.0
+ * @since 0.9.0
  *
  * @param {string} viewType View type.
  * @param {Array}  units    Units to filter.

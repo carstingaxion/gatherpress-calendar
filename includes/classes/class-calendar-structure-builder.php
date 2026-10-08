@@ -319,7 +319,7 @@ class Calendar_Structure_Builder {
 	 * day cell in day view. In day view the header name of a removed day is
 	 * removed too, so the columns still line up.
 	 *
-	 * @since 0.8.0
+	 * @since 0.9.0
 	 *
 	 * @param string                                                                                         $view_type View type ('month', 'week', 'day').
 	 * @param list<array{caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>}> $units     Units to filter.
@@ -357,7 +357,7 @@ class Calendar_Structure_Builder {
 	 *
 	 * The header names are removed with their days, so the columns still line up.
 	 *
-	 * @since 0.8.0
+	 * @since 0.9.0
 	 *
 	 * @param array{caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>} $unit Day view unit, with all days in one row.
 	 *
@@ -382,7 +382,7 @@ class Calendar_Structure_Builder {
 	/**
 	 * Whether any of the given days has posts.
 	 *
-	 * @since 0.8.0
+	 * @since 0.9.0
 	 *
 	 * @param array<mixed> $days Day entries.
 	 *

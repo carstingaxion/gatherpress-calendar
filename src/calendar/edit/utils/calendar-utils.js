@@ -5,7 +5,7 @@
  * @since 0.1.0
  */
 
-import { dateI18n } from '@wordpress/date';
+import { dateI18n, getSettings } from '@wordpress/date';
 import { select } from '@wordpress/data';
 import { _x } from '@wordpress/i18n';
 
@@ -22,6 +22,21 @@ export const WEEKDAY_SLUGS = [
 	'friday',
 	'saturday',
 ];
+
+/**
+ * Retrieves the start of week setting, syncing directly with PHP's setting.
+ *
+ * @return {number} Start of week index (0 = Sunday, 1 = Monday).
+ */
+export function getStartOfWeek() {
+	const settings = select( 'core/editor' )?.getEditorSettings?.();
+	const wpStartOfWeek = Number( settings?.gatherpress?.startOfWeek );
+	if ( ! Number.isNaN( wpStartOfWeek ) ) {
+		return wpStartOfWeek;
+	}
+	const dateSettings = getSettings();
+	return Number( dateSettings?.l10n?.startOfWeek ?? 0 );
+}
 
 /**
  * Retrieves the days of the week considered weekend days in the editor.

@@ -19,7 +19,9 @@
     "queryContext",
     "displayLayout",
     "templateSlug",
-    "previewPostType"
+    "previewPostType",
+    "postId",
+    "postType"
   ],
   "providesContext": {
     "gatherpress/viewType": "viewType",
@@ -62,6 +64,23 @@
     "unitsWithoutEventsOpacity": {
       "type": "number",
       "default": 100
+    },
+    "dateRangeSource": {
+      "type": "string",
+      "enum": [
+        "default",
+        "context",
+        "selected"
+      ],
+      "default": "default"
+    },
+    "postId": {
+      "type": "number",
+      "default": 0
+    },
+    "sourcePostType": {
+      "type": "string",
+      "default": ""
     }
   },
   "supports": {
