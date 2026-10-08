@@ -9,14 +9,15 @@ const EMPTY_ARRAY = [];
 /**
  * Hook to fetch posts and site settings for calendar rendering.
  *
- * @param {Object|null} query     Query Loop configuration.
- * @param {Object}      dateQuery Date query parameters.
+ * @param {Object|null} query         Query Loop configuration.
+ * @param {Object}      dateQuery     Date query parameters.
+ * @param {boolean}     showScheduled Whether to include scheduled posts.
  *
  * @return {Object} Object containing:
  *   - {Array} posts - Array of post objects
  *   - {number} startOfWeek - Start of week setting
  */
-export function useCalendarData( query, dateQuery ) {
+export function useCalendarData( query, dateQuery, showScheduled = false ) {
 	return useSelect(
 		( select ) => {
 			if ( ! query ) {
@@ -33,6 +34,11 @@ export function useCalendarData( query, dateQuery ) {
 				per_page: getPostsPerPage(),
 				_embed: 'wp:term',
 			};
+
+			// The REST API returns only published posts unless a status is given.
+			if ( showScheduled ) {
+				queryArgs.status = [ 'publish', 'future' ];
+			}
 
 			if ( dateQuery && dateQuery.startDate && dateQuery.endDate ) {
 				queryArgs.gatherpress_calendar_query = true;
@@ -92,6 +98,6 @@ export function useCalendarData( query, dateQuery ) {
 				startOfWeek: weekStartsOn,
 			};
 		},
-		[ query, dateQuery ]
+		[ query, dateQuery, showScheduled ]
 	);
 }
