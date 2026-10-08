@@ -57,6 +57,10 @@
       "type": "boolean",
       "default": true
     },
+    "showScheduled": {
+      "type": "boolean",
+      "default": false
+    },
     "dateRangeSource": {
       "type": "string",
       "enum": [
