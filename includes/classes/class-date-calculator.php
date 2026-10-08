@@ -35,6 +35,33 @@ class Date_Calculator {
 	const DATE_FORMAT = 'Y-m-d';
 
 	/**
+	 * Retrieves the datetime separator, respecting GatherPress core's separator filter.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @return string Filtered datetime separator.
+	 */
+	public static function get_datetime_separator(): string {
+		$default_separator = _x( '–', 'Calendar heading date range separator', 'gatherpress-calendar' );
+
+		/**
+		 * Filter the separator between start and end dates/times.
+		 *
+		 * Matches GatherPress core's 'gatherpress_datetime_separator' hook.
+		 *
+		 * @since 0.9.0
+		 *
+		 * @param string $separator The separator string.
+		 */
+		$separator = apply_filters( 'gatherpress_datetime_separator', $default_separator );
+
+		// @phpstan-ignore-next-line
+		return is_string( $separator ) && '' !== trim( $separator )
+			? trim( $separator )
+			: $default_separator;
+	}
+
+	/**
 	 * Resolves the baseline target date applying date modifiers.
 	 *
 	 * @param string $selected_date Selected date string.
@@ -607,6 +634,8 @@ class Date_Calculator {
 			return is_string( $day_heading ) ? $day_heading : '';
 		}
 
+		$separator = self::get_datetime_separator();
+
 		if ( 'day' === $view_type || 'week' === $view_type ) {
 			if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
 				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
@@ -640,9 +669,10 @@ class Date_Calculator {
 		}
 
 		return sprintf(
-			/* translators: %1$s: start date, %2$s: end date. */
-			_x( '%1$s – %2$s', 'Calendar heading: date range', 'gatherpress-calendar' ),
+			/* translators: %1$s: start date, %2$s: separator, %3$s: end date. */
+			_x( '%1$s %2$s %3$s', 'Calendar heading: date range', 'gatherpress-calendar' ),
 			wp_date( $start_format, $start ),
+			$separator,
 			wp_date( $end_format, $end )
 		);
 	}

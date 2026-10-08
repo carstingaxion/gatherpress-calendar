@@ -2,7 +2,7 @@
  * Hook to resolve start and end dates from a target event post.
  *
  * @package
- * @since 0.9.0
+ * @since 0.8.0
  */
 
 import { useSelect } from '@wordpress/data';
