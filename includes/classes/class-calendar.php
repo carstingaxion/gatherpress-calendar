@@ -115,7 +115,8 @@ class Calendar {
 		// Assemble structure and delegate rendering.
 		$start_of_week = get_option( 'start_of_week', 0 );
 		$start_of_week = is_numeric( $start_of_week ) ? (int) $start_of_week : 0;
-		$calendar_data = Calendar_Structure_Builder::build_structure( $date_range, $start_of_week, $posts_by_date, $block->context['gatherpress/showWeekends'] );
+		$show_units    = ! isset( $attributes['showUnitsWithoutEvents'] ) || ( false !== $attributes['showUnitsWithoutEvents'] && 'false' !== $attributes['showUnitsWithoutEvents'] );
+		$calendar_data = Calendar_Structure_Builder::build_structure( $date_range, $start_of_week, $posts_by_date, $block->context['gatherpress/showWeekends'], $show_units );
 
 		// Generate HTML.
 		$renderer = new HTML_Renderer( $block );
