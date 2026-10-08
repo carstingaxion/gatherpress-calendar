@@ -55,6 +55,7 @@ Configures how many consecutive view units to render:
 
 - **Show Weekdays:** Toggles visibility of the table header (`<th>`) containing weekday labels. When disabled, headers remain in markup for screen readers using `.gatherpress--screen-reader-text`.
 - **Show Weekends:** Toggles weekend columns in month and week views. Weekend days default to Saturday and Sunday and are customizable via the `gatherpress_calendar_weekend_days` filter.
+- **Show Scheduled Posts:** Adds posts with the `future` status to the calendar. Off by default. All visitors can see whatever the calendar entries display for these posts, such as the title and excerpt, so only turn it on when that content may be public before the publish date. Their links return a 404 for visitors who are not logged in until the post is published. GatherPress hides event details such as date and venue for scheduled events from those visitors. Private posts still show only to users who can read them.
 
 ## Query Loop & Pagination
 

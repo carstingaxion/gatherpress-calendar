@@ -64,6 +64,7 @@ export default function Edit( {
 		dateModifier = 0,
 		showWeekdays = true,
 		showWeekends = true,
+		showScheduled = false,
 		dateRangeSource = 'default',
 		postId = 0,
 		sourcePostType = '',
@@ -196,7 +197,8 @@ export default function Edit( {
 				showWeekends,
 				startOfWeek,
 			]
-		)
+		),
+		showScheduled
 	);
 
 	const calendar = useMemo(
@@ -437,6 +439,20 @@ export default function Edit( {
 							) }
 						/>
 					) }
+					<ToggleControl
+						label={ __(
+							'Show Scheduled Posts',
+							'gatherpress-calendar'
+						) }
+						checked={ showScheduled }
+						onChange={ ( value ) =>
+							setAttributes( { showScheduled: value } )
+						}
+						help={ __(
+							'Include posts that are scheduled to publish later. All visitors can see what the calendar shows for them, such as title and excerpt, but their links only work once they are published.',
+							'gatherpress-calendar'
+						) }
+					/>
 				</PanelBody>
 			</InspectorControls>
 			<div { ...blockProps }>
