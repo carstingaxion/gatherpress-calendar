@@ -14,13 +14,12 @@ import {
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
 import { Placeholder, PanelBody, ToggleControl } from '@wordpress/components';
-import { useState, useMemo, useEffect, useRef } from '@wordpress/element';
+import { useState, useMemo } from '@wordpress/element';
 
 import { CALENDAR_TEMPLATE } from './edit/constants';
 import {
 	calculateDateRange,
 	calculateDateQuery,
-	calculatePostSpanUnits,
 	formatHeading,
 } from './edit/utils/date-utils';
 import {
@@ -32,11 +31,10 @@ import {
 import { useCalendarSync } from './edit/hooks/useCalendarSync';
 import { useCalendarData } from './edit/hooks/useCalendarData';
 import { useCalendarDayTemplate } from './edit/hooks/useCalendarDayTemplate';
-import { useSourcePostDates } from './edit/hooks/useSourcePostDates';
+import { useDateRangeSourceSync } from './edit/hooks/useDateRangeSourceSync';
 import { MonthPicker } from './edit/components/MonthPicker';
 import { DateControls } from './edit/components/DateControls';
 import { CalendarTable } from './edit/components/CalendarTable';
-import { usePostTypeSupports } from '../utils/post-types';
 
 /**
  * Edit Component
@@ -71,134 +69,27 @@ export default function Edit( {
 		sourcePostType = '',
 	} = attributes;
 
-	const {
-		query,
-		postId: contextPostId = 0,
-		postType: contextPostType = '',
-	} = context;
+	const { query } = context;
 
 	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 	const [ activeDate, setActiveDate ] = useState( '' );
 
-	// Determine if current editor post type supports gatherpress-event-date.
-	const hasCurrentSupport = usePostTypeSupports(
-		'gatherpress-event-date',
-		contextPostType || null
-	);
-
-	useEffect( () => {
-		const isContext = 'context' === dateRangeSource;
-		if ( isContext && ! hasCurrentSupport ) {
-			setAttributes( { dateRangeSource: 'default' } );
-		}
-	}, [ dateRangeSource, hasCurrentSupport, setAttributes ] );
-
-	const sourcePostDates = useSourcePostDates( {
-		dateRangeSource,
-		postId,
-		sourcePostType,
-		contextPostId,
-		contextPostType,
-	} );
-
-	const hasPostDates =
-		'default' !== dateRangeSource &&
-		Boolean( sourcePostDates.startDate && sourcePostDates.endDate );
-
 	const startOfWeek = getStartOfWeek();
 
-	// Calculate span units directly from the source post dates when active.
-	const effectiveUnitCount = useMemo( () => {
-		if ( ! hasPostDates ) {
-			return unitCount;
-		}
-		return calculatePostSpanUnits(
-			viewType,
-			sourcePostDates.startDate,
-			sourcePostDates.endDate,
-			startOfWeek
-		);
-	}, [
-		hasPostDates,
-		viewType,
-		sourcePostDates.startDate,
-		sourcePostDates.endDate,
-		startOfWeek,
-		unitCount,
-	] );
-
-	const effectiveSelectedDate = hasPostDates
-		? sourcePostDates.startDate
-		: selectedDate;
-
-	const effectiveDateModifier = hasPostDates ? 0 : dateModifier;
-
-	// Synchronize unitCount and selectedDate attributes with the event post span.
-	useEffect( () => {
-		if ( ! hasPostDates ) {
-			return;
-		}
-
-		const updates = {};
-		if ( unitCount !== effectiveUnitCount ) {
-			updates.unitCount = effectiveUnitCount;
-		}
-		if ( selectedDate !== effectiveSelectedDate ) {
-			updates.selectedDate = effectiveSelectedDate;
-		}
-		if ( dateModifier !== 0 ) {
-			updates.dateModifier = 0;
-		}
-
-		if ( Object.keys( updates ).length > 0 ) {
-			setAttributes( updates );
-		}
-	}, [
+	// Coordinate dateRangeSource resolution, attribute synchronization, and presets.
+	const {
+		sourcePostDates,
 		hasPostDates,
 		effectiveUnitCount,
 		effectiveSelectedDate,
-		unitCount,
-		selectedDate,
-		dateModifier,
+		effectiveDateModifier,
+		hasCurrentSupport,
+	} = useDateRangeSourceSync( {
+		attributes,
 		setAttributes,
-	] );
-
-	// Preset viewType based on post duration when a new source post is selected.
-	const lastPresetPostIdRef = useRef( 0 );
-	useEffect( () => {
-		if ( ! hasPostDates || ! sourcePostDates.effectivePostId ) {
-			return;
-		}
-
-		if ( lastPresetPostIdRef.current === sourcePostDates.effectivePostId ) {
-			return;
-		}
-
-		lastPresetPostIdRef.current = sourcePostDates.effectivePostId;
-
-		const startObj = new Date( sourcePostDates.startDate );
-		const endObj = new Date( sourcePostDates.endDate );
-		const durationDays =
-			Math.round( ( endObj - startObj ) / ( 1000 * 60 * 60 * 24 ) ) + 1;
-
-		let recommendedView = 'month';
-		if ( durationDays <= 7 ) {
-			recommendedView = 'day';
-		} else if ( durationDays <= 28 ) {
-			recommendedView = 'week';
-		}
-
-		if ( viewType !== recommendedView ) {
-			setAttributes( { viewType: recommendedView } );
-		}
-	}, [
-		hasPostDates,
-		sourcePostDates.effectivePostId,
-		sourcePostDates.startDate,
-		sourcePostDates.endDate,
-		viewType,
-		setAttributes,
-	] );
+		context,
+		startOfWeek,
+	} );
 
 	// Synchronize parent Query block name, Heading name, and pagination labels.
 	useCalendarSync( {

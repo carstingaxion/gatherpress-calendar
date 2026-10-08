@@ -20,6 +20,14 @@ import { store as coreStore } from '@wordpress/core-data';
 import { useState, useMemo } from '@wordpress/element';
 
 import { useEventPostTypes } from '../hooks/useEventPostTypes';
+import {
+	DATE_SOURCE_DEFAULT,
+	DATE_SOURCE_CONTEXT,
+	DATE_SOURCE_SELECTED,
+	normalizeDateSource,
+	isSelectedDateSource,
+	getDefaultEventPostType,
+} from '../utils/source-utils';
 
 const EMPTY_RECORDS = [];
 
@@ -38,7 +46,7 @@ const EMPTY_RECORDS = [];
  * @return {Element} Source controls component.
  */
 export function SourcePostControls( {
-	dateRangeSource = 'default',
+	dateRangeSource = DATE_SOURCE_DEFAULT,
 	onSourceChange,
 	postId = 0,
 	onPostIdChange,
@@ -49,21 +57,12 @@ export function SourcePostControls( {
 	const [ searchFilter, setSearchFilter ] = useState( '' );
 	const eventPostTypes = useEventPostTypes();
 
-	const isSelected =
-		'selected' === dateRangeSource || 'specific_post' === dateRangeSource;
+	const activeValue = normalizeDateSource( dateRangeSource );
+	const isSelected = isSelectedDateSource( activeValue );
 
-	let activeValue = 'default';
-	if ( 'context' === dateRangeSource ) {
-		activeValue = 'context';
-	} else if ( isSelected ) {
-		activeValue = 'selected';
-	}
-
-	let activePostType = 'gatherpress_event';
-	if ( sourcePostType ) {
-		activePostType = sourcePostType;
-	} else if ( eventPostTypes.length > 0 ) {
-		activePostType = eventPostTypes[ 0 ].slug;
+	let activePostType = sourcePostType;
+	if ( ! activePostType ) {
+		activePostType = getDefaultEventPostType( eventPostTypes );
 	}
 
 	const query = useMemo( () => {
@@ -156,17 +155,17 @@ export function SourcePostControls( {
 					isDeselectable={ false }
 				>
 					<ToggleGroupControlOption
-						value="default"
+						value={ DATE_SOURCE_DEFAULT }
 						label={ __( 'Default', 'gatherpress-calendar' ) }
 					/>
 					{ hasCurrentSupport && (
 						<ToggleGroupControlOption
-							value="context"
+							value={ DATE_SOURCE_CONTEXT }
 							label={ __( 'Current', 'gatherpress-calendar' ) }
 						/>
 					) }
 					<ToggleGroupControlOption
-						value="selected"
+						value={ DATE_SOURCE_SELECTED }
 						label={ __( 'Specific', 'gatherpress-calendar' ) }
 					/>
 				</ToggleGroupControl>

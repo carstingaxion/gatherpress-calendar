@@ -1,3 +1,10 @@
+/**
+ * DateControls component managing calendar navigation and settings.
+ *
+ * @package
+ * @since 0.1.0
+ */
+
 import { __ } from '@wordpress/i18n';
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 import {
@@ -11,6 +18,12 @@ import { useMemo } from '@wordpress/element';
 import { generateMonthOptions } from '../utils/calendar-utils';
 import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
 import { SourcePostControls } from './SourcePostControls';
+import {
+	DATE_SOURCE_DEFAULT,
+	isPostDateSource,
+	isSelectedDateSource,
+	isContextDateSource,
+} from '../utils/source-utils';
 
 const MAX_UNITS = {
 	month: 12,
@@ -53,7 +66,7 @@ export function DateControls( {
 	onDateChange,
 	onModifierChange,
 	onOpenPicker,
-	dateRangeSource = 'default',
+	dateRangeSource = DATE_SOURCE_DEFAULT,
 	onSourceChange,
 	postId = 0,
 	onPostIdChange,
@@ -67,10 +80,8 @@ export function DateControls( {
 	const offsetHelp = useDateOffsetHelp( dateModifier, viewType );
 	const maxUnits = MAX_UNITS[ viewType ] || 12;
 
-	const isPostSource =
-		'context' === dateRangeSource || 'selected' === dateRangeSource;
-
-	const isDefaultMode = ! isPostSource;
+	const isPostAnchored = isPostDateSource( dateRangeSource );
+	const isDefaultMode = ! isPostAnchored;
 
 	const handleViewTypeChange = ( newViewType ) => {
 		const newMax = MAX_UNITS[ newViewType ] || 12;
@@ -110,14 +121,13 @@ export function DateControls( {
 	}, [ viewType ] );
 
 	const selectionLabel = useMemo( () => {
-		const isSelected = 'selected' === dateRangeSource;
-		const isContext = 'context' === dateRangeSource;
-
-		if ( isSelected ) {
+		if ( isSelectedDateSource( dateRangeSource ) ) {
 			if ( hasPostDates ) {
-				return postTitle
-					? `${ postTitle } (${ selectedDate })`
-					: selectedDate;
+				let label = selectedDate;
+				if ( postTitle ) {
+					label = `${ postTitle } (${ selectedDate })`;
+				}
+				return label;
 			}
 			if ( postId > 0 ) {
 				return __( 'Loading event dates…', 'gatherpress-calendar' );
@@ -125,11 +135,13 @@ export function DateControls( {
 			return __( 'No source post selected.', 'gatherpress-calendar' );
 		}
 
-		if ( isContext ) {
+		if ( isContextDateSource( dateRangeSource ) ) {
 			if ( hasPostDates ) {
-				return postTitle
-					? `${ postTitle } (${ selectedDate })`
-					: selectedDate;
+				let label = selectedDate;
+				if ( postTitle ) {
+					label = `${ postTitle } (${ selectedDate })`;
+				}
+				return label;
 			}
 			return __(
 				'No event dates detected on the current post.',

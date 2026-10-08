@@ -22,9 +22,9 @@ import {
 import { getStartOfWeek } from './edit/utils/calendar-utils';
 import { findBlockByName } from './edit/utils/block-sync-utils';
 import {
-	getLiveEventDates,
-	toDateString,
-} from './edit/hooks/useSourcePostDates';
+	resolveSourceEventDates,
+	isPostDateSource,
+} from './edit/utils/source-utils';
 
 domReady( () => {
 	if ( typeof registerBlockBindingsSource !== 'function' ) {
@@ -94,71 +94,33 @@ domReady( () => {
 
 		const startOfWeek = getStartOfWeek();
 
-		const isContext = 'context' === dateRangeSource;
-		const isSelected = 'selected' === dateRangeSource;
+		const sourceDates = resolveSourceEventDates( registrySelect, {
+			dateRangeSource,
+			postId,
+			sourcePostType,
+		} );
 
 		let effectiveSelectedDate = selectedDate;
 		let effectiveUnitCount = unitCount;
 
-		if ( isContext ) {
-			const liveDates = getLiveEventDates( registrySelect );
-			if ( liveDates ) {
-				effectiveSelectedDate = liveDates.startDate;
-				effectiveUnitCount = calculatePostSpanUnits(
-					viewType,
-					liveDates.startDate,
-					liveDates.endDate,
-					startOfWeek
-				);
-			}
-		} else if ( isSelected && Number( postId ) > 0 ) {
-			const targetId = Number( postId );
-			const targetType = sourcePostType || 'gatherpress_event';
-			const currentEditorId =
-				registrySelect( 'core/editor' )?.getCurrentPostId?.();
-
-			if ( targetId === currentEditorId ) {
-				const liveDates = getLiveEventDates( registrySelect );
-				if ( liveDates ) {
-					effectiveSelectedDate = liveDates.startDate;
-					effectiveUnitCount = calculatePostSpanUnits(
-						viewType,
-						liveDates.startDate,
-						liveDates.endDate,
-						startOfWeek
-					);
-				}
-			} else {
-				const record = registrySelect( 'core' ).getEntityRecord(
-					'postType',
-					targetType,
-					targetId
-				);
-				const sDate = toDateString(
-					record?.meta?.gatherpress_datetime_start
-				);
-				const eDate =
-					toDateString( record?.meta?.gatherpress_datetime_end ) ||
-					sDate;
-
-				if ( sDate ) {
-					effectiveSelectedDate = sDate;
-					effectiveUnitCount = calculatePostSpanUnits(
-						viewType,
-						sDate,
-						eDate,
-						startOfWeek
-					);
-				}
-			}
+		if ( sourceDates.hasPost ) {
+			effectiveSelectedDate = sourceDates.startDate;
+			effectiveUnitCount = calculatePostSpanUnits(
+				viewType,
+				sourceDates.startDate,
+				sourceDates.endDate,
+				startOfWeek
+			);
 		}
+
+		const isPostAnchored = isPostDateSource( dateRangeSource );
 
 		const range = calculateDateRange(
 			{
 				viewType,
 				unitCount: effectiveUnitCount,
 				selectedDate: effectiveSelectedDate,
-				dateModifier: isContext || isSelected ? 0 : dateModifier,
+				dateModifier: isPostAnchored ? 0 : dateModifier,
 				showWeekends,
 			},
 			startOfWeek
