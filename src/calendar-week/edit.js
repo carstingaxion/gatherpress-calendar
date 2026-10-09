@@ -125,21 +125,44 @@ export default memo( function Edit( {
 		[ activeDay ]
 	);
 
-	// In standalone preview environments (e.g. Block Styles picker sandbox),
-	// wrap in <table><tbody> to satisfy HTML nesting rules and avoid <tr> inside <div> warnings.
+	// In standalone preview environments (e.g. Block Styles hover popover),
+	// enforce horizontal CSS Grid layout with repeat(7, 1fr) so cells stay horizontal.
 	if ( isStandalonePreview ) {
+		const previewWrapperProps = {
+			...innerBlocksWrapperProps,
+			style: {
+				...innerBlocksWrapperProps.style,
+				display: 'grid',
+				gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+				gap: '2px',
+				width: '100%',
+			},
+		};
+
 		return (
 			<table
 				className="gatherpress-calendar__table"
-				style={ { width: '100%', borderCollapse: 'collapse' } }
+				style={ {
+					width: '100%',
+					borderCollapse: 'collapse',
+					display: 'block',
+				} }
 			>
-				<tbody>
-					<tr { ...innerBlocksWrapperProps }>
+				<tbody style={ { display: 'block', width: '100%' } }>
+					<tr { ...previewWrapperProps }>
 						{ SAMPLE_PREVIEW_DAYS.map( ( dayNum ) => (
 							<td
 								key={ dayNum }
 								className="gatherpress-calendar__day"
-								style={ { height: '32px', textAlign: 'center' } }
+								style={ {
+									minHeight: '28px',
+									height: '56px',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									fontSize: '11px',
+									boxSizing: 'border-box',
+								} }
 							>
 								{ dayNum }
 							</td>

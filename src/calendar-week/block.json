@@ -59,6 +59,10 @@
     {
       "name": "zebra",
       "label": "Zebra"
+    },
+    {
+      "name": "pride",
+      "label": "Pride"
     }
   ],
   "textdomain": "gatherpress-calendar",

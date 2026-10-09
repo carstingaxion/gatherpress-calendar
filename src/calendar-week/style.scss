@@ -2,12 +2,9 @@
 .gatherpress-calendar__week {
 	display: contents;
 
-	/*
-	 * Zebra style: apply an overlay tint via ::before on child day cells.
-	 *
-	 * Resolves the custom CSS variable if set via the block UI, falling back to currentColor.
-	 * Sits on top of any author-configured cell background without being overwritten.
-	 */
+	/* ======================================================================
+		BLOCK STYLE: Zebra
+	====================================================================== */
 	&.is-style-zebra:nth-of-type(even) > .gatherpress-calendar__day:not(.is-empty) {
 		position: relative;
 
@@ -19,6 +16,72 @@
 			opacity: 0.05;
 			pointer-events: none;
 			z-index: 0;
+    		border-radius: inherit;
+		}
+	}
+
+	/* ======================================================================
+		BLOCK STYLE: Pride (Adaptive Column Spectrum)
+	====================================================================== */
+	&.is-style-pride {
+
+		> .gatherpress-calendar__day:not(.is-empty) {
+			position: relative;
+			border-top: 3px solid var(--pride-col, #e40303);
+			transition: background-color 0.2s ease, border-color 0.2s ease;
+
+			&::before {
+				content: "";
+				position: absolute;
+				inset: 0;
+				background: var(--pride-col, #e40303);
+				opacity: 0.07;
+				pointer-events: none;
+				z-index: 0;
+				transition: opacity 0.2s ease;
+    			border-radius: inherit;
+			}
+
+			&:hover::before {
+				opacity: 0.15;
+			}
+
+			.gatherpress-calendar__day-number {
+				color: var(--pride-col, #e40303);
+			}
+		}
+
+		/**
+		 * 1. Default: 7-column spectrum (Monday – Sunday)
+		 *
+		 * based on: https://colorkit.co/palette/ec111a-fb6330-ffd42f-138468-009dd6-7849b8-f2609e/
+		 */
+		> .gatherpress-calendar__day {
+			&:nth-of-type(1) { --pride-col: #ec111a; } /* Life / Red */
+			&:nth-of-type(2) { --pride-col: #ff8c00; } /* Healing / Orange */
+			&:nth-of-type(3) { --pride-col: #ffd42f; } /* Sunlight / Yellow */
+			&:nth-of-type(4) { --pride-col: #138468; } /* Nature / Green */
+			&:nth-of-type(5) { --pride-col: #004dff; } /* Harmony / Blue */
+			&:nth-of-type(6) { --pride-col: #7849b8; } /* Spirit / Purple */
+			&:nth-of-type(7) { --pride-col: #d84b80; } /* Inclusivity / Pink */
+		}
+
+		/* 2. Adaptive: 5-column spectrum (Weekdays only, weekends hidden) */
+		&:has(> .gatherpress-calendar__day:nth-of-type(5):last-child) > .gatherpress-calendar__day,
+		&:has(> .gatherpress-calendar__day:nth-of-type(5):last-of-type) > .gatherpress-calendar__day {
+			&:nth-of-type(1) { --pride-col: #ec111a; }
+			&:nth-of-type(2) { --pride-col: #ff8c00; }
+			&:nth-of-type(3) { --pride-col: #138468; }
+			&:nth-of-type(4) { --pride-col: #004dff; }
+			&:nth-of-type(5) { --pride-col: #7849b8; }
+		}
+
+		/* 3. Adaptive: 3-column spectrum (e.g. 3-day multi-day / festival view) */
+		&:has(> .gatherpress-calendar__day:nth-of-type(3):last-child) > .gatherpress-calendar__day,
+		&:has(> .gatherpress-calendar__day:nth-of-type(3):last-of-type) > .gatherpress-calendar__day {
+			&:nth-of-type(1) { --pride-col: #ec111a; }
+			&:nth-of-type(2) { --pride-col: #ff8c00; }
+			&:nth-of-type(3) { --pride-col: #004dff; }
 		}
 	}
 }
