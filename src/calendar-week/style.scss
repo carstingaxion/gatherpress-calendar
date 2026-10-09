@@ -22,6 +22,7 @@
 
 	/* ======================================================================
 		BLOCK STYLE: Pride (Adaptive Column Spectrum)
+		based on: https://en.wikipedia.org/wiki/Rainbow_flag_(LGBTQ)
 	====================================================================== */
 	&.is-style-pride {
 
@@ -52,36 +53,63 @@
 		}
 
 		/**
-		 * 1. Default: 7-column spectrum (Monday – Sunday)
+		 * Default: 7-column spectrum (Monday – Sunday)
 		 *
-		 * based on: https://colorkit.co/palette/ec111a-fb6330-ffd42f-138468-009dd6-7849b8-f2609e/
+		 * based on: https://en.wikipedia.org/wiki/File:Gay_flag_7.svg
+		 *
+		 * Seven-color version (due to unavailability of pink fabric) (1978–1979)
 		 */
 		> .gatherpress-calendar__day {
-			&:nth-of-type(1) { --pride-col: #ec111a; } /* Life / Red */
-			&:nth-of-type(2) { --pride-col: #ff8c00; } /* Healing / Orange */
-			&:nth-of-type(3) { --pride-col: #ffd42f; } /* Sunlight / Yellow */
-			&:nth-of-type(4) { --pride-col: #138468; } /* Nature / Green */
-			&:nth-of-type(5) { --pride-col: #004dff; } /* Harmony / Blue */
-			&:nth-of-type(6) { --pride-col: #7849b8; } /* Spirit / Purple */
-			&:nth-of-type(7) { --pride-col: #d84b80; } /* Inclusivity / Pink */
+			&:nth-of-type(1) { --pride-col: #f00; }    /* Life      / Red */
+			&:nth-of-type(2) { --pride-col: #ff8e00; } /* Healing   / Orange */
+			&:nth-of-type(3) { --pride-col: #ff0; }    /* Sunlight  / Yellow */
+			&:nth-of-type(4) { --pride-col: #008e00; } /* Nature    / Green */
+			&:nth-of-type(5) { --pride-col: #00c0c0; } /* Magic/Art / Turquoise */
+			&:nth-of-type(6) { --pride-col: #400098; } /* Serenity  / Indigo */
+			&:nth-of-type(7) { --pride-col: #8e008e; } /* Spirit    / Violet */
 		}
 
-		/* 2. Adaptive: 5-column spectrum (Weekdays only, weekends hidden) */
+		/**
+		 * Adaptive: 6-column spectrum (Weekdays only, weekends hidden)
+		 *
+		 * based on: https://en.wikipedia.org/wiki/File:Gay_Pride_Flag.svg
+		 *
+		 * Six-color version; the most popular since 1979,
+		 * with turquoise and indigo replaced with blue
+		 */
+		&:has(> .gatherpress-calendar__day:nth-of-type(6):last-child) > .gatherpress-calendar__day,
+		&:has(> .gatherpress-calendar__day:nth-of-type(6):last-of-type) > .gatherpress-calendar__day {
+			&:nth-of-type(1) { --pride-col: #E50000; } /* Life      / Red */
+			&:nth-of-type(2) { --pride-col: #FF8D00; } /* Healing   / Orange */
+			&:nth-of-type(3) { --pride-col: #FFEE00; } /* Sunlight  / Yellow */
+			&:nth-of-type(4) { --pride-col: #028121; } /* Nature    / Green */
+			&:nth-of-type(5) { --pride-col: #004CFF; } /* Magic/Art / Blue */
+			&:nth-of-type(6) { --pride-col: #770088; } /* Spirit    / Purple */
+		}
+
+		/**
+		 * Adaptive: 5-column spectrum (Weekdays only, weekends hidden)
+		 *
+		 * based on: https://en.wikipedia.org/wiki/File:Gay_Pride_Flag.svg
+		 *
+		 * Five-color version; based on the most popular since 1979,
+		 * with yellow removed
+		 */
 		&:has(> .gatherpress-calendar__day:nth-of-type(5):last-child) > .gatherpress-calendar__day,
 		&:has(> .gatherpress-calendar__day:nth-of-type(5):last-of-type) > .gatherpress-calendar__day {
-			&:nth-of-type(1) { --pride-col: #ec111a; }
-			&:nth-of-type(2) { --pride-col: #ff8c00; }
-			&:nth-of-type(3) { --pride-col: #138468; }
-			&:nth-of-type(4) { --pride-col: #004dff; }
-			&:nth-of-type(5) { --pride-col: #7849b8; }
+			&:nth-of-type(1) { --pride-col: #E50000; } /* Life      / Red */
+			&:nth-of-type(2) { --pride-col: #FF8D00; } /* Healing   / Orange */
+			&:nth-of-type(3) { --pride-col: #028121; } /* Nature    / Green */
+			&:nth-of-type(4) { --pride-col: #004CFF; } /* Magic/Art / Blue */
+			&:nth-of-type(5) { --pride-col: #770088; } /* Spirit    / Purple */
 		}
 
 		/* 3. Adaptive: 3-column spectrum (e.g. 3-day multi-day / festival view) */
 		&:has(> .gatherpress-calendar__day:nth-of-type(3):last-child) > .gatherpress-calendar__day,
 		&:has(> .gatherpress-calendar__day:nth-of-type(3):last-of-type) > .gatherpress-calendar__day {
-			&:nth-of-type(1) { --pride-col: #ec111a; }
-			&:nth-of-type(2) { --pride-col: #ff8c00; }
-			&:nth-of-type(3) { --pride-col: #004dff; }
+			&:nth-of-type(1) { --pride-col: #f00; }
+			&:nth-of-type(2) { --pride-col: #ff8e00; }
+			&:nth-of-type(3) { --pride-col: #00c0c0; }
 		}
 	}
 }
