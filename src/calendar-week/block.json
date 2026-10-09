@@ -31,6 +31,10 @@
     "weekIndex": {
       "type": "number",
       "default": 0
+    },
+    "zebraColor": {
+      "type": "string",
+      "default": ""
     }
   },
   "supports": {
@@ -46,6 +50,21 @@
       "gradients": false
     }
   },
+  "styles": [
+    {
+      "name": "default",
+      "label": "Default",
+      "isDefault": true
+    },
+    {
+      "name": "zebra",
+      "label": "Zebra"
+    },
+    {
+      "name": "pride",
+      "label": "Pride"
+    }
+  ],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",

@@ -10,21 +10,13 @@ import { DayPreviewCell } from './DayPreviewCell';
 /**
  * WeekPreviewRow Component
  *
- * Renders a whole non-active week as a read-only virtual instance: a real
- * `<tr>` (mirroring the real calendar-week block's own color styling) of
- * DayPreviewCell previews, one per day, all built from the same real day
- * template inner blocks. Clicking any day activates it, making that week
- * (and that day) the live/editable one.
- *
- * @since 0.4.0
- *
- * @param {Object}   props                     - Component props.
- * @param {Array}    props.week                - This week's day data entries.
- * @param {number}   props.weekNumber          - ISO week number, 0 for none.
- * @param {Array}    props.dayInnerBlocks      - The real day template's inner blocks, for previews.
- * @param {Object}   props.weekBlockAttributes - The real calendar-week block's own attributes, for style parity.
- * @param {Object}   props.dayBlockAttributes  - The real calendar-day block's own attributes, for style parity.
- * @param {Function} props.onActivateDay       - Called with a day's date when that day is clicked.
+ * @param {Object}   props                     Component props.
+ * @param {Array}    props.week                This week's day data entries.
+ * @param {number}   props.weekNumber          ISO week number, 0 for none.
+ * @param {Array}    props.dayInnerBlocks      Day template inner blocks.
+ * @param {Object}   props.weekBlockAttributes Attributes of week block.
+ * @param {Object}   props.dayBlockAttributes  Attributes of day block.
+ * @param {Function} props.onActivateDay       Callback when day is activated.
  *
  * @return {Element} Week row preview element.
  */
@@ -32,21 +24,31 @@ function WeekPreviewRowComponent( {
 	week,
 	weekNumber,
 	dayInnerBlocks,
-	weekBlockAttributes,
+	weekBlockAttributes = {},
 	dayBlockAttributes,
 	onActivateDay,
 } ) {
-	// Mirror the real calendar-week block's own color/spacing/shadow
-	// styling so every previewed week row looks like the live one.
 	const colorProps = useColorProps( weekBlockAttributes ?? {} );
 
-	const classNames = [ 'gatherpress-calendar__week', colorProps.className ]
-		.filter( Boolean )
-		.join( ' ' );
+	const zebraColor = weekBlockAttributes?.zebraColor;
+	const isZebra =
+		Boolean( weekBlockAttributes?.className?.includes( 'is-style-zebra' ) );
 
 	const style = {
 		...colorProps.style,
 	};
+
+	if ( isZebra && zebraColor ) {
+		style[ '--gatherpress-calendar-zebra-color' ] = zebraColor;
+	}
+
+	const classNames = [
+		'gatherpress-calendar__week',
+		weekBlockAttributes?.className,
+		colorProps.className,
+	]
+		.filter( Boolean )
+		.join( ' ' );
 
 	return (
 		<tr className={ classNames } style={ style }>
@@ -72,8 +74,4 @@ function WeekPreviewRowComponent( {
 	);
 }
 
-// Memoized: this (and each DayPreviewCell inside it) mounts a real,
-// isolated block-editor preview instance. Without memoization, every
-// unrelated re-render higher up (e.g. selecting any block) would
-// re-render every non-active week/day preview in the whole grid.
 export const WeekPreviewRow = memo( WeekPreviewRowComponent );
