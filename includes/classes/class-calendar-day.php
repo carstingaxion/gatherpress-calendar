@@ -156,8 +156,15 @@ class Calendar_Day {
 			$classes[] = 'is-empty';
 		}
 
-		if ( ! empty( $context['gatherpress/dayPosts'] ) ) {
+		if ( ! empty( $context['gatherpress/dayPosts'] ) && is_array( $context['gatherpress/dayPosts'] ) ) {
 			$classes[] = 'has-posts';
+
+			foreach ( $context['gatherpress/dayPosts'] as $post_entry ) {
+				if ( is_array( $post_entry ) && ! empty( $post_entry['total_days'] ) && (int) $post_entry['total_days'] > 1 ) {
+					$classes[] = 'has-multi-day-event';
+					break;
+				}
+			}
 		}
 
 		[ $weekday, $is_weekend ] = $this->resolve_weekday_and_weekend( $context );

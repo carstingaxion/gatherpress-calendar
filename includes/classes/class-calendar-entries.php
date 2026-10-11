@@ -55,6 +55,9 @@ class Calendar_Entries {
 	 */
 	private static string $current_post_type = '';
 
+
+	private static array $current_span_data = array();
+
 	/**
 	 * Constructor.
 	 */
@@ -117,9 +120,12 @@ class Calendar_Entries {
 		);
 
 		$items_html = '';
-		foreach ( $day_posts as $post_id ) {
-			if ( is_int( $post_id ) ) {
-				$items_html .= $this->render_event_item( $post_id, $block );
+		foreach ( $day_posts as $entry ) {
+			$post_id   = is_array( $entry ) ? ( $entry['id'] ?? 0 ) : $entry;
+			$span_data = is_array( $entry ) ? $entry : array();
+
+			if ( is_int( $post_id ) && $post_id > 0 ) {
+				$items_html .= $this->render_entry( $post_id, $block, $span_data );
 			}
 		}
 
@@ -131,14 +137,15 @@ class Calendar_Entries {
 	}
 
 	/**
-	 * Render a single event entry with its innerBlocks content.
+	 * Render a single entry with its innerBlocks content.
 	 *
-	 * @param int      $post_id Post ID.
-	 * @param WP_Block $block   The Calendar Entries block instance.
+	 * @param int                  $post_id   Post ID.
+	 * @param WP_Block             $block     The Calendar Entries block instance.
+	 * @param array<string, mixed> $span_data Multi-day span descriptors.
 	 *
 	 * @return string Event HTML with innerBlocks rendered.
 	 */
-	private function render_event_item( int $post_id, WP_Block $block ): string {
+	private function render_entry( int $post_id, WP_Block $block, array $span_data = array() ): string {
 		$post = get_post( $post_id );
 		if ( ! $post instanceof WP_Post ) {
 			return '';
@@ -181,13 +188,40 @@ class Calendar_Entries {
 
 		$style_attribute = '' !== $entry_styles['inline_styles'] ? sprintf( ' style="%s"', esc_attr( $entry_styles['inline_styles'] ) ) : '';
 
-		// The post ID class lets other plugins find the event of an entry, as they do for Query Loop items.
-		$entry_classes = implode( ' ', get_post_class( $entry_styles['classnames'], $post_id ) );
+		$extra_classes = array();
+		if ( ! empty( $span_data['span'] ) && is_string( $span_data['span'] ) ) {
+			$extra_classes[] = 'is-span-' . sanitize_html_class( $span_data['span'] );
+		}
+		if ( isset( $span_data['total_days'] ) && (int) $span_data['total_days'] > 1 ) {
+			$extra_classes[] = 'is-multi-day';
+		}
+
+		$classnames = $entry_styles['classnames'];
+		if ( ! empty( $extra_classes ) ) {
+			$classnames .= ' ' . implode( ' ', $extra_classes );
+		}
+
+		$entry_classes = implode( ' ', get_post_class( $classnames, $post_id ) );
+
+		$data_attributes = '';
+		if ( ! empty( $span_data['span'] ) ) {
+			$data_attributes .= sprintf( ' data-span="%s"', esc_attr( (string) $span_data['span'] ) );
+		}
+		if ( isset( $span_data['day_index'] ) ) {
+			$data_attributes .= sprintf( ' data-day-index="%d"', (int) $span_data['day_index'] );
+		}
+		if ( isset( $span_data['total_days'] ) ) {
+			$data_attributes .= sprintf( ' data-total-days="%d"', (int) $span_data['total_days'] );
+		}
+		if ( isset( $span_data['slot'] ) ) {
+			$data_attributes .= sprintf( ' data-slot="%d"', (int) $span_data['slot'] );
+		}
 
 		return sprintf(
-			'<div class="%1$s"%2$s>%3$s</div>',
+			'<div class="%1$s"%2$s%3$s>%4$s</div>',
 			esc_attr( $entry_classes ),
 			$style_attribute,
+			$data_attributes,
 			$inner_content
 		);
 	}
@@ -262,6 +296,16 @@ class Calendar_Entries {
 	public static function filter_entry_context( array $context ): array {
 		$context['postType'] = self::$current_post_type;
 		$context['postId']   = self::$current_post_id;
+
+		if ( ! empty( self::$current_span_data ) ) {
+			$context['gatherpress/eventSpan']      = self::$current_span_data['span'] ?? 'single';
+			$context['gatherpress/eventDayIndex']  = self::$current_span_data['day_index'] ?? 1;
+			$context['gatherpress/eventTotalDays'] = self::$current_span_data['total_days'] ?? 1;
+			if ( isset( self::$current_span_data['slot'] ) ) {
+				$context['gatherpress/eventSlot'] = self::$current_span_data['slot'];
+			}
+		}
+
 		return $context;
 	}
 

@@ -13,26 +13,38 @@ import { WEEKDAY_SLUGS, isWeekendDay, getDayNames } from './calendar-utils';
 import { isEventPostType } from '../../../utils/post-types';
 
 /**
- * Organizes posts by YYYY-MM-DD date string.
+ * Classifies the span position for a day within a multi-day event.
  *
- * @param {Array} posts Raw post entities.
- * @return {Object} Posts grouped by date string.
+ * @param {number} dayIndex  1-based day index.
+ * @param {number} totalDays Total days of the event.
+ * @return {string} 'single', 'start', 'middle', or 'end'.
  */
-export function groupPostsByDate( posts = [] ) {
-	const grouped = {};
-	if ( ! posts || ! posts.length ) {
-		return grouped;
+export function determineSpanType( dayIndex, totalDays ) {
+	if ( totalDays <= 1 ) {
+		return 'single';
 	}
+	if ( dayIndex === 1 ) {
+		return 'start';
+	}
+	if ( dayIndex === totalDays ) {
+		return 'end';
+	}
+	return 'middle';
+}
 
-	posts.forEach( ( post ) => {
-		const isEvent = isEventPostType( post.type );
-		const postDate = isEvent
-			? post.meta?.gatherpress_datetime_start
-			: post.date;
+/**
+ * Calculates start object, total days, and string dates for a post.
+ *
+ * @param {Object} post Post entity record.
+ * @return {Object|null}
+ */
+export function resolvePostDateSpan( post ) {
+	const isEvent = isEventPostType( post.type );
+	const postDate = isEvent ? post.meta?.gatherpress_datetime_start : post.date;
 
-		if ( ! postDate ) {
-			return;
-		}
+	if ( ! postDate ) {
+		return null;
+	}
 
 		// When post supports gatherpress-event-date, postDate from meta is a string like:
 		// "2026-09-30 23:30:00" (an event starting at 11:30 PM in its local timezone).
@@ -44,15 +56,116 @@ export function groupPostsByDate( posts = [] ) {
 		//
 		// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
 		// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
-		const dateStr =
-			isEvent && post.meta?.gatherpress_datetime_start
-				? post.meta.gatherpress_datetime_start.slice( 0, 10 )
-				: dateI18n( DATE_FORMAT, new Date( postDate ) );
+		const startDateStr =
+		isEvent && post.meta?.gatherpress_datetime_start
+			? post.meta.gatherpress_datetime_start.slice( 0, 10 )
+			: dateI18n( DATE_FORMAT, new Date( postDate ) );
 
-		if ( ! grouped[ dateStr ] ) {
-			grouped[ dateStr ] = [];
+	let endDateStr = startDateStr;
+	if ( isEvent && post.meta?.gatherpress_datetime_end ) {
+		const rawEnd = post.meta.gatherpress_datetime_end.slice( 0, 10 );
+		if ( rawEnd >= startDateStr ) {
+			endDateStr = rawEnd;
 		}
-		grouped[ dateStr ].push( post );
+	}
+
+	const [ sY, sM, sD ] = startDateStr.split( '-' ).map( Number );
+	const [ eY, eM, eD ] = endDateStr.split( '-' ).map( Number );
+	const startObj = new Date( sY, sM - 1, sD, 12, 0, 0 );
+	const endObj = new Date( eY, eM - 1, eD, 12, 0, 0 );
+
+	const totalDays = Math.min(
+		366,
+		Math.max(
+			1,
+			Math.round( ( endObj - startObj ) / ( 1000 * 60 * 60 * 24 ) ) + 1
+		)
+	);
+
+	return { post, startObj, startDateStr, totalDays };
+}
+
+/**
+ * Finds the lowest 0-indexed vertical slot free across all dates of an event's span.
+ *
+ * @param {string[]} dates         Array of YYYY-MM-DD date strings.
+ * @param {Object}   occupiedSlots Map of date strings to Set of occupied slots.
+ * @return {number} Lowest available slot index.
+ */
+export function findAvailableSlot( dates, occupiedSlots ) {
+	let slot = 0;
+
+	while ( true ) {
+		const isFree = dates.every( ( date ) => ! occupiedSlots[ date ]?.has( slot ) );
+		if ( isFree ) {
+			return slot;
+		}
+		slot++;
+	}
+}
+
+/**
+ * Organizes posts by YYYY-MM-DD date string, spanning multi-day events across all active days.
+ *
+ * @param {Array} posts Raw post entities.
+ * @return {Object} Posts grouped by date string.
+ */
+export function groupPostsByDate( posts = [] ) {
+	const grouped = {};
+	if ( ! posts?.length ) {
+		return grouped;
+	}
+
+	const rawEvents = posts.map( resolvePostDateSpan ).filter( Boolean );
+
+	// Multi-day events first (descending totalDays), then start date, then ID.
+	rawEvents.sort( ( a, b ) => {
+		if ( b.totalDays !== a.totalDays ) {
+			return b.totalDays - a.totalDays;
+		}
+		if ( a.startDateStr !== b.startDateStr ) {
+			return a.startDateStr.localeCompare( b.startDateStr );
+		}
+		return ( a.post.id || 0 ) - ( b.post.id || 0 );
+	} );
+
+	const occupiedSlots = {};
+
+	rawEvents.forEach( ( { post, startObj, totalDays } ) => {
+		const eventDates = [];
+		for ( let i = 0; i < totalDays; i++ ) {
+			const current = new Date( startObj );
+			current.setDate( startObj.getDate() + i );
+			eventDates.push( formatDate( current ) );
+		}
+
+		const slot = findAvailableSlot( eventDates, occupiedSlots );
+
+		eventDates.forEach( ( dateStr, i ) => {
+			if ( ! occupiedSlots[ dateStr ] ) {
+				occupiedSlots[ dateStr ] = new Set();
+			}
+			occupiedSlots[ dateStr ].add( slot );
+
+			const dayIndex = i + 1;
+			const span = determineSpanType( dayIndex, totalDays );
+
+			if ( ! grouped[ dateStr ] ) {
+				grouped[ dateStr ] = [];
+			}
+
+			grouped[ dateStr ].push( {
+				...post,
+				span,
+				dayIndex,
+				totalDays,
+				slot,
+			} );
+		} );
+	} );
+
+	Object.keys( grouped ).forEach( ( dateStr ) => {
+		grouped[ dateStr ].sort( ( a, b ) => ( a.slot || 0 ) - ( b.slot || 0 ) );
 	} );
 
 	return grouped;
