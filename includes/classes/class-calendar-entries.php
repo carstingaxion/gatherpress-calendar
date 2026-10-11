@@ -181,9 +181,12 @@ class Calendar_Entries {
 
 		$style_attribute = '' !== $entry_styles['inline_styles'] ? sprintf( ' style="%s"', esc_attr( $entry_styles['inline_styles'] ) ) : '';
 
+		// The post ID class lets other plugins find the event of an entry, as they do for Query Loop items.
+		$entry_classes = implode( ' ', get_post_class( $entry_styles['classnames'], $post_id ) );
+
 		return sprintf(
 			'<div class="%1$s"%2$s>%3$s</div>',
-			esc_attr( $entry_styles['classnames'] ),
+			esc_attr( $entry_classes ),
 			$style_attribute,
 			$inner_content
 		);
@@ -596,10 +599,20 @@ class Calendar_Entries {
 			)
 		);
 
+		// @phpstan-ignore-next-line
+		$inline_styles = $styles['css'] ?? '';
+
+		// The dot of the "Colored Dots" style has no visible text, so it uses the text color as its background.
+		if ( ! empty( $styles['declarations']['color'] ) ) {
+			$dot_color = safecss_filter_attr( '--gatherpress-calendar-dot-color:' . $styles['declarations']['color'] );
+			if ( '' !== $dot_color ) {
+				$inline_styles .= $dot_color . ';';
+			}
+		}
+
 		return array(
 			'classnames'    => $classnames,
-			// @phpstan-ignore-next-line
-			'inline_styles' => $styles['css'] ?? '',
+			'inline_styles' => $inline_styles,
 		);
 	}
 
