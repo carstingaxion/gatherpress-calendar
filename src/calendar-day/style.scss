@@ -50,6 +50,30 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 			font-weight: 800;
 		}
 	}
+
+	/* ==========================================================================
+	Ribbon Style Protection: Prevents user layout overrides from breaking spans
+	========================================================================== */
+	&.has-style-ribbon,
+	&:has(.is-style-ribbon) {
+		display: flex !important;
+		flex-direction: column !important;
+		align-items: stretch !important;
+		justify-content: flex-start !important;
+		padding: 0 !important;
+
+		.gatherpress-calendar__day-number {
+			align-self: flex-start;
+			margin: 0.3rem 0.45rem 0.15rem;
+			display: block;
+			// z-index: 3;
+		}
+
+		.wp-block-gatherpress-calendar-entries {
+			width: 100% !important;
+			margin: 0 !important;
+		}
+	}
 }
 
 /* Browsers without container units keep square cells the older way. */
@@ -78,5 +102,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 .gatherpress-calendar__day-number {
 	margin: 0.2em;
 	display: inline;
-	z-index: 1;
+	// z-index: 1;
 }
+
+

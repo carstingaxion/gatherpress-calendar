@@ -7,80 +7,153 @@
 
 @use "../calendar/style/visually-hidden" as *;
 
-// Select all modal-triggers, that are not part of a modal itself.
+// Select all modal-triggers outside of modals.
 $trigger: ".gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal .gatherpress-modal--trigger-open) > *";
 
-// The start time of an entry, when it is plain text and not the trigger.
+// Start time outside of modals.
 $start-time: ".wp-block-gatherpress-event-date:not(.gatherpress-modal--trigger-open):not(.wp-block-gatherpress-modal .wp-block-gatherpress-event-date)";
 
-/*
- * One colored dot per event is the trigger. The start time and the title
- * stay in the markup, so screen readers still read them.
- */
+// Column gap variable inherited from the calendar table grid.
+$gap: var(--gatherpress-calendar-column-gap, 2px);
+
+/* ==========================================================================
+   DOTS MIXIN: Connected tracks for multi-day, distinct dots for single-day
+   ========================================================================== */
 @mixin dots {
 
 	#{$start-time} {
-
 		@include visually-hidden;
 	}
 
 	.gatherpress-calendar__entry {
-
-		/* Stacked dots are 24px apart, so their tap areas do not overlap. */
 		display: flex;
 		align-items: center;
-		min-height: 24px;
+		min-height: 20px;
+		height: 20px;
+		width: 100%;
+		min-width: 0 !important;
+		box-sizing: border-box;
 
-		/*
-		 * The text color of the block sets the dot color.
-		 * Without it, the dots take turns through the palette.
-		 */
-		#{$trigger} {
+		/* Single-day dots */
+		&:not(.is-multi-day) #{$trigger} {
+			width: clamp(8px, 2vw, 10px);
+			height: clamp(8px, 2vw, 10px);
+			min-width: clamp(8px, 2vw, 10px);
+			min-height: clamp(8px, 2vw, 10px);
+			border-radius: 50%;
+			margin-inline: 4px;
+		}
+
+		/* Multi-day connected pill track */
+		&.is-multi-day {
+			#{$trigger} {
+				height: clamp(6px, 1.5vw, 8px);
+				min-height: clamp(6px, 1.5vw, 8px);
+				border-radius: 0;
+				width: 100%;
+				min-width: 0 !important;
+
+				&:hover,
+				&:focus-visible {
+					transform: scaleY(1.3);
+				}
+			}
+
+			// Start: rounded left cap, extends into right column gap
+			&.is-span-start {
+				#{$trigger} {
+					border-start-start-radius: 9999px;
+					border-end-start-radius: 9999px;
+					border-start-end-radius: 0;
+					border-end-end-radius: 0;
+					width: calc(100% + #{$gap});
+					margin-inline-end: calc(-1 * #{$gap});
+				}
+			}
+
+			// Middle: flat bar bridging gaps on both sides
+			&.is-span-middle {
+				#{$trigger} {
+					border-radius: 0;
+					width: calc(100% + (2 * #{$gap}));
+					margin-inline: calc(-1 * #{$gap});
+				}
+			}
+
+			// End: extends from left gap, rounded right cap
+			&.is-span-end {
+				#{$trigger} {
+					border-start-start-radius: 0;
+					border-end-start-radius: 0;
+					border-start-end-radius: 9999px;
+					border-end-end-radius: 9999px;
+					width: calc(100% + #{$gap});
+					margin-inline-start: calc(-1 * #{$gap});
+				}
+			}
+
+			// Boundary capping
+			&.is-span-continues {
+				#{$trigger} {
+					margin-inline-end: 0 !important;
+					width: 100% !important;
+					border-start-end-radius: 0;
+					border-end-end-radius: 0;
+				}
+			}
+
+			&.is-span-continued {
+				#{$trigger} {
+					margin-inline-start: 0 !important;
+					width: 100% !important;
+					border-start-start-radius: 0;
+					border-end-start-radius: 0;
+				}
+			}
+		}
+
+		/* Palette per slot maintains an identical color across all days of the span */
+		#{$trigger},
+		&[data-slot="0"] #{$trigger} {
 			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--primary, #007cba));
 		}
 
-		&:nth-child(2) #{$trigger} {
+		&[data-slot="1"] #{$trigger},
+		&:nth-child(2):not([data-slot]) #{$trigger} {
 			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--secondary, #e65054));
 		}
 
-		&:nth-child(3) #{$trigger} {
+		&[data-slot="2"] #{$trigger},
+		&:nth-child(3):not([data-slot]) #{$trigger} {
 			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--tertiary, #4ab866));
 		}
 
-		&:nth-child(4) #{$trigger} {
+		&[data-slot="3"] #{$trigger},
+		&:nth-child(4):not([data-slot]) #{$trigger} {
 			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--vivid-purple, #9b51e0));
 		}
 
-		&:nth-child(5) #{$trigger} {
+		&[data-slot="4"] #{$trigger},
+		&:nth-child(5):not([data-slot]) #{$trigger} {
 			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--vivid-cyan-blue, #0693e3));
 		}
 
-		&:nth-child(n+6) #{$trigger} {
+		&[data-slot="5"] #{$trigger},
+		&:nth-child(n+6):not([data-slot]) #{$trigger} {
 			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--contrast, #666));
 		}
 
 		#{$trigger} {
-			width: clamp(8px, 2.5vw, 12px);
-			height: clamp(8px, 2.5vw, 12px);
-			min-width: clamp(8px, 2.5vw, 12px);
-			min-height: clamp(8px, 2.5vw, 12px);
-			border-radius: 50%;
 			cursor: pointer;
 			position: relative;
 			transition: transform 0.2s ease, box-shadow 0.2s ease;
 			flex-shrink: 0;
 			display: inline-block;
 			text-decoration: none;
-
 			font-size: 0;
-
-			// The text is only for screen readers; it has no visible color.
 			color: transparent;
 
-			/*
-			 * The dot stays small, but clicks and taps land on a 24px area
-			 * around it (WCAG 2.5.8). A click on ::after goes to the link.
-			 */
+			// WCAG 2.5.8 compliant 24px tap area
 			&::after {
 				content: "";
 				position: absolute;
@@ -91,78 +164,283 @@ $start-time: ".wp-block-gatherpress-event-date:not(.gatherpress-modal--trigger-o
 				transform: translate(-50%, -50%);
 			}
 
-			&:hover {
-				transform: scale(1.3);
-				box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.2);
-			}
-
 			&:focus-visible {
 				outline: 2px solid var(--wp--preset--color--contrast, #007cba);
 				outline-offset: 2px;
-				transform: scale(1.3);
-			}
-
-			/*
-			 * Forced colors (Windows High Contrast) remove author backgrounds,
-			 * and a dot is only a background. Paint it with the system link
-			 * color. !important wins over the per-entry colors above.
-			 */
-			@media (forced-colors: active) {
-				forced-color-adjust: none;
-				background: LinkText !important;
-
-				&:focus-visible {
-					outline-color: Highlight;
-				}
 			}
 		}
 	}
 }
 
+/* ==========================================================================
+   Base Calendar Entries Layout (Enforces Uniform Slots & Zero Min-Width)
+   ========================================================================== */
 .wp-block-gatherpress-calendar-entries {
-
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0;
-	flex-direction: column;
+	display: grid;
+	grid-auto-flow: row;
+	grid-auto-rows: 24px;
+	row-gap: 3px;
+	width: 100%;
+	min-width: 0 !important;
 	flex: 1;
 	min-height: 0;
 	margin-block-start: 0 !important;
 
 	.gatherpress-calendar__entry {
+		grid-row-start: calc(var(--gatherpress-calendar-entry-slot, 0) + 1);
 		margin: 0;
 		padding: 0;
-		width: fit-content;
+		width: 100%;
+		min-width: 0 !important;
+		max-width: 100%;
+		box-sizing: border-box;
+		position: relative;
+
+		// Connected hover and focus styles
+		&.is-hovered,
+		&:hover {
+			box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+		}
+
+		&.is-focused,
+		&:focus-within {
+			outline: 2px solid var(--wp--preset--color--contrast, #1e1e1e);
+			outline-offset: 1px;
+		}
 	}
 
 	/* ======================================================================
-		BLOCK STYLE: Dots
-		====================================================================== */
-	&.is-style-dots {
+	   STYLE: Ribbon (.is-style-ribbon)
+	   ====================================================================== */
+	&.is-style-ribbon {
 
+		.gatherpress-calendar__entry.is-multi-day {
+			background: var(--wp--preset--color--primary, #007cba);
+			color: #fff;
+			font-size: clamp(0.6875rem, 1.4vw, 0.8125rem);
+			line-height: 1.2;
+			height: 24px;
+			min-height: 24px;
+			display: flex;
+			align-items: center;
+			min-width: 0 !important;
+
+			// Slot colors
+			&[data-slot="1"] { background: var(--wp--preset--color--secondary, #e65054); }
+			&[data-slot="2"] { background: var(--wp--preset--color--tertiary, #4ab866); }
+			&[data-slot="3"] { background: var(--wp--preset--color--vivid-purple, #9b51e0); }
+			&[data-slot="4"] { background: var(--wp--preset--color--vivid-cyan-blue, #0693e3); }
+			&[data-slot="5"] { background: var(--wp--preset--color--contrast, #555); }
+
+			.wp-block-gatherpress-modal-manager {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				width: 100%;
+				min-width: 0 !important;
+				max-width: 100%;
+				overflow: hidden;
+			}
+
+			.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) {
+				margin: 0;
+				padding: 0;
+				min-width: 0 !important;
+				max-width: 100%;
+				width: 100%;
+				flex: 1 1 auto;
+				overflow: hidden !important;
+				text-overflow: ellipsis !important;
+				white-space: nowrap !important;
+
+				a {
+					color: inherit;
+					text-decoration: none;
+					display: block !important;
+					min-width: 0 !important;
+					max-width: 100%;
+					width: 100%;
+					overflow: hidden !important;
+					text-overflow: ellipsis !important;
+					white-space: nowrap !important;
+				}
+			}
+
+			#{$trigger} {
+				color: inherit;
+				padding-inline: 6px;
+				display: block !important;
+				min-width: 0 !important;
+				max-width: 100%;
+				width: 100%;
+				white-space: nowrap !important;
+				overflow: hidden !important;
+				text-overflow: ellipsis !important;
+			}
+
+			// Start cell: extends right into gap
+			&.is-span-start {
+				border-start-start-radius: 4px;
+				border-end-start-radius: 4px;
+				border-start-end-radius: 0;
+				border-end-end-radius: 0;
+				margin-inline-end: calc(-1 * #{$gap});
+				padding-inline-end: #{$gap};
+				width: calc(100% + #{$gap});
+				max-width: calc(100% + #{$gap});
+
+				#{$start-time} {
+					font-weight: 700;
+					padding-inline-start: 6px;
+					flex-shrink: 0;
+				}
+			}
+
+			// Middle cells: bridges gaps on both sides
+			&.is-span-middle {
+				border-radius: 0;
+				margin-inline: calc(-1 * #{$gap});
+				padding-inline: #{$gap};
+				width: calc(100% + (2 * #{$gap}));
+				max-width: calc(100% + (2 * #{$gap}));
+
+				#{$start-time} {
+					display: none;
+				}
+
+				&:not(.is-span-continued) #{$trigger} {
+					opacity: 0;
+				}
+
+				&:not(.is-span-continued):hover #{$trigger},
+				&:not(.is-span-continued):focus-within #{$trigger} {
+					opacity: 1;
+				}
+			}
+
+			// End cell: extends into left gap, rounded right
+			&.is-span-end {
+				border-start-start-radius: 0;
+				border-end-start-radius: 0;
+				border-start-end-radius: 4px;
+				border-end-end-radius: 4px;
+				margin-inline-start: calc(-1 * #{$gap});
+				padding-inline-start: #{$gap};
+				width: calc(100% + #{$gap});
+				max-width: calc(100% + #{$gap});
+
+				#{$start-time} {
+					display: none;
+				}
+			}
+
+			// Inter-week wrapping: end of row capping with indicator
+			&.is-span-continues {
+				margin-inline-end: 0 !important;
+				padding-inline-end: 10px !important;
+				width: 100% !important;
+				max-width: 100% !important;
+				border-start-end-radius: 0 !important;
+				border-end-end-radius: 0 !important;
+				position: relative;
+
+				&::after {
+					content: "";
+					position: absolute;
+					inset-inline-end: 3px;
+					top: calc(50% - 3px);
+					width: 0;
+					height: 0;
+					border-block: 3px solid transparent;
+					border-inline-start: 4px solid currentColor;
+					pointer-events: none;
+				}
+			}
+
+			// Inter-week wrapping: start of next row continuation
+			&.is-span-continued {
+				margin-inline-start: 0 !important;
+				padding-inline-start: 6px;
+				border-start-start-radius: 0 !important;
+				border-end-start-radius: 0 !important;
+
+				#{$trigger} {
+					opacity: 1;
+					font-weight: 600;
+				}
+			}
+		}
+	}
+
+	/* ======================================================================
+	   STYLE: Dots (.is-style-dots)
+	   ====================================================================== */
+	&.is-style-dots {
 		@include dots;
 	}
 
-	/*
-	 * Text triggers are at least 24px tall, so stacked events are not too
-	 * small to tap (WCAG 2.5.8). The narrow-calendar dots below override this.
-	 */
-	&:not(.is-style-dots) .gatherpress-calendar__entry #{$trigger} {
+	/* Single-day text trigger taps in default/classic */
+	&:not(.is-style-dots):not(.is-style-ribbon) .gatherpress-calendar__entry #{$trigger} {
 		display: inline-block;
 		min-height: 24px;
 		align-content: center;
+		overflow: hidden !important;
+		text-overflow: ellipsis !important;
+		white-space: nowrap !important;
+		max-width: 100% !important;
+		min-width: 0 !important;
 	}
-
 }
 
-/*
- * Wide calendars show the event title. A long title uses at most two lines.
- * The clamp is on the link, because themes can set the display of the
- * title block and of its link.
- */
-@container calendar (width > 600px) {
+/* ==========================================================================
+   MODAL ISOLATION & STACKING ELEVATION
+   ========================================================================== */
+.gatherpress-calendar__day.is-modal-active,
+.gatherpress-calendar__day:has(dialog[open]),
+.gatherpress-calendar__day:has(.wp-block-gatherpress-modal[open]),
+.gatherpress-calendar__day:has(.wp-block-gatherpress-modal.is-open),
+.gatherpress-calendar__day:has(.gatherpress-modal--trigger-open[aria-expanded="true"]),
+.gatherpress-calendar__entry.is-modal-active,
+.gatherpress-calendar__entry:has(dialog[open]),
+.gatherpress-calendar__entry:has(.wp-block-gatherpress-modal[open]),
+.gatherpress-calendar__entry:has(.wp-block-gatherpress-modal.is-open),
+.gatherpress-calendar__entry:has(.gatherpress-modal--trigger-open[aria-expanded="true"]) {
+	z-index: 999999 !important;
+	position: relative !important;
+}
 
-	.wp-block-gatherpress-calendar-entries:not(.is-style-dots) .gatherpress-calendar__entry .wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) a {
+// Suppress background highlights when a modal is open
+.wp-block-gatherpress-calendar:has(dialog[open]) .gatherpress-calendar__entry,
+.wp-block-gatherpress-calendar:has(.wp-block-gatherpress-modal.is-open) .gatherpress-calendar__entry,
+.wp-block-gatherpress-calendar:has(.is-modal-active) .gatherpress-calendar__entry {
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.wp-block-gatherpress-modal {
+	color: var(--wp--preset--color--contrast, #1e1e1e) !important;
+	filter: none !important;
+	opacity: 1 !important;
+	white-space: normal !important;
+	z-index: 999999 !important;
+
+	a {
+		color: var(--wp--preset--color--primary, #007cba);
+		text-decoration: underline;
+	}
+
+	.wp-block-post-title {
+		overflow: visible !important;
+		white-space: normal !important;
+		text-overflow: clip !important;
+	}
+}
+
+/* ==========================================================================
+   Title Clamping & Narrow View Fallbacks
+   ========================================================================== */
+@container calendar (width > 600px) {
+	.wp-block-gatherpress-calendar-entries:not(.is-style-dots):not(.is-style-ribbon) .gatherpress-calendar__entry:not(.is-multi-day) .wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) a {
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 2;
@@ -172,14 +450,30 @@ $start-time: ".wp-block-gatherpress-event-date:not(.gatherpress-modal--trigger-o
 	}
 }
 
-/*
- * Narrow calendars have no room for the time and the title, so every
- * style shows dots.
- */
+// Narrow calendars switch to dots
 @container calendar (width <= 600px) {
-
-	.wp-block-gatherpress-calendar-entries:not(.is-style-dots) {
-
+	.wp-block-gatherpress-calendar-entries {
 		@include dots;
+	}
+}
+
+/* ==========================================================================
+   Day View Adjustments
+   ========================================================================== */
+.wp-block-gatherpress-calendar.is-view-day,
+.gatherpress-calendar.is-view-day {
+	.wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-multi-day {
+		margin-inline: 0 !important;
+		width: 100% !important;
+		max-width: 100% !important;
+		border-radius: 4px !important;
+
+		#{$start-time} {
+			display: inline-block !important;
+		}
+
+		#{$trigger} {
+			opacity: 1 !important;
+		}
 	}
 }

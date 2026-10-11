@@ -1,3 +1,10 @@
+/**
+ * DayPreviewCell Component
+ *
+ * @package 
+ * @since 0.4.0
+ */
+
 import { memo, useCallback, useMemo } from '@wordpress/element';
 import {
 	BlockContextProvider,
@@ -22,58 +29,107 @@ import {
 } from '../../../utils/day-number';
 
 /**
- * Clones inner blocks, resolving the Day Number bound block's content to
- * this specific day's number directly. On days without posts, filters out
- * the entries template so fake placeholder times are not shown.
+ * Checks whether an entries block declares the ribbon style.
  *
- * @param {Array}  blocks - Real inner blocks to preview.
- * @param {Object} day    - Day data (day, isEmpty, posts).
- *
- * @return {Array} Inner blocks with the Day Number block's value resolved.
+ * @param {Array} blocks Array of inner blocks.
+ * @return {boolean} True if ribbon style is present.
  */
+function hasRibbonStyle( blocks = [] ) {
+	return ( blocks ?? [] ).some(
+		( b ) =>
+			b.name === 'gatherpress/calendar-entries' &&
+			( b.attributes?.className?.includes( 'is-style-ribbon' ) ||
+				b.attributes?.style?.variation === 'ribbon' )
+	);
+}
 
-function withResolvedDayNumber( blocks, day ) {
-	const hasPosts = ( day.posts?.length ?? 0 ) > 0;
-
-	return ( blocks ?? [] )
-		.filter( ( block ) => {
-			// On days without posts, only keep the day number block.
-			if ( ! hasPosts ) {
-				return isDayNumberBindingBlock( block );
-			}
-			return true;
-		} )
-		.map( ( block ) => {
-			if ( ! isDayNumberBindingBlock( block ) ) {
-				return block;
-			}
-
-			const format =
-				block.attributes?.metadata?.bindings?.content?.args?.format ||
-				'';
-			let content = '';
-
-			if ( ! day.isEmpty ) {
-				if ( day.date && format !== '' ) {
-					const dateObj = new Date( `${ day.date }T12:00:00Z` );
-					content = dateI18n( format, dateObj, 'UTC' );
-				} else {
-					content = String( day.day ?? '' );
-				}
-			}
-
+/**
+ * Strips top-level event-date blocks from entries on multi-day spans.
+ *
+ * @param {Array} blocks Day template inner blocks.
+ * @return {Array} Sanitized blocks.
+ */
+function stripMultiDayEventDates( blocks = [] ) {
+	return ( blocks ?? [] ).map( ( block ) => {
+		if (
+			block.name === 'gatherpress/calendar-entries' &&
+			block.innerBlocks
+		) {
 			return {
 				...block,
-				attributes: {
-					...block.attributes,
-					content,
-					metadata: {
-						...block.attributes?.metadata,
-						bindings: undefined,
-					},
-				},
+				innerBlocks: block.innerBlocks.map( ( inner ) => {
+					if (
+						inner.name === 'gatherpress/modal-manager' &&
+						inner.innerBlocks
+					) {
+						return {
+							...inner,
+							innerBlocks: inner.innerBlocks.filter(
+								( b ) => b.name !== 'gatherpress/event-date'
+							),
+						};
+					}
+					return inner;
+				} ),
 			};
-		} );
+		}
+		return block;
+	} );
+}
+
+/**
+ * Clones inner blocks, resolving the Day Number bound block's content.
+ * Filters out entries on empty days and strips multi-day start times.
+ *
+ * @param {Array}  blocks Real inner blocks to preview.
+ * @param {Object} day    Day data (day, isEmpty, posts).
+ * @return {Array} Resolved blocks.
+ */
+function withResolvedDayContent( blocks, day ) {
+	const hasPosts = ( day.posts?.length ?? 0 ) > 0;
+	const hasMultiDay = day.posts?.some( ( p ) => ( p.totalDays ?? 1 ) > 1 );
+
+	let processedBlocks = ( blocks ?? [] ).filter( ( block ) => {
+		if ( ! hasPosts ) {
+			return isDayNumberBindingBlock( block );
+		}
+		return true;
+	} );
+
+	if ( hasMultiDay ) {
+		processedBlocks = stripMultiDayEventDates( processedBlocks );
+	}
+
+	return processedBlocks.map( ( block ) => {
+		if ( ! isDayNumberBindingBlock( block ) ) {
+			return block;
+		}
+
+		const format =
+			block.attributes?.metadata?.bindings?.content?.args?.format || '';
+		let content = '';
+
+		if ( ! day.isEmpty ) {
+			if ( day.date && format !== '' ) {
+				const dateObj = new Date( `${ day.date }T12:00:00Z` );
+				content = dateI18n( format, dateObj, 'UTC' );
+			} else {
+				content = String( day.day ?? '' );
+			}
+		}
+
+		return {
+			...block,
+			attributes: {
+				...block.attributes,
+				content,
+				metadata: {
+					...block.attributes?.metadata,
+					bindings: undefined,
+				},
+			},
+		};
+	} );
 }
 
 /**
@@ -113,6 +169,7 @@ function DayPreviewCellComponent( {
 		() => onActivateDay( day.date ),
 		[ onActivateDay, day.date ]
 	);
+
 	const dayContext = useMemo(
 		() => ( {
 			'gatherpress/dayDate': day.date ?? '',
@@ -124,13 +181,18 @@ function DayPreviewCellComponent( {
 		[ day ]
 	);
 
+	const isRibbon = useMemo(
+		() => hasRibbonStyle( innerBlocks ),
+		[ innerBlocks ]
+	);
+
 	const hasDayNumberBlock = useMemo(
 		() => ( innerBlocks ?? [] ).some( isDayNumberBindingBlock ),
 		[ innerBlocks ]
 	);
 
 	const resolvedBlocks = useMemo(
-		() => withResolvedDayNumber( innerBlocks, day ),
+		() => withResolvedDayContent( innerBlocks, day ),
 		[ innerBlocks, day ]
 	);
 
@@ -163,6 +225,7 @@ function DayPreviewCellComponent( {
 			: '',
 		day.isWeekend ? 'is-weekend' : '',
 		day.weekday ? `is-${ day.weekday }` : '',
+		isRibbon ? 'has-style-ribbon' : '',
 		colorProps.className,
 		borderProps.className,
 	]
@@ -177,18 +240,30 @@ function DayPreviewCellComponent( {
 		// ...layoutProps.style,
 	};
 
-	const blockPreviewProps = useBlockPreview( {
-		blocks: resolvedBlocks,
-		props: {
-			className: layoutProps.className
-				? layoutProps.className
-				: undefined,
-			style: {
+	// Enforce column layout for ribbon view regardless of day layout settings.
+	const previewLayoutStyles = isRibbon
+		? {
+				display: 'flex',
+				flexDirection: 'column',
+				alignItems: 'stretch',
+				justifyContent: 'flex-start',
+				width: '100%',
+				minWidth: 0,
+		  }
+		: {
 				...layoutProps.style,
 				gap: getGapCSSValue(
 					dayBlockAttributes?.style?.spacing?.blockGap
 				),
-			},
+		  };
+
+	const blockPreviewProps = useBlockPreview( {
+		blocks: resolvedBlocks,
+		props: {
+			className: isRibbon
+				? 'gatherpress-calendar__day-preview has-style-ribbon'
+				: layoutProps.className || undefined,
+			style: previewLayoutStyles,
 		},
 	} );
 

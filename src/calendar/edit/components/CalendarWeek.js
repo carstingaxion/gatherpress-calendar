@@ -41,7 +41,44 @@ export function CalendarWeek( {
 	weekBlockAttributes,
 	dayBlockAttributes,
 } ) {
-	const isActiveWeek = week.some( ( day ) => day.date === activeDate );
+	// Annotate week days with row boundary wrap flags for multi-day events.
+	const annotatedWeek = useMemo( () => {
+		const totalCols = week.length;
+
+		return week.map( ( day, colIndex ) => {
+			if ( ! day.posts || ! day.posts.length ) {
+				return day;
+			}
+
+			// First column of row OR first day after leading padding cells.
+			const isFirstCol = colIndex === 0 || Boolean( week[ colIndex - 1 ]?.isEmpty );
+
+			// Last column of row OR last day before trailing padding cells.
+			const isLastCol  = colIndex === totalCols - 1 || Boolean( week[ colIndex + 1 ]?.isEmpty );
+
+			const annotatedPosts = day.posts.map( ( post ) => {
+				const totalDays = post.totalDays ?? 1;
+				const dayIndex  = post.dayIndex ?? 1;
+
+				if ( totalDays <= 1 ) {
+					return post;
+				}
+
+				return {
+					...post,
+					isContinued: isFirstCol && dayIndex > 1,
+					isContinues: isLastCol && dayIndex < totalDays,
+				};
+			} );
+
+			return {
+				...day,
+				posts: annotatedPosts,
+			};
+		} );
+	}, [ week ] );
+
+	const isActiveWeek = annotatedWeek.some( ( day ) => day.date === activeDate );
 
 	// Memoized so each week's context object keeps its reference across renders
 	// that don't change the calendar or active date.
@@ -49,12 +86,12 @@ export function CalendarWeek( {
 		() => ( {
 			...weekContext,
 			'gatherpress/weekIndex': weekIndex,
-			'gatherpress/weekDays': week,
+			'gatherpress/weekDays': annotatedWeek,
 			'gatherpress/weekNumber': weekNumber,
 			'gatherpress/activeDate': activeDate,
 			'gatherpress/setActiveDate': setActiveDate,
 		} ),
-		[ weekContext, weekIndex, week, weekNumber, activeDate, setActiveDate ]
+		[ weekContext, weekIndex, annotatedWeek, weekNumber, activeDate, setActiveDate ]
 	);
 
 	return (
@@ -63,7 +100,7 @@ export function CalendarWeek( {
 				liveWeekChildren
 			) : (
 				<WeekPreviewRow
-					week={ week }
+					week={ annotatedWeek }
 					weekNumber={ weekNumber }
 					dayInnerBlocks={ dayInnerBlocks }
 					weekBlockAttributes={ weekBlockAttributes }

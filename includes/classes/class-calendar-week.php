@@ -112,14 +112,38 @@ class Calendar_Week {
 	 * @return string Rendered HTML of all day cells.
 	 */
 	private function render_days( array $week_days, WP_Block $block, array $day_template, string $today ): string {
-		$output = '';
+		$output     = '';
+		$total_cols = count( $week_days );
 
-		foreach ( $week_days as $day ) {
+		foreach ( $week_days as $col_index => $day ) {
 			if ( ! is_array( $day ) ) {
 				continue;
 			}
 
-			$day_posts   = is_array( $day['posts'] ?? null ) ? $day['posts'] : array();
+			// First column of row OR first day after leading padding cells.
+			$is_first_col = ( 0 === $col_index ) || ! empty( $week_days[ $col_index - 1 ]['isEmpty'] );
+
+			// Last column of row OR last day before trailing padding cells.
+			$is_last_col  = ( ( $total_cols - 1 ) === $col_index ) || ! empty( $week_days[ $col_index + 1 ]['isEmpty'] );
+
+			$day_posts = is_array( $day['posts'] ?? null ) ? $day['posts'] : array();
+
+			// Annotate multi-day events with week-boundary and month-boundary wrapping flags.
+			foreach ( $day_posts as &$post_entry ) {
+				if ( is_array( $post_entry ) ) {
+					$day_idx    = (int) ( $post_entry['day_index'] ?? 1 );
+					$total_days = (int) ( $post_entry['total_days'] ?? 1 );
+
+					if ( $total_days > 1 ) {
+						// Continued from the previous week row.
+						$post_entry['is_continued'] = $is_first_col && $day_idx > 1;
+						// Continues into the next week row.
+						$post_entry['is_continues'] = $is_last_col && $day_idx < $total_days;
+					}
+				}
+			}
+			unset( $post_entry );
+
 			$day_date    = is_string( $day['date'] ?? null ) ? $day['date'] : '';
 			$day_context = array_merge(
 				$block->context,

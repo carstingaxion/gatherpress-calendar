@@ -80,6 +80,10 @@
 			"label": "Classic",
 			"isDefault": true
 		},
+    {
+      "name": "ribbon",
+      "label": "Ribbon"
+    },
 		{
 			"name": "dots",
 			"label": "Colored Dots"
@@ -87,5 +91,6 @@
 	],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
   "style": "file:./style-index.css"
 }
