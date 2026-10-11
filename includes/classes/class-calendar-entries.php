@@ -188,12 +188,13 @@ class Calendar_Entries {
 		$style_attribute = '' !== $entry_styles['inline_styles'] ? sprintf( ' style="%s"', esc_attr( $entry_styles['inline_styles'] ) ) : '';
 
 		// The post ID class lets other plugins find the event of an entry, as they do for Query Loop items.
+		$entry_classes = implode( ' ', get_post_class( $entry_styles['classnames'], $post_id ) );
+
 		return sprintf(
-			'<div class="%1$s post-%4$d"%2$s>%3$s</div>',
-			esc_attr( $entry_styles['classnames'] ),
+			'<div class="%1$s"%2$s>%3$s</div>',
+			esc_attr( $entry_classes ),
 			$style_attribute,
-			$inner_content,
-			$post_id
+			$inner_content
 		);
 	}
 
