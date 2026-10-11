@@ -1,3 +1,10 @@
+/**
+ * GatherPress Calendar Template Constants
+ *
+ * @package
+ * @since 0.1.0
+ */
+
 import { __, _x } from '@wordpress/i18n';
 
 /**
@@ -20,14 +27,7 @@ export const ENTRY_START_TIME = [
 ];
 
 /**
- * The linked event title that opens the modal.
- * Shared by ENTRIES_TEMPLATE and the transform in ../transforms.js.
- */
-/**
- * Attributes of the Modal Manager in an entry: the time above the title,
- * with no gap between them. The default flex row with the theme's block gap
- * leaves a large space in a narrow day cell.
- * Shared by ENTRIES_TEMPLATE and the transform in ../transforms.js.
+ * Attributes of the Modal Manager in an entry.
  */
 export const ENTRY_MODAL_MANAGER_ATTRIBUTES = {
 	layout: {
@@ -59,14 +59,55 @@ export const ENTRY_TITLE_TRIGGER = [
 ];
 
 /**
+ * Close button block for the modal content.
+ */
+export const MODAL_CLOSE_BUTTON = [
+	'core/buttons',
+	{
+		align: 'center',
+		layout: {
+			type: 'flex',
+			justifyContent: 'center',
+		},
+	},
+	[
+		[
+			'core/button',
+			{
+				tagName: 'button',
+				className: 'gatherpress-modal--trigger-close',
+				text: __( 'Close', 'gatherpress-calendar' ),
+			},
+		],
+	],
+];
+
+/**
+ * Canonical event layout matching gatherpress/event-template with patternPicked flags.
+ */
+export const EVENT_TEMPLATE_BLOCKS = [
+	[ 'gatherpress/event-date', {} ],
+	[ 'gatherpress/add-to-calendar', {} ],
+	[ 'gatherpress/venue', { patternPicked: true } ],
+	[ 'gatherpress/online-event', {} ],
+	[ 'gatherpress/rsvp', { patternPicked: true } ],
+	[
+		'core/paragraph',
+		{
+			placeholder: __(
+				'Add a description of the event and let people know what to expect…',
+				'gatherpress-calendar'
+			),
+		},
+	],
+	[ 'gatherpress/rsvp-response', { patternPicked: true } ],
+	MODAL_CLOSE_BUTTON,
+];
+
+/**
  * The inner template inside gatherpress/calendar-entries:
- * Modal Manager holding the start time, the linked event title that opens
- * the modal, and the popover modal content.
- *
- * The title is the trigger, so every event shows and announces its name.
- * The trigger class goes on core/post-title: GatherPress's Modal Manager
- * binds the element with the class or the tag right after it, and here
- * that tag is the title's link.
+ * Modal Manager holding start time, linked title trigger, and a modal popover
+ * seeded with the canonical gatherpress/event-template layout plus a Close button.
  */
 export const ENTRIES_TEMPLATE = [
 	[
@@ -95,90 +136,7 @@ export const ENTRIES_TEMPLATE = [
 							},
 							backgroundColor: 'base',
 						},
-						[
-							[
-								'core/group',
-								{
-									layout: {
-										type: 'flex',
-										flexWrap: 'nowrap',
-									},
-								},
-								[
-									[
-										'gatherpress/event-date',
-										{
-											style: {
-												spacing: {
-													padding: {
-														top: '0',
-														bottom: '0',
-														left: '0',
-														right: '0',
-													},
-													margin: {
-														top: '0',
-														bottom: '0',
-														left: '0',
-														right: '0',
-													},
-												},
-											},
-											fontSize: 'small',
-										},
-									],
-									[
-										'core/post-title',
-										{
-											level: 3,
-											isLink: true,
-											style: {
-												spacing: {
-													padding: {
-														top: '0',
-														bottom: '0',
-														left: '0',
-														right: '0',
-													},
-													margin: {
-														top: '0',
-														bottom: '0',
-														left: '0',
-														right: '0',
-													},
-												},
-											},
-											fontSize: 'small',
-										},
-									],
-								],
-							],
-							[ 'core/post-excerpt', {} ],
-							[
-								'core/buttons',
-								{
-									align: 'center',
-									layout: {
-										type: 'flex',
-										justifyContent: 'center',
-									},
-								},
-								[
-									[
-										'core/button',
-										{
-											tagName: 'button',
-											className:
-												'gatherpress-modal--trigger-close',
-											text: __(
-												'Close',
-												'gatherpress-calendar'
-											),
-										},
-									],
-								],
-							],
-						],
+						EVENT_TEMPLATE_BLOCKS,
 					],
 				],
 			],
@@ -187,8 +145,7 @@ export const ENTRIES_TEMPLATE = [
 ];
 
 /**
- * The inner template inside gatherpress/calendar-day:
- * Bound Day Number paragraph + Calendar Entries block.
+ * The inner template inside gatherpress/calendar-day.
  */
 export const DAY_TEMPLATE = [
 	[
@@ -248,23 +205,21 @@ export const DAY_TEMPLATE = [
 ];
 
 /**
- * The inner template inside gatherpress/calendar:
- * Week container holding the day template.
+ * The inner template inside gatherpress/calendar.
  */
 export const CALENDAR_TEMPLATE = [
 	[ 'gatherpress/calendar-week', {}, DAY_TEMPLATE ],
 ];
 
 /**
- * The complete InnerBlocks tree for the core/query block variation:
- * Bound Month Heading + Pagination (Previous/Next Month) + Calendar Block.
+ * The complete InnerBlocks tree for the core/query Event Calendar variation.
  */
 export const QUERY_VARIATION_INNER_BLOCKS = [
 	[
 		'core/heading',
 		{
 			level: 2,
-			className: 'gatherpress-calendar__heading has-text-align-center',
+			className: 'gatherpress-calendar__month has-text-align-center',
 			typography: {
 				textAlign: 'center',
 			},
@@ -343,10 +298,4 @@ export const QUERY_VARIATION_INNER_BLOCKS = [
 	],
 ];
 
-/**
- * The date format used throughout the component.
- *
- * @type {string}
- * @since 0.1.0
- */
 export const DATE_FORMAT = 'Y-m-d';

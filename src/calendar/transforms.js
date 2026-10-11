@@ -11,6 +11,7 @@ import {
 	ENTRY_MODAL_MANAGER_ATTRIBUTES,
 	ENTRY_START_TIME,
 	ENTRY_TITLE_TRIGGER,
+	EVENT_TEMPLATE_BLOCKS,
 } from './edit/constants';
 
 /**
@@ -36,30 +37,49 @@ function findBlockByName( blocks = [], blockName ) {
 }
 
 /**
+ * Instantiates the default event template block list for modal content.
+ *
+ * @return {Array} Array of instantiated WP_Block objects.
+ */
+function createDefaultModalBlocks() {
+	return EVENT_TEMPLATE_BLOCKS.map( ( [ name, attrs, children ] ) => {
+		const childBlocks = Array.isArray( children )
+			? children.map( ( [ cName, cAttrs ] ) =>
+					createBlock( cName, cAttrs )
+				)
+			: [];
+		return createBlock( name, attrs, childBlocks );
+	} );
+}
+
+/**
  * Wraps content blocks inside the complete calendar template hierarchy.
  *
  * @param {Array} contentBlocks Blocks to preserve inside gatherpress/modal-content.
  * @return {Object} New gatherpress/calendar block.
  */
 function createCalendarFromTemplate( contentBlocks = [] ) {
-	// 1. Prepare preserved blocks inside modal content with a Close button
-	const modalContentBlocks = [
-		...contentBlocks.map( ( block ) => cloneBlock( block ) ),
-		createBlock(
-			'core/buttons',
-			{
-				align: 'center',
-				layout: { type: 'flex', justifyContent: 'center' },
-			},
-			[
-				createBlock( 'core/button', {
-					tagName: 'button',
-					className: 'gatherpress-modal--trigger-close',
-					text: __( 'Close', 'gatherpress-calendar' ),
-				} ),
+	const closeButtonBlock = createBlock(
+		'core/buttons',
+		{
+			align: 'center',
+			layout: { type: 'flex', justifyContent: 'center' },
+		},
+		[
+			createBlock( 'core/button', {
+				tagName: 'button',
+				className: 'gatherpress-modal--trigger-close',
+				text: __( 'Close', 'gatherpress-calendar' ),
+			} ),
+		]
+	);
+
+	const modalContentBlocks = contentBlocks.length
+		? [
+				...contentBlocks.map( ( block ) => cloneBlock( block ) ),
+				closeButtonBlock,
 			]
-		),
-	];
+		: createDefaultModalBlocks();
 
 	const modalContent = createBlock(
 		'gatherpress/modal-content',
@@ -82,7 +102,6 @@ function createCalendarFromTemplate( contentBlocks = [] ) {
 
 	const modal = createBlock( 'gatherpress/modal', {}, [ modalContent ] );
 
-	// Same blocks as ENTRIES_TEMPLATE; the linked title opens the modal.
 	const startTime = createBlock( ...ENTRY_START_TIME );
 	const trigger = createBlock( ...ENTRY_TITLE_TRIGGER );
 
@@ -129,6 +148,7 @@ function createCalendarFromTemplate( contentBlocks = [] ) {
 		fontSize: 'small',
 		placeholder: 'DD',
 		content: 'DD',
+		className: 'gatherpress-calendar__day-number',
 	} );
 
 	const day = createBlock( 'gatherpress/calendar-day', {}, [
@@ -154,7 +174,6 @@ function extractModalContentBlocks( calendarInnerBlocks = [] ) {
 	);
 
 	if ( ! modalContent || ! modalContent.innerBlocks?.length ) {
-		// Fallback: look for calendar-entries or return default template blocks
 		const entries = findBlockByName(
 			calendarInnerBlocks,
 			'gatherpress/calendar-entries'
@@ -168,7 +187,7 @@ function extractModalContentBlocks( calendarInnerBlocks = [] ) {
 		];
 	}
 
-	// Filter out the modal's Close button since it is no longer inside a modal
+	// Filter out the modal's Close button since it is no longer inside a modal.
 	const preservedBlocks = modalContent.innerBlocks
 		.filter( ( block ) => {
 			const isCloseButtons =
@@ -184,19 +203,14 @@ function extractModalContentBlocks( calendarInnerBlocks = [] ) {
 
 	return preservedBlocks.length
 		? preservedBlocks
-		: modalContent.innerBlocks.map( ( block ) => cloneBlock( block ) );
+		: [
+				createBlock( 'core/post-title', { isLink: true } ),
+				createBlock( 'core/post-excerpt' ),
+			];
 }
+
 /**
- * Transforming core/post-template ➔ gatherpress/calendar:
- *
- * Clicking the block switcher in the toolbar transforms the list into a calendar.
- * The Post Title, Excerpt, Event Date, and custom blocks are moved inside the popover gatherpress/modal-content.
- *
- * Transforming gatherpress/calendar ➔ core/post-template:
- *
- * Clicking the block switcher transforms the calendar back into a standard core/post-template.
- * All blocks configured inside gatherpress/modal-content are extracted
- * and placed directly in the template loop (with the modal close button cleanly stripped).
+ * Block transforms between core/post-template and gatherpress/calendar.
  */
 const transforms = {
 	from: [
