@@ -90,9 +90,8 @@ class Calendar_Day {
 		$cell_content       = '';
 
 		if ( ! $is_empty && $day_number > 0 ) {
-			$inner_blocks_raw = is_array( $block->parsed_block['innerBlocks'] ?? null ) ? $block->parsed_block['innerBlocks'] : array();
-			$inner_blocks     = $this->find_day_inner_blocks( $inner_blocks_raw );
-			$cell_content     = $this->render_day_cell_content( $block->context, $inner_blocks['day_number'], $inner_blocks['entries'] );
+			$inner_blocks = is_array( $block->parsed_block['innerBlocks'] ?? null ) ? $block->parsed_block['innerBlocks'] : array();
+			$cell_content = $this->render_day_cell_content( $block->context, $inner_blocks );
 		}
 
 		return sprintf(
@@ -255,29 +254,20 @@ class Calendar_Day {
 	}
 
 	/**
-	 * Check if a block is a calendar entries block.
+	 * Render day cell content.
 	 *
-	 * @param array<string, mixed> $block Parsed block array.
+	 * Days with posts render every top-level inner block in template order.
+	 * Days without posts render only the day number, like the editor preview.
+	 * Without a Day Number block in the template, no day number is added.
 	 *
-	 * @return bool True if calendar entries block.
-	 */
-	private function is_entries_block( array $block ): bool {
-		return Calendar_Entries::BLOCK_NAME === ( $block['blockName'] ?? '' );
-	}
-
-	/**
-	 * Locate day number and entries inner blocks.
-	 *
+	 * @param array<mixed> $context      Day context.
 	 * @param array<mixed> $inner_blocks Parsed inner blocks.
 	 *
-	 * @return array{
-	 *   day_number: array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>}|null,
-	 *   entries: array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>}|null
-	 * } Found blocks.
+	 * @return string Rendered HTML.
 	 */
-	private function find_day_inner_blocks( array $inner_blocks ): array {
-		$day_number_block = null;
-		$entries_block    = null;
+	private function render_day_cell_content( array $context, array $inner_blocks ): string {
+		$has_posts = ! empty( $context['gatherpress/dayPosts'] );
+		$html      = '';
 
 		foreach ( $inner_blocks as $inner ) {
 			if ( ! is_array( $inner ) ) {
@@ -291,40 +281,11 @@ class Calendar_Day {
 			 */
 			$inner_typed = $inner;
 
-			if ( null === $day_number_block && $this->is_day_number_block( $inner_typed ) ) {
-				$day_number_block = $inner_typed;
-			}
-
-			if ( null === $entries_block && $this->is_entries_block( $inner_typed ) ) {
-				$entries_block = $inner_typed;
+			if ( $has_posts || $this->is_day_number_block( $inner_typed ) ) {
+				$html .= ( new WP_Block( $inner_typed, $context ) )->render();
 			}
 		}
 
-		return array(
-			'day_number' => $day_number_block,
-			'entries'    => $entries_block,
-		);
-	}
-
-	/**
-	 * Render day cell content (day number and events list).
-	 *
-	 * @param array<mixed>                                                                                                                                   $context          Day context.
-	 * @param array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>}|null $day_number_block Bound day number block.
-	 * @param array{blockName?: string|null, attrs?: array<string, mixed>, innerBlocks?: array<mixed>, innerHTML?: string, innerContent?: array<mixed>}|null $entries_block    Calendar entries block.
-	 *
-	 * @return string Rendered HTML.
-	 */
-	private function render_day_cell_content( array $context, ?array $day_number_block, ?array $entries_block ): string {
-		$day_number      = isset( $context['gatherpress/dayNumber'] ) && is_numeric( $context['gatherpress/dayNumber'] ) ? (int) $context['gatherpress/dayNumber'] : 0;
-		$day_number_html = null !== $day_number_block
-			? ( new WP_Block( $day_number_block, $context ) )->render()
-			: sprintf( '<p class="gatherpress-calendar__day-number">%s</p>', esc_html( (string) $day_number ) );
-
-		$entries_html = null !== $entries_block
-			? ( new WP_Block( $entries_block, $context ) )->render()
-			: '';
-
-		return $day_number_html . $entries_html;
+		return $html;
 	}
 }

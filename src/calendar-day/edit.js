@@ -16,8 +16,6 @@ import { useMemo, memo } from '@wordpress/element';
 
 import './editor.scss';
 
-import { findDayNumberBlock } from '../utils/day-number';
-
 const EMPTY_ARRAY = [];
 
 /**
@@ -61,21 +59,16 @@ export default memo( function Edit( { context, clientId } ) {
 		[ dayDate, dayNumber, posts, isEmpty, isToday, weekday, isWeekend ]
 	);
 
-	// Check whether this day cell or any of its inner blocks are currently selected,
-	// and whether a bound Day Number block exists in the template.
-	const { isDayActive, hasDayNumberBlock } = useSelect(
+	// Check whether this day cell or any of its inner blocks are currently selected.
+	const isDayActive = useSelect(
 		( select ) => {
-			const { isBlockSelected, hasSelectedInnerBlock, getBlocks } =
+			const { isBlockSelected, hasSelectedInnerBlock } =
 				select( blockEditorStore );
 
-			return {
-				isDayActive:
-					isBlockSelected( clientId ) ||
-					hasSelectedInnerBlock( clientId, true ),
-				hasDayNumberBlock: !! findDayNumberBlock(
-					getBlocks( clientId )
-				),
-			};
+			return (
+				isBlockSelected( clientId ) ||
+				hasSelectedInnerBlock( clientId, true )
+			);
 		},
 		[ clientId ]
 	);
@@ -110,11 +103,6 @@ export default memo( function Edit( { context, clientId } ) {
 
 	return (
 		<td { ...blockProps }>
-			{ ! hasDayNumberBlock && (
-				<div className="gatherpress-calendar__day-number">
-					{ dayNumber }
-				</div>
-			) }
 			<div { ...innerBlocksWrapperProps }>
 				<BlockContextProvider value={ dayContext }>
 					{ children }

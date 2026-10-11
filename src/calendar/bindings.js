@@ -9,7 +9,6 @@ import { registerBlockBindingsSource } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
 import { __ } from '@wordpress/i18n';
 import domReady from '@wordpress/dom-ready';
-import { dateI18n } from '@wordpress/date';
 import { InspectorControls } from '@wordpress/block-editor';
 import { createHigherOrderComponent } from '@wordpress/compose';
 import { PanelBody, SelectControl } from '@wordpress/components';
@@ -25,6 +24,7 @@ import {
 	resolveSourceEventDates,
 	isPostDateSource,
 } from './edit/utils/source-utils';
+import { formatDayValue, NAMED_DAY_FORMATS } from '../utils/day-number';
 
 domReady( () => {
 	if ( typeof registerBlockBindingsSource !== 'function' ) {
@@ -150,25 +150,25 @@ domReady( () => {
 			'gatherpress/dayDate',
 			'gatherpress/isEmpty',
 		],
-		getValues( { context, args } ) {
-			if ( context?.[ 'gatherpress/isEmpty' ] ) {
-				return { content: '' };
-			}
-			const dayDate = context?.[ 'gatherpress/dayDate' ];
-			const format = args?.format || '';
+		// One value per bound attribute: 'content', or 'text' and 'url' of the
+		// day modal button. The day archive URL is only known on the server.
+		getValues( { context, bindings } ) {
+			const values = {};
 
-			if ( dayDate && format !== '' ) {
-				const dateObj = new Date( `${ dayDate }T12:00:00Z` );
-				return { content: dateI18n( format, dateObj, 'UTC' ) };
+			for ( const [ attribute, binding ] of Object.entries(
+				bindings ?? {}
+			) ) {
+				values[ attribute ] =
+					context?.[ 'gatherpress/isEmpty' ] || 'url' === attribute
+						? ''
+						: formatDayValue(
+								context?.[ 'gatherpress/dayDate' ],
+								context?.[ 'gatherpress/dayNumber' ],
+								binding?.args?.format
+							);
 			}
 
-			const dayNumber = context?.[ 'gatherpress/dayNumber' ];
-			return {
-				content:
-					null !== dayNumber && undefined !== dayNumber
-						? String( dayNumber )
-						: '',
-			};
+			return values;
 		},
 	} );
 } );
@@ -180,7 +180,10 @@ const withDayNumberBindingControls = createHigherOrderComponent(
 			const { attributes, setAttributes } = props;
 			const binding = attributes?.metadata?.bindings?.content;
 
-			if ( binding?.source !== 'gatherpress/calendar-day' ) {
+			if (
+				binding?.source !== 'gatherpress/calendar-day' ||
+				NAMED_DAY_FORMATS.includes( binding?.args?.format )
+			) {
 				return <BlockEdit { ...props } />;
 			}
 

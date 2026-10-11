@@ -153,6 +153,15 @@ function extractModalContentBlocks( calendarInnerBlocks = [] ) {
 		'gatherpress/modal-content'
 	);
 
+	// The day modal holds the entries of the whole day: keep one entry.
+	const dayEntries = findBlockByName(
+		modalContent?.innerBlocks ?? [],
+		'gatherpress/calendar-entries'
+	);
+	if ( dayEntries?.innerBlocks?.length ) {
+		return dayEntries.innerBlocks.map( ( block ) => cloneBlock( block ) );
+	}
+
 	if ( ! modalContent || ! modalContent.innerBlocks?.length ) {
 		// Fallback: look for calendar-entries or return default template blocks
 		const entries = findBlockByName(

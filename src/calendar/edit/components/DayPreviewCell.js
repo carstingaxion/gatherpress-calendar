@@ -14,11 +14,10 @@ import {
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalGetGapCSSValue as getGapCSSValue,
 } from '@wordpress/block-editor';
-import { dateI18n } from '@wordpress/date';
-
 import {
 	isDayNumberBindingBlock,
 	getLayoutProps,
+	formatDayValue,
 } from '../../../utils/day-number';
 
 /**
@@ -48,19 +47,14 @@ function withResolvedDayNumber( blocks, day ) {
 				return block;
 			}
 
-			const format =
-				block.attributes?.metadata?.bindings?.content?.args?.format ||
-				'';
-			let content = '';
-
-			if ( ! day.isEmpty ) {
-				if ( day.date && format !== '' ) {
-					const dateObj = new Date( `${ day.date }T12:00:00Z` );
-					content = dateI18n( format, dateObj, 'UTC' );
-				} else {
-					content = String( day.day ?? '' );
-				}
-			}
+			const content = day.isEmpty
+				? ''
+				: formatDayValue(
+						day.date,
+						day.day,
+						block.attributes?.metadata?.bindings?.content?.args
+							?.format
+					);
 
 			return {
 				...block,
@@ -122,11 +116,6 @@ function DayPreviewCellComponent( {
 			'gatherpress/isToday': !! day.isToday,
 		} ),
 		[ day ]
-	);
-
-	const hasDayNumberBlock = useMemo(
-		() => ( innerBlocks ?? [] ).some( isDayNumberBindingBlock ),
-		[ innerBlocks ]
 	);
 
 	const resolvedBlocks = useMemo(
@@ -203,11 +192,6 @@ function DayPreviewCellComponent( {
 				onClick={ onActivate }
 				onKeyPress={ onActivate }
 			>
-				{ ! hasDayNumberBlock && (
-					<div className="gatherpress-calendar__day-number">
-						{ day.day }
-					</div>
-				) }
 				{ resolvedBlocks.length > 0 && (
 					<div { ...blockPreviewProps } />
 				) }
