@@ -158,6 +158,9 @@ function DayPreviewCellComponent( {
 		isPast ? 'is-past' : '',
 		isFuture ? 'is-future' : '',
 		day.posts?.length > 0 ? 'has-posts' : '',
+		day.posts?.some( ( p ) => ( p.totalDays ?? 1 ) > 1 )
+			? 'has-multi-day-event'
+			: '',
 		day.isWeekend ? 'is-weekend' : '',
 		day.weekday ? `is-${ day.weekday }` : '',
 		colorProps.className,
