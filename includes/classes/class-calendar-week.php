@@ -124,7 +124,7 @@ class Calendar_Week {
 			$is_first_col = ( 0 === $col_index ) || ! empty( $week_days[ $col_index - 1 ]['isEmpty'] );
 
 			// Last column of row OR last day before trailing padding cells.
-			$is_last_col  = ( ( $total_cols - 1 ) === $col_index ) || ! empty( $week_days[ $col_index + 1 ]['isEmpty'] );
+			$is_last_col = ( ( $total_cols - 1 ) === $col_index ) || ! empty( $week_days[ $col_index + 1 ]['isEmpty'] );
 
 			$day_posts = is_array( $day['posts'] ?? null ) ? $day['posts'] : array();
 

@@ -36,11 +36,13 @@ export function determineSpanType( dayIndex, totalDays ) {
  * Calculates start object, total days, and string dates for a post.
  *
  * @param {Object} post Post entity record.
- * @return {Object|null}
+ * @return {Object|null} PostDateSpan descriptor object.
  */
 export function resolvePostDateSpan( post ) {
 	const isEvent = isEventPostType( post.type );
-	const postDate = isEvent ? post.meta?.gatherpress_datetime_start : post.date;
+	const postDate = isEvent
+		? post.meta?.gatherpress_datetime_start
+		: post.date;
 
 	if ( ! postDate ) {
 		return null;
@@ -64,9 +66,9 @@ export function resolvePostDateSpan( post ) {
 	// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
 	// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
 	const startDateStr =
-	isEvent && post.meta?.gatherpress_datetime_start
-		? post.meta.gatherpress_datetime_start.slice( 0, 10 )
-		: dateI18n( DATE_FORMAT, new Date( postDate ) );
+		isEvent && post.meta?.gatherpress_datetime_start
+			? post.meta.gatherpress_datetime_start.slice( 0, 10 )
+			: dateI18n( DATE_FORMAT, new Date( postDate ) );
 
 	let endDateStr = startDateStr;
 	if ( isEvent && post.meta?.gatherpress_datetime_end ) {
@@ -103,7 +105,9 @@ export function findAvailableSlot( dates, occupiedSlots ) {
 	let slot = 0;
 
 	while ( true ) {
-		const isFree = dates.every( ( date ) => ! occupiedSlots[ date ]?.has( slot ) );
+		const isFree = dates.every(
+			( date ) => ! occupiedSlots[ date ]?.has( slot )
+		);
 		if ( isFree ) {
 			return slot;
 		}
@@ -178,7 +182,9 @@ export function groupPostsByDate( posts = [] ) {
 	} );
 
 	Object.keys( grouped ).forEach( ( dateStr ) => {
-		grouped[ dateStr ].sort( ( a, b ) => ( a.slot || 0 ) - ( b.slot || 0 ) );
+		grouped[ dateStr ].sort(
+			( a, b ) => ( a.slot || 0 ) - ( b.slot || 0 )
+		);
 	} );
 
 	return grouped;

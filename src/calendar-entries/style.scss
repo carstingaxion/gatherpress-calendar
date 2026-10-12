@@ -212,7 +212,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	/* ======================================================================
 	   STYLE: Ribbon (.is-style-ribbon)
 	   ====================================================================== */
-	&.is-style-ribbon {
+&.is-style-ribbon {
 
 		.gatherpress-calendar__entry.is-multi-day {
 			background: var(--wp--preset--color--primary, #007cba);
@@ -224,29 +224,12 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 			display: flex;
 			align-items: center;
 			min-width: 0 !important;
+			z-index: 1;
 
-			// Slot colors
-			&[data-slot="1"] { background: var(--wp--preset--color--secondary, #e65054); }
-			&[data-slot="2"] { background: var(--wp--preset--color--tertiary, #4ab866); }
-			&[data-slot="3"] { background: var(--wp--preset--color--vivid-purple, #9b51e0); }
-			&[data-slot="4"] { background: var(--wp--preset--color--vivid-cyan-blue, #0693e3); }
-			&[data-slot="5"] { background: var(--wp--preset--color--contrast, #555); }
-
-			// Single-day ribbons (e.g. single-day all-day events)
-			&.is-span-single,
-			&:not(.is-span-start):not(.is-span-middle):not(.is-span-end) {
-				border-radius: 4px;
-				width: 100%;
-				max-width: 100%;
-
-				#{$start-time} {
-					display: none !important;
-				}
-			}
-
-			// Hide start-time unconditionally on any all-day event
-			&.is-all-day #{$start-time} {
-				display: none !important;
+			// Elevate start and continued cells so their title floats over middle/end cells
+			&.is-span-start,
+			&.is-span-continued {
+				z-index: 2;
 			}
 
 			.wp-block-gatherpress-modal-manager {
@@ -255,17 +238,16 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 				align-items: center;
 				width: 100%;
 				min-width: 0 !important;
-				max-width: 100%;
-				overflow: hidden;
+				overflow: visible; // Allows title to flow into sibling columns
 			}
 
 			.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) {
 				margin: 0;
 				padding: 0;
 				min-width: 0 !important;
-				max-width: 100%;
-				width: 100%;
-				flex: 1 1 auto;
+				max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap});
+				width: max-content;
+				flex: 0 1 auto;
 				overflow: hidden !important;
 				text-overflow: ellipsis !important;
 				white-space: nowrap !important;
@@ -275,8 +257,8 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 					text-decoration: none;
 					display: block !important;
 					min-width: 0 !important;
-					max-width: 100%;
-					width: 100%;
+					max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap});
+					width: max-content;
 					overflow: hidden !important;
 					text-overflow: ellipsis !important;
 					white-space: nowrap !important;
@@ -288,116 +270,21 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 				padding-inline: 6px;
 				display: block !important;
 				min-width: 0 !important;
-				max-width: 100%;
-				width: 100%;
+				max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap});
+				width: max-content;
 				white-space: nowrap !important;
 				overflow: hidden !important;
 				text-overflow: ellipsis !important;
 			}
 
-			// Start cell: extends right into gap
-			&.is-span-start {
-				border-start-start-radius: 4px;
-				border-end-start-radius: 4px;
-				border-start-end-radius: 0;
-				border-end-end-radius: 0;
-				margin-inline-end: calc(-1 * #{$gap});
-				padding-inline-end: #{$gap};
-				width: calc(100% + #{$gap});
-				max-width: calc(100% + #{$gap});
-
-				#{$start-time} {
-					font-weight: 700;
-					padding-inline-start: 6px;
-					flex-shrink: 0;
-				}
-			}
-
-			// Middle cells: bridges gaps on both sides
-			&.is-span-middle {
-				border-radius: 0;
-				margin-inline: calc(-1 * #{$gap});
-				padding-inline: #{$gap};
-				width: calc(100% + (2 * #{$gap}));
-				max-width: calc(100% + (2 * #{$gap}));
-
-				#{$start-time} {
-					display: none;
-				}
-
-				&:not(.is-span-continued) #{$trigger} {
-					opacity: 0;
-				}
-
-				&:not(.is-span-continued):hover #{$trigger},
-				&:not(.is-span-continued):focus-within #{$trigger} {
-					opacity: 1;
-				}
-			}
-
-			// End cell: extends into left gap, rounded right
-			&.is-span-end {
-				border-start-start-radius: 0;
-				border-end-start-radius: 0;
-				border-start-end-radius: 4px;
-				border-end-end-radius: 4px;
-				margin-inline-start: calc(-1 * #{$gap});
-				padding-inline-start: #{$gap};
-				width: calc(100% + #{$gap});
-				max-width: calc(100% + #{$gap});
-
-				#{$start-time} {
-					display: none;
-				}
-
-				// Only show title on span-end if it continued from a previous week row
-				&:not(.is-span-continued) #{$trigger} {
-					opacity: 0;
-				}
-
-				&:not(.is-span-continued):hover #{$trigger},
-				&:not(.is-span-continued):focus-within #{$trigger} {
-					opacity: 1;
-				}
-			}
-
-			// Inter-week wrapping: end of row capping with indicator
+			// Leave room for continuation arrow when spanning into the next week
 			&.is-span-continues {
-				margin-inline-end: 0 !important;
-				padding-inline-end: 10px !important;
-				width: 100% !important;
-				max-width: 100% !important;
-				border-start-end-radius: 0 !important;
-				border-end-end-radius: 0 !important;
-				position: relative;
-
-				&::after {
-					content: "";
-					position: absolute;
-					inset-inline-end: 3px;
-					top: calc(50% - 3px);
-					width: 0;
-					height: 0;
-					border-block: 3px solid transparent;
-					border-inline-start: 4px solid currentColor;
-					pointer-events: none;
-				}
-			}
-
-			// Inter-week wrapping: start of next row continuation
-			&.is-span-continued {
-				margin-inline-start: 0 !important;
-				padding-inline-start: 6px;
-				border-start-start-radius: 0 !important;
-				border-end-start-radius: 0 !important;
-
+				.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title),
+				.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) a,
 				#{$trigger} {
-					opacity: 1;
-					font-weight: 600;
+					max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap} - 14px);
 				}
 			}
-		}
-	}
 
 	/* ======================================================================
 	   STYLE: Dots (.is-style-dots)

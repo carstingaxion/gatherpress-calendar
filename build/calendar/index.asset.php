@@ -14,5 +14,5 @@
 		'wp-hooks',
 		'wp-i18n'
 	),
-	'version' => '98a691f51e84b0200b58'
+	'version' => '0e25fea9b4bbf6c7b53a'
 );

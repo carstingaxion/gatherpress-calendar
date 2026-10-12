@@ -100,22 +100,26 @@ const EventItem = memo( function EventItemComponent( {
 	const postType =
 		typeof post === 'object' && post?.type ? post.type : defaultPostType;
 
-const isAllDay = Boolean(
-		typeof post === 'object' && (
-			post?.isAllDay ||
+	const isAllDay = Boolean(
+		typeof post === 'object' &&
+		( post?.isAllDay ||
 			post?.meta?.gatherpress_is_all_day === true ||
 			post?.meta?.gatherpress_is_all_day === '1' ||
 			post?.meta?.gatherpress_is_all_day === 1 ||
-			post?.meta?.gatherpress_is_all_day === 'true'
-		)
+			post?.meta?.gatherpress_is_all_day === 'true' )
 	);
-	const totalDays = typeof post === 'object' ? post?.totalDays ?? 1 : 1;
+	const totalDays = typeof post === 'object' ? ( post?.totalDays ?? 1 ) : 1;
 	const isMultiDay = totalDays > 1 || isAllDay;
-	const dayIndex = typeof post === 'object' ? post?.dayIndex ?? 1 : 1;
-	const slot = typeof post === 'object' ? post?.slot ?? 0 : 0;
-	const span = typeof post === 'object' ? post?.span ?? 'single' : 'single';
-	const isContinued = Boolean( typeof post === 'object' && post?.isContinued );
-	const isContinues = Boolean( typeof post === 'object' && post?.isContinues );
+	const dayIndex = typeof post === 'object' ? ( post?.dayIndex ?? 1 ) : 1;
+	const slot = typeof post === 'object' ? ( post?.slot ?? 0 ) : 0;
+	const span =
+		typeof post === 'object' ? ( post?.span ?? 'single' ) : 'single';
+	const isContinued = Boolean(
+		typeof post === 'object' && post?.isContinued
+	);
+	const isContinues = Boolean(
+		typeof post === 'object' && post?.isContinues
+	);
 
 	const contextValue = useMemo( () => {
 		// The placeholder item on an empty day has no event. Clear the post
