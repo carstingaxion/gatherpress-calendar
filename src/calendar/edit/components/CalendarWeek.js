@@ -51,14 +51,17 @@ export function CalendarWeek( {
 			}
 
 			// First column of row OR first day after leading padding cells.
-			const isFirstCol = colIndex === 0 || Boolean( week[ colIndex - 1 ]?.isEmpty );
+			const isFirstCol =
+				colIndex === 0 || Boolean( week[ colIndex - 1 ]?.isEmpty );
 
 			// Last column of row OR last day before trailing padding cells.
-			const isLastCol  = colIndex === totalCols - 1 || Boolean( week[ colIndex + 1 ]?.isEmpty );
+			const isLastCol =
+				colIndex === totalCols - 1 ||
+				Boolean( week[ colIndex + 1 ]?.isEmpty );
 
 			const annotatedPosts = day.posts.map( ( post ) => {
 				const totalDays = post.totalDays ?? 1;
-				const dayIndex  = post.dayIndex ?? 1;
+				const dayIndex = post.dayIndex ?? 1;
 
 				if ( totalDays <= 1 ) {
 					return post;
@@ -78,7 +81,9 @@ export function CalendarWeek( {
 		} );
 	}, [ week ] );
 
-	const isActiveWeek = annotatedWeek.some( ( day ) => day.date === activeDate );
+	const isActiveWeek = annotatedWeek.some(
+		( day ) => day.date === activeDate
+	);
 
 	// Memoized so each week's context object keeps its reference across renders
 	// that don't change the calendar or active date.
@@ -91,7 +96,14 @@ export function CalendarWeek( {
 			'gatherpress/activeDate': activeDate,
 			'gatherpress/setActiveDate': setActiveDate,
 		} ),
-		[ weekContext, weekIndex, annotatedWeek, weekNumber, activeDate, setActiveDate ]
+		[
+			weekContext,
+			weekIndex,
+			annotatedWeek,
+			weekNumber,
+			activeDate,
+			setActiveDate,
+		]
 	);
 
 	return (

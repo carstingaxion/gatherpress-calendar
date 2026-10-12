@@ -168,7 +168,7 @@ class Post_Organizer {
 	public static function sort_events_for_slotting( array $events ): array {
 		usort(
 			$events,
-			static function( array $a, array $b ): int {
+			static function ( array $a, array $b ): int {
 				$a_promoted = ( $a['total_days'] > 1 || ! empty( $a['is_all_day'] ) ) ? 1 : 0;
 				$b_promoted = ( $b['total_days'] > 1 || ! empty( $b['is_all_day'] ) ) ? 1 : 0;
 				if ( $a_promoted !== $b_promoted ) {
@@ -207,7 +207,7 @@ class Post_Organizer {
 	/**
 	 * Finds the lowest 0-indexed vertical slot free across all dates of an event's span.
 	 *
-	 * @param list<string>                   $dates          Dates occupied by the event.
+	 * @param list<string>                    $dates          Dates occupied by the event.
 	 * @param array<string, array<int, bool>> $occupied_slots Map of date strings to occupied slots.
 	 *
 	 * @return int Lowest available slot index.
@@ -296,7 +296,7 @@ class Post_Organizer {
 		foreach ( $posts_by_date as &$day_entries ) {
 			usort(
 				$day_entries,
-				static function( array $a, array $b ): int {
+				static function ( array $a, array $b ): int {
 					return ( $a['slot'] ?? 0 ) <=> ( $b['slot'] ?? 0 );
 				}
 			);

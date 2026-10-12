@@ -1,7 +1,7 @@
 /**
  * DayPreviewCell Component
  *
- * @package 
+ * @package
  * @since 0.4.0
  */
 
@@ -251,13 +251,13 @@ function DayPreviewCellComponent( {
 				justifyContent: 'flex-start',
 				width: '100%',
 				minWidth: 0,
-		  }
+			}
 		: {
 				...layoutProps.style,
 				gap: getGapCSSValue(
 					dayBlockAttributes?.style?.spacing?.blockGap
 				),
-		  };
+			};
 
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
