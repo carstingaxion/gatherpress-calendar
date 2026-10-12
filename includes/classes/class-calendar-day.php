@@ -79,20 +79,20 @@ class Calendar_Day {
 			return '';
 		}
 
-		$is_empty         = ! empty( $block->context['gatherpress/isEmpty'] );
-		$day_number       = is_numeric( $block->context['gatherpress/dayNumber'] ?? null ) ? (int) $block->context['gatherpress/dayNumber'] : 0;
-		$day_date         = is_string( $block->context['gatherpress/dayDate'] ?? null ) ? $block->context['gatherpress/dayDate'] : '';
-		$weekday          = is_string( $block->context['gatherpress/weekday'] ?? null ) ? $block->context['gatherpress/weekday'] : '';
-		$inner_blocks_raw = is_array( $block->parsed_block['innerBlocks'] ?? null ) ? $block->parsed_block['innerBlocks'] : array();
-		$inner_blocks     = $this->find_day_inner_blocks( $inner_blocks_raw );
-		$cell_classes     = $this->get_day_cell_classes( $block->context, $inner_blocks['entries'] );
+		$is_empty     = ! empty( $block->context['gatherpress/isEmpty'] );
+		$day_number   = is_numeric( $block->context['gatherpress/dayNumber'] ?? null ) ? (int) $block->context['gatherpress/dayNumber'] : 0;
+		$day_date     = is_string( $block->context['gatherpress/dayDate'] ?? null ) ? $block->context['gatherpress/dayDate'] : '';
+		$weekday      = is_string( $block->context['gatherpress/weekday'] ?? null ) ? $block->context['gatherpress/weekday'] : '';
+		$cell_classes = $this->get_day_cell_classes( $block->context );
 
 		$extra_attributes   = $this->build_cell_attributes( $cell_classes, $day_date, $is_empty, $weekday );
 		$wrapper_attributes = get_block_wrapper_attributes( $extra_attributes );
 		$cell_content       = '';
 
 		if ( ! $is_empty && $day_number > 0 ) {
-			$cell_content = $this->render_day_cell_content( $block->context, $inner_blocks['day_number'], $inner_blocks['entries'] );
+			$inner_blocks_raw = is_array( $block->parsed_block['innerBlocks'] ?? null ) ? $block->parsed_block['innerBlocks'] : array();
+			$inner_blocks     = $this->find_day_inner_blocks( $inner_blocks_raw );
+			$cell_content     = $this->render_day_cell_content( $block->context, $inner_blocks['day_number'], $inner_blocks['entries'] );
 		}
 
 		return sprintf(
@@ -146,11 +146,10 @@ class Calendar_Day {
 	 * Resolve class names for a calendar day cell.
 	 *
 	 * @param array<mixed>      $context       Block context.
-	 * @param array<mixed>|null $entries_block Optional inner entries block.
 	 *
 	 * @return list<string> Array of CSS classes.
 	 */
-	private function get_day_cell_classes( array $context, ?array $entries_block = null ): array {
+	private function get_day_cell_classes( array $context ): array {
 		$classes = array( 'gatherpress-calendar__day' );
 
 		if ( ! empty( $context['gatherpress/isEmpty'] ) ) {
@@ -168,13 +167,6 @@ class Calendar_Day {
 					$classes[] = 'has-multi-day-event';
 					break;
 				}
-			}
-		}
-
-		if ( null !== $entries_block ) {
-			$entries_class = is_string( $entries_block['attrs']['className'] ?? null ) ? $entries_block['attrs']['className'] : '';
-			if ( false !== strpos( $entries_class, 'is-style-ribbon' ) ) {
-				$classes[] = 'has-style-ribbon';
 			}
 		}
 
@@ -273,17 +265,6 @@ class Calendar_Day {
 	}
 
 	/**
-	 * Check if a block is a calendar entries block.
-	 *
-	 * @param array<string, mixed> $block Parsed block array.
-	 *
-	 * @return bool True if calendar entries block.
-	 */
-	private function is_entries_block( array $block ): bool {
-		return Calendar_Entries::BLOCK_NAME === ( $block['blockName'] ?? '' );
-	}
-
-	/**
 	 * Locate day number and entries inner blocks.
 	 *
 	 * @param array<mixed> $inner_blocks Parsed inner blocks.
@@ -313,7 +294,7 @@ class Calendar_Day {
 				$day_number_block = $inner_typed;
 			}
 
-			if ( null === $entries_block && $this->is_entries_block( $inner_typed ) ) {
+			if ( null === $entries_block && Calendar_Entries::BLOCK_NAME === ( $inner_typed['blockName'] ?? '' ) ) {
 				$entries_block = $inner_typed;
 			}
 		}

@@ -29,22 +29,7 @@ import {
 } from '../../../utils/day-number';
 
 /**
- * Checks whether an entries block declares the ribbon style.
- *
- * @param {Array} blocks Array of inner blocks.
- * @return {boolean} True if ribbon style is present.
- */
-function hasRibbonStyle( blocks = [] ) {
-	return ( blocks ?? [] ).some(
-		( b ) =>
-			b.name === 'gatherpress/calendar-entries' &&
-			( b.attributes?.className?.includes( 'is-style-ribbon' ) ||
-				b.attributes?.style?.variation === 'ribbon' )
-	);
-}
-
-/**
- * Strips top-level event-date blocks from entries on multi-day spans.
+ * Strips top-level event-date blocks from entries on multi-day/all-day spans.
  *
  * @param {Array} blocks Day template inner blocks.
  * @return {Array} Sanitized blocks.
@@ -83,9 +68,10 @@ function stripMultiDayEventDates( blocks = [] ) {
  *
  * @param {Array}  blocks Real inner blocks to preview.
  * @param {Object} day    Day data (day, isEmpty, posts).
+ * @param {boolean} isRibbon Whether the day block is in ribbon style.
  * @return {Array} Resolved blocks.
  */
-function withResolvedDayContent( blocks, day ) {
+function withResolvedDayContent( blocks, day, isRibbon ) {
 	const hasPosts = ( day.posts?.length ?? 0 ) > 0;
 	const hasMultiDay = day.posts?.some(
 		( p ) => ( p.totalDays ?? 1 ) > 1 || p.isAllDay
@@ -98,7 +84,7 @@ function withResolvedDayContent( blocks, day ) {
 		return true;
 	} );
 
-	if ( hasMultiDay ) {
+	if ( isRibbon && hasMultiDay ) {
 		processedBlocks = stripMultiDayEventDates( processedBlocks );
 	}
 
@@ -183,9 +169,9 @@ function DayPreviewCellComponent( {
 		[ day ]
 	);
 
-	const isRibbon = useMemo(
-		() => hasRibbonStyle( innerBlocks ),
-		[ innerBlocks ]
+	// Directly check if gatherpress/calendar-day has the ribbon style
+	const isRibbon = Boolean(
+		dayBlockAttributes?.className?.includes( 'is-style-ribbon' )
 	);
 
 	const hasDayNumberBlock = useMemo(
@@ -194,8 +180,8 @@ function DayPreviewCellComponent( {
 	);
 
 	const resolvedBlocks = useMemo(
-		() => withResolvedDayContent( innerBlocks, day ),
-		[ innerBlocks, day ]
+		() => withResolvedDayContent( innerBlocks, day, isRibbon ),
+		[ innerBlocks, day, isRibbon ]
 	);
 
 	// Mirror the real calendar-day block's own color/border/spacing/shadow
@@ -227,7 +213,7 @@ function DayPreviewCellComponent( {
 			: '',
 		day.isWeekend ? 'is-weekend' : '',
 		day.weekday ? `is-${ day.weekday }` : '',
-		isRibbon ? 'has-style-ribbon' : '',
+		isRibbon ? 'is-style-ribbon' : '',
 		colorProps.className,
 		borderProps.className,
 	]
@@ -242,7 +228,7 @@ function DayPreviewCellComponent( {
 		// ...layoutProps.style,
 	};
 
-	// Enforce column layout for ribbon view regardless of day layout settings.
+	// Ribbon mode locks layout to column; Classic mode uses user/default layoutProps
 	const previewLayoutStyles = isRibbon
 		? {
 				display: 'flex',
@@ -251,19 +237,19 @@ function DayPreviewCellComponent( {
 				justifyContent: 'flex-start',
 				width: '100%',
 				minWidth: 0,
-			}
+		  }
 		: {
 				...layoutProps.style,
 				gap: getGapCSSValue(
 					dayBlockAttributes?.style?.spacing?.blockGap
 				),
-			};
+		  };
 
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
 		props: {
 			className: isRibbon
-				? 'gatherpress-calendar__day-preview has-style-ribbon'
+				? 'gatherpress-calendar__day-preview'
 				: layoutProps.className || undefined,
 			style: previewLayoutStyles,
 		},

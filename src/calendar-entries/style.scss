@@ -162,272 +162,428 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	min-height: 0;
 	margin-block-start: 0 !important;
 
-	/* --------------------------------------------------------------------------
-	   DEFAULT (CLASSIC) STYLE: Contained vertical flow with ellipsis truncation
-	   -------------------------------------------------------------------------- */
-	&:not(.is-style-ribbon):not(.is-style-dots) {
+	.gatherpress-calendar__entry {
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		min-width: 0 !important;
+		max-width: 100%;
+		box-sizing: border-box;
+		position: relative;
+
+		&.is-hovered,
+		&:hover {
+			box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+		}
+
+		&.is-focused,
+		&:focus-within {
+			outline: 2px solid var(--wp--preset--color--contrast, #1e1e1e);
+			outline-offset: 1px;
+		}
+	}
+
+	&.is-style-dots {
+		@include dots;
+	}
+}
+
+/* ==========================================================================
+   DEFAULT (CLASSIC) VIEW: Contained vertical flow with ellipsis truncation
+   ========================================================================== */
+.gatherpress-calendar__day:not(.is-style-ribbon) .wp-block-gatherpress-calendar-entries:not(.is-style-dots) {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	overflow: hidden;
+
+	.gatherpress-calendar__entry {
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
-		overflow: hidden;
+		gap: 1px;
+		width: 100%;
+		max-width: 100% !important;
+		min-width: 0 !important;
+		overflow: hidden !important;
+		box-sizing: border-box;
 
-		.gatherpress-calendar__entry {
+		.wp-block-gatherpress-modal-manager {
+			display: flex;
+			flex-direction: column;
+			gap: 1px;
 			width: 100%;
 			max-width: 100% !important;
 			min-width: 0 !important;
 			overflow: hidden !important;
-			box-sizing: border-box;
+		}
+
+		#{$start-time} {
+			font-size: 0.75rem;
+			line-height: 1.1;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			max-width: 100%;
+			display: block;
+		}
+
+		.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title),
+		.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) a,
+		#{$trigger} {
+			display: block !important;
+			width: 100% !important;
+			max-width: 100% !important;
+			min-width: 0 !important;
+			white-space: nowrap !important;
+			overflow: hidden !important;
+			text-overflow: ellipsis !important;
+			font-size: 0.8125rem;
+			line-height: 1.2;
+			text-decoration: none;
+		}
+	}
+}
+
+/* ==========================================================================
+   RIBBON VIEW: Multi-day slots & title spanning
+   ========================================================================== */
+.gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries:not(.is-style-dots) {
+	.gatherpress-calendar__entry {
+		grid-row-start: calc(var(--gatherpress-calendar-entry-slot, 0) + 1);
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		min-width: 0 !important;
+		max-width: 100%;
+		box-sizing: border-box;
+		position: relative;
+		z-index: 1;
+
+		/* Elevate start and continued cells so text floats above middle/end cells */
+		&.is-span-start,
+		&.is-span-continued {
+			z-index: 2;
+		}
+
+		&.is-multi-day,
+		&.is-all-day {
+			background: var(--wp--preset--color--primary, #007cba);
+			color: #fff;
+			font-size: clamp(0.6875rem, 1.4vw, 0.8125rem);
+			line-height: 1.2;
+			height: 24px;
+			min-height: 24px;
+			display: flex;
+			align-items: center;
+			min-width: 0 !important;
+
+			// Slot colors
+			&[data-slot="1"] { background: var(--wp--preset--color--secondary, #e65054); }
+			&[data-slot="2"] { background: var(--wp--preset--color--tertiary, #4ab866); }
+			&[data-slot="3"] { background: var(--wp--preset--color--vivid-purple, #9b51e0); }
+			&[data-slot="4"] { background: var(--wp--preset--color--vivid-cyan-blue, #0693e3); }
+			&[data-slot="5"] { background: var(--wp--preset--color--contrast, #555); }
+
+			// Single-day ribbons
+			&.is-span-single,
+			&:not(.is-span-start):not(.is-span-middle):not(.is-span-end) {
+				border-radius: 4px;
+				width: 100%;
+				max-width: 100%;
+
+				#{$start-time} {
+					display: none !important;
+				}
+			}
+
+			&.is-all-day #{$start-time} {
+				display: none !important;
+			}
 
 			.wp-block-gatherpress-modal-manager {
 				display: flex;
-				flex-direction: column;
-				gap: 1px;
+				flex-direction: row;
+				align-items: center;
 				width: 100%;
-				max-width: 100% !important;
 				min-width: 0 !important;
-				overflow: hidden !important;
 			}
 
-			#{$start-time} {
-				font-size: 0.75rem;
-				line-height: 1.1;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-
-			.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title),
-			.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) a,
 			#{$trigger} {
+				color: inherit;
+				padding-inline: 6px;
 				display: block !important;
-				width: 100%;
-				max-width: 100% !important;
 				min-width: 0 !important;
 				white-space: nowrap !important;
 				overflow: hidden !important;
 				text-overflow: ellipsis !important;
-				font-size: 0.8125rem;
-				line-height: 1.2;
-				text-decoration: none;
-			}
-		}
-	}
-
-	/* --------------------------------------------------------------------------
-	   STYLE: Ribbon (.is-style-ribbon)
-	   -------------------------------------------------------------------------- */
-	&.is-style-ribbon {
-		display: grid;
-		grid-auto-flow: row;
-		grid-auto-rows: 24px;
-		row-gap: 3px;
-		overflow: visible;
-
-		.gatherpress-calendar__entry {
-			grid-row-start: calc(var(--gatherpress-calendar-entry-slot, 0) + 1);
-			margin: 0;
-			padding: 0;
-			width: 100%;
-			min-width: 0 !important;
-			max-width: 100%;
-			box-sizing: border-box;
-			position: relative;
-			overflow: visible;
-
-			&.is-hovered,
-			&:hover {
-				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 			}
 
-			&.is-focused,
-			&:focus-within {
-				outline: 2px solid var(--wp--preset--color--contrast, #1e1e1e);
-				outline-offset: 1px;
-			}
-
-			&.is-multi-day {
-				background: var(--wp--preset--color--primary, #007cba);
-				color: #fff;
-				font-size: clamp(0.6875rem, 1.4vw, 0.8125rem);
-				line-height: 1.2;
-				height: 24px;
-				min-height: 24px;
-				display: flex;
-				align-items: center;
-				min-width: 0 !important;
-
-				&[data-slot="1"] { background: var(--wp--preset--color--secondary, #e65054); }
-				&[data-slot="2"] { background: var(--wp--preset--color--tertiary, #4ab866); }
-				&[data-slot="3"] { background: var(--wp--preset--color--vivid-purple, #9b51e0); }
-				&[data-slot="4"] { background: var(--wp--preset--color--vivid-cyan-blue, #0693e3); }
-				&[data-slot="5"] { background: var(--wp--preset--color--contrast, #555); }
-
-				// Single-day ribbons (e.g. single-day all-day events)
-				&.is-span-single,
-				&:not(.is-span-start):not(.is-span-middle):not(.is-span-end) {
-					border-radius: 4px;
-					width: 100%;
-					max-width: 100%;
-
-					#{$start-time} {
-						display: none !important;
-					}
-				}
-
-				&.is-all-day #{$start-time} {
-					display: none !important;
-				}
+			/* ------------------------------------------------------------------
+			   1. WHEN ROW SPAN < 2 OR UNSET: Strictly clamp inside the day cell
+			   ------------------------------------------------------------------ */
+			&:not([data-row-span]),
+			&[data-row-span="1"],
+			&[data-row-span="0"],
+			&:not(.has-multi-col-span) {
+				overflow: hidden !important;
 
 				.wp-block-gatherpress-modal-manager {
-					display: flex;
-					flex-direction: row;
-					align-items: center;
-					width: 100%;
-					min-width: 0 !important;
-					max-width: 100%;
-					overflow: hidden;
+					overflow: hidden !important;
+					max-width: 100% !important;
+					width: 100% !important;
 				}
 
-				.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) {
-					margin: 0;
-					padding: 0;
-					min-width: 0 !important;
-					max-width: 100%;
-					width: 100%;
-					flex: 1 1 auto;
+				.gatherpress-modal--trigger-open,
+				.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title),
+				.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) a,
+				#{$trigger} {
+					max-width: 100% !important;
+					width: 100% !important;
 					overflow: hidden !important;
+					text-overflow: ellipsis !important;
+					white-space: nowrap !important;
+					display: block !important;
+				}
+			}
+
+			/* ------------------------------------------------------------------
+			   2. WHEN ROW SPAN >= 2: Permit flowing across multi-column slot
+			   ------------------------------------------------------------------ */
+			&[data-row-span]:not([data-row-span="1"]):not([data-row-span="0"]),
+			&.has-multi-col-span {
+				overflow: visible !important;
+
+				.wp-block-gatherpress-modal-manager {
+					overflow: visible !important;
+				}
+
+				.gatherpress-modal--trigger-open,
+				.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) {
+					max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap}) !important;
+					width: max-content;
+					flex: 0 1 auto;
+					// overflow: hidden !important;
 					text-overflow: ellipsis !important;
 					white-space: nowrap !important;
 
 					a {
-						color: inherit;
-						text-decoration: none;
 						display: block !important;
-						min-width: 0 !important;
-						max-width: 100%;
-						width: 100%;
-						overflow: hidden !important;
+						max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap}) !important;
+						width: max-content;
+						// overflow: hidden !important;
 						text-overflow: ellipsis !important;
 						white-space: nowrap !important;
 					}
 				}
 
 				#{$trigger} {
-					color: inherit;
-					padding-inline: 6px;
-					display: block !important;
-					min-width: 0 !important;
-					max-width: 100%;
-					width: 100%;
-					white-space: nowrap !important;
-					overflow: hidden !important;
-					text-overflow: ellipsis !important;
-				}
-
-				&.is-span-start {
-					border-start-start-radius: 4px;
-					border-end-start-radius: 4px;
-					border-start-end-radius: 0;
-					border-end-end-radius: 0;
-					margin-inline-end: calc(-1 * #{$gap});
-					padding-inline-end: #{$gap};
-					width: calc(100% + #{$gap});
-					max-width: calc(100% + #{$gap});
-
-					#{$start-time} {
-						font-weight: 700;
-						padding-inline-start: 6px;
-						flex-shrink: 0;
-					}
-				}
-
-				&.is-span-middle {
-					border-radius: 0;
-					margin-inline: calc(-1 * #{$gap});
-					padding-inline: #{$gap};
-					width: calc(100% + (2 * #{$gap}));
-					max-width: calc(100% + (2 * #{$gap}));
-
-					#{$start-time} {
-						display: none;
-					}
-
-					&:not(.is-span-continued) #{$trigger} {
-						opacity: 0;
-					}
-
-					&:not(.is-span-continued):hover #{$trigger},
-					&:not(.is-span-continued):focus-within #{$trigger} {
-						opacity: 1;
-					}
-				}
-
-				&.is-span-end {
-					border-start-start-radius: 0;
-					border-end-start-radius: 0;
-					border-start-end-radius: 4px;
-					border-end-end-radius: 4px;
-					margin-inline-start: calc(-1 * #{$gap});
-					padding-inline-start: #{$gap};
-					width: calc(100% + #{$gap});
-					max-width: calc(100% + #{$gap});
-
-					#{$start-time} {
-						display: none;
-					}
-
-					&:not(.is-span-continued) #{$trigger} {
-						opacity: 0;
-					}
-
-					&:not(.is-span-continued):hover #{$trigger},
-					&:not(.is-span-continued):focus-within #{$trigger} {
-						opacity: 1;
-					}
+					max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap}) !important;
+					width: max-content;
 				}
 
 				&.is-span-continues {
-					margin-inline-end: 0 !important;
-					padding-inline-end: 10px !important;
-					width: 100% !important;
-					max-width: 100% !important;
-					border-start-end-radius: 0 !important;
-					border-end-end-radius: 0 !important;
-					position: relative;
-
-					&::after {
-						content: "";
-						position: absolute;
-						inset-inline-end: 3px;
-						top: calc(50% - 3px);
-						width: 0;
-						height: 0;
-						border-block: 3px solid transparent;
-						border-inline-start: 4px solid currentColor;
-						pointer-events: none;
+					.gatherpress-modal--trigger-open,
+					.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title),
+					.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) a,
+					#{$trigger} {
+						max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap} - 14px) !important;
 					}
 				}
+			}
 
-				&.is-span-continued {
-					margin-inline-start: 0 !important;
+			// Start cell
+			&.is-span-start {
+				border-start-start-radius: 4px;
+				border-end-start-radius: 4px;
+				border-start-end-radius: 0;
+				border-end-end-radius: 0;
+				margin-inline-end: calc(-1 * #{$gap});
+				padding-inline-end: #{$gap};
+				width: calc(100% + #{$gap});
+				max-width: calc(100% + #{$gap});
+
+				#{$start-time} {
+					font-weight: 700;
 					padding-inline-start: 6px;
-					border-start-start-radius: 0 !important;
-					border-end-start-radius: 0 !important;
+					flex-shrink: 0;
+				}
+			}
 
-					#{$trigger} {
-						opacity: 1;
-						font-weight: 600;
-					}
+			// Middle cell
+			&.is-span-middle {
+				border-radius: 0;
+				margin-inline: calc(-1 * #{$gap});
+				padding-inline: #{$gap};
+				width: calc(100% + (2 * #{$gap}));
+				max-width: calc(100% + (2 * #{$gap}));
+
+				#{$start-time} {
+					display: none;
+				}
+
+				&:not(.is-span-continued) #{$trigger} {
+					opacity: 0;
+				}
+
+				&:not(.is-span-continued):hover #{$trigger},
+				&:not(.is-span-continued):focus-within #{$trigger} {
+					opacity: 1;
+				}
+			}
+
+			// End cell
+			&.is-span-end {
+				border-start-start-radius: 0;
+				border-end-start-radius: 0;
+				border-start-end-radius: 4px;
+				border-end-end-radius: 4px;
+				margin-inline-start: calc(-1 * #{$gap});
+				padding-inline-start: #{$gap};
+				width: calc(100% + #{$gap});
+				max-width: calc(100% + #{$gap});
+
+				#{$start-time} {
+					display: none;
+				}
+
+				&:not(.is-span-continued) #{$trigger} {
+					opacity: 0;
+				}
+
+				&:not(.is-span-continued):hover #{$trigger},
+				&:not(.is-span-continued):focus-within #{$trigger} {
+					opacity: 1;
+				}
+			}
+
+			// Continues into next week row
+			&.is-span-continues {
+				margin-inline-end: 0 !important;
+				padding-inline-end: 10px !important;
+				width: 100% !important;
+				max-width: 100% !important;
+				border-start-end-radius: 0 !important;
+				border-end-end-radius: 0 !important;
+				position: relative;
+
+				&::after {
+					content: "";
+					position: absolute;
+					inset-inline-end: 3px;
+					top: calc(50% - 3px);
+					width: 0;
+					height: 0;
+					border-block: 3px solid transparent;
+					border-inline-start: 4px solid currentColor;
+					pointer-events: none;
+				}
+			}
+
+			// Continued from previous week row
+			&.is-span-continued {
+				margin-inline-start: 0 !important;
+				padding-inline-start: 6px;
+				border-start-start-radius: 0 !important;
+				border-end-start-radius: 0 !important;
+
+				#{$trigger} {
+					opacity: 1;
+					font-weight: 600;
 				}
 			}
 		}
 	}
+}
 
-	/* --------------------------------------------------------------------------
-	   STYLE: Dots (.is-style-dots)
-	   -------------------------------------------------------------------------- */
-	&.is-style-dots {
-		@include dots;
+/* ==========================================================================
+   Block Editor Live-Template Normalization
+   ========================================================================== */
+.editor-styles-wrapper {
+	.wp-block-gatherpress-calendar-entries {
+		overflow: visible !important;
+
+		.block-editor-block-list__layout {
+			margin: 0 !important;
+			padding: 0 !important;
+			gap: 0 !important;
+			overflow: visible !important;
+		}
+
+		.gatherpress-calendar__entry {
+			.gatherpress-calendar__entry-template {
+				display: flex !important;
+				flex-direction: row !important;
+				align-items: center !important;
+				width: 100% !important;
+				height: 100% !important;
+				min-height: 100% !important;
+				min-width: 0 !important;
+				margin: 0 !important;
+				padding: 0 !important;
+			}
+
+			/* Clamp single-column entries in editor */
+			&:not([data-row-span]),
+			&[data-row-span="1"],
+			&[data-row-span="0"],
+			&:not(.has-multi-col-span) {
+				overflow: hidden !important;
+
+				.gatherpress-calendar__entry-template {
+					overflow: hidden !important;
+					max-width: 100% !important;
+					width: 100% !important;
+
+					> .block-editor-block-list__block {
+						max-width: 100% !important;
+						width: 100% !important;
+						overflow: hidden !important;
+					}
+
+					.gatherpress-modal--trigger-open,
+					.wp-block-post-title,
+					.wp-block-post-title a {
+						max-width: 100% !important;
+						width: 100% !important;
+						overflow: hidden !important;
+						text-overflow: ellipsis !important;
+						white-space: nowrap !important;
+					}
+				}
+			}
+
+			/* Allow multi-column entries to expand up to row_span in editor */
+			&[data-row-span]:not([data-row-span="1"]):not([data-row-span="0"]),
+			&.has-multi-col-span {
+				overflow: visible !important;
+
+				.gatherpress-calendar__entry-template {
+					overflow: visible !important;
+
+					> .block-editor-block-list__block {
+						margin: 0 !important;
+						padding: 0 !important;
+						max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * var(--gatherpress-calendar-column-gap, 2px)) !important;
+						width: max-content !important;
+						min-width: 0 !important;
+						overflow: hidden !important;
+					}
+				}
+			}
+
+			&.is-span-middle,
+			&.is-span-end {
+				&:focus-within,
+				&:has(.is-selected) {
+					#{$trigger},
+					.gatherpress-modal--trigger-open > *,
+					.wp-block-post-title,
+					.wp-block-post-title a {
+						opacity: 1 !important;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -448,7 +604,6 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	position: relative !important;
 }
 
-// Suppress background highlights when a modal is open
 .wp-block-gatherpress-calendar:has(dialog[open]) .gatherpress-calendar__entry,
 .wp-block-gatherpress-calendar:has(.wp-block-gatherpress-modal.is-open) .gatherpress-calendar__entry,
 .wp-block-gatherpress-calendar:has(.is-modal-active) .gatherpress-calendar__entry {

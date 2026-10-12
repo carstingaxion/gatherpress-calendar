@@ -144,6 +144,8 @@ const EventItem = memo( function EventItemComponent( {
 	// const spacingProps = getSpacingClassesAndStyles( parentAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( parentAttributes ?? {} );
 
+	const rowSpan = typeof post === 'object' ? post?.rowSpan ?? 1 : 1;
+
 	const classNames = [
 		'gatherpress-calendar__entry',
 		postId ? `post-${ postId }` : '',
@@ -152,16 +154,19 @@ const EventItem = memo( function EventItemComponent( {
 		span ? `is-span-${ span }` : '',
 		isContinued ? 'is-span-continued' : '',
 		isContinues ? 'is-span-continues' : '',
+		rowSpan >= 2 ? 'has-multi-col-span' : '',
 		colorProps.className,
 		borderProps.className,
 	]
 		.filter( Boolean )
 		.join( ' ' );
 
+
 	const style = {
 		...colorProps.style,
 		'--gatherpress-calendar-dot-color': colorProps.style?.color,
 		'--gatherpress-calendar-entry-slot': slot,
+		'--gatherpress-calendar-row-span': rowSpan,
 		...borderProps.style,
 		// ...spacingProps.style,
 		...shadowProps.style,
@@ -176,6 +181,7 @@ const EventItem = memo( function EventItemComponent( {
 				data-span={ span }
 				data-day-index={ dayIndex }
 				data-total-days={ totalDays }
+				data-row-span={ rowSpan }
 			>
 				{ isFirst ? (
 					// The primary, editable template container

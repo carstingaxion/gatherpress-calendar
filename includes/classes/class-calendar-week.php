@@ -139,6 +139,17 @@ class Calendar_Week {
 						$post_entry['is_continued'] = $is_first_col && $day_idx > 1;
 						// Continues into the next week row.
 						$post_entry['is_continues'] = $is_last_col && $day_idx < $total_days;
+
+						// Calculate consecutive active columns this event covers in this row.
+						$cols_left = 0;
+						for ( $c = $col_index; $c < $total_cols; $c++ ) {
+							if ( empty( $week_days[ $c ]['isEmpty'] ) ) {
+								++$cols_left;
+							}
+						}
+						$post_entry['row_span'] = max( 1, min( $total_days - $day_idx + 1, $cols_left ) );
+					} else {
+						$post_entry['row_span'] = 1;
 					}
 				}
 			}
