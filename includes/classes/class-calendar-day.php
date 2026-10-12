@@ -161,7 +161,10 @@ class Calendar_Day {
 			$classes[] = 'has-posts';
 
 			foreach ( $context['gatherpress/dayPosts'] as $post_entry ) {
-				if ( is_array( $post_entry ) && ! empty( $post_entry['total_days'] ) && (int) $post_entry['total_days'] > 1 ) {
+				if ( is_array( $post_entry ) && (
+					( ! empty( $post_entry['total_days'] ) && (int) $post_entry['total_days'] > 1 ) ||
+					! empty( $post_entry['is_all_day'] )
+				) ) {
 					$classes[] = 'has-multi-day-event';
 					break;
 				}

@@ -112,11 +112,15 @@ class Post_Organizer {
 				continue;
 			}
 
+			$is_all_day_meta = get_post_meta( $post_id, 'gatherpress_is_all_day', true );
+			$is_all_day      = ! empty( $is_all_day_meta ) && '0' !== $is_all_day_meta && false !== $is_all_day_meta;
+
 			$spans[] = array(
 				'id'         => $post_id,
 				'start_obj'  => $span['start_obj'],
 				'start_date' => $dates['start'],
 				'total_days' => $span['total_days'],
+				'is_all_day' => $is_all_day,
 			);
 		}
 
@@ -165,6 +169,11 @@ class Post_Organizer {
 		usort(
 			$events,
 			static function( array $a, array $b ): int {
+				$a_promoted = ( $a['total_days'] > 1 || ! empty( $a['is_all_day'] ) ) ? 1 : 0;
+				$b_promoted = ( $b['total_days'] > 1 || ! empty( $b['is_all_day'] ) ) ? 1 : 0;
+				if ( $a_promoted !== $b_promoted ) {
+					return $b_promoted <=> $a_promoted;
+				}
 				if ( $a['total_days'] !== $b['total_days'] ) {
 					return $b['total_days'] <=> $a['total_days'];
 				}
@@ -277,6 +286,7 @@ class Post_Organizer {
 					'span'       => $span_type,
 					'day_index'  => $day_index,
 					'total_days' => $event['total_days'],
+					'is_all_day' => ! empty( $event['is_all_day'] ),
 					'slot'       => $slot,
 				);
 			}

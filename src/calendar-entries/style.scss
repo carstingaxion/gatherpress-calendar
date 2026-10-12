@@ -232,6 +232,23 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 			&[data-slot="4"] { background: var(--wp--preset--color--vivid-cyan-blue, #0693e3); }
 			&[data-slot="5"] { background: var(--wp--preset--color--contrast, #555); }
 
+			// Single-day ribbons (e.g. single-day all-day events)
+			&.is-span-single,
+			&:not(.is-span-start):not(.is-span-middle):not(.is-span-end) {
+				border-radius: 4px;
+				width: 100%;
+				max-width: 100%;
+
+				#{$start-time} {
+					display: none !important;
+				}
+			}
+
+			// Hide start-time unconditionally on any all-day event
+			&.is-all-day #{$start-time} {
+				display: none !important;
+			}
+
 			.wp-block-gatherpress-modal-manager {
 				display: flex;
 				flex-direction: row;
@@ -331,6 +348,16 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 				#{$start-time} {
 					display: none;
+				}
+
+				// Only show title on span-end if it continued from a previous week row
+				&:not(.is-span-continued) #{$trigger} {
+					opacity: 0;
+				}
+
+				&:not(.is-span-continued):hover #{$trigger},
+				&:not(.is-span-continued):focus-within #{$trigger} {
+					opacity: 1;
 				}
 			}
 

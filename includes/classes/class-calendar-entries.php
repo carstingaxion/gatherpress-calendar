@@ -197,11 +197,17 @@ class Calendar_Entries {
 			$GLOBALS['post'] = $original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		}
 
+		$is_multi_day = ( ! empty( $span_data['total_days'] ) && (int) $span_data['total_days'] > 1 ) || ! empty( $span_data['is_all_day'] );
+		$is_all_day   = ! empty( $span_data['is_all_day'] );
+
 		$extra_classes = array();
 		if ( ! empty( $span_data['span'] ) && is_string( $span_data['span'] ) ) {
 			$extra_classes[] = 'is-span-' . sanitize_html_class( $span_data['span'] );
 		}
-		if ( ! empty( $span_data['total_days'] ) && (int) $span_data['total_days'] > 1 ) {
+		if ( $is_all_day ) {
+			$extra_classes[] = 'is-all-day';
+		}
+		if ( $is_multi_day ) {
 			$extra_classes[] = 'is-multi-day';
 		}
 		if ( ! empty( $span_data['is_continued'] ) ) {
@@ -310,9 +316,10 @@ class Calendar_Entries {
 			return $block_content;
 		}
 
-		// Outside modal-content (inside the trigger/ribbon): return empty string.
+		// Outside modal-content (inside trigger/ribbon): return empty string for multi-day and all-day events.
 		$total_days = (int) ( self::$current_span_data['total_days'] ?? 1 );
-		if ( $total_days > 1 ) {
+		$is_all_day = ! empty( self::$current_span_data['is_all_day'] );
+		if ( $total_days > 1 || $is_all_day ) {
 			return '';
 		}
 
@@ -409,6 +416,7 @@ class Calendar_Entries {
 			$context['gatherpress/eventSpan']      = self::$current_span_data['span'] ?? 'single';
 			$context['gatherpress/eventDayIndex']  = self::$current_span_data['day_index'] ?? 1;
 			$context['gatherpress/eventTotalDays'] = self::$current_span_data['total_days'] ?? 1;
+			$context['gatherpress/isAllDay']       = ! empty( self::$current_span_data['is_all_day'] );
 			if ( isset( self::$current_span_data['slot'] ) ) {
 				$context['gatherpress/eventSlot'] = self::$current_span_data['slot'];
 			}
