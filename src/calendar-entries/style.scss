@@ -268,7 +268,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 		&.is-multi-day,
 		&.is-all-day {
 			background: var(--wp--preset--color--primary, #007cba);
-			color: #fff;
+			// color: #fff;
 			font-size: clamp(0.6875rem, 1.4vw, 0.8125rem);
 			line-height: 1.2;
 			height: 24px;
@@ -359,7 +359,8 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 				.gatherpress-modal--trigger-open,
 				.wp-block-post-title:not(.wp-block-gatherpress-modal .wp-block-post-title) {
-					max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap}) !important;
+					// max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap}) !important;
+					max-width: 100%;
 					width: max-content;
 					flex: 0 1 auto;
 					// overflow: hidden !important;
@@ -612,16 +613,11 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 }
 
 .wp-block-gatherpress-modal {
-	color: var(--wp--preset--color--contrast, #1e1e1e) !important;
-	filter: none !important;
-	opacity: 1 !important;
-	white-space: normal !important;
-	z-index: 999999 !important;
-
-	a {
-		color: var(--wp--preset--color--primary, #007cba);
-		text-decoration: underline;
-	}
+	// color: var(--wp--preset--color--contrast, #1e1e1e) !important;
+	// filter: none !important;
+	// opacity: 1 !important;
+	// white-space: normal !important;
+	// z-index: 999999 !important;
 
 	.wp-block-post-title {
 		overflow: visible !important;
