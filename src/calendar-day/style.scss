@@ -51,22 +51,14 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 		}
 	}
 
-	/* ==========================================================================
-	Ribbon Style Protection: Prevents user layout overrides from breaking spans
-	========================================================================== */
+	/* 4. Ribbon Style Override: removes cell padding and permits horizontal bridging */
 	&.has-style-ribbon,
 	&:has(.is-style-ribbon) {
-		display: flex !important;
-		flex-direction: column !important;
-		align-items: stretch !important;
-		justify-content: flex-start !important;
 		padding: 0 !important;
+		overflow: visible;
 
 		.gatherpress-calendar__day-number {
-			align-self: flex-start;
 			margin: 0.3rem 0.45rem 0.15rem;
-			display: block;
-			// z-index: 3;
 		}
 
 		.wp-block-gatherpress-calendar-entries {
