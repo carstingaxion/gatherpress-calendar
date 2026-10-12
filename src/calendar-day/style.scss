@@ -108,10 +108,18 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 /* Day View adjustments */
 .wp-block-gatherpress-calendar.is-view-day,
 .gatherpress-calendar.is-view-day {
-	.gatherpress-calendar__day {
+	/* Classic / Default style days get generous padding and height */
+	.gatherpress-calendar__day:not(.is-style-ribbon) {
 		aspect-ratio: auto;
 		min-height: 140px;
 		align-items: flex-start;
 		padding: 1rem;
+	}
+
+	/* Ribbon style days maintain edge-to-edge padding to permit gap bridging */
+	.gatherpress-calendar__day.is-style-ribbon {
+		aspect-ratio: auto;
+		min-height: 140px;
+		padding: 0 !important;
 	}
 }
