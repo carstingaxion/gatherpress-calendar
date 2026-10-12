@@ -91,7 +91,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 			margin: 0 !important;
 			display: grid !important;
 			grid-auto-flow: row !important;
-			grid-auto-rows: 24px !important;
+			grid-auto-rows: min-content !important; /* Ribbons stay 24px, regular events take natural height */
 			row-gap: 3px !important;
 			align-content: start !important; /* Retains 24px slots while cell expands vertically */
 		}
