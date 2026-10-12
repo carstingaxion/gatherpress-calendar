@@ -87,7 +87,9 @@ function stripMultiDayEventDates( blocks = [] ) {
  */
 function withResolvedDayContent( blocks, day ) {
 	const hasPosts = ( day.posts?.length ?? 0 ) > 0;
-	const hasMultiDay = day.posts?.some( ( p ) => ( p.totalDays ?? 1 ) > 1 );
+	const hasMultiDay = day.posts?.some(
+		( p ) => ( p.totalDays ?? 1 ) > 1 || p.isAllDay
+	);
 
 	let processedBlocks = ( blocks ?? [] ).filter( ( block ) => {
 		if ( ! hasPosts ) {
@@ -220,7 +222,7 @@ function DayPreviewCellComponent( {
 		isPast ? 'is-past' : '',
 		isFuture ? 'is-future' : '',
 		day.posts?.length > 0 ? 'has-posts' : '',
-		day.posts?.some( ( p ) => ( p.totalDays ?? 1 ) > 1 )
+		day.posts?.some( ( p ) => ( p.totalDays ?? 1 ) > 1 || p.isAllDay )
 			? 'has-multi-day-event'
 			: '',
 		day.isWeekend ? 'is-weekend' : '',

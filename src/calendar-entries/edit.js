@@ -100,8 +100,17 @@ const EventItem = memo( function EventItemComponent( {
 	const postType =
 		typeof post === 'object' && post?.type ? post.type : defaultPostType;
 
+const isAllDay = Boolean(
+		typeof post === 'object' && (
+			post?.isAllDay ||
+			post?.meta?.gatherpress_is_all_day === true ||
+			post?.meta?.gatherpress_is_all_day === '1' ||
+			post?.meta?.gatherpress_is_all_day === 1 ||
+			post?.meta?.gatherpress_is_all_day === 'true'
+		)
+	);
 	const totalDays = typeof post === 'object' ? post?.totalDays ?? 1 : 1;
-	const isMultiDay = totalDays > 1;
+	const isMultiDay = totalDays > 1 || isAllDay;
 	const dayIndex = typeof post === 'object' ? post?.dayIndex ?? 1 : 1;
 	const slot = typeof post === 'object' ? post?.slot ?? 0 : 0;
 	const span = typeof post === 'object' ? post?.span ?? 'single' : 'single';
@@ -121,9 +130,10 @@ const EventItem = memo( function EventItemComponent( {
 			'gatherpress/eventSpan': span,
 			'gatherpress/eventDayIndex': dayIndex,
 			'gatherpress/eventTotalDays': totalDays,
+			'gatherpress/isAllDay': isAllDay,
 			'gatherpress/eventSlot': slot,
 		};
-	}, [ postId, postType, span, dayIndex, totalDays, slot ] );
+	}, [ postId, postType, span, dayIndex, totalDays, isAllDay, slot ] );
 
 	const colorProps = useColorProps( parentAttributes ?? {} );
 	const borderProps = useBorderProps( parentAttributes ?? {} );
@@ -133,6 +143,7 @@ const EventItem = memo( function EventItemComponent( {
 	const classNames = [
 		'gatherpress-calendar__entry',
 		postId ? `post-${ postId }` : '',
+		isAllDay ? 'is-all-day' : '',
 		isMultiDay ? 'is-multi-day' : '',
 		span ? `is-span-${ span }` : '',
 		isContinued ? 'is-span-continued' : '',
