@@ -94,6 +94,17 @@
       "__experimentalFontWeight": true
     }
   },
+  "styles": [
+    {
+      "name": "default",
+      "label": "Classic",
+      "isDefault": true
+    },
+    {
+      "name": "ribbon",
+      "label": "Ribbon"
+    }
+  ],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",

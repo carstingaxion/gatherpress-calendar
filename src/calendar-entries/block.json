@@ -56,41 +56,36 @@
       "gradients": true,
       "__experimentalSkipSerialization": true
     },
-		"__experimentalBorder": {
-			"color": true,
-			"radius": true,
-			"width": true,
-			"__experimentalSkipSerialization": true,
-			"__experimentalSelector": ".gatherpress-calendar__entry"
-		},
-		"shadow": {
-			"__experimentalSkipSerialization": true
-		},
+    "__experimentalBorder": {
+      "color": true,
+      "radius": true,
+      "width": true,
+      "__experimentalSkipSerialization": true,
+      "__experimentalSelector": ".gatherpress-calendar__entry"
+    },
+    "shadow": {
+      "__experimentalSkipSerialization": true
+    },
     "listView": true,
     "contentRole": true
   },
-	"selectors": {
+  "selectors": {
     "border": ".wp-block-gatherpress-calendar .gatherpress-calendar__entry",
     "color": ".wp-block-gatherpress-calendar .gatherpress-calendar__entry",
-		"shadow": ".wp-block-gatherpress-calendar .gatherpress-calendar__entry"
-	},
+    "shadow": ".wp-block-gatherpress-calendar .gatherpress-calendar__entry"
+  },
   "styles": [
-		{
-			"name": "default",
-			"label": "Classic",
-			"isDefault": true
-		},
     {
-      "name": "ribbon",
-      "label": "Ribbon"
+      "name": "default",
+      "label": "Classic",
+      "isDefault": true
     },
-		{
-			"name": "dots",
-			"label": "Colored Dots"
-		}
-	],
+    {
+      "name": "dots",
+      "label": "Colored Dots"
+    }
+  ],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
-  "editorStyle": "file:./index.css",
   "style": "file:./style-index.css"
 }

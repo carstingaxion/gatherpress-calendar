@@ -64,13 +64,25 @@ export function CalendarWeek( {
 				const dayIndex = post.dayIndex ?? 1;
 
 				if ( totalDays <= 1 ) {
-					return post;
+					return { ...post, rowSpan: 1 };
 				}
+
+				let colsLeft = 0;
+				for ( let c = colIndex; c < totalCols; c++ ) {
+					if ( ! week[ c ]?.isEmpty ) {
+						colsLeft++;
+					}
+				}
+				const rowSpan = Math.max(
+					1,
+					Math.min( totalDays - dayIndex + 1, colsLeft )
+				);
 
 				return {
 					...post,
 					isContinued: isFirstCol && dayIndex > 1,
 					isContinues: isLastCol && dayIndex < totalDays,
+					rowSpan,
 				};
 			} );
 

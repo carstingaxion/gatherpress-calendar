@@ -217,6 +217,18 @@ class Calendar_Entries {
 			$extra_classes[] = 'is-span-continues';
 		}
 
+		// Enforce visual slot alignment via inline CSS custom property.
+		$slot_style = isset( $span_data['slot'] )
+			? sprintf( '--gatherpress-calendar-entry-slot: %d;', (int) $span_data['slot'] )
+			: '';
+
+		$row_span = isset( $span_data['row_span'] ) ? (int) $span_data['row_span'] : 1;
+		$row_span_style = sprintf( '--gatherpress-calendar-row-span: %d;', $row_span );
+
+		if ( $row_span >= 2 ) {
+			$extra_classes[] = 'has-multi-col-span';
+		}
+
 		$classnames = $entry_styles['classnames'];
 		if ( ! empty( $extra_classes ) ) {
 			$classnames .= ' ' . implode( ' ', $extra_classes );
@@ -224,12 +236,7 @@ class Calendar_Entries {
 
 		$entry_classes = implode( ' ', get_post_class( $classnames, $post_id ) );
 
-		// Enforce visual slot alignment via inline CSS custom property.
-		$slot_style = isset( $span_data['slot'] )
-			? sprintf( '--gatherpress-calendar-entry-slot: %d;', (int) $span_data['slot'] )
-			: '';
-
-		$combined_style  = trim( $entry_styles['inline_styles'] . ' ' . $slot_style );
+		$combined_style  = trim( $entry_styles['inline_styles'] . ' ' . $slot_style . ' ' . $row_span_style );
 		$style_attribute = '' !== $combined_style ? sprintf( ' style="%s"', esc_attr( $combined_style ) ) : '';
 
 		$data_attributes = '';
@@ -245,6 +252,7 @@ class Calendar_Entries {
 		if ( isset( $span_data['slot'] ) ) {
 			$data_attributes .= sprintf( ' data-slot="%d"', (int) $span_data['slot'] );
 		}
+		$data_attributes .= sprintf( ' data-row-span="%d"', $row_span );
 
 		// Interactivity API directives for synchronized multi-day event hover/focus.
 		$context_json = wp_json_encode( array( 'eventId' => $post_id ) );
