@@ -633,9 +633,9 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	}
 }
 
-/* Day View adjustments */
-.wp-block-gatherpress-calendar.is-view-day,
-.gatherpress-calendar.is-view-day {
+/* Day View adjustments: only apply isolated card resets when showing a single day (1 column) */
+.wp-block-gatherpress-calendar.is-view-day[style*="--gatherpress-calendar-columns: 1"],
+.gatherpress-calendar.is-view-day[style*="--gatherpress-calendar-columns: 1"] {
 	.wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-multi-day {
 		margin-inline: 0 !important;
 		width: 100% !important;
