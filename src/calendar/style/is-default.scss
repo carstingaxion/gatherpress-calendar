@@ -1,21 +1,38 @@
 @use "visually-hidden" as *;
 
 /* ==========================================================================
-   Block Container
+   Block Container & Design Tokens
    ========================================================================== */
 .wp-block-gatherpress-calendar {
 
-	/* Default decent background that fills the grid lines. */
-	background: var(--wp--preset--color--base, #fff);
+	--gatherpress-calendar-column-gap: 2px;
+
+	// Surface & Table Header Tokens
+	--gatherpress-calendar-header-bg: color-mix(in srgb, currentColor 10%, transparent);
+	--gatherpress-calendar-header-color: currentColor;
+
+	// Day Cell Surface & State Tokens
+	--gatherpress-calendar-day-bg: color-mix(in srgb, currentColor 3%, transparent);
+	--gatherpress-calendar-day-color: inherit;
+	--gatherpress-calendar-day-has-posts-border: color-mix(in srgb, currentColor 25%, transparent);
+	--gatherpress-calendar-day-today-outline: currentColor;
+	--gatherpress-calendar-day-today-color: currentColor;
+
+	// Entry Typography & Interaction Tokens
+	--gatherpress-calendar-time-color: color-mix(in srgb, currentColor 75%, transparent);
+	--gatherpress-calendar-title-color: currentColor;
+	--gatherpress-calendar-focus-outline-color: currentColor;
+
+	// Ribbon Surface Tokens
+	// --gatherpress-calendar-ribbon-bg: var(--wp--preset--color--primary, currentColor);
+	--gatherpress-calendar-ribbon-color: currentColor;
+
+	/* Container Layout */
+	background: inherit;
+	color: inherit;
 	padding: 0;
 	margin-block: var(--wp--preset--spacing--50, 1rem);
-
-
-	/* ==========================================================================
-   Calendar Wrapper
-   ========================================================================== */
 	width: 100%;
-	// max-width: var(--wp--style--global--wide-size, 1200px);
 	margin-inline: auto;
 
 	&.has-multiple-units.is-view-month {
@@ -43,7 +60,6 @@
 
 		/* minmax(0, 1fr): content cannot make a column wider than its share. */
 		grid-template-columns: repeat(var(--gatherpress-calendar-columns, 7), minmax(0, 1fr));
-		--gatherpress-calendar-column-gap: 2px; /* Default thin grid line when no spacing is set */
 		gap: var(--gatherpress-calendar-column-gap);
 
 		thead,
@@ -54,8 +70,8 @@
 
 		/* Weekday Column Headers (Sun, Mon, Tue...) */
 		th {
-			background: var(--wp--preset--color--base-2, #f8f9fa);
-			color: var(--wp--preset--color--contrast, #495057);
+			background: var(--gatherpress-calendar-header-bg);
+			color: var(--gatherpress-calendar-header-color);
 			font-weight: 600;
 			text-align: center;
 			padding: clamp(0.5rem, 2vw, 0.75rem);
@@ -76,7 +92,6 @@
 		 */
 		thead.gatherpress--screen-reader-text th,
 		tr th.gatherpress--screen-reader-text {
-
 			@include visually-hidden;
 			aspect-ratio: auto;
 		}
@@ -84,7 +99,6 @@
 
 	/* Day View adjustments */
 	&.is-view-day {
-
 		th {
 			aspect-ratio: auto;
 			min-height: 140px;
@@ -100,6 +114,5 @@
  * 0.35. Remove it when the calendar requires GatherPress 0.36 or later.
  */
 .wp-block-gatherpress-calendar .gatherpress--screen-reader-text {
-
 	@include visually-hidden;
 }

@@ -12,7 +12,6 @@ $trigger: ".gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal *) >
 $start-time: ".wp-block-gatherpress-event-date:not(.gatherpress-modal--trigger-open):not(.wp-block-gatherpress-modal *)";
 $gap: var(--gatherpress-calendar-column-gap, 2px);
 
-// Reusable text truncation
 @mixin text-truncate {
 	white-space: nowrap;
 	overflow: hidden;
@@ -21,6 +20,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 // Palette for multi-day slots & dots
 $slot-colors: (
+	0: var(--wp--preset--color--primary, #007cba),
 	1: var(--wp--preset--color--secondary, #e65054),
 	2: var(--wp--preset--color--tertiary, #4ab866),
 	3: var(--wp--preset--color--vivid-purple, #9b51e0),
@@ -81,8 +81,8 @@ $slot-colors: (
 
 			&.is-span-middle {
 				border-radius: 0;
-				margin-inline: calc(-1 * #{$gap});
 				width: calc(100% + (2 * #{$gap}));
+				margin-inline: calc(-1 * #{$gap});
 			}
 
 			&.is-span-end {
@@ -109,8 +109,7 @@ $slot-colors: (
 			}
 		}
 
-		#{$trigger},
-		&[data-slot="0"] #{$trigger} {
+		#{$trigger} {
 			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--primary, #007cba));
 		}
 
@@ -142,7 +141,7 @@ $slot-colors: (
 			}
 
 			&:focus-visible {
-				outline: 2px solid var(--wp--preset--color--contrast, #007cba);
+				outline: 2px solid var(--gatherpress-calendar-focus-outline-color, currentColor);
 				outline-offset: 2px;
 			}
 		}
@@ -169,7 +168,7 @@ $slot-colors: (
 		position: relative;
 
 		&:focus-within {
-			outline: 2px solid var(--wp--preset--color--contrast, #1e1e1e);
+			outline: 2px solid var(--gatherpress-calendar-focus-outline-color, currentColor);
 			outline-offset: 1px;
 		}
 	}
@@ -209,6 +208,7 @@ $slot-colors: (
 			line-height: 1.1;
 			display: block;
 			max-width: 100%;
+			color: var(--gatherpress-calendar-time-color, color-mix(in srgb, currentColor 65%, transparent));
 		}
 
 		.wp-block-post-title:not(.wp-block-gatherpress-modal *) a,
@@ -220,6 +220,7 @@ $slot-colors: (
 			min-width: 0;
 			font-size: 0.8125rem;
 			line-height: 1.2;
+			color: var(--gatherpress-calendar-title-color, currentColor);
 			text-decoration: none;
 		}
 	}
@@ -258,12 +259,14 @@ $slot-colors: (
 				@include text-truncate;
 				font-size: 0.75rem;
 				line-height: 1.2;
+				color: var(--gatherpress-calendar-time-color, color-mix(in srgb, currentColor 65%, transparent));
 				display: block;
 			}
 
 			.wp-block-post-title:not(.wp-block-gatherpress-modal *) a,
 			#{$trigger} {
 				@include text-truncate;
+				color: var(--gatherpress-calendar-title-color, currentColor);
 				font-size: 0.8125rem;
 				line-height: 1.2;
 				font-weight: 500;
@@ -275,7 +278,8 @@ $slot-colors: (
 		/* Ribbons (Multi-day & All-day) */
 		&.is-multi-day,
 		&.is-all-day {
-			background: var(--wp--preset--color--primary, #007cba);
+			// background: var(--gatherpress-calendar-ribbon-bg);
+			color: var(--gatherpress-calendar-ribbon-color);
 			font-size: clamp(0.6875rem, 1.4vw, 0.8125rem);
 			line-height: 1.2;
 			height: 24px;
