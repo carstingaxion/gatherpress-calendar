@@ -145,7 +145,7 @@ class Calendar_Day {
 	/**
 	 * Resolve class names for a calendar day cell.
 	 *
-	 * @param array<mixed>      $context       Block context.
+	 * @param array<mixed> $context       Block context.
 	 *
 	 * @return list<string> Array of CSS classes.
 	 */

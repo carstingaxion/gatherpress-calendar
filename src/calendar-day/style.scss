@@ -20,8 +20,8 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	height: 100%;
 	min-width: 0;
 
-	background: var(--gatherpress-calendar-day-bg, color-mix(in srgb, currentColor 4%, transparent));
-	color: var(--gatherpress-calendar-day-color, inherit);
+	background: var(--gatherpress-calendar-day-bg);
+	color: var(--gatherpress-calendar-day-color);
 
 	/* --------------------------------------------------------------------------
 	   DEFAULT (CLASSIC) STYLE: Vertical flow, auto-growing, clean containment
@@ -51,7 +51,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 	/* 2. Days with Posts: Tokenized inset border */
 	&.has-posts {
-		box-shadow: inset 0 0 0 1px var(--gatherpress-calendar-day-has-posts-border, color-mix(in srgb, currentColor 25%, transparent));
+		box-shadow: inset 0 0 0 1px var(--gatherpress-calendar-day-has-posts-border);
 
 		.gatherpress-calendar__day-number {
 			font-weight: 700;
@@ -60,11 +60,11 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 	/* 3. Today's Date: Tokenized outline & color */
 	&.is-today {
-		outline: 2px solid var(--gatherpress-calendar-day-today-outline, currentColor);
+		outline: 2px solid var(--gatherpress-calendar-day-today-outline);
 		outline-offset: -2px;
 
 		.gatherpress-calendar__day-number {
-			color: var(--gatherpress-calendar-day-today-color, currentColor);
+			color: var(--gatherpress-calendar-day-today-color);
 			font-weight: 800;
 		}
 	}
