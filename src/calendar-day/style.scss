@@ -18,8 +18,10 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	box-sizing: border-box;
 	min-height: calc((100cqi - (#{$columns} - 1) * #{$gap}) / #{$columns});
 	height: 100%;
-	background: #fafafa;
 	min-width: 0;
+
+	background: var(--gatherpress-calendar-day-bg, color-mix(in srgb, currentColor 4%, transparent));
+	color: var(--gatherpress-calendar-day-color, inherit);
 
 	/* --------------------------------------------------------------------------
 	   DEFAULT (CLASSIC) STYLE: Vertical flow, auto-growing, clean containment
@@ -30,7 +32,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 		align-items: stretch;
 		justify-content: flex-start;
 		padding: 0.35rem;
-		overflow: hidden; /* Guarantees no text bleeds out of the cell */
+		overflow: hidden;
 
 		.gatherpress-calendar__day-number {
 			align-self: flex-start;
@@ -47,22 +49,22 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 		pointer-events: none;
 	}
 
-	/* 2. Days with Posts (Non-invasive inset highlight) */
+	/* 2. Days with Posts: Tokenized inset border */
 	&.has-posts {
-		box-shadow: inset 0 0 0 1px var(--wp--preset--color--primary, rgba(0, 124, 186, 0.35));
+		box-shadow: inset 0 0 0 1px var(--gatherpress-calendar-day-has-posts-border, color-mix(in srgb, currentColor 25%, transparent));
 
 		.gatherpress-calendar__day-number {
 			font-weight: 700;
 		}
 	}
 
-	/* 3. Today's Date (Non-invasive outline + overlay tint) */
+	/* 3. Today's Date: Tokenized outline & color */
 	&.is-today {
-		outline: 2px solid var(--wp--preset--color--primary, #007cba);
+		outline: 2px solid var(--gatherpress-calendar-day-today-outline, currentColor);
 		outline-offset: -2px;
 
 		.gatherpress-calendar__day-number {
-			color: var(--wp--preset--color--primary, #006ba1);
+			color: var(--gatherpress-calendar-day-today-color, currentColor);
 			font-weight: 800;
 		}
 	}
