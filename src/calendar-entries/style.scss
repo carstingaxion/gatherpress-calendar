@@ -7,7 +7,6 @@
 
 @use "../calendar/style/visually-hidden" as *;
 
-// Common triggers and times outside of modals
 $trigger: ".gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal *) > *";
 $start-time: ".wp-block-gatherpress-event-date:not(.gatherpress-modal--trigger-open):not(.wp-block-gatherpress-modal *)";
 $gap: var(--gatherpress-calendar-column-gap, 2px);
@@ -18,18 +17,28 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	text-overflow: ellipsis;
 }
 
-// Palette for multi-day slots & dots
-$slot-colors: (
-	0: var(--wp--preset--color--primary, #007cba),
-	1: var(--wp--preset--color--secondary, #e65054),
-	2: var(--wp--preset--color--tertiary, #4ab866),
-	3: var(--wp--preset--color--vivid-purple, #9b51e0),
-	4: var(--wp--preset--color--vivid-cyan-blue, #0693e3),
-	5: var(--wp--preset--color--contrast, #555),
+// Solid palette tokens for colored status dots
+$dot-slot-colors: (
+	0: var(--gatherpress-calendar-slot-0-color, var(--wp--preset--color--primary, #007cba)),
+	1: var(--gatherpress-calendar-slot-1-color, var(--wp--preset--color--secondary, #e65054)),
+	2: var(--gatherpress-calendar-slot-2-color, var(--wp--preset--color--tertiary, #4ab866)),
+	3: var(--gatherpress-calendar-slot-3-color, var(--wp--preset--color--vivid-purple, #9b51e0)),
+	4: var(--gatherpress-calendar-slot-4-color, var(--wp--preset--color--vivid-cyan-blue, #0693e3)),
+	5: var(--gatherpress-calendar-slot-5-color, var(--wp--preset--color--contrast, #666)),
+);
+
+// Tinted palette tokens for multi-day ribbons
+$ribbon-slot-bgs: (
+	0: var(--gatherpress-calendar-ribbon-slot-0-bg, color-mix(in srgb, var(--wp--preset--color--primary, #007cba) 18%, transparent)),
+	1: var(--gatherpress-calendar-ribbon-slot-1-bg, color-mix(in srgb, var(--wp--preset--color--secondary, #e65054) 18%, transparent)),
+	2: var(--gatherpress-calendar-ribbon-slot-2-bg, color-mix(in srgb, var(--wp--preset--color--tertiary, #4ab866) 18%, transparent)),
+	3: var(--gatherpress-calendar-ribbon-slot-3-bg, color-mix(in srgb, var(--wp--preset--color--vivid-purple, #9b51e0) 18%, transparent)),
+	4: var(--gatherpress-calendar-ribbon-slot-4-bg, color-mix(in srgb, var(--wp--preset--color--vivid-cyan-blue, #0693e3) 18%, transparent)),
+	5: var(--gatherpress-calendar-ribbon-slot-5-bg, color-mix(in srgb, var(--wp--preset--color--contrast, #666) 14%, transparent)),
 );
 
 /* ==========================================================================
-   DOTS MIXIN: Compact colored dot indicators
+   DOTS MIXIN: Solid, high-visibility circular indicators
    ========================================================================== */
 @mixin dots {
 	#{$start-time} {
@@ -110,10 +119,10 @@ $slot-colors: (
 		}
 
 		#{$trigger} {
-			background: var(--gatherpress-calendar-dot-color, var(--wp--preset--color--primary, #007cba));
+			background: var(--gatherpress-calendar-dot-color, map-get($dot-slot-colors, 0));
 		}
 
-		@each $slot, $color in $slot-colors {
+		@each $slot, $color in $dot-slot-colors {
 			&[data-slot="#{$slot}"] #{$trigger} {
 				background: var(--gatherpress-calendar-dot-color, #{$color});
 			}
@@ -208,7 +217,7 @@ $slot-colors: (
 			line-height: 1.1;
 			display: block;
 			max-width: 100%;
-			color: var(--gatherpress-calendar-time-color, color-mix(in srgb, currentColor 65%, transparent));
+			color: var(--gatherpress-calendar-time-color, color-mix(in srgb, currentColor 75%, transparent));
 		}
 
 		.wp-block-post-title:not(.wp-block-gatherpress-modal *) a,
@@ -227,7 +236,7 @@ $slot-colors: (
 }
 
 /* ==========================================================================
-   RIBBON VIEW: Multi-day slots & title spanning
+   RIBBON VIEW: Tinted multi-day slots & wide title spanning with currentColor
    ========================================================================== */
 .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries:not(.is-style-dots) {
 	.gatherpress-calendar__entry {
@@ -259,7 +268,7 @@ $slot-colors: (
 				@include text-truncate;
 				font-size: 0.75rem;
 				line-height: 1.2;
-				color: var(--gatherpress-calendar-time-color, color-mix(in srgb, currentColor 65%, transparent));
+				color: var(--gatherpress-calendar-time-color, color-mix(in srgb, currentColor 75%, transparent));
 				display: block;
 			}
 
@@ -275,21 +284,22 @@ $slot-colors: (
 			}
 		}
 
-		/* Ribbons (Multi-day & All-day) */
+		/* Ribbons (Multi-day & All-day): Soft tinted background + currentColor text */
 		&.is-multi-day,
 		&.is-all-day {
-			// background: var(--gatherpress-calendar-ribbon-bg);
-			color: var(--gatherpress-calendar-ribbon-color);
+			background: map-get($ribbon-slot-bgs, 0);
+			color: var(--gatherpress-calendar-ribbon-color, currentColor);
 			font-size: clamp(0.6875rem, 1.4vw, 0.8125rem);
+			font-weight: 500;
 			line-height: 1.2;
 			height: 24px;
 			min-height: 24px;
 			display: flex;
 			align-items: center;
 
-			@each $slot, $color in $slot-colors {
+			@each $slot, $bg in $ribbon-slot-bgs {
 				&[data-slot="#{$slot}"] {
-					background: #{$color};
+					background: #{$bg};
 				}
 			}
 
