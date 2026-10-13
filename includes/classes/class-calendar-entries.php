@@ -222,7 +222,7 @@ class Calendar_Entries {
 			? sprintf( '--gatherpress-calendar-entry-slot: %d;', (int) $span_data['slot'] )
 			: '';
 
-		$row_span = isset( $span_data['row_span'] ) ? (int) $span_data['row_span'] : 1;
+		$row_span       = isset( $span_data['row_span'] ) ? (int) $span_data['row_span'] : 1;
 		$row_span_style = sprintf( '--gatherpress-calendar-row-span: %d;', $row_span );
 
 		if ( $row_span >= 2 ) {
