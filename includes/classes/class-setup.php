@@ -442,10 +442,11 @@ class Setup {
 	public function gatherpress_force_pagination_max_pages( array $posts, WP_Query $query ): array {
 		if ( isset( $query->query[ self::CALENDAR_QUERY_PARAM ] ) ) {
 			$query->max_num_pages = 200;
+
+			// Immediately remove the filter so it only affects this single block query.
+			remove_filter( 'the_posts', array( $this, 'gatherpress_force_pagination_max_pages' ), 10 );
 		}
 
-		// Immediately remove the filter so it only affects this single block query.
-		remove_filter( 'the_posts', array( $this, 'gatherpress_force_pagination_max_pages' ), 10 );
 
 		return $posts;
 	}
@@ -513,18 +514,30 @@ class Setup {
 	public function query_loop_block_query_vars( array $query, WP_Block $block ): array {
 		$block_query = $block->context['query'] ?? null;
 
-		if ( ! is_array( $block_query ) || ! isset( $block_query[ self::CALENDAR_QUERY_PARAM ] ) ) {
+		// If context did not receive the param due to wrapping/grouping,
+		// like the issues in https://github.com/carstingaxion/gatherpress-calendar/issues/152
+		// check if our pagination filter is active.
+		$is_calendar_query = is_array( $block_query ) && ! empty( $block_query[ self::CALENDAR_QUERY_PARAM ] );
+
+		if ( ! $is_calendar_query ) {
+			// Fallback: Check if the current block query belongs to a calendar
+			if ( has_filter( 'the_posts', array( $this, 'gatherpress_force_pagination_max_pages' ) ) ) {
+				$is_calendar_query = true;
+			}
+		}
+
+		if ( ! $is_calendar_query ) {
 			return $query;
 		}
 
 		$query_args = array(
-			self::CALENDAR_QUERY_PARAM => $block_query[ self::CALENDAR_QUERY_PARAM ],
+			self::CALENDAR_QUERY_PARAM => true,
 		);
 
 		$filtered_query_args = apply_filters(
 			'gatherpress_query_vars',
 			$query_args,
-			$block_query,
+			is_array( $block_query ) ? $block_query : $query_args,
 			false
 		);
 
@@ -601,14 +614,17 @@ class Setup {
 		$query = $block_instance->context['query'] ?? null;
 
 		if ( is_array( $query ) ) {
+			// Resolve the actual requested page from context:
+			$page           = Query_Builder::get_requested_page( $block_instance->context['queryId'] ?? null );
 			$source_post_id = Date_Calculator::resolve_source_post_id( array(), $block_instance );
+
 			/**
 			 * Type safety.
 			 *
 			 * @var array<string, mixed> $query_typed
 			 */
 			$query_typed = $query;
-			$range       = Date_Calculator::get_range_from_query( $query_typed, array(), 1, $source_post_id );
+			$range       = Date_Calculator::get_range_from_query( $query_typed, array(), $page, $source_post_id );
 			return $range['heading'];
 		}
 

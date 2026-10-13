@@ -82,13 +82,17 @@ class Query_Builder {
 		$page_key = is_numeric( $query_id ) ? 'query-' . (int) $query_id . '-page' : 'query-page';
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( ! isset( $_GET[ $page_key ] ) || ! is_scalar( $_GET[ $page_key ] ) ) {
-			return 1;
+		if ( isset( $_GET[ $page_key ] ) && is_scalar( $_GET[ $page_key ] ) ) {
+			return min( self::MAX_PAGE, max( 1, (int) $_GET[ $page_key ] ) );
 		}
 
-		$page = (int) $_GET[ $page_key ]; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		// Fallback: Check general query-page parameter
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['query-1-page'] ) && is_scalar( $_GET['query-1-page'] ) ) {
+			return min( self::MAX_PAGE, max( 1, (int) $_GET['query-1-page'] ) );
+		}
 
-		return min( self::MAX_PAGE, max( 1, $page ) );
+		return 1;
 	}
 
 	/**
