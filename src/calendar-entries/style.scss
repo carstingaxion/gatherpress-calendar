@@ -173,7 +173,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 		&.is-hovered,
 		&:hover {
-			box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+			// box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 		}
 
 		&.is-focused,
@@ -489,99 +489,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 				#{$trigger} {
 					opacity: 1;
-					font-weight: 600;
-				}
-			}
-		}
-	}
-}
-
-/* ==========================================================================
-   Block Editor Live-Template Normalization
-   ========================================================================== */
-.editor-styles-wrapper {
-	.wp-block-gatherpress-calendar-entries {
-		overflow: visible !important;
-
-		.block-editor-block-list__layout {
-			margin: 0 !important;
-			padding: 0 !important;
-			gap: 0 !important;
-			overflow: visible !important;
-		}
-
-		.gatherpress-calendar__entry {
-			.gatherpress-calendar__entry-template {
-				display: flex !important;
-				flex-direction: row !important;
-				align-items: center !important;
-				width: 100% !important;
-				height: 100% !important;
-				min-height: 100% !important;
-				min-width: 0 !important;
-				margin: 0 !important;
-				padding: 0 !important;
-			}
-
-			/* Clamp single-column entries in editor */
-			&:not([data-row-span]),
-			&[data-row-span="1"],
-			&[data-row-span="0"],
-			&:not(.has-multi-col-span) {
-				overflow: hidden !important;
-
-				.gatherpress-calendar__entry-template {
-					overflow: hidden !important;
-					max-width: 100% !important;
-					width: 100% !important;
-
-					> .block-editor-block-list__block {
-						max-width: 100% !important;
-						width: 100% !important;
-						overflow: hidden !important;
-					}
-
-					.gatherpress-modal--trigger-open,
-					.wp-block-post-title,
-					.wp-block-post-title a {
-						max-width: 100% !important;
-						width: 100% !important;
-						overflow: hidden !important;
-						text-overflow: ellipsis !important;
-						white-space: nowrap !important;
-					}
-				}
-			}
-
-			/* Allow multi-column entries to expand up to row_span in editor */
-			&[data-row-span]:not([data-row-span="1"]):not([data-row-span="0"]),
-			&.has-multi-col-span {
-				overflow: visible !important;
-
-				.gatherpress-calendar__entry-template {
-					overflow: visible !important;
-
-					> .block-editor-block-list__block {
-						margin: 0 !important;
-						padding: 0 !important;
-						max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * var(--gatherpress-calendar-column-gap, 2px)) !important;
-						width: max-content !important;
-						min-width: 0 !important;
-						overflow: hidden !important;
-					}
-				}
-			}
-
-			&.is-span-middle,
-			&.is-span-end {
-				&:focus-within,
-				&:has(.is-selected) {
-					#{$trigger},
-					.gatherpress-modal--trigger-open > *,
-					.wp-block-post-title,
-					.wp-block-post-title a {
-						opacity: 1 !important;
-					}
+					// font-weight: 600;
 				}
 			}
 		}

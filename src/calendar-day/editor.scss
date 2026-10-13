@@ -70,6 +70,93 @@
 					width: 100% !important;
 				}
 			}
+
+			/* Entries live-template normalization inside ribbon days */
+			.wp-block-gatherpress-calendar-entries {
+				overflow: visible !important;
+
+				.block-editor-block-list__layout {
+					margin: 0 !important;
+					padding: 0 !important;
+					gap: 0 !important;
+					overflow: visible !important;
+				}
+
+				.gatherpress-calendar__entry {
+					.gatherpress-calendar__entry-template {
+						display: flex !important;
+						flex-direction: row !important;
+						align-items: center !important;
+						width: 100% !important;
+						height: 100% !important;
+						min-height: 100% !important;
+						min-width: 0 !important;
+						margin: 0 !important;
+						padding: 0 !important;
+					}
+
+					/* Single-column entries are clamped within the cell */
+					&:not([data-row-span]),
+					&[data-row-span="1"],
+					&[data-row-span="0"],
+					&:not(.has-multi-col-span) {
+						overflow: hidden !important;
+
+						.gatherpress-calendar__entry-template {
+							overflow: hidden !important;
+							max-width: 100% !important;
+							width: 100% !important;
+
+							> .block-editor-block-list__block {
+								max-width: 100% !important;
+								width: 100% !important;
+								overflow: hidden !important;
+							}
+
+							.gatherpress-modal--trigger-open,
+							.wp-block-post-title,
+							.wp-block-post-title a {
+								max-width: 100% !important;
+								width: 100% !important;
+								overflow: hidden !important;
+								text-overflow: ellipsis !important;
+								white-space: nowrap !important;
+							}
+						}
+					}
+
+					/* Multi-column entries can span across sibling cells */
+					&[data-row-span]:not([data-row-span="1"]):not([data-row-span="0"]),
+					&.has-multi-col-span {
+						overflow: visible !important;
+
+						.gatherpress-calendar__entry-template {
+							overflow: visible !important;
+
+							> .block-editor-block-list__block {
+								margin: 0 !important;
+								padding: 0 !important;
+								max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * var(--gatherpress-calendar-column-gap, 2px)) !important;
+								width: max-content !important;
+								min-width: 0 !important;
+								overflow: hidden !important;
+							}
+						}
+					}
+
+					&.is-span-middle,
+					&.is-span-end {
+						&:focus-within,
+						&:has(.is-selected) {
+							.gatherpress-modal--trigger-open > *,
+							.wp-block-post-title,
+							.wp-block-post-title a {
+								opacity: 1 !important;
+							}
+						}
+					}
+				}
+			}
 		}
 
 		/* Hide placeholder entries on empty days when the day is not being edited */
@@ -81,9 +168,7 @@
 	}
 }
 
-/* ==========================================================================
-   Lock Layout UI in Inspector & Toolbar when Ribbon style is selected
-   ========================================================================== */
+/* Lock Layout UI in Inspector & Toolbar when Ribbon style is selected */
 body:has(.gatherpress-calendar__day.is-style-ribbon.is-selected) .block-editor-block-inspector .components-panel__body:has(.block-editor-hooks__layout-controls),
 body:has(.gatherpress-calendar__day.is-style-ribbon.is-selected) .block-editor-block-toolbar .components-toolbar-group:has([aria-label*="Justification"]),
 body:has(.gatherpress-calendar__day.is-style-ribbon .is-selected) .block-editor-block-inspector .components-panel__body:has(.block-editor-hooks__layout-controls),
