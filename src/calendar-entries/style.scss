@@ -247,6 +247,13 @@ $ribbon-slot-bgs: (
 		&.is-span-continued {
 			z-index: 2;
 		}
+		
+		&.is-js-hovered {
+			.wp-block-post-title:not(.wp-block-gatherpress-modal *) a,
+			#{$trigger} {
+				text-decoration: underline;
+			}
+		}
 
 		/* Regular (Single-day Timed) Events */
 		&:not(.is-multi-day):not(.is-all-day) {
@@ -368,7 +375,8 @@ $ribbon-slot-bgs: (
 						@include text-truncate;
 						display: block;
 						max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap});
-						width: max-content;
+						// width: max-content;
+						width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap});
 					}
 				}
 
@@ -376,6 +384,7 @@ $ribbon-slot-bgs: (
 					max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap});
 					width: max-content;
 				}
+
 
 				&.is-span-continues {
 					.wp-block-post-title:not(.wp-block-gatherpress-modal *) a,
@@ -414,7 +423,7 @@ $ribbon-slot-bgs: (
 			&.is-span-end {
 				border-radius: 0 4px 4px 0;
 				margin-inline-start: calc(-1 * #{$gap});
-				padding-inline-start: #{$gap};
+				padding-inline-end: #{$gap};
 				width: calc(100% + #{$gap});
 
 				#{$start-time} {
@@ -430,7 +439,7 @@ $ribbon-slot-bgs: (
 
 					&:hover,
 					&:focus-visible {
-						opacity: 1;
+						// opacity: 1;
 					}
 				}
 			}
@@ -461,6 +470,18 @@ $ribbon-slot-bgs: (
 				padding-inline-start: 6px;
 				border-start-start-radius: 0;
 				border-end-start-radius: 0;
+
+				&::after {
+					content: "";
+					position: absolute;
+					inset-inline-start: 3px;
+					top: calc(50% - 3px);
+					width: 0;
+					height: 0;
+					border-block: 3px solid transparent;
+					border-inline-end: 4px solid currentColor;
+					pointer-events: none;
+				}
 
 				#{$trigger} {
 					opacity: 1;

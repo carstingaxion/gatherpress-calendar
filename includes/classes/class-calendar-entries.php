@@ -263,8 +263,8 @@ class Calendar_Entries {
 		$iapi_directives .= ' data-wp-on--mouseleave="actions.unhoverEvent"';
 		$iapi_directives .= ' data-wp-on--focusin="actions.focusEvent"';
 		$iapi_directives .= ' data-wp-on--focusout="actions.unfocusEvent"';
-		$iapi_directives .= ' data-wp-class--is-hovered="callbacks.isEventHovered"';
-		$iapi_directives .= ' data-wp-class--is-focused="callbacks.isEventFocused"';
+		$iapi_directives .= ' data-wp-class--is-js-hovered="callbacks.isEventHovered"';
+		$iapi_directives .= ' data-wp-class--is-js-focused="callbacks.isEventFocused"';
 
 		return sprintf(
 			'<div class="%1$s"%2$s%3$s%4$s>%5$s</div>',
