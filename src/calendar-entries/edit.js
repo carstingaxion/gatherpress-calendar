@@ -26,8 +26,6 @@ import {
 import { useSelect } from '@wordpress/data';
 import { useMemo, memo } from '@wordpress/element';
 
-import './editor.scss';
-
 const EMPTY_ARRAY = [];
 
 /**
