@@ -25,3 +25,9 @@ It renders across all calendar views:
 - **Attributes:**
   - `weekIndex` (`number`, default `0`): The zero-based index of this week within the current calendar unit.
   - Supports standard WordPress text color and custom CSS class names.
+
+## Block Styles
+
+- **Default (`default`):** Standard week row flowing cleanly into CSS Grid.
+- **Zebra (`zebra`):** Applies alternating background shading to even week rows. Supports an optional custom stripe color control in the block settings sidebar.
+- **Pride (`pride`):** Applies an adaptive LGBTIQ+ rainbow spectrum across the week row that fluidly redistributes between 7-column (full week), 5-column (workdays only), and multi-day views.
