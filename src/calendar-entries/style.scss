@@ -548,3 +548,98 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 		}
 	}
 }
+
+
+/* ==========================================================================
+   INTEGRATED TIME-GRID EXTENSION (Extends Ribbon Layout)
+   ========================================================================== */
+.gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries {
+	// Active Time Grid configuration
+	.has-time-grid & {
+		--gatherpress-quarter-slot-height: calc(var(--gatherpress-calendar-slot-height, 48px) / 4);
+
+		display: grid;
+		grid-auto-flow: row;
+		grid-template-rows:
+			repeat(var(--gatherpress-num-ribbon-slots, 0), 24px)
+			repeat(var(--gatherpress-total-quarter-slots, 48), var(--gatherpress-quarter-slot-height));
+		position: relative;
+		width: 100%;
+
+		// Pure CSS repeating gradient hour markers
+		background-image: repeating-linear-gradient(
+			to bottom,
+			transparent,
+			transparent calc(var(--gatherpress-calendar-slot-height, 48px) - 1px),
+			color-mix(in srgb, currentColor 8%, transparent) calc(var(--gatherpress-calendar-slot-height, 48px) - 1px),
+			color-mix(in srgb, currentColor 8%, transparent) var(--gatherpress-calendar-slot-height, 48px)
+		);
+		background-position: 0 calc(var(--gatherpress-num-ribbon-slots, 0) * 24px);
+
+		// Timed events dynamically fill their calculated space
+		.gatherpress-calendar__entry.is-timed-event {
+			grid-row-start: calc(var(--gatherpress-num-ribbon-slots, 0) + var(--gatherpress-event-time-row-start));
+			grid-row-end: calc(var(--gatherpress-num-ribbon-slots, 0) + var(--gatherpress-event-time-row-end));
+			position: relative;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-start;
+			border-radius: 4px;
+			padding: 2px 6px;
+			background: var(--gatherpress-slot-color);
+			color: #fff;
+			z-index: 1;
+			box-sizing: border-box;
+			overflow: hidden;
+
+			// Horizontal concurrent overlap offsets
+			width: calc((100% / var(--gatherpress-overlap-total, 1)) - 2px);
+			margin-inline-start: calc((100% / var(--gatherpress-overlap-total, 1)) * var(--gatherpress-overlap-index, 0));
+
+			#{$start-time} {
+				font-size: 0.6875rem;
+				font-weight: 700;
+				line-height: 1.1;
+				color: rgba(255, 255, 255, 0.9);
+				display: block;
+			}
+
+			.wp-block-post-title a,
+			#{$trigger} {
+				color: #fff;
+				font-size: 0.75rem;
+				font-weight: 600;
+				line-height: 1.15;
+				text-decoration: none;
+			}
+
+			&:hover,
+			&:focus-within {
+				z-index: 10;
+				box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+			}
+		}
+	}
+}
+
+// Time Gutter Column Styles
+.gatherpress-calendar__time-gutter {
+	width: 52px;
+	min-width: 52px;
+	padding: 0;
+	background: transparent;
+	border: none;
+	display: flex;
+	flex-direction: column;
+	padding-top: calc(var(--gatherpress-num-ribbon-slots, 0) * 24px);
+
+	.gatherpress-calendar__time-slot-label {
+		height: var(--gatherpress-calendar-slot-height, 48px);
+		box-sizing: border-box;
+		padding-inline-end: 8px;
+		font-size: 0.6875rem;
+		color: color-mix(in srgb, currentColor 60%, transparent);
+		text-align: end;
+		transform: translateY(-50%);
+	}
+}

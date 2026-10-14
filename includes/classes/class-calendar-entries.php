@@ -115,7 +115,20 @@ class Calendar_Entries {
 			? $block->context['gatherpress/dayPosts']
 			: array();
 
-		if ( empty( $day_posts ) ) {
+$grid_config  = $block->context['gatherpress/timeGridConfig'] ?? array();
+		$is_time_grid = ! empty( $grid_config['enabled'] );
+		$day_number   = $block->context['gatherpress/dayNumber'] ?? 0;
+
+		// DEBUG LOG 3: Check whether entries container runs on this day
+		error_log( sprintf(
+			'[TimeGrid Debug] Day %s: posts_count=%d, is_time_grid=%s',
+			$day_number,
+			count( $day_posts ),
+			$is_time_grid ? 'YES' : 'NO'
+		) );		$is_time_grid = ! empty( $grid_config['enabled'] );
+
+		// Only return early if empty AND not in time-grid mode
+		if ( empty( $day_posts ) && ! $is_time_grid ) {
 			return '';
 		}
 
@@ -124,15 +137,22 @@ class Calendar_Entries {
 		if ( '' !== $grid_gap ) {
 			$entries_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
 		}
+
+		$extra_classes = array();
+		if ( $is_time_grid ) {
+			$extra_classes[] = 'has-time-grid';
+		}
+
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
+				'class' => implode( ' ', $extra_classes ),
 				'style' => esc_attr( implode( '; ', $entries_styles ) ),
 			)
 		);
 
 		$items_html = '';
 		foreach ( $day_posts as $entry ) {
-			$post_id = is_array( $entry ) ? ( $entry['id'] ?? 0 ) : $entry;
+			$post_id   = is_array( $entry ) ? ( $entry['id'] ?? 0 ) : $entry;
 			/** @var array<string, mixed> $span_data */
 			$span_data = is_array( $entry ) ? $entry : array();
 
@@ -295,7 +315,7 @@ class Calendar_Entries {
 	 *
 	 * @return string Data attributes string.
 	 */
-private function build_entry_data_attributes( array $span_data, int $row_span ): string {
+	private function build_entry_data_attributes( array $span_data, int $row_span ): string {
 		$attrs = '';
 		if ( ! empty( $span_data['span'] ) && is_scalar( $span_data['span'] ) ) {
 			$attrs .= sprintf( ' data-span="%s"', esc_attr( (string) $span_data['span'] ) );

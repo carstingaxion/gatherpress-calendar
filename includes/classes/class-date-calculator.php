@@ -526,20 +526,25 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Compute the grid column count based on viewType and weekend visibility.
+	 * Compute the grid column count based on viewType, weekend visibility, and time grid gutter.
 	 *
-	 * @param string $view_type     View type ('month', 'week', 'day').
-	 * @param bool   $show_weekends Weekend visibility.
-	 * @param int    $unit_count    Number of units to show.
+	 * @param string $view_type       View type ('month', 'week', 'day').
+	 * @param bool   $show_weekends   Weekend visibility.
+	 * @param int    $unit_count      Number of units to show.
+	 * @param bool   $has_time_gutter Whether the time gutter column is active.
 	 *
 	 * @return int Grid column count.
 	 */
-	public static function get_columns_count( string $view_type, bool $show_weekends, int $unit_count = 1 ): int {
-		if ( 'day' === $view_type ) {
-			return max( 1, $unit_count );
+	public static function get_columns_count( string $view_type, bool $show_weekends, int $unit_count = 1, bool $has_time_gutter = false ): int {
+		$columns = 'day' === $view_type
+			? max( 1, $unit_count )
+			: ( $show_weekends ? 7 : ( 7 - count( self::get_weekend_days() ) ) );
+
+		if ( $has_time_gutter && ( 'day' === $view_type || 'week' === $view_type ) ) {
+			++$columns;
 		}
 
-		return $show_weekends ? 7 : ( 7 - count( self::get_weekend_days() ) );
+		return $columns;
 	}
 
 	/**

@@ -43,26 +43,25 @@ class HTML_Renderer {
 	/**
 	 * Generate complete calendar HTML.
 	 *
-	 * @param array<string, mixed>                                                                                                                                                                                                                   $attributes Block attributes.
+	 * @param array<string, mixed>                                                                                                                                                                                                                   $attributes    Block attributes.
 	 * @param array{ heading: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>, view_type: string, unit_count: int, units: list<array{ caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>}> } $calendar_data Calendar structure.
+	 * @param array<string, mixed>                                                                                                                                                                                                                   $grid_config   Time grid configuration.
 	 *
 	 * @return string Calendar HTML.
 	 */
-	public function generate_calendar_html( array $attributes, array $calendar_data ): string {
+	public function generate_calendar_html( array $attributes, array $calendar_data, array $grid_config = array() ): string {
 		// @phpstan-ignore-next-line
 		$view_type     = $calendar_data['view_type'] ?? ( $attributes['viewType'] ?? 'month' );
 		$unit_count    = $calendar_data['unit_count'];
 		$show_weekends = isset( $attributes['showWeekends'] ) && is_bool( $attributes['showWeekends'] ) ? $attributes['showWeekends'] : true;
-		$columns_count = Date_Calculator::get_columns_count( $view_type, $show_weekends, $unit_count );
+		$is_time_grid  = ! empty( $grid_config['enabled'] );
+		$columns_count = Date_Calculator::get_columns_count( $view_type, $show_weekends, $unit_count, $is_time_grid );
 
 		$classes = array( 'is-view-' . $view_type );
 		if ( $unit_count > 1 ) {
 			$classes[] = 'has-multiple-units';
 		}
-
-		$grid_config = Date_Calculator::get_time_grid_config( $attributes, $this->block->context['query'] ?? array() );
-		if ( $grid_config['enabled'] ) {
-			++$columns_count;
+		if ( $is_time_grid ) {
 			$classes[] = 'has-time-grid';
 		}
 
@@ -96,6 +95,10 @@ class HTML_Renderer {
 		if ( '' !== $column_gap ) {
 			$table_styles[] = sprintf( '--gatherpress-calendar-column-gap: %s', esc_attr( $column_gap ) );
 		}
+		if ( $is_time_grid ) {
+			$total_quarters = isset( $grid_config['total_quarters'] ) && is_numeric( $grid_config['total_quarters'] ) ? (int) $grid_config['total_quarters'] : 48;
+			$table_styles[] = sprintf( '--gatherpress-total-quarter-slots: %d', $total_quarters );
+		}
 		$table_style = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
 
 		ob_start();
@@ -105,7 +108,7 @@ class HTML_Renderer {
 			// Render each unit's table.
 			foreach ( $calendar_data['units'] as $unit ) {
 				?>
-				<table class="gatherpress-calendar__table" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+				<table class="gatherpress-calendar__table<?php echo $is_time_grid ? ' has-time-grid' : ''; ?>" <?php echo $table_style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
 					<?php if ( '' !== $unit['caption'] ) { ?>
 						<caption class="gatherpress--screen-reader-text"><?php echo esc_html( $unit['caption'] ); ?></caption>
 					<?php } ?>
@@ -116,7 +119,7 @@ class HTML_Renderer {
 					?>
 					<thead<?php echo $show_weekdays ? '' : ' class="gatherpress--screen-reader-text"'; ?>>
 						<tr>
-							<?php echo $this->render_header_cells( $unit['day_names'], $render_week_numbers ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+							<?php echo $this->render_header_cells( $unit['day_names'], $render_week_numbers, $is_time_grid ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 						</tr>
 					</thead>
 					<tbody>
@@ -140,11 +143,17 @@ class HTML_Renderer {
 	 *
 	 * @param string[] $day_names           Weekday names.
 	 * @param bool     $render_week_numbers Whether rows get a week number header.
+	 * @param bool     $is_time_grid        Whether time grid is active.
 	 *
 	 * @return string Escaped header cells HTML.
 	 */
-	private function render_header_cells( array $day_names, bool $render_week_numbers ): string {
+	private function render_header_cells( array $day_names, bool $render_week_numbers, bool $is_time_grid = false ): string {
 		$cells = '';
+
+		// Prepend empty header for the time gutter column
+		if ( $is_time_grid ) {
+			$cells .= '<th scope="col" class="gatherpress-calendar__time-gutter-header" aria-hidden="true"></th>';
+		}
 
 		// Header for the hidden week number column, so the row headers line up.
 		if ( $render_week_numbers ) {

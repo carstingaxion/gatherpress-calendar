@@ -13,6 +13,7 @@
   ],
   "usesContext": [
     "queryId",
+    "query",
     "gatherpress/year",
     "gatherpress/month",
     "gatherpress/dayDate",
@@ -21,8 +22,16 @@
     "gatherpress/isEmpty",
     "gatherpress/isToday",
     "gatherpress/weekday",
-    "gatherpress/isWeekend"
+    "gatherpress/isWeekend",
+    "gatherpress/viewType",
+    "gatherpress/enableTimeGrid",
+    "gatherpress/dayStartHour",
+    "gatherpress/dayEndHour",
+    "gatherpress/numRibbonSlots"
   ],
+  "providesContext": {
+    "gatherpress/slotHeight": "slotHeight"
+  },
   "attributes": {
     "date": {
       "type": "string",
@@ -39,6 +48,10 @@
     "isToday": {
       "type": "boolean",
       "default": false
+    },
+    "slotHeight": {
+      "type": "number",
+      "default": 48
     },
     "layout": {
       "type": "object",

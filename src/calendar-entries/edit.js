@@ -100,11 +100,11 @@ const EventItem = memo( function EventItemComponent( {
 
 	const isAllDay = Boolean(
 		typeof post === 'object' &&
-		( post?.isAllDay ||
-			post?.meta?.gatherpress_is_all_day === true ||
-			post?.meta?.gatherpress_is_all_day === '1' ||
-			post?.meta?.gatherpress_is_all_day === 1 ||
-			post?.meta?.gatherpress_is_all_day === 'true' )
+			( post?.isAllDay ||
+				post?.meta?.gatherpress_is_all_day === true ||
+				post?.meta?.gatherpress_is_all_day === '1' ||
+				post?.meta?.gatherpress_is_all_day === 1 ||
+				post?.meta?.gatherpress_is_all_day === 'true' )
 	);
 	const totalDays = typeof post === 'object' ? ( post?.totalDays ?? 1 ) : 1;
 	const isMultiDay = totalDays > 1 || isAllDay;
@@ -118,6 +118,13 @@ const EventItem = memo( function EventItemComponent( {
 	const isContinues = Boolean(
 		typeof post === 'object' && post?.isContinues
 	);
+
+	// Timed grid coordinates
+	const isTimed = Boolean( typeof post === 'object' && post?.isTimed );
+	const timeRowStart = post?.timeRowStart;
+	const timeRowEnd = post?.timeRowEnd;
+	const overlapTotal = post?.overlapTotal ?? 1;
+	const overlapIndex = post?.overlapIndex ?? 0;
 
 	const contextValue = useMemo( () => {
 		// The placeholder item on an empty day has no event. Clear the post
@@ -149,6 +156,7 @@ const EventItem = memo( function EventItemComponent( {
 		postId ? `post-${ postId }` : '',
 		isAllDay ? 'is-all-day' : '',
 		isMultiDay ? 'is-multi-day' : '',
+		isTimed ? 'is-timed-event' : '',
 		span ? `is-span-${ span }` : '',
 		isContinued ? 'is-span-continued' : '',
 		isContinues ? 'is-span-continues' : '',
@@ -164,6 +172,14 @@ const EventItem = memo( function EventItemComponent( {
 		'--gatherpress-calendar-dot-color': colorProps.style?.color,
 		'--gatherpress-calendar-entry-slot': slot,
 		'--gatherpress-calendar-row-span': rowSpan,
+		...( isTimed
+			? {
+					'--gatherpress-event-time-row-start': timeRowStart,
+					'--gatherpress-event-time-row-end': timeRowEnd,
+					'--gatherpress-overlap-total': overlapTotal,
+					'--gatherpress-overlap-index': overlapIndex,
+				}
+			: {} ),
 		...borderProps.style,
 		// ...spacingProps.style,
 		...shadowProps.style,
@@ -179,6 +195,7 @@ const EventItem = memo( function EventItemComponent( {
 				data-day-index={ dayIndex }
 				data-total-days={ totalDays }
 				data-row-span={ rowSpan }
+				data-is-timed={ isTimed ? 'true' : undefined }
 			>
 				{ isFirst ? (
 					// The primary, editable template container
@@ -201,8 +218,14 @@ export default function Edit( { attributes, clientId, context } ) {
 	const defaultPostType = context?.postType || 'post';
 	const blockGap = attributes?.style?.spacing?.blockGap;
 
+	const isTimeGridActive = Boolean(
+		context?.[ 'gatherpress/enableTimeGrid' ]
+	);
+
 	const blockProps = useBlockProps( {
-		className: 'wp-block-gatherpress-calendar-entries',
+		className: `wp-block-gatherpress-calendar-entries${
+			isTimeGridActive ? ' has-time-grid' : ''
+		}`,
 		style: {
 			gap: blockGap ? getGapCSSValue( blockGap ) : undefined,
 		},
