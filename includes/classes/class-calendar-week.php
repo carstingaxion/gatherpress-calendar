@@ -70,33 +70,56 @@ class Calendar_Week {
 		$week_days    = is_array( $block->context['gatherpress/weekDays'] ?? null ) ? $block->context['gatherpress/weekDays'] : array();
 		$today        = Date_Calculator::get_today();
 		$day_template = HTML_Renderer::get_inner_template_block( $block, Calendar_Day::BLOCK_NAME );
-		$days_html    = $this->render_days( $week_days, $block, $day_template, $today );
-		$week_number  = is_numeric( $block->context['gatherpress/weekNumber'] ?? null ) ? (int) $block->context['gatherpress/weekNumber'] : 0;
 
-		// Hidden row header, so screen readers announce the week when moving between rows.
-		if ( $week_number > 0 ) {
-			$days_html = sprintf(
-				'<th scope="row" class="gatherpress--screen-reader-text">%s</th>',
-				esc_html(
-					sprintf(
-						/* translators: %d: ISO 8601 week number. */
-						__( 'Week %d', 'gatherpress-calendar' ),
-						$week_number
-					)
-				)
-			) . $days_html;
+		/** @var array<string, mixed> $grid_config */
+		$grid_config   = $block->context['gatherpress/timeGridConfig'] ?? array( 'enabled' => false );
+		$is_time_grid  = ! empty( $grid_config['enabled'] );
+
+		// Calculate the highest ribbon slot used across all days in this week
+		$max_ribbon_slot = -1;
+		foreach ( $week_days as $day ) {
+			if ( is_array( $day ) && ! empty( $day['posts'] ) && is_array( $day['posts'] ) ) {
+				foreach ( $day['posts'] as $post_entry ) {
+					if ( is_array( $post_entry ) && empty( $post_entry['is_timed'] ) ) {
+						$slot            = isset( $post_entry['slot'] ) ? (int) $post_entry['slot'] : 0;
+						$max_ribbon_slot = max( $max_ribbon_slot, $slot );
+					}
+				}
+			}
+		}
+		$num_ribbon_slots = $max_ribbon_slot + 1;
+
+		// Propagate ribbon slot count into block context
+		$block->context['gatherpress/numRibbonSlots'] = $num_ribbon_slots;
+
+		$days_html   = $this->render_days( $week_days, $block, $day_template, $today, $num_ribbon_slots );
+		$gutter_html = '';
+
+		if ( $is_time_grid ) {
+			$slot_labels = '';
+			$slots       = is_array( $grid_config['slots'] ?? null ) ? $grid_config['slots'] : array();
+			foreach ( $slots as $slot_label ) {
+				$slot_labels .= sprintf( '<div class="gatherpress-calendar__time-slot-label">%s</div>', esc_html( (string) $slot_label ) );
+			}
+
+			$gutter_html = sprintf(
+				'<th scope="row" class="gatherpress-calendar__time-gutter" aria-hidden="true">%s</th>',
+				$slot_labels
+			);
 		}
 
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
-				'class'       => 'gatherpress-calendar__week',
+				'class'       => 'gatherpress-calendar__week' . ( $is_time_grid ? ' has-time-grid' : '' ),
+				'style'       => sprintf( '--gatherpress-num-ribbon-slots: %d;', $num_ribbon_slots ),
 				'data-wp-key' => $this->get_row_key( $block->context ),
 			)
 		);
 
 		return sprintf(
-			'<tr %1$s>%2$s</tr>',
+			'<tr %1$s>%2$s%3$s</tr>',
 			$wrapper_attributes,
+			$gutter_html,
 			$days_html
 		);
 	}

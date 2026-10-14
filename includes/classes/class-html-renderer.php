@@ -60,6 +60,12 @@ class HTML_Renderer {
 			$classes[] = 'has-multiple-units';
 		}
 
+		$grid_config = Date_Calculator::get_time_grid_config( $attributes, $this->block->context['query'] ?? array() );
+		if ( $grid_config['enabled'] ) {
+			++$columns_count;
+			$classes[] = 'has-time-grid';
+		}
+
 		// A new key per date range makes client-side navigation mount a new
 		// wrapper, so its init callback runs once for each new month. The
 		// callback moves focus to the month heading (see src/calendar/view.js).
