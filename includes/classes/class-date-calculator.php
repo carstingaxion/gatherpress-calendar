@@ -814,9 +814,54 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Retrieve time grid configuration respecting attributes and developer filters.
+	 * Retrieves start and end timestamps and times for an event post.
 	 *
-	 * @since 0.9.0
+	 * @param int $post_id Post ID.
+	 *
+	 * @return array{start_date: string, end_date: string, start_min: int, end_min: int}|null Datetime data or null.
+	 */
+	public static function get_post_event_datetimes( int $post_id ): ?array {
+		if ( $post_id <= 0 ) {
+			return null;
+		}
+
+		$post_type = get_post_type( $post_id );
+		if ( ! is_string( $post_type ) || ! post_type_supports( $post_type, 'gatherpress-event-date' ) ) {
+			return null;
+		}
+
+		$event     = new \GatherPress\Core\Event\Event( $post_id );
+		$datetimes = $event->get_datetime();
+		$start_raw = isset( $datetimes['datetime_start'] ) && is_string( $datetimes['datetime_start'] ) ? $datetimes['datetime_start'] : '';
+		$end_raw   = isset( $datetimes['datetime_end'] ) && is_string( $datetimes['datetime_end'] ) ? $datetimes['datetime_end'] : '';
+
+		if ( '' === $start_raw ) {
+			return null;
+		}
+
+		$start_ts = strtotime( $start_raw );
+		if ( false === $start_ts ) {
+			return null;
+		}
+
+		$end_ts = '' !== $end_raw ? strtotime( $end_raw ) : false;
+		if ( false === $end_ts || $end_ts <= $start_ts ) {
+			$end_ts = $start_ts + HOUR_IN_SECONDS;
+		}
+
+		$start_min = ( (int) gmdate( 'G', $start_ts ) * 60 ) + (int) gmdate( 'i', $start_ts );
+		$end_min   = ( (int) gmdate( 'G', $end_ts ) * 60 ) + (int) gmdate( 'i', $end_ts );
+
+		return array(
+			'start_date' => substr( $start_raw, 0, 10 ),
+			'end_date'   => '' !== $end_raw ? substr( $end_raw, 0, 10 ) : substr( $start_raw, 0, 10 ),
+			'start_min'  => $start_min,
+			'end_min'    => max( $start_min + 15, $end_min ),
+		);
+	}
+
+	/**
+	 * Retrieve time grid configuration respecting attributes, query sorting, and filters.
 	 *
 	 * @param array<string, mixed> $attributes Calendar block attributes.
 	 * @param array<string, mixed> $query      Query block context.
@@ -891,11 +936,9 @@ class Date_Calculator {
 	/**
 	 * Round minute timestamp offset to the nearest 1/4 slot duration.
 	 *
-	 * @since 0.9.0
-	 *
-	 * @param int $minutes      Minutes past midnight.
-	 * @param int $quarter_mins Minutes per quarter-slot.
-	 * @param bool $is_end      Whether rounding end time (ceils to prevent zero-length events).
+	 * @param int  $minutes      Minutes past midnight.
+	 * @param int  $quarter_mins Minutes per quarter-slot.
+	 * @param bool $is_end       Whether rounding end time (ceils to prevent zero-length events).
 	 *
 	 * @return int Rounded minutes.
 	 */
