@@ -21,7 +21,12 @@
     "gatherpress/isEmpty",
     "gatherpress/isToday",
     "gatherpress/weekday",
-    "gatherpress/isWeekend"
+    "gatherpress/isWeekend",
+    "gatherpress/isTimeGridActive",
+    "gatherpress/dayStartHour",
+    "gatherpress/dayEndHour",
+    "gatherpress/slotHeight",
+    "gatherpress/numRibbonSlots"
   ],
   "attributes": {
     "date": {
@@ -39,6 +44,10 @@
     "isToday": {
       "type": "boolean",
       "default": false
+    },
+    "slotHeight": {
+      "type": "number",
+      "default": 48
     },
     "layout": {
       "type": "object",
