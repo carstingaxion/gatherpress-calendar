@@ -123,6 +123,44 @@ class Query_Builder {
 	}
 
 	/**
+	 * Add scheduled posts to the query arguments.
+	 *
+	 * Core sets no post_status here, so WP_Query shows published posts, plus
+	 * private ones to users who may read them. Listing statuses by hand drops
+	 * that private check, so 'perm' => 'readable' puts it back. The check is
+	 * done per post type here because, with more than one post type, WP_Query
+	 * tests a 'read_private_multiple_post_types' capability that no role has.
+	 * A user who can read private posts of only some of the types sees just
+	 * their own private posts, which errs on the side of showing less.
+	 *
+	 * 'private' is added only for logged-in users, as core does. With
+	 * 'perm' => 'readable', WP_Query matches private posts that have
+	 * post_author 0 (for example from an importer or WP-CLI) to the
+	 * logged-out user ID 0, which would show them to every visitor.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param array<string, mixed> $query_args WP_Query arguments.
+	 *
+	 * @return array<string, mixed> WP_Query arguments with scheduled posts included.
+	 */
+	private static function include_scheduled_posts( array $query_args ): array {
+		$query_args['post_status'] = is_user_logged_in() ? array( 'publish', 'future', 'private' ) : array( 'publish', 'future' );
+
+		foreach ( (array) ( $query_args['post_type'] ?? 'post' ) as $type ) {
+			$type_object  = is_string( $type ) ? get_post_type_object( $type ) : null;
+			$read_private = $type_object ? $type_object->cap->read_private_posts : null;
+
+			if ( ! is_string( $read_private ) || ! current_user_can( $read_private ) ) {
+				$query_args['perm'] = 'readable';
+				break;
+			}
+		}
+
+		return $query_args;
+	}
+
+	/**
 	 * Build query arguments from block context and resolved date range.
 	 *
 	 * @since 0.1.0
@@ -150,27 +188,8 @@ class Query_Builder {
 		$query_args[ Setup::CALENDAR_QUERY_END_DATE ]   = $date_range['end_date'];
 		$query_args['posts_per_page']                   = self::get_posts_per_page();
 
-		/*
-		 * Core sets no post_status here, so WP_Query shows published posts, plus
-		 * private ones to users who may read them. Listing statuses by hand drops
-		 * that private check, so 'perm' => 'readable' puts it back. The check is
-		 * done per post type here because, with more than one post type, WP_Query
-		 * tests a 'read_private_multiple_post_types' capability that no role has.
-		 * A user who can read private posts of only some of the types sees just
-		 * their own private posts, which errs on the side of showing less.
-		 */
 		if ( true === ( $block->attributes['showScheduled'] ?? false ) ) {
-			$query_args['post_status'] = array( 'publish', 'future', 'private' );
-
-			foreach ( (array) ( $query_args['post_type'] ?? 'post' ) as $type ) {
-				$type_object  = is_string( $type ) ? get_post_type_object( $type ) : null;
-				$read_private = $type_object ? $type_object->cap->read_private_posts : null;
-
-				if ( ! is_string( $read_private ) || ! current_user_can( $read_private ) ) {
-					$query_args['perm'] = 'readable';
-					break;
-				}
-			}
+			$query_args = self::include_scheduled_posts( $query_args );
 		}
 
 		$post_type = $query_args['post_type'] ?? 'post';
