@@ -520,7 +520,7 @@ class Setup {
 		$is_calendar_query = is_array( $block_query ) && ! empty( $block_query[ self::CALENDAR_QUERY_PARAM ] );
 
 		if ( ! $is_calendar_query ) {
-			// Fallback: Check if the current block query belongs to a calendar
+			// Fallback: Check if the current block query belongs to a calendar.
 			if ( has_filter( 'the_posts', array( $this, 'gatherpress_force_pagination_max_pages' ) ) ) {
 				$is_calendar_query = true;
 			}
@@ -614,7 +614,7 @@ class Setup {
 		$query = $block_instance->context['query'] ?? null;
 
 		if ( is_array( $query ) ) {
-			// Resolve the actual requested page from context:
+			// Resolve the actual requested page from context.
 			$page           = Query_Builder::get_requested_page( $block_instance->context['queryId'] ?? null );
 			$source_post_id = Date_Calculator::resolve_source_post_id( array(), $block_instance );
 

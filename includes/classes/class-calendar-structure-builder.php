@@ -27,7 +27,7 @@ class Calendar_Structure_Builder {
 	 *
 	 * @param array{ view_type: string, unit_count: int, start_date: string, end_date: string, start_date_obj: DateTimeImmutable, end_date_obj: DateTimeImmutable, raw_week_start: DateTimeImmutable, target_date: DateTimeImmutable, year: int, month: int, heading: string } $date_range    Date range array.
 	 * @param int                                                                                                                                                                                                                                                              $start_of_week Start of week setting (0-6).
-	 * @param array<string, list<int>>                                                                                                                                                                                                                                         $posts_by_date Posts organized by date.
+	 * @param array<string, list<array{id: int, span: string, day_index: int, total_days: int, slot: int}>>|array<string, list<int>> $posts_by_date Posts organized by date.
 	 * @param bool                                                                                                                                                                                                                                                             $show_weekends Whether to include weekend days.
 	 *
 	 * @return array{
@@ -182,7 +182,7 @@ class Calendar_Structure_Builder {
 	 * @param int                      $month         Target month.
 	 * @param int                      $start_of_week Start of week setting (0-6).
 	 * @param int                      $days_in_month Number of days in month.
-	 * @param array<string, list<int>> $posts_by_date Posts by date.
+	 * @param array<string, list<array{id: int, span: string, day_index: int, total_days: int, slot: int}>>|array<string, list<int>> $posts_by_date Posts by date.
 	 * @param bool                     $show_weekends Whether to include weekend days.
 	 *
 	 * @return list<list<array<string, mixed>>>
@@ -235,7 +235,7 @@ class Calendar_Structure_Builder {
 	 *
 	 * @param DateTimeImmutable        $week_start    Start of the week.
 	 * @param int                      $unit_count    Number of units to show.
-	 * @param array<string, list<int>> $posts_by_date Posts by date.
+	 * @param array<string, list<array{id: int, span: string, day_index: int, total_days: int, slot: int}>>|array<string, list<int>> $posts_by_date Posts organized by date.
 	 * @param bool                     $show_weekends Whether to include weekend days.
 	 *
 	 * @return list<list<array<string, mixed>>>

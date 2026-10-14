@@ -83,6 +83,7 @@
 				}
 
 				.gatherpress-calendar__entry {
+
 					.gatherpress-calendar__entry-template {
 						display: flex !important;
 						flex-direction: row !important;
@@ -146,8 +147,10 @@
 
 					&.is-span-middle,
 					&.is-span-end {
+
 						&:focus-within,
 						&:has(.is-selected) {
+
 							.gatherpress-modal--trigger-open > *,
 							.wp-block-post-title,
 							.wp-block-post-title a {
@@ -161,6 +164,7 @@
 
 		/* Hide placeholder entries on empty days when the day is not being edited */
 		&.is-inactive-empty-day {
+
 			.wp-block-gatherpress-calendar-entries {
 				display: none;
 			}

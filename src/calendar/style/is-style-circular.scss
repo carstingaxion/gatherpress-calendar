@@ -7,7 +7,7 @@
 	--gatherpress-calendar-column-gap: clamp(0.5rem, 2vw, 1rem);
 	--gatherpress-calendar-header-bg: transparent;
 	--gatherpress-calendar-header-color: var(--wp--preset--color--primary, currentColor);
-	--gatherpress-calendar-day-bg: color-mix(in srgb, currentColor 8%, transparent);
+	--gatherpress-calendar-day-bg: color-mix(in srgb, currentcolor 8%, transparent);
 	--gatherpress-calendar-day-has-posts-border: transparent;
 	--gatherpress-calendar-day-today-outline: transparent;
 	--gatherpress-calendar-day-today-color: var(--wp--preset--color--base, #fff);
@@ -35,7 +35,7 @@
 			align-self: center;
 			border-radius: 50%;
 			aspect-ratio: 1;
-			border:none;
+			border: none;
 			padding: 0.35rem;
 			display: flex;
 			flex-direction: column;
@@ -101,7 +101,7 @@
 			}
 
 			&.is-today {
-				background: color-mix(in srgb, currentColor 23%, transparent);
+				background: color-mix(in srgb, currentcolor 23%, transparent);
 
 				/* Invert cutout on the today circle */
 				.gatherpress-calendar__day-number {
@@ -132,10 +132,10 @@
 			justify-content: center;
 
 			.gatherpress-modal--trigger-open:not(.wp-block-gatherpress-modal *) > * {
-				box-shadow: 0 2px 4px color-mix(in srgb, currentColor 20%, transparent);
+				box-shadow: 0 2px 4px color-mix(in srgb, currentcolor 20%, transparent);
 
 				&:hover {
-					box-shadow: 0 4px 8px color-mix(in srgb, currentColor 40%, transparent);
+					box-shadow: 0 4px 8px color-mix(in srgb, currentcolor 40%, transparent);
 					transform: scale(1.4);
 				}
 			}
