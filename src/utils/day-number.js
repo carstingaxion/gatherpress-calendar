@@ -8,6 +8,9 @@
  * @since 0.4.0
  */
 
+// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+import { __experimentalGetGapCSSValue as getGapCSSValue } from '@wordpress/block-editor';
+
 const DAY_NUMBER_BINDING_SOURCE = 'gatherpress/calendar-day';
 
 /**
@@ -58,117 +61,149 @@ export function getDayNumberJustifyContent( blocks ) {
 	return JUSTIFY_CONTENT_BY_TEXT_ALIGN[ textAlign ];
 }
 
+const FLEX_JUSTIFY_CONTENT = {
+	left: 'flex-start',
+	right: 'flex-end',
+	center: 'center',
+};
+
+const FLEX_VERTICAL_ALIGNMENT = {
+	top: 'flex-start',
+	center: 'center',
+	bottom: 'flex-end',
+};
+
 /**
- * Resolves Gutenberg layout attributes (flex, grid, orientation, justification, alignment)
- * into standard Core classes and inline styles for virtual previews.
+ * Resolves the flex layout styles, as core's wp_get_layout_style() does.
  *
- * @param {Object} layout - Block's layout attribute object.
+ * Each orientation has one extra option: a row can use "space-between"
+ * justification and "stretch" alignment, a stack the reverse. In a stack,
+ * justification sets align-items, with flex-start as the default, and
+ * vertical alignment sets justify-content.
+ *
+ * @param {Object} layout Block's layout attribute object.
+ *
+ * @return {Object} Inline styles.
+ */
+function getFlexLayoutStyle( layout ) {
+	const isVertical = 'vertical' === layout.orientation;
+	const justifyOptions = {
+		...FLEX_JUSTIFY_CONTENT,
+		...( isVertical
+			? { stretch: 'stretch' }
+			: { 'space-between': 'space-between' } ),
+	};
+	const alignmentOptions = {
+		...FLEX_VERTICAL_ALIGNMENT,
+		...( isVertical
+			? { 'space-between': 'space-between' }
+			: { stretch: 'stretch' } ),
+	};
+	const justification = justifyOptions[ layout.justifyContent ];
+	const alignment = alignmentOptions[ layout.verticalAlignment ];
+
+	const style = {
+		display: 'flex',
+		flexWrap: 'nowrap' === layout.flexWrap ? 'nowrap' : 'wrap',
+	};
+
+	if ( isVertical ) {
+		style.flexDirection = 'column';
+		style.alignItems = justification ?? 'flex-start';
+		if ( alignment ) {
+			style.justifyContent = alignment;
+		}
+	} else {
+		if ( justification ) {
+			style.justifyContent = justification;
+		}
+		if ( alignment ) {
+			style.alignItems = alignment;
+		}
+	}
+
+	return style;
+}
+
+/**
+ * Resolves the grid layout styles, as core's wp_get_layout_style() does.
+ *
+ * "Manual" mode sets columnCount (and optionally rowCount), "Auto" mode
+ * sets minimumColumnWidth. With both, the columns shrink to the minimum
+ * width when the container is narrow.
+ *
+ * @param {Object}        layout   Block's layout attribute object.
+ * @param {string|Object} blockGap Block's style.spacing.blockGap value.
+ *
+ * @return {Object} Inline styles.
+ */
+function getGridLayoutStyle( layout, blockGap ) {
+	const { columnCount, minimumColumnWidth, rowCount, autoFit } = layout;
+	const autoPlacement = autoFit ? 'auto-fit' : 'auto-fill';
+	const style = { display: 'grid' };
+
+	if ( columnCount && minimumColumnWidth ) {
+		// The column gap is the 'left' side of a split gap; core's default is 0.5em.
+		const gapSide =
+			blockGap && 'object' === typeof blockGap ? blockGap.left : blockGap;
+		let gap = getGapCSSValue( gapSide ) || '0.5em';
+		if ( '0' === gap ) {
+			gap = '0px';
+		}
+		const maxValue = `max(min(${ minimumColumnWidth }, 100%), (100% - (${ gap } * (${ columnCount } - 1))) /${ columnCount })`;
+		style.gridTemplateColumns = `repeat(${ autoPlacement }, minmax(${ maxValue }, 1fr))`;
+	} else if ( columnCount ) {
+		style.gridTemplateColumns = `repeat(${ columnCount }, minmax(0, 1fr))`;
+	} else {
+		style.gridTemplateColumns = `repeat(${ autoPlacement }, minmax(min(${
+			minimumColumnWidth || '12rem'
+		}, 100%), 1fr))`;
+	}
+
+	if ( ! columnCount || minimumColumnWidth ) {
+		style.containerType = 'inline-size';
+	}
+
+	if ( columnCount && rowCount ) {
+		style.gridTemplateRows = `repeat(${ rowCount }, minmax(1rem, auto))`;
+	}
+
+	return style;
+}
+
+/**
+ * Resolves Gutenberg layout attributes into the classes and inline styles
+ * that core's layout support gives the live day, for the virtual previews.
+ *
+ * @param {Object}        layout   Block's layout attribute object.
+ * @param {string|Object} blockGap Block's style.spacing.blockGap value, used by grid columns.
+ *
  * @return {Object} { className: string, style: Object }
  */
-export function getLayoutProps( layout = {} ) {
+export function getLayoutProps( layout = {}, blockGap = undefined ) {
 	const classes = [];
-	const style = {};
+	let style = {};
 
 	const type = layout?.type || 'default';
 
 	if ( type === 'flex' ) {
 		classes.push( 'is-layout-flex' );
-		style.display = 'flex';
-
-		const isVertical = layout.orientation === 'vertical';
-
-		// Orientation (Row vs Column)
-		if ( isVertical ) {
-			classes.push( 'is-vertical' );
-			style.flexDirection = 'column';
-		} else {
-			classes.push( 'is-horizontal' );
-			style.flexDirection = 'row';
+		// The same classes as core's wp_render_layout_support_flag().
+		if ( layout.orientation ) {
+			classes.push( `is-${ layout.orientation }` );
 		}
-
-		// Flex Wrap
-		if ( layout.flexWrap === 'nowrap' ) {
+		if ( layout.justifyContent ) {
+			classes.push(
+				`is-content-justification-${ layout.justifyContent }`
+			);
+		}
+		if ( 'nowrap' === layout.flexWrap ) {
 			classes.push( 'is-nowrap' );
-			style.flexWrap = 'nowrap';
-		} else {
-			style.flexWrap = 'wrap';
 		}
-
-		// Horizontal alignment (Justification)
-		const justifyMap = {
-			left: {
-				className: 'is-content-justification-left',
-				css: 'flex-start',
-			},
-			center: {
-				className: 'is-content-justification-center',
-				css: 'center',
-			},
-			right: {
-				className: 'is-content-justification-right',
-				css: 'flex-end',
-			},
-			'space-between': {
-				className: 'is-content-justification-space-between',
-				css: 'space-between',
-			},
-		};
-
-		if ( layout.justifyContent && justifyMap[ layout.justifyContent ] ) {
-			classes.push( justifyMap[ layout.justifyContent ].className );
-			const cssVal = justifyMap[ layout.justifyContent ].css;
-
-			// In vertical flex, horizontal alignment belongs to the cross axis (alignItems)
-			if ( isVertical ) {
-				style.alignItems =
-					cssVal === 'space-between' ? 'stretch' : cssVal;
-			} else {
-				style.justifyContent = cssVal;
-			}
-		}
-
-		// Vertical alignment
-		const alignMap = {
-			top: {
-				className: 'is-vertically-aligned-top',
-				css: 'flex-start',
-			},
-			center: {
-				className: 'is-vertically-aligned-center',
-				css: 'center',
-			},
-			bottom: {
-				className: 'is-vertically-aligned-bottom',
-				css: 'flex-end',
-			},
-			stretch: {
-				className: 'is-vertically-aligned-stretch',
-				css: 'stretch',
-			},
-		};
-
-		if (
-			layout.verticalAlignment &&
-			alignMap[ layout.verticalAlignment ]
-		) {
-			classes.push( alignMap[ layout.verticalAlignment ].className );
-			const cssVal = alignMap[ layout.verticalAlignment ].css;
-
-			// In vertical flex, vertical alignment belongs to the main axis (justifyContent)
-			if ( isVertical ) {
-				style.justifyContent =
-					cssVal === 'stretch' ? 'flex-start' : cssVal;
-			} else {
-				style.alignItems = cssVal;
-			}
-		}
+		style = getFlexLayoutStyle( layout );
 	} else if ( type === 'grid' ) {
 		classes.push( 'is-layout-grid' );
-		style.display = 'grid';
-		const columns = layout.columnFields || layout.columns;
-		if ( columns ) {
-			style.gridTemplateColumns = `repeat(${ columns }, minmax(0, 1fr))`;
-		}
+		style = getGridLayoutStyle( layout, blockGap );
 	} else if ( type === 'constrained' ) {
 		classes.push( 'is-layout-constrained' );
 	} else {

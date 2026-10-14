@@ -141,7 +141,10 @@ function DayPreviewCellComponent( {
 	const borderProps = useBorderProps( dayBlockAttributes ?? {} );
 	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
-	const layoutProps = getLayoutProps( dayBlockAttributes?.layout );
+	const layoutProps = getLayoutProps(
+		dayBlockAttributes?.layout,
+		dayBlockAttributes?.style?.spacing?.blockGap
+	);
 	// console.group("getLayoutProps");
 	// console.log(dayBlockAttributes);
 	// console.log(colorProps.className);
