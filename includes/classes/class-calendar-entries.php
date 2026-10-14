@@ -176,13 +176,26 @@ class Calendar_Entries {
 		$row_span_raw  = $span_data['row_span'] ?? 1;
 		$row_span      = is_numeric( $row_span_raw ) ? (int) $row_span_raw : 1;
 		$extra_classes = $this->build_span_classes( $span_data, $row_span );
+
+		$timed_style = '';
+		if ( ! empty( $span_data['is_timed'] ) && isset( $span_data['time_row_start'], $span_data['time_row_end'] ) ) {
+			$extra_classes[] = 'is-timed-event';
+			$timed_style     = sprintf(
+				'--gatherpress-event-time-row-start: %d; --gatherpress-event-time-row-end: %d; --gatherpress-overlap-total: %d; --gatherpress-overlap-index: %d;',
+				(int) $span_data['time_row_start'],
+				(int) $span_data['time_row_end'],
+				(int) ( $span_data['overlap_total'] ?? 1 ),
+				(int) ( $span_data['overlap_index'] ?? 0 )
+			);
+		}
+
 		$classnames    = trim( $entry_styles['classnames'] . ' ' . implode( ' ', $extra_classes ) );
 		$entry_classes = implode( ' ', get_post_class( $classnames, $post_id ) );
 
 		$slot_raw        = $span_data['slot'] ?? null;
 		$slot_style      = is_numeric( $slot_raw ) ? sprintf( '--gatherpress-calendar-entry-slot: %d;', (int) $slot_raw ) : '';
 		$row_span_style  = sprintf( '--gatherpress-calendar-row-span: %d;', $row_span );
-		$combined_style  = trim( $entry_styles['inline_styles'] . ' ' . $slot_style . ' ' . $row_span_style );
+		$combined_style  = trim( $entry_styles['inline_styles'] . ' ' . $slot_style . ' ' . $row_span_style . ' ' . $timed_style );
 		$style_attribute = '' !== $combined_style ? sprintf( ' style="%s"', esc_attr( $combined_style ) ) : '';
 
 		$data_attributes = $this->build_entry_data_attributes( $span_data, $row_span );
