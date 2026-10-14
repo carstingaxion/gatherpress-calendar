@@ -11,6 +11,7 @@ import {
 	Button,
 	SelectControl,
 	TextControl,
+	ToggleControl,
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 /* eslint-enable @wordpress/no-unsafe-wp-apis */
@@ -57,6 +58,8 @@ const MAX_UNITS = {
  * @param {string}   props.postTitle         Resolved post title.
  * @param {boolean}  props.hasPostDates      Whether post dates are actively driving the range.
  * @param {boolean}  props.hasCurrentSupport Whether context post type supports events.
+ * @param {boolean}  props.enableTimeGrid    Whether the time grid is enabled.
+ * @param {Function} props.onTimeGridChange  Callback when time grid toggle changes.
  *
  * @return {Element} Date controls component.
  */
@@ -80,12 +83,20 @@ export function DateControls( {
 	postTitle = '',
 	hasPostDates = false,
 	hasCurrentSupport = false,
+	enableTimeGrid = false,
+	onTimeGridChange,
 } ) {
 	const offsetHelp = useDateOffsetHelp( dateModifier, viewType );
 	const maxUnits = MAX_UNITS[ viewType ] || 12;
 
 	const isPostAnchored = isPostDateSource( dateRangeSource );
 	const isDefaultMode = ! isPostAnchored;
+
+	// Condition: Day or Week view AND Query Loop sorted by datetime
+	const isDatetimeOrdered =
+		( context?.query?.orderBy || context?.query?.orderby ) === 'datetime';
+	const supportsTimeGrid =
+		( 'day' === viewType || 'week' === viewType ) && isDatetimeOrdered;
 
 	const handleViewTypeChange = ( newViewType ) => {
 		const newMax = MAX_UNITS[ newViewType ] || 12;
@@ -337,6 +348,19 @@ export function DateControls( {
 						</>
 					) }
 				</>
+			) }
+
+			{ /* Global Time Grid Toggle (Guarded) */ }
+			{ supportsTimeGrid && (
+				<ToggleControl
+					label={ __( 'Show Time Grid', 'gatherpress-calendar' ) }
+					help={ __(
+						'Render timed events vertically along an hour timeline.',
+						'gatherpress-calendar'
+					) }
+					checked={ !! enableTimeGrid }
+					onChange={ onTimeGridChange }
+				/>
 			) }
 		</>
 	);

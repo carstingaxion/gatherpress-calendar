@@ -24,10 +24,14 @@
     "gatherpress/activeDate",
     "gatherpress/setActiveDate",
     "gatherpress/showWeekends",
-    "gatherpress/enableTimeGrid"
+    "gatherpress/viewType",
+    "gatherpress/enableTimeGrid",
+    "gatherpress/timeGridConfig"
   ],
   "providesContext": {
-    "gatherpress/weekIndex": "weekIndex"
+    "gatherpress/weekIndex": "weekIndex",
+    "gatherpress/dayStartHour": "dayStartHour",
+    "gatherpress/dayEndHour": "dayEndHour"
   },
   "attributes": {
     "weekIndex": {

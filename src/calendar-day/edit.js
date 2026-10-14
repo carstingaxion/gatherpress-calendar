@@ -9,8 +9,11 @@ import {
 	BlockContextProvider,
 	useBlockProps,
 	useInnerBlocksProps,
+	InspectorControls,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
+import { PanelBody, RangeControl } from '@wordpress/components';
+import { __ } from '@wordpress/i18n';
 import { useSelect } from '@wordpress/data';
 import { useMemo, memo } from '@wordpress/element';
 
@@ -25,18 +28,39 @@ const EMPTY_ARRAY = [];
  *
  * Renders an individual calendar cell with date information and event dots/content.
  *
- * @param {Object} props          Component props.
- * @param {Object} props.context  Context provided by parent Calendar / query.
- * @param {string} props.clientId This block's client ID.
+ * @param {Object}   props               Component props.
+ * @param {Object}   props.attributes    Block attributes.
+ * @param {Function} props.setAttributes Function to update block attributes.
+ * @param {Object}   props.context       Context provided by parent Calendar / query.
+ * @param {string}   props.clientId      This block's client ID.
  * @return {Element} Day cell preview element.
  */
-export default memo( function Edit( { context, clientId } ) {
+export default memo( function Edit( {
+	attributes,
+	setAttributes,
+	context,
+	clientId,
+} ) {
+	const { slotHeight = 48 } = attributes || {};
+
 	const dayDate = context?.[ 'gatherpress/dayDate' ] ?? '';
 	const dayNumber = context?.[ 'gatherpress/dayNumber' ] ?? 1;
 	const isToday = context?.[ 'gatherpress/isToday' ] ?? false;
 	const isEmpty = context?.[ 'gatherpress/isEmpty' ] ?? false;
 	const weekday = context?.[ 'gatherpress/weekday' ] ?? '';
 	const isWeekend = context?.[ 'gatherpress/isWeekend' ] ?? false;
+	const viewType = context?.[ 'gatherpress/viewType' ] ?? 'month';
+	const numRibbonSlots = context?.[ 'gatherpress/numRibbonSlots' ] ?? 0;
+	const dayStartHour = context?.[ 'gatherpress/dayStartHour' ] ?? 8;
+	const dayEndHour = context?.[ 'gatherpress/dayEndHour' ] ?? 20;
+
+	const isDatetimeOrdered =
+		( context?.query?.orderBy || context?.query?.orderby ) === 'datetime';
+	const isTimeGridActive = Boolean(
+		( 'day' === viewType || 'week' === viewType ) &&
+			isDatetimeOrdered &&
+			context?.[ 'gatherpress/enableTimeGrid' ]
+	);
 
 	const rawPosts = context?.[ 'gatherpress/dayPosts' ];
 	const posts = useMemo( () => rawPosts ?? EMPTY_ARRAY, [ rawPosts ] );
@@ -57,8 +81,26 @@ export default memo( function Edit( { context, clientId } ) {
 			'gatherpress/isToday': isToday,
 			'gatherpress/weekday': weekday,
 			'gatherpress/isWeekend': isWeekend,
+			'gatherpress/enableTimeGrid': isTimeGridActive,
+			'gatherpress/numRibbonSlots': numRibbonSlots,
+			'gatherpress/dayStartHour': dayStartHour,
+			'gatherpress/dayEndHour': dayEndHour,
+			'gatherpress/slotHeight': slotHeight,
 		} ),
-		[ dayDate, dayNumber, posts, isEmpty, isToday, weekday, isWeekend ]
+		[
+			dayDate,
+			dayNumber,
+			posts,
+			isEmpty,
+			isToday,
+			weekday,
+			isWeekend,
+			isTimeGridActive,
+			numRibbonSlots,
+			dayStartHour,
+			dayEndHour,
+			slotHeight,
+		]
 	);
 
 	// Check whether this day cell or any of its inner blocks are currently selected,
@@ -87,6 +129,7 @@ export default memo( function Edit( { context, clientId } ) {
 		posts.length > 0 ? 'has-posts' : '',
 		isWeekend ? 'is-weekend' : '',
 		weekday ? `is-${ weekday }` : '',
+		isTimeGridActive ? 'has-time-grid' : '',
 		! isDayActive && posts.length === 0 ? 'is-inactive-empty-day' : '',
 	]
 		.filter( Boolean )
@@ -94,6 +137,9 @@ export default memo( function Edit( { context, clientId } ) {
 
 	const blockProps = useBlockProps( {
 		className: classNames,
+		style: {
+			'--gatherpress-num-ribbon-slots': numRibbonSlots,
+		},
 	} );
 
 	const { children, ...innerBlocksWrapperProps } = useInnerBlocksProps(
@@ -109,17 +155,48 @@ export default memo( function Edit( { context, clientId } ) {
 	}
 
 	return (
-		<td { ...blockProps }>
-			{ ! hasDayNumberBlock && (
-				<div className="gatherpress-calendar__day-number">
-					{ dayNumber }
-				</div>
+		<>
+			{ isTimeGridActive && (
+				<InspectorControls>
+					<PanelBody
+						title={ __(
+							'Time Grid Sizing',
+							'gatherpress-calendar'
+						) }
+						initialOpen={ true }
+					>
+						<RangeControl
+							label={ __(
+								'Slot Height (Vertical Space)',
+								'gatherpress-calendar'
+							) }
+							value={ slotHeight }
+							onChange={ ( val ) =>
+								setAttributes( { slotHeight: val } )
+							}
+							min={ 32 }
+							max={ 120 }
+							step={ 4 }
+							help={ __(
+								'Adjusts the vertical space per hour slot in pixels.',
+								'gatherpress-calendar'
+							) }
+						/>
+					</PanelBody>
+				</InspectorControls>
 			) }
-			<div { ...innerBlocksWrapperProps }>
-				<BlockContextProvider value={ dayContext }>
-					{ children }
-				</BlockContextProvider>
-			</div>
-		</td>
+			<td { ...blockProps }>
+				{ ! hasDayNumberBlock && (
+					<div className="gatherpress-calendar__day-number">
+						{ dayNumber }
+					</div>
+				) }
+				<div { ...innerBlocksWrapperProps }>
+					<BlockContextProvider value={ dayContext }>
+						{ children }
+					</BlockContextProvider>
+				</div>
+			</td>
+		</>
 	);
 } );

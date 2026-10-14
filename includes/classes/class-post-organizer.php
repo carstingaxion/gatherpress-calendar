@@ -112,7 +112,7 @@ class Post_Organizer {
 
 			$is_all_day_meta = get_post_meta( $post_id, 'gatherpress_is_all_day', true );
 			$is_all_day      = ! empty( $is_all_day_meta );
-			$spans[] = array(
+			$spans[]         = array(
 				'id'         => $post_id,
 				'start_obj'  => $span['start_obj'],
 				'start_date' => $dates['start'],
@@ -266,14 +266,14 @@ class Post_Organizer {
 	 * Allocates slots and groups entries into the daily map.
 	 *
 	 * @param array<int, array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool}> $sorted_events Sorted event descriptors.
-	 * @param array<string, mixed>                                                                                              $grid_config   Time grid configuration.
+	 * @param array<string, mixed>                                                                                            $grid_config   Time grid configuration.
 	 *
 	 * @return array<string, list<array<string, mixed>>> Slotted entries by date.
 	 */
 	public static function build_slotted_calendar_entries( array $sorted_events, array $grid_config = array() ): array {
-		$occupied_slots    = array();
-		$posts_by_date     = array();
-		$is_time_grid      = ! empty( $grid_config['enabled'] );
+		$occupied_slots = array();
+		$posts_by_date  = array();
+		$is_time_grid   = ! empty( $grid_config['enabled'] );
 
 		foreach ( $sorted_events as $event ) {
 			$is_multi_day = $event['total_days'] > 1 || ! empty( $event['is_all_day'] );
@@ -291,15 +291,15 @@ class Post_Organizer {
 				}
 
 				$posts_by_date[ $date_str ][] = array(
-					'id'              => $event['id'],
-					'span'            => 'single',
-					'day_index'       => 1,
-					'total_days'      => 1,
-					'is_all_day'      => false,
-					'is_timed'        => true,
-					'time_row_start'  => $tracks['row_start'],
-					'time_row_end'    => $tracks['row_end'],
-					'slot'            => 0,
+					'id'             => $event['id'],
+					'span'           => 'single',
+					'day_index'      => 1,
+					'total_days'     => 1,
+					'is_all_day'     => false,
+					'is_timed'       => true,
+					'time_row_start' => $tracks['row_start'],
+					'time_row_end'   => $tracks['row_end'],
+					'slot'           => 0,
 				);
 				continue;
 			}
@@ -346,7 +346,7 @@ class Post_Organizer {
 					$overlap_idx = 0;
 
 					foreach ( $timed_indices as $other_idx ) {
-						$other = $day_entries[ $other_idx ];
+						$other          = $day_entries[ $other_idx ];
 						$is_overlapping = ( $curr['time_row_start'] < $other['time_row_end'] ) && ( $curr['time_row_end'] > $other['time_row_start'] );
 						if ( $is_overlapping ) {
 							++$overlaps;
@@ -460,11 +460,7 @@ class Post_Organizer {
 		$day_end_min   = $end_hour * 60;
 
 		// Skip events ending before day starts or starting after day ends
-		if ( $datetimes['end_min'] <= $day_start_min || $datetimes['start_min'] >= $day_end_min ) {
-			return null;
-		}
-
-		// Clamp event to visible day window
+		// and clamp event to visible day window
 		$clamped_start = max( $day_start_min, $datetimes['start_min'] );
 		$clamped_end   = min( $day_end_min, $datetimes['end_min'] );
 
@@ -484,6 +480,4 @@ class Post_Organizer {
 			'row_end'   => max( $start_track + 1, $end_track ),
 		);
 	}
-
-
 }

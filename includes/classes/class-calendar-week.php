@@ -71,30 +71,37 @@ class Calendar_Week {
 		$today        = Date_Calculator::get_today();
 		$day_template = HTML_Renderer::get_inner_template_block( $block, Calendar_Day::BLOCK_NAME );
 
+		// 1. Resolve time grid config from context, or calculate directly as fallback
 		/** @var array<string, mixed> $grid_config */
-		$grid_config   = $block->context['gatherpress/timeGridConfig'] ?? array( 'enabled' => false );
-		$is_time_grid  = ! empty( $grid_config['enabled'] );
+		$grid_config = $block->context['gatherpress/timeGridConfig'] ?? array();
+		// if ( empty( $grid_config ) ) {
+		// 	$parent_calendar = $block->context['gatherpress/parentCalendarAttrs'] ?? array();
+		// 	$grid_config     = Date_Calculator::get_time_grid_config( $parent_calendar, $block->context['query'] ?? array() );
+		// }
 
-		// Calculate the highest ribbon slot used across all days in this week
+		$is_time_grid = ! empty( $grid_config['enabled'] );
+
+		// 2. Calculate maximum ribbon slot index across all days in this week
 		$max_ribbon_slot = -1;
 		foreach ( $week_days as $day ) {
 			if ( is_array( $day ) && ! empty( $day['posts'] ) && is_array( $day['posts'] ) ) {
 				foreach ( $day['posts'] as $post_entry ) {
 					if ( is_array( $post_entry ) && empty( $post_entry['is_timed'] ) ) {
-						$slot            = isset( $post_entry['slot'] ) ? (int) $post_entry['slot'] : 0;
+						$slot_raw        = $post_entry['slot'] ?? 0;
+						$slot            = is_numeric( $slot_raw ) ? (int) $slot_raw : 0;
 						$max_ribbon_slot = max( $max_ribbon_slot, $slot );
 					}
 				}
 			}
 		}
 		$num_ribbon_slots = $max_ribbon_slot + 1;
-
-		// Propagate ribbon slot count into block context
 		$block->context['gatherpress/numRibbonSlots'] = $num_ribbon_slots;
 
 		$days_html   = $this->render_days( $week_days, $block, $day_template, $today, $num_ribbon_slots );
-		$gutter_html = '';
+		$week_number = is_numeric( $block->context['gatherpress/weekNumber'] ?? null ) ? (int) $block->context['gatherpress/weekNumber'] : 0;
 
+		// 3. Render the Time Gutter column if active
+		$gutter_html = '';
 		if ( $is_time_grid ) {
 			$slot_labels = '';
 			$slots       = is_array( $grid_config['slots'] ?? null ) ? $grid_config['slots'] : array();
@@ -102,10 +109,25 @@ class Calendar_Week {
 				$slot_labels .= sprintf( '<div class="gatherpress-calendar__time-slot-label">%s</div>', esc_html( (string) $slot_label ) );
 			}
 
+			// 28px accounts for the day-number row, plus any ribbon slots above the time grid
 			$gutter_html = sprintf(
-				'<th scope="row" class="gatherpress-calendar__time-gutter" aria-hidden="true">%s</th>',
+				'<th scope="row" class="gatherpress-calendar__time-gutter" aria-hidden="true" style="padding-top: calc(28px + %d * 24px);">%s</th>',
+				$num_ribbon_slots,
 				$slot_labels
 			);
+		}
+
+		if ( $week_number > 0 ) {
+			$days_html = sprintf(
+				'<th scope="row" class="gatherpress--screen-reader-text">%s</th>',
+				esc_html(
+					sprintf(
+						/* translators: %d: ISO 8601 week number. */
+						__( 'Week %d', 'gatherpress-calendar' ),
+						$week_number
+					)
+				)
+			) . $days_html;
 		}
 
 		$wrapper_attributes = get_block_wrapper_attributes(
@@ -211,21 +233,25 @@ class Calendar_Week {
 	 *
 	 * @return array<string, mixed> Day block context.
 	 */
-	private function build_day_context( array $day, array $day_posts, array $parent_context, string $today ): array {
+	private function build_day_context( array $day, array $day_posts, array $parent_context, string $today, int $num_ribbon_slots = 0 ): array {
 		$day_date = is_string( $day['date'] ?? null ) ? $day['date'] : '';
 
-		return array_merge(
+		/** @var array<string, mixed> $context */
+		$context = array_merge(
 			$parent_context,
 			array(
-				'gatherpress/dayDate'   => $day_date,
-				'gatherpress/dayNumber' => $day['day'] ?? 0,
-				'gatherpress/dayPosts'  => $day_posts,
-				'gatherpress/isEmpty'   => ! empty( $day['isEmpty'] ),
-				'gatherpress/isToday'   => '' !== $day_date && $day_date === $today,
-				'gatherpress/weekday'   => $day['weekday'] ?? '',
-				'gatherpress/isWeekend' => ! empty( $day['isWeekend'] ),
+				'gatherpress/dayDate'        => $day_date,
+				'gatherpress/dayNumber'      => $day['day'] ?? 0,
+				'gatherpress/dayPosts'       => $day_posts,
+				'gatherpress/isEmpty'        => ! empty( $day['isEmpty'] ),
+				'gatherpress/isToday'        => '' !== $day_date && $day_date === $today,
+				'gatherpress/weekday'        => $day['weekday'] ?? '',
+				'gatherpress/isWeekend'      => ! empty( $day['isWeekend'] ),
+				'gatherpress/numRibbonSlots' => $num_ribbon_slots,
 			)
 		);
+
+		return $context;
 	}
 
 	/**
@@ -238,7 +264,7 @@ class Calendar_Week {
 	 *
 	 * @return string Rendered HTML of all day cells.
 	 */
-	private function render_days( array $week_days, WP_Block $block, array $day_template, string $today ): string {
+	private function render_days( array $week_days, WP_Block $block, array $day_template, string $today, int $num_ribbon_slots = 0 ): string {
 		$output     = '';
 		$total_cols = count( $week_days );
 
@@ -248,8 +274,8 @@ class Calendar_Week {
 			}
 
 			$day_posts   = is_array( $day['posts'] ?? null ) ? $day['posts'] : array();
-			$annotated   = $this->annotate_day_posts( $day_posts, $col_index, $week_days, $total_cols );
-			$day_context = $this->build_day_context( $day, $annotated, $block->context, $today );
+			$annotated   = $this->annotate_day_posts( $day_posts, (int) $col_index, $week_days, $total_cols );
+			$day_context = $this->build_day_context( $day, $annotated, $block->context, $today, $num_ribbon_slots );
 
 			$day_block = new WP_Block( $day_template, $day_context );
 			$output   .= $day_block->render();

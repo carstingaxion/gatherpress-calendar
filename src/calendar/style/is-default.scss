@@ -88,6 +88,44 @@
 			display: contents;
 		}
 
+		// When Time Grid is active: 52px for the time gutter column, remaining columns for days
+		&.has-time-grid {
+			grid-template-columns: 52px repeat(calc(var(--gatherpress-calendar-columns, 7) - 1), minmax(0, 1fr));
+		}
+
+		// Gutter header column in thead
+		th.gatherpress-calendar__time-gutter-header {
+			width: 52px;
+			min-width: 52px;
+			background: var(--gatherpress-calendar-header-bg);
+			border: none;
+			padding: 0;
+			aspect-ratio: auto;
+		}
+
+		// Gutter time labels column in tbody
+		th.gatherpress-calendar__time-gutter {
+			width: 52px;
+			min-width: 52px;
+			background: transparent;
+			border: none;
+			padding: 0;
+			aspect-ratio: auto;
+			display: flex;
+			flex-direction: column;
+
+			.gatherpress-calendar__time-slot-label {
+				height: var(--gatherpress-calendar-slot-height, 48px);
+				box-sizing: border-box;
+				padding-inline-end: 8px;
+				font-size: 0.6875rem;
+				font-weight: 500;
+				color: color-mix(in srgb, currentColor 60%, transparent);
+				text-align: end;
+				transform: translateY(-50%);
+			}
+		}
+
 		/* Weekday Column Headers (Sun, Mon, Tue...) */
 		th {
 			background: var(--gatherpress-calendar-header-bg);

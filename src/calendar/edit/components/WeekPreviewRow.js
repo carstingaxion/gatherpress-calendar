@@ -35,21 +35,50 @@ function WeekPreviewRowComponent( {
 	weekBlockAttributes,
 	dayBlockAttributes,
 	onActivateDay,
+	numRibbonSlots = 0,
+	isTimeGrid = false,
+	timeGridConfig = {},
 } ) {
 	// Mirror the real calendar-week block's own color/spacing/shadow
 	// styling so every previewed week row looks like the live one.
 	const colorProps = useColorProps( weekBlockAttributes ?? {} );
 
-	const classNames = [ 'gatherpress-calendar__week', colorProps.className ]
+	const classNames = [
+		'gatherpress-calendar__week',
+		isTimeGrid ? 'has-time-grid' : '',
+		colorProps.className,
+	]
 		.filter( Boolean )
 		.join( ' ' );
 
 	const style = {
 		...colorProps.style,
+		'--gatherpress-num-ribbon-slots': numRibbonSlots,
 	};
 
 	return (
 		<tr className={ classNames } style={ style }>
+			{ /* Time Gutter column: first child inside <tr> */ }
+			{ isTimeGrid && (
+				<th
+					scope="row"
+					className="gatherpress-calendar__time-gutter"
+					aria-hidden="true"
+					style={ {
+						paddingTop: `calc(${ numRibbonSlots } * 24px)`,
+					} }
+				>
+					{ ( timeGridConfig.slots || [] ).map( ( slot ) => (
+						<div
+							key={ slot }
+							className="gatherpress-calendar__time-slot-label"
+						>
+							{ slot }
+						</div>
+					) ) }
+				</th>
+			) }
+
 			{ weekNumber > 0 && (
 				<th scope="row" className="gatherpress--screen-reader-text">
 					{ sprintf(
@@ -59,6 +88,7 @@ function WeekPreviewRowComponent( {
 					) }
 				</th>
 			) }
+
 			{ week.map( ( day, dayIndex ) => (
 				<DayPreviewCell
 					key={ day.date ?? `empty-${ dayIndex }` }
@@ -66,6 +96,8 @@ function WeekPreviewRowComponent( {
 					innerBlocks={ dayInnerBlocks }
 					dayBlockAttributes={ dayBlockAttributes }
 					onActivateDay={ onActivateDay }
+					numRibbonSlots={ numRibbonSlots }
+					isTimeGrid={ isTimeGrid }
 				/>
 			) ) }
 		</tr>

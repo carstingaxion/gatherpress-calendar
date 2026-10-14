@@ -13,6 +13,7 @@
   ],
   "usesContext": [
     "queryId",
+    "query",
     "gatherpress/year",
     "gatherpress/month",
     "gatherpress/dayDate",
@@ -22,12 +23,15 @@
     "gatherpress/isToday",
     "gatherpress/weekday",
     "gatherpress/isWeekend",
-    "gatherpress/isTimeGridActive",
+    "gatherpress/viewType",
+    "gatherpress/enableTimeGrid",
     "gatherpress/dayStartHour",
     "gatherpress/dayEndHour",
-    "gatherpress/slotHeight",
     "gatherpress/numRibbonSlots"
   ],
+  "providesContext": {
+    "gatherpress/slotHeight": "slotHeight"
+  },
   "attributes": {
     "date": {
       "type": "string",

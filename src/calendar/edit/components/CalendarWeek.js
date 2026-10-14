@@ -40,7 +40,11 @@ export function CalendarWeek( {
 	dayInnerBlocks,
 	weekBlockAttributes,
 	dayBlockAttributes,
+	timeGridConfig = {},
+	numRibbonSlots = 0,
 } ) {
+	const isTimeGrid = Boolean( timeGridConfig?.enabled );
+
 	// Annotate week days with row boundary wrap flags for multi-day events.
 	const annotatedWeek = useMemo( () => {
 		const totalCols = week.length;
@@ -107,6 +111,7 @@ export function CalendarWeek( {
 			'gatherpress/weekNumber': weekNumber,
 			'gatherpress/activeDate': activeDate,
 			'gatherpress/setActiveDate': setActiveDate,
+			'gatherpress/numRibbonSlots': numRibbonSlots,
 		} ),
 		[
 			weekContext,
@@ -115,6 +120,7 @@ export function CalendarWeek( {
 			weekNumber,
 			activeDate,
 			setActiveDate,
+			numRibbonSlots,
 		]
 	);
 
@@ -130,6 +136,9 @@ export function CalendarWeek( {
 					weekBlockAttributes={ weekBlockAttributes }
 					dayBlockAttributes={ dayBlockAttributes }
 					onActivateDay={ setActiveDate }
+					numRibbonSlots={ numRibbonSlots }
+					isTimeGrid={ isTimeGrid }
+					timeGridConfig={ timeGridConfig }
 				/>
 			) }
 		</BlockContextProvider>
