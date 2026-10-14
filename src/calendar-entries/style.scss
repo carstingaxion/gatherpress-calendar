@@ -400,7 +400,7 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 			&.is-span-end {
 				border-radius: 0 4px 4px 0;
-				margin-inline-start: calc(-1 * #{$gap});
+				margin-inline-end: calc(-1 * #{$gap});
 				padding-inline-end: #{$gap};
 				width: calc(100% + #{$gap});
 
@@ -476,7 +476,6 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 .wp-block-gatherpress-calendar:has(dialog[open], .wp-block-gatherpress-modal.is-open, .is-modal-active) .gatherpress-calendar__entry {
 	outline: none;
-	box-shadow: none;
 }
 
 .wp-block-gatherpress-modal .wp-block-post-title {
