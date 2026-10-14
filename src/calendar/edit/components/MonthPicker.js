@@ -7,7 +7,7 @@ import {
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 /* eslint-enable @wordpress/no-unsafe-wp-apis */
-import { useMemo } from '@wordpress/element';
+import { useEffect, useMemo, useState } from '@wordpress/element';
 
 import { generateMonthOptions } from '../utils/calendar-utils';
 import { calculateTargetDate } from '../utils/date-utils';
@@ -39,12 +39,17 @@ export function MonthPicker( { selectedMonth, dateModifier = 0, onChange } ) {
 	const year = shownDate.getFullYear();
 	const month = String( shownDate.getMonth() + 1 ).padStart( 2, '0' );
 
+	// The typed text, which can be an incomplete year while the user types.
+	const [ yearDraft, setYearDraft ] = useState( String( year ) );
+	useEffect( () => setYearDraft( String( year ) ), [ year ] );
+
 	const handleYearChange = ( value ) => {
-		// Wait for a complete year while the user types.
-		if ( ! /^\d{4}$/.test( String( value ) ) ) {
-			return;
+		setYearDraft( value ?? '' );
+		// Save only a complete year from 1000 to 9999. JavaScript reads
+		// years 0-99 as 1900-1999, but PHP does not.
+		if ( /^[1-9]\d{3}$/.test( String( value ) ) ) {
+			onChange( `${ value }-${ month }` );
 		}
-		onChange( `${ value }-${ month }` );
 	};
 
 	return (
@@ -62,8 +67,10 @@ export function MonthPicker( { selectedMonth, dateModifier = 0, onChange } ) {
 			<FlexBlock>
 				<NumberControl
 					label={ __( 'Year', 'gatherpress-calendar' ) }
-					value={ year }
+					value={ yearDraft }
 					onChange={ handleYearChange }
+					// An incomplete year is not saved: show the saved year again.
+					onBlur={ () => setYearDraft( String( year ) ) }
 					step={ 1 }
 					__next40pxDefaultSize
 				/>

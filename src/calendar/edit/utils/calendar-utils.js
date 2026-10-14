@@ -7,7 +7,6 @@
 
 import { dateI18n, getSettings } from '@wordpress/date';
 import { select } from '@wordpress/data';
-import { _x } from '@wordpress/i18n';
 
 // Re-export decomposed helpers so existing imports remain backward-compatible:
 export * from './grid-builder';
@@ -178,28 +177,4 @@ export function generateMonthOptions() {
 	}
 
 	return options;
-}
-
-/**
- * Format a selected month as its localized name and year.
- *
- * @since 0.9.0
- *
- * @param {string} value Month in format "YYYY-MM" (a "YYYY-MM-DD" date also works).
- *
- * @return {string} Formatted month (e.g., "January 2025"), or '' if the value is not a month.
- */
-export function formatMonth( value ) {
-	const match = /^(\d{4})-(\d{2})/.exec( value || '' );
-	if ( ! match ) {
-		return '';
-	}
-
-	const date = new Date( Number( match[ 1 ] ), match[ 2 ] - 1, 15, 12, 0, 0 );
-
-	return dateI18n(
-		/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-		_x( 'F Y', 'Month picker option', 'gatherpress-calendar' ),
-		date
-	);
 }

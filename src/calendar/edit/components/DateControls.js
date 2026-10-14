@@ -16,7 +16,7 @@ import {
 /* eslint-enable @wordpress/no-unsafe-wp-apis */
 import { useMemo } from '@wordpress/element';
 
-import { formatMonth } from '../utils/calendar-utils';
+import { calculateTargetDate, formatHeading } from '../utils/date-utils';
 import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
 import { MonthPicker } from './MonthPicker';
 import { SourcePostControls } from './SourcePostControls';
@@ -48,7 +48,6 @@ const MAX_UNITS = {
  * @param {number}   props.dateModifier      Date offset value.
  * @param {Function} props.onDateChange      Callback when date changes.
  * @param {Function} props.onModifierChange  Callback when modifier changes.
- * @param {Function} props.onMonthChange     Callback when a month is picked.
  * @param {string}   props.dateRangeSource   Source mode ('default', 'context', 'selected').
  * @param {Function} props.onSourceChange    Callback when source changes.
  * @param {number}   props.postId            Selected post ID.
@@ -72,7 +71,6 @@ export function DateControls( {
 	dateModifier,
 	onDateChange,
 	onModifierChange,
-	onMonthChange,
 	dateRangeSource = DATE_SOURCE_DEFAULT,
 	onSourceChange,
 	postId = 0,
@@ -156,8 +154,9 @@ export function DateControls( {
 		}
 
 		if ( selectedDate ) {
-			if ( 'month' === viewType ) {
-				return formatMonth( selectedDate ) || selectedDate;
+			if ( 'month' === viewType && /^\d{4}-\d{2}/.test( selectedDate ) ) {
+				const month = calculateTargetDate( { selectedDate } );
+				return formatHeading( 'month', month, month );
 			}
 			return selectedDate;
 		}
@@ -255,7 +254,8 @@ export function DateControls( {
 				</strong>
 				<br />
 				{ selectionLabel }
-				{ ! selectedDate && isDefaultMode && 0 !== dateModifier && (
+				{ /* Blocks saved before 0.9.0 can have a date and an offset. */ }
+				{ isDefaultMode && 0 !== dateModifier && (
 					<>
 						{ ' ' }
 						{ dateModifier > 0
@@ -272,7 +272,7 @@ export function DateControls( {
 						<MonthPicker
 							selectedMonth={ selectedDate }
 							dateModifier={ dateModifier }
-							onChange={ onMonthChange }
+							onChange={ onDateChange }
 						/>
 					) : (
 						<TextControl

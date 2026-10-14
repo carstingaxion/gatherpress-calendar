@@ -268,13 +268,10 @@ export default function Edit( {
 		);
 	}
 
+	// A picked date or month replaces the offset, which the controls hide
+	// while a date is set. The month picker shows the offset month, so the
+	// calendar stays on the month it showed. A reset also clears the offset.
 	const handleDateChange = ( value ) => {
-		setAttributes( { selectedDate: value } );
-	};
-
-	// The month picker shows the month the calendar shows, offset included.
-	// A picked month replaces that offset, which the controls then hide.
-	const handleMonthChange = ( value ) => {
 		setAttributes( { selectedDate: value, dateModifier: 0 } );
 	};
 
@@ -324,7 +321,6 @@ export default function Edit( {
 						dateModifier={ dateModifier }
 						onDateChange={ handleDateChange }
 						onModifierChange={ handleModifierChange }
-						onMonthChange={ handleMonthChange }
 						dateRangeSource={ dateRangeSource }
 						onSourceChange={ ( val ) =>
 							setAttributes( { dateRangeSource: val } )
