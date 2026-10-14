@@ -33,30 +33,28 @@ class Post_Organizer {
 	const MAX_EVENT_SPAN_DAYS = 366;
 
 	/**
-	 * Public entry point: queries posts and organizes them by date.
+	 * Public entry point: queries posts and organizes them by date and time grid.
 	 *
-	 * @since 0.1.0
+	 * @param array<string, mixed> $query_args  WP_Query arguments.
+	 * @param array<string, mixed> $grid_config Time grid configuration.
 	 *
-	 * @param array<string, mixed> $query_args WP_Query arguments.
-	 *
-	 * @return array<string, list<array{id: int, span: string, day_index: int, total_days: int, slot: int}>>
+	 * @return array<string, list<array<string, mixed>>> Slotted calendar entries grouped by date.
 	 */
-	public static function organize_posts_by_date( array $query_args ): array {
+	public static function organize_posts_by_date( array $query_args, array $grid_config = array() ): array {
 		$post_ids = self::fetch_post_ids_from_query( $query_args );
 
-		return self::organize_posts( $post_ids );
+		return self::organize_posts( $post_ids, $grid_config );
 	}
 
 	/**
-	 * Core orchestrator: transforms an array of post IDs into slotted date-grouped entries.
+	 * Transforms an array of post IDs into slotted date-grouped entries.
 	 *
-	 * @since 0.9.0
+	 * @param int[]                $post_ids    Array of post IDs.
+	 * @param array<string, mixed> $grid_config Time grid configuration.
 	 *
-	 * @param int[] $post_ids Array of post IDs.
-	 *
-	 * @return array<string, list<array{id: int, span: string, day_index: int, total_days: int, slot: int}>>
+	 * @return array<string, list<array<string, mixed>>>
 	 */
-	public static function organize_posts( array $post_ids ): array {
+	public static function organize_posts( array $post_ids, array $grid_config = array() ): array {
 		if ( empty( $post_ids ) ) {
 			return array();
 		}
@@ -64,7 +62,7 @@ class Post_Organizer {
 		$spans         = self::resolve_post_spans( $post_ids );
 		$sorted_events = self::sort_events_for_slotting( $spans );
 
-		return self::build_slotted_calendar_entries( $sorted_events );
+		return self::build_slotted_calendar_entries( $sorted_events, $grid_config );
 	}
 
 	/**
@@ -268,14 +266,45 @@ class Post_Organizer {
 	 * Allocates slots and groups entries into the daily map.
 	 *
 	 * @param array<int, array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool}> $sorted_events Sorted event descriptors.
+	 * @param array<string, mixed>                                                                                              $grid_config   Time grid configuration.
 	 *
-	 * @return array<string, list<array{id: int, span: string, day_index: int, total_days: int, slot: int}>>
+	 * @return array<string, list<array<string, mixed>>> Slotted entries by date.
 	 */
-	public static function build_slotted_calendar_entries( array $sorted_events ): array {
-		$occupied_slots = array();
-		$posts_by_date  = array();
+	public static function build_slotted_calendar_entries( array $sorted_events, array $grid_config = array() ): array {
+		$occupied_slots    = array();
+		$posts_by_date     = array();
+		$is_time_grid      = ! empty( $grid_config['enabled'] );
 
 		foreach ( $sorted_events as $event ) {
+			$is_multi_day = $event['total_days'] > 1 || ! empty( $event['is_all_day'] );
+
+			// In time-grid mode, single-day timed events skip ribbon slot allocation
+			if ( $is_time_grid && ! $is_multi_day ) {
+				$tracks = self::calculate_timed_event_tracks( $event['id'], $grid_config );
+				if ( null === $tracks ) {
+					continue; // Outside visible day hours
+				}
+
+				$date_str = $event['start_date'];
+				if ( ! isset( $posts_by_date[ $date_str ] ) ) {
+					$posts_by_date[ $date_str ] = array();
+				}
+
+				$posts_by_date[ $date_str ][] = array(
+					'id'              => $event['id'],
+					'span'            => 'single',
+					'day_index'       => 1,
+					'total_days'      => 1,
+					'is_all_day'      => false,
+					'is_timed'        => true,
+					'time_row_start'  => $tracks['row_start'],
+					'time_row_end'    => $tracks['row_end'],
+					'slot'            => 0,
+				);
+				continue;
+			}
+
+			// Standard Ribbon Slot Allocation for All-day / Multi-day events
 			$event_dates = self::get_span_dates( $event['start_obj'], $event['total_days'] );
 			$slot        = self::find_available_slot( $event_dates, $occupied_slots );
 
@@ -295,21 +324,44 @@ class Post_Organizer {
 					'day_index'  => $day_index,
 					'total_days' => $event['total_days'],
 					'is_all_day' => ! empty( $event['is_all_day'] ),
+					'is_timed'   => false,
 					'slot'       => $slot,
 				);
 			}
 		}
 
-		// Sort daily lists by slot ascending for consistent vertical order across cells.
-		foreach ( $posts_by_date as &$day_entries ) {
-			usort(
-				$day_entries,
-				static function ( array $a, array $b ): int {
-					return $a['slot'] <=> $b['slot'];
+		// Resolve concurrent overlapping columns for timed entries in each day
+		if ( $is_time_grid ) {
+			foreach ( $posts_by_date as &$day_entries ) {
+				$timed_indices = array();
+				foreach ( $day_entries as $idx => $entry ) {
+					if ( ! empty( $entry['is_timed'] ) ) {
+						$timed_indices[] = $idx;
+					}
 				}
-			);
+
+				foreach ( $timed_indices as $curr_idx ) {
+					$curr        = $day_entries[ $curr_idx ];
+					$overlaps    = 0;
+					$overlap_idx = 0;
+
+					foreach ( $timed_indices as $other_idx ) {
+						$other = $day_entries[ $other_idx ];
+						$is_overlapping = ( $curr['time_row_start'] < $other['time_row_end'] ) && ( $curr['time_row_end'] > $other['time_row_start'] );
+						if ( $is_overlapping ) {
+							++$overlaps;
+							if ( $other_idx < $curr_idx ) {
+								++$overlap_idx;
+							}
+						}
+					}
+
+					$day_entries[ $curr_idx ]['overlap_total'] = max( 1, $overlaps );
+					$day_entries[ $curr_idx ]['overlap_index'] = $overlap_idx;
+				}
+			}
+			unset( $day_entries );
 		}
-		unset( $day_entries );
 
 		return $posts_by_date;
 	}
@@ -341,4 +393,97 @@ class Post_Organizer {
 			'end'   => $date_str,
 		);
 	}
+
+	/**
+	 * Resolves event start and end time minutes past midnight for a given date.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param int    $post_id  Post ID.
+	 * @param string $date_str Date string (Y-m-d).
+	 *
+	 * @return array{start_min: int, end_min: int}|null Minutes past midnight or null.
+	 */
+	public static function get_event_minute_range( int $post_id, string $date_str ): ?array {
+		$post_type = get_post_type( $post_id );
+		if ( ! Query_Builder::is_event_post_type( $post_type ) ) {
+			return null;
+		}
+
+		$event     = new \GatherPress\Core\Event\Event( $post_id );
+		$datetimes = $event->get_datetime();
+		$start_raw = isset( $datetimes['datetime_start'] ) && is_string( $datetimes['datetime_start'] ) ? $datetimes['datetime_start'] : '';
+		$end_raw   = isset( $datetimes['datetime_end'] ) && is_string( $datetimes['datetime_end'] ) ? $datetimes['datetime_end'] : '';
+
+		if ( '' === $start_raw ) {
+			return null;
+		}
+
+		$start_ts = strtotime( $start_raw );
+		if ( false === $start_ts ) {
+			return null;
+		}
+
+		$end_ts = '' !== $end_raw ? strtotime( $end_raw ) : false;
+		if ( false === $end_ts || $end_ts <= $start_ts ) {
+			$end_ts = $start_ts + HOUR_IN_SECONDS;
+		}
+
+		$start_min = ( (int) gmdate( 'G', $start_ts ) * 60 ) + (int) gmdate( 'i', $start_ts );
+		$end_min   = ( (int) gmdate( 'G', $end_ts ) * 60 ) + (int) gmdate( 'i', $end_ts );
+
+		return array(
+			'start_min' => $start_min,
+			'end_min'   => max( $start_min + 15, $end_min ),
+		);
+	}
+
+	/**
+	 * Compute quarter-slot row tracks for a timed event within configured day boundaries.
+	 *
+	 * @param int                  $post_id     Post ID.
+	 * @param array<string, mixed> $grid_config Time grid configuration.
+	 *
+	 * @return array{row_start: int, row_end: int}|null Row track coordinates or null if outside visible range.
+	 */
+	public static function calculate_timed_event_tracks( int $post_id, array $grid_config ): ?array {
+		$datetimes = Date_Calculator::get_post_event_datetimes( $post_id );
+		if ( null === $datetimes ) {
+			return null;
+		}
+
+		$start_hour   = isset( $grid_config['start_hour'] ) && is_numeric( $grid_config['start_hour'] ) ? (int) $grid_config['start_hour'] : 8;
+		$end_hour     = isset( $grid_config['end_hour'] ) && is_numeric( $grid_config['end_hour'] ) ? (int) $grid_config['end_hour'] : 20;
+		$quarter_mins = isset( $grid_config['quarter_mins'] ) && is_numeric( $grid_config['quarter_mins'] ) ? max( 1, (int) $grid_config['quarter_mins'] ) : 15;
+
+		$day_start_min = $start_hour * 60;
+		$day_end_min   = $end_hour * 60;
+
+		// Skip events ending before day starts or starting after day ends
+		if ( $datetimes['end_min'] <= $day_start_min || $datetimes['start_min'] >= $day_end_min ) {
+			return null;
+		}
+
+		// Clamp event to visible day window
+		$clamped_start = max( $day_start_min, $datetimes['start_min'] );
+		$clamped_end   = min( $day_end_min, $datetimes['end_min'] );
+
+		// Round to 1/4 of slot duration
+		$rounded_start = Date_Calculator::round_to_quarter_slot( $clamped_start, $quarter_mins, false );
+		$rounded_end   = Date_Calculator::round_to_quarter_slot( $clamped_end, $quarter_mins, true );
+
+		if ( $rounded_end <= $rounded_start ) {
+			$rounded_end = $rounded_start + $quarter_mins;
+		}
+
+		$start_track = (int) ( ( $rounded_start - $day_start_min ) / $quarter_mins ) + 1;
+		$end_track   = (int) ( ( $rounded_end - $day_start_min ) / $quarter_mins ) + 1;
+
+		return array(
+			'row_start' => $start_track,
+			'row_end'   => max( $start_track + 1, $end_track ),
+		);
+	}
+
+
 }
