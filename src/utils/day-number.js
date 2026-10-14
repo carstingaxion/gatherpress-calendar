@@ -14,6 +14,12 @@ import { __experimentalGetGapCSSValue as getGapCSSValue } from '@wordpress/block
 const DAY_NUMBER_BINDING_SOURCE = 'gatherpress/calendar-day';
 
 /**
+ * The gap for a side that the Day block does not set: the theme's root
+ * block gap, as core's layout support uses, else core's 0.5em default.
+ */
+export const FALLBACK_BLOCK_GAP = 'var(--wp--style--block-gap, 0.5em)';
+
+/**
  * Whether a block's `content` attribute is bound to the Day Number source.
  *
  * @param {Object} block Block object.
@@ -143,10 +149,11 @@ function getGridLayoutStyle( layout, blockGap ) {
 	const style = { display: 'grid' };
 
 	if ( columnCount && minimumColumnWidth ) {
-		// The column gap is the 'left' side of a split gap; core's default is 0.5em.
+		// The column gap is the 'left' side of a split gap. Without one, use
+		// the gap that the preview renders: the theme's root block gap.
 		const gapSide =
 			blockGap && 'object' === typeof blockGap ? blockGap.left : blockGap;
-		let gap = getGapCSSValue( gapSide ) || '0.5em';
+		let gap = getGapCSSValue( gapSide ) || FALLBACK_BLOCK_GAP;
 		if ( '0' === gap ) {
 			gap = '0px';
 		}

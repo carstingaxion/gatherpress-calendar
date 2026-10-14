@@ -19,6 +19,7 @@ import { dateI18n } from '@wordpress/date';
 import {
 	isDayNumberBindingBlock,
 	getLayoutProps,
+	FALLBACK_BLOCK_GAP,
 } from '../../../utils/day-number';
 
 /**
@@ -185,8 +186,10 @@ function DayPreviewCellComponent( {
 				: undefined,
 			style: {
 				...layoutProps.style,
+				// A split gap with one side set uses the root gap for the other.
 				gap: getGapCSSValue(
-					dayBlockAttributes?.style?.spacing?.blockGap
+					dayBlockAttributes?.style?.spacing?.blockGap,
+					FALLBACK_BLOCK_GAP
 				),
 			},
 		},
