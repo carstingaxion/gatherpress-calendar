@@ -66,8 +66,8 @@ function stripMultiDayEventDates( blocks = [] ) {
  * Clones inner blocks, resolving the Day Number bound block's content.
  * Filters out entries on empty days and strips multi-day start times.
  *
- * @param {Array}  blocks Real inner blocks to preview.
- * @param {Object} day    Day data (day, isEmpty, posts).
+ * @param {Array}   blocks   Real inner blocks to preview.
+ * @param {Object}  day      Day data (day, isEmpty, posts).
  * @param {boolean} isRibbon Whether the day block is in ribbon style.
  * @return {Array} Resolved blocks.
  */
@@ -237,13 +237,13 @@ function DayPreviewCellComponent( {
 				justifyContent: 'flex-start',
 				width: '100%',
 				minWidth: 0,
-		  }
+			}
 		: {
 				...layoutProps.style,
 				gap: getGapCSSValue(
 					dayBlockAttributes?.style?.spacing?.blockGap
 				),
-		  };
+			};
 
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,

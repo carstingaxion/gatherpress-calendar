@@ -52,7 +52,7 @@ class Post_Organizer {
 	 *
 	 * @since 0.9.0
 	 *
-	 * @param list<int> $post_ids Array of post IDs.
+	 * @param int[] $post_ids Array of post IDs.
 	 *
 	 * @return array<string, list<array{id: int, span: string, day_index: int, total_days: int, slot: int}>>
 	 */
@@ -79,7 +79,7 @@ class Post_Organizer {
 		$query_args['fields'] = 'ids';
 		$query                = new WP_Query( $query_args );
 
-		if ( empty( $query->posts ) || ! is_array( $query->posts ) ) {
+		if ( empty( $query->posts ) ) {
 			return array();
 		}
 
@@ -94,9 +94,9 @@ class Post_Organizer {
 	/**
 	 * Resolves active date spans for a list of post IDs.
 	 *
-	 * @param list<int> $post_ids Array of post IDs.
+	 * @param int[] $post_ids Array of post IDs.
 	 *
-	 * @return list<array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int}>
+	 * @return list<array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool}>
 	 */
 	public static function resolve_post_spans( array $post_ids ): array {
 		$spans = array();
@@ -113,8 +113,7 @@ class Post_Organizer {
 			}
 
 			$is_all_day_meta = get_post_meta( $post_id, 'gatherpress_is_all_day', true );
-			$is_all_day      = ! empty( $is_all_day_meta ) && '0' !== $is_all_day_meta && false !== $is_all_day_meta;
-
+			$is_all_day      = ! empty( $is_all_day_meta );
 			$spans[] = array(
 				'id'         => $post_id,
 				'start_obj'  => $span['start_obj'],
@@ -159,30 +158,39 @@ class Post_Organizer {
 	}
 
 	/**
+	 * Comparison callback for sorting events for slotting.
+	 *
+	 * Multi-day events first (descending duration), then start date, then ID.
+	 *
+	 * @param array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool} $a First event.
+	 * @param array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool} $b Second event.
+	 *
+	 * @return int Comparison result (-1, 0, 1).
+	 */
+	private static function compare_events_for_slotting( array $a, array $b ): int {
+		$a_promoted = ( $a['total_days'] > 1 || ! empty( $a['is_all_day'] ) ) ? 1 : 0;
+		$b_promoted = ( $b['total_days'] > 1 || ! empty( $b['is_all_day'] ) ) ? 1 : 0;
+		if ( $a_promoted !== $b_promoted ) {
+			return $b_promoted <=> $a_promoted;
+		}
+		if ( $a['total_days'] !== $b['total_days'] ) {
+			return $b['total_days'] <=> $a['total_days'];
+		}
+		if ( $a['start_date'] !== $b['start_date'] ) {
+			return strcmp( $a['start_date'], $b['start_date'] );
+		}
+		return $a['id'] <=> $b['id'];
+	}
+
+	/**
 	 * Sorts events for slotting: multi-day events first (descending duration), then start date, then ID.
 	 *
-	 * @param list<array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int}> $events
+	 * @param array<int, array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool}> $events List of event descriptors.
 	 *
-	 * @return list<array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int}>
+	 * @return list<array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool}>
 	 */
 	public static function sort_events_for_slotting( array $events ): array {
-		usort(
-			$events,
-			static function ( array $a, array $b ): int {
-				$a_promoted = ( $a['total_days'] > 1 || ! empty( $a['is_all_day'] ) ) ? 1 : 0;
-				$b_promoted = ( $b['total_days'] > 1 || ! empty( $b['is_all_day'] ) ) ? 1 : 0;
-				if ( $a_promoted !== $b_promoted ) {
-					return $b_promoted <=> $a_promoted;
-				}
-				if ( $a['total_days'] !== $b['total_days'] ) {
-					return $b['total_days'] <=> $a['total_days'];
-				}
-				if ( $a['start_date'] !== $b['start_date'] ) {
-					return strcmp( $a['start_date'], $b['start_date'] );
-				}
-				return $a['id'] <=> $b['id'];
-			}
-		);
+		usort( $events, array( self::class, 'compare_events_for_slotting' ) );
 
 		return $events;
 	}
@@ -207,7 +215,7 @@ class Post_Organizer {
 	/**
 	 * Finds the lowest 0-indexed vertical slot free across all dates of an event's span.
 	 *
-	 * @param list<string>                    $dates          Dates occupied by the event.
+	 * @param string[]                        $dates          Dates occupied by the event.
 	 * @param array<string, array<int, bool>> $occupied_slots Map of date strings to occupied slots.
 	 *
 	 * @return int Lowest available slot index.
@@ -259,7 +267,7 @@ class Post_Organizer {
 	/**
 	 * Allocates slots and groups entries into the daily map.
 	 *
-	 * @param list<array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int}> $sorted_events
+	 * @param array<int, array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool}> $sorted_events Sorted event descriptors.
 	 *
 	 * @return array<string, list<array{id: int, span: string, day_index: int, total_days: int, slot: int}>>
 	 */
@@ -297,7 +305,7 @@ class Post_Organizer {
 			usort(
 				$day_entries,
 				static function ( array $a, array $b ): int {
-					return ( $a['slot'] ?? 0 ) <=> ( $b['slot'] ?? 0 );
+					return $a['slot'] <=> $b['slot'];
 				}
 			);
 		}

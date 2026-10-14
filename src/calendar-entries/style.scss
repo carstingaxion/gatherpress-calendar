@@ -134,7 +134,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 					width: 0;
 					height: 0;
 					border-block: var(--gatherpress-arrow-size, 3px) solid transparent;
-					border-inline-start: calc(var(--gatherpress-arrow-size, 3px) + 1px) solid currentColor;
+					border-inline-start: calc(var(--gatherpress-arrow-size, 3px) + 1px) solid currentcolor;
 					pointer-events: none;
 				}
 			}
@@ -154,7 +154,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 					width: 0;
 					height: 0;
 					border-block: var(--gatherpress-arrow-size, 3px) solid transparent;
-					border-inline-end: calc(var(--gatherpress-arrow-size, 3px) + 1px) solid currentColor;
+					border-inline-end: calc(var(--gatherpress-arrow-size, 3px) + 1px) solid currentcolor;
 					pointer-events: none;
 				}
 			}
@@ -187,6 +187,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 		}
 
 		#{$start-time} {
+
 			@include text-truncate;
 			font-size: 0.75rem;
 			line-height: 1.1;
@@ -197,6 +198,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 
 		.wp-block-post-title:not(.wp-block-gatherpress-modal *) a,
 		#{$trigger} {
+
 			@include text-truncate;
 			display: block;
 			width: 100%;
@@ -214,6 +216,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
    RIBBON VIEW: Grid Slot Allocation
    ========================================================================== */
 .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries {
+
 	.gatherpress-calendar__entry {
 		grid-row-start: calc(var(--gatherpress-calendar-entry-slot, 0) + 1);
 		z-index: 1;
@@ -230,8 +233,11 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
    Full 24px banners with floating multi-column text
    ========================================================================== */
 @container calendar (min-width: 601px) {
+
 	.gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries:not(.is-style-dots) {
+
 		.gatherpress-calendar__entry {
+
 			/* Timed Events */
 			&:not(.is-multi-day):not(.is-all-day) {
 				height: auto;
@@ -249,6 +255,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 				}
 
 				#{$start-time} {
+
 					@include text-truncate;
 					font-size: 0.75rem;
 					line-height: 1.2;
@@ -258,6 +265,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 
 				.wp-block-post-title:not(.wp-block-gatherpress-modal *) a,
 				#{$trigger} {
+
 					@include text-truncate;
 					color: var(--gatherpress-calendar-title-color);
 					font-size: 0.8125rem;
@@ -299,6 +307,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 				}
 
 				#{$trigger} {
+
 					@include text-truncate;
 					color: inherit;
 					padding-inline: 6px;
@@ -336,6 +345,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 						white-space: nowrap;
 
 						a {
+
 							@include text-truncate;
 							display: block;
 							max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * #{$gap});
@@ -373,6 +383,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
    ========================================================================== */
 @mixin apply-compact-dots {
 	#{$start-time} {
+
 		@include visually-hidden;
 	}
 
@@ -459,7 +470,9 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 
 	/* Explicitly override Ribbon Day styles when in compact dots mode */
 	.gatherpress-calendar__day.is-style-ribbon & {
+
 		.gatherpress-calendar__entry {
+
 			&.is-multi-day,
 			&.is-all-day {
 				--gatherpress-entry-track-height: 10px;
@@ -477,11 +490,14 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
    2. Responsive container query: width <= 600px
    ========================================================================== */
 .wp-block-gatherpress-calendar-entries.is-style-dots {
+
 	@include apply-compact-dots;
 }
 
 @container calendar (width <= 600px) {
+
 	.wp-block-gatherpress-calendar-entries {
+
 		@include apply-compact-dots;
 	}
 }
@@ -491,23 +507,19 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
    Directly queries GatherPress modal state via CSS :has()
    ========================================================================== */
 
-// 1. Elevate active modal day and entry natively when GatherPress opens the modal
+// 1. Elevate active modal day
+// and entry natively when GatherPress opens the modal.
 :where(.gatherpress-calendar__day, .gatherpress-calendar__entry):has(#{$modal-open-state}) {
 	z-index: 100000;
 	position: relative;
-
-	// Inactive trigger inside the open entry cannot intercept clicks while modal is open
-	// #{$trigger} {
-	// 	pointer-events: none;
-	// }
 }
 
-// 2. Prevent background entries from capturing hover/focus while modal is open
-.wp-block-gatherpress-calendar:has(#{$modal-open-state}) {
-	.gatherpress-calendar__entry:not(:has(#{$modal-open-state})) {
-		// z-index: auto;
-	}
-}
+// // 2. Prevent background entries from showing above the modal
+// .wp-block-gatherpress-calendar:has(#{$modal-open-state}) {
+// 	.gatherpress-calendar__entry:not(:has(#{$modal-open-state})) {
+// 		// z-index: auto;
+// 	}
+// }
 .wp-block-gatherpress-calendar:has(#{$modal-open-state}) {
 	.gatherpress-calendar__entry:has(#{$modal-open-state}) {
 		z-index: 2;
@@ -518,36 +530,10 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 	outline: none;
 }
 
-/* 3. Modal interior formatting & pointer recovery
-.wp-block-gatherpress-modal {
-	font-size: initial;
-	line-height: initial;
-	color: initial;
-	text-align: initial;
-	pointer-events: auto;
-	position: relative;
-	z-index: 100001;
-
-	.wp-block-post-title {
-		font-size: var(--wp--preset--font-size--large, 1.5rem);
-		line-height: 1.2;
-		color: inherit;
-		overflow: visible;
-		white-space: normal;
-		text-overflow: clip;
-
-		a {
-			font-size: inherit;
-			line-height: inherit;
-			color: inherit;
-			text-decoration: none;
-		}
-	}
-}*/
-
 /* Single-day Day View adjustments */
 .wp-block-gatherpress-calendar.is-view-day[style*="--gatherpress-calendar-columns: 1"],
 .gatherpress-calendar.is-view-day[style*="--gatherpress-calendar-columns: 1"] {
+
 	.wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-multi-day {
 		margin-inline: 0;
 		width: 100%;

@@ -143,11 +143,34 @@ class Calendar_Day {
 	}
 
 	/**
+	 * Check if any post entry is a multi-day or all-day event.
+	 *
+	 * @param array<mixed> $day_posts List of day post entries.
+	 *
+	 * @return bool True if at least one entry spans multiple days or is all day.
+	 */
+	private function has_multi_day_event( array $day_posts ): bool {
+		foreach ( $day_posts as $post_entry ) {
+			if ( ! is_array( $post_entry ) ) {
+				continue;
+			}
+
+			$total_days_raw = $post_entry['total_days'] ?? 1;
+			$total_days     = is_numeric( $total_days_raw ) ? (int) $total_days_raw : 1;
+			if ( $total_days > 1 || ! empty( $post_entry['is_all_day'] ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Resolve class names for a calendar day cell.
 	 *
-	 * @param array<mixed> $context       Block context.
+	 * @param array<mixed> $context Block context.
 	 *
-	 * @return list<string> Array of CSS classes.
+	 * @return string[] Array of CSS classes.
 	 */
 	private function get_day_cell_classes( array $context ): array {
 		$classes = array( 'gatherpress-calendar__day' );
@@ -159,14 +182,8 @@ class Calendar_Day {
 		if ( ! empty( $context['gatherpress/dayPosts'] ) && is_array( $context['gatherpress/dayPosts'] ) ) {
 			$classes[] = 'has-posts';
 
-			foreach ( $context['gatherpress/dayPosts'] as $post_entry ) {
-				if ( is_array( $post_entry ) && (
-					( ! empty( $post_entry['total_days'] ) && (int) $post_entry['total_days'] > 1 ) ||
-					! empty( $post_entry['is_all_day'] )
-				) ) {
-					$classes[] = 'has-multi-day-event';
-					break;
-				}
+			if ( $this->has_multi_day_event( $context['gatherpress/dayPosts'] ) ) {
+				$classes[] = 'has-multi-day-event';
 			}
 		}
 

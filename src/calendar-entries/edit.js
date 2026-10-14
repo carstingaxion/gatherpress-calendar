@@ -142,7 +142,7 @@ const EventItem = memo( function EventItemComponent( {
 	// const spacingProps = getSpacingClassesAndStyles( parentAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( parentAttributes ?? {} );
 
-	const rowSpan = typeof post === 'object' ? post?.rowSpan ?? 1 : 1;
+	const rowSpan = typeof post === 'object' ? ( post?.rowSpan ?? 1 ) : 1;
 
 	const classNames = [
 		'gatherpress-calendar__entry',
@@ -158,7 +158,6 @@ const EventItem = memo( function EventItemComponent( {
 	]
 		.filter( Boolean )
 		.join( ' ' );
-
 
 	const style = {
 		...colorProps.style,

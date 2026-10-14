@@ -8,20 +8,20 @@
 	--gatherpress-calendar-column-gap: 2px;
 
 	// Surface & Table Header Tokens
-	--gatherpress-calendar-header-bg: color-mix(in srgb, currentColor 6%, transparent);
-	--gatherpress-calendar-header-color: currentColor;
+	--gatherpress-calendar-header-bg: color-mix(in srgb, currentcolor 6%, transparent);
+	--gatherpress-calendar-header-color: currentcolor;
 
 	// Day Cell Surface & State Tokens
-	--gatherpress-calendar-day-bg: color-mix(in srgb, currentColor 3%, transparent);
+	--gatherpress-calendar-day-bg: color-mix(in srgb, currentcolor 3%, transparent);
 	--gatherpress-calendar-day-color: inherit;
-	--gatherpress-calendar-day-has-posts-border: color-mix(in srgb, currentColor 25%, transparent);
-	--gatherpress-calendar-day-today-outline: currentColor;
-	--gatherpress-calendar-day-today-color: currentColor;
+	--gatherpress-calendar-day-has-posts-border: color-mix(in srgb, currentcolor 25%, transparent);
+	--gatherpress-calendar-day-today-outline: currentcolor;
+	--gatherpress-calendar-day-today-color: currentcolor;
 
 	// Entry Typography & Interaction Tokens
-	--gatherpress-calendar-time-color: color-mix(in srgb, currentColor 75%, transparent);
-	--gatherpress-calendar-title-color: currentColor;
-	--gatherpress-calendar-focus-outline-color: currentColor;
+	--gatherpress-calendar-time-color: color-mix(in srgb, currentcolor 75%, transparent);
+	--gatherpress-calendar-title-color: currentcolor;
+	--gatherpress-calendar-focus-outline-color: currentcolor;
 
 	// --------------------------------------------------------------------------
 	// Slot Palette Tokens (Solid hues used for Dots)
@@ -36,7 +36,7 @@
 	// --------------------------------------------------------------------------
 	// Ribbon Lightness & Surface Tokens
 	// --------------------------------------------------------------------------
-	--gatherpress-calendar-ribbon-color: currentColor;
+	--gatherpress-calendar-ribbon-color: currentcolor;
 	--gatherpress-calendar-ribbon-mix-target: #fff;
 	--gatherpress-calendar-ribbon-color-intensity: 22%;
 
@@ -112,6 +112,7 @@
 		 */
 		thead.gatherpress--screen-reader-text th,
 		tr th.gatherpress--screen-reader-text {
+
 			@include visually-hidden;
 			aspect-ratio: auto;
 		}
@@ -119,6 +120,7 @@
 
 	/* Day View adjustments */
 	&.is-view-day {
+
 		th {
 			aspect-ratio: auto;
 			min-height: 140px;
@@ -134,5 +136,6 @@
  * 0.35. Remove it when the calendar requires GatherPress 0.36 or later.
  */
 .wp-block-gatherpress-calendar .gatherpress--screen-reader-text {
+
 	@include visually-hidden;
 }
