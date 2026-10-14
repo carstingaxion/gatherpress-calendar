@@ -16,8 +16,9 @@ import {
 /* eslint-enable @wordpress/no-unsafe-wp-apis */
 import { useMemo } from '@wordpress/element';
 
-import { generateMonthOptions } from '../utils/calendar-utils';
+import { calculateTargetDate, formatHeading } from '../utils/date-utils';
 import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
+import { MonthPicker } from './MonthPicker';
 import { SourcePostControls } from './SourcePostControls';
 import { ShadowSourceFilterControls } from './ShadowSourceFilterControls';
 import {
@@ -47,7 +48,6 @@ const MAX_UNITS = {
  * @param {number}   props.dateModifier      Date offset value.
  * @param {Function} props.onDateChange      Callback when date changes.
  * @param {Function} props.onModifierChange  Callback when modifier changes.
- * @param {Function} props.onOpenPicker      Callback to open month picker.
  * @param {string}   props.dateRangeSource   Source mode ('default', 'context', 'selected').
  * @param {Function} props.onSourceChange    Callback when source changes.
  * @param {number}   props.postId            Selected post ID.
@@ -71,7 +71,6 @@ export function DateControls( {
 	dateModifier,
 	onDateChange,
 	onModifierChange,
-	onOpenPicker,
 	dateRangeSource = DATE_SOURCE_DEFAULT,
 	onSourceChange,
 	postId = 0,
@@ -82,7 +81,6 @@ export function DateControls( {
 	hasPostDates = false,
 	hasCurrentSupport = false,
 } ) {
-	const monthOptions = useMemo( () => generateMonthOptions(), [] );
 	const offsetHelp = useDateOffsetHelp( dateModifier, viewType );
 	const maxUnits = MAX_UNITS[ viewType ] || 12;
 
@@ -156,11 +154,9 @@ export function DateControls( {
 		}
 
 		if ( selectedDate ) {
-			if ( 'month' === viewType ) {
-				const match = monthOptions.find(
-					( o ) => o.value === selectedDate
-				);
-				return match?.label || selectedDate;
+			if ( 'month' === viewType && /^\d{4}-\d{2}/.test( selectedDate ) ) {
+				const month = calculateTargetDate( { selectedDate } );
+				return formatHeading( 'month', month, month );
 			}
 			return selectedDate;
 		}
@@ -179,7 +175,6 @@ export function DateControls( {
 		selectedDate,
 		postId,
 		viewType,
-		monthOptions,
 	] );
 
 	const unitLabel = useMemo( () => {
@@ -259,7 +254,8 @@ export function DateControls( {
 				</strong>
 				<br />
 				{ selectionLabel }
-				{ ! selectedDate && isDefaultMode && 0 !== dateModifier && (
+				{ /* Blocks saved before 0.9.0 can have a date and an offset. */ }
+				{ isDefaultMode && 0 !== dateModifier && (
 					<>
 						{ ' ' }
 						{ dateModifier > 0
@@ -273,14 +269,11 @@ export function DateControls( {
 			{ isDefaultMode && (
 				<>
 					{ 'month' === viewType ? (
-						<Button
-							variant="primary"
-							onClick={ onOpenPicker }
-							__next40pxDefaultSize
-							style={ { width: '100%', marginBottom: '8px' } }
-						>
-							{ __( 'Change Month', 'gatherpress-calendar' ) }
-						</Button>
+						<MonthPicker
+							selectedMonth={ selectedDate }
+							dateModifier={ dateModifier }
+							onChange={ onDateChange }
+						/>
 					) : (
 						<TextControl
 							label={ __(
@@ -294,16 +287,17 @@ export function DateControls( {
 						/>
 					) }
 
-					{ selectedDate && (
-						<Button
-							onClick={ () => onDateChange( '' ) }
-							variant="secondary"
-							__next40pxDefaultSize
-							style={ { width: '100%', marginBottom: '8px' } }
-						>
-							{ __( 'Reset to Current', 'gatherpress-calendar' ) }
-						</Button>
-					) }
+					{ /* The reset buttons stay in place, so focus is not lost. */ }
+					<Button
+						onClick={ () => onDateChange( '' ) }
+						variant="secondary"
+						disabled={ ! selectedDate }
+						accessibleWhenDisabled
+						__next40pxDefaultSize
+						style={ { width: '100%', marginBottom: '8px' } }
+					>
+						{ __( 'Reset to Current', 'gatherpress-calendar' ) }
+					</Button>
 
 					{ ! selectedDate && (
 						<>
@@ -327,22 +321,19 @@ export function DateControls( {
 								step={ 1 }
 								help={ offsetHelp }
 							/>
-							{ 0 !== dateModifier && (
-								<Button
-									onClick={ () => onModifierChange( 0 ) }
-									variant="secondary"
-									__next40pxDefaultSize
-									style={ {
-										width: '100%',
-										marginBottom: '8px',
-									} }
-								>
-									{ __(
-										'Reset Offset',
-										'gatherpress-calendar'
-									) }
-								</Button>
-							) }
+							<Button
+								onClick={ () => onModifierChange( 0 ) }
+								variant="secondary"
+								disabled={ 0 === dateModifier }
+								accessibleWhenDisabled
+								__next40pxDefaultSize
+								style={ {
+									width: '100%',
+									marginBottom: '8px',
+								} }
+							>
+								{ __( 'Reset Offset', 'gatherpress-calendar' ) }
+							</Button>
 						</>
 					) }
 				</>
