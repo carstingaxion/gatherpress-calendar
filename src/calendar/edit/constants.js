@@ -187,6 +187,42 @@ export const ENTRIES_TEMPLATE = [
 ];
 
 /**
+ * The Day Number paragraph, bound to the day of its calendar cell.
+ * Shared by DAY_TEMPLATE and the transform in ../transforms.js.
+ */
+export const DAY_NUMBER = [
+	'core/paragraph',
+	{
+		className: 'gatherpress-calendar__day-number',
+		fontSize: 'small',
+		placeholder: 'DD',
+		content: 'DD',
+		style: {
+			spacing: {
+				margin: {
+					top: '0',
+					bottom: '0',
+					left: '0',
+					right: '0',
+				},
+			},
+		},
+		metadata: {
+			bindings: {
+				content: {
+					source: 'gatherpress/calendar-day',
+				},
+			},
+			name: _x(
+				'Day Number',
+				'Block variation name',
+				'gatherpress-calendar'
+			),
+		},
+	},
+];
+
+/**
  * The inner template inside gatherpress/calendar-day:
  * Bound Day Number paragraph + Calendar Entries block.
  */
@@ -195,37 +231,7 @@ export const DAY_TEMPLATE = [
 		'gatherpress/calendar-day',
 		{},
 		[
-			[
-				'core/paragraph',
-				{
-					className: 'gatherpress-calendar__day-number',
-					fontSize: 'small',
-					placeholder: 'DD',
-					content: 'DD',
-					style: {
-						spacing: {
-							margin: {
-								top: '0',
-								bottom: '0',
-								left: '0',
-								right: '0',
-							},
-						},
-					},
-					metadata: {
-						bindings: {
-							content: {
-								source: 'gatherpress/calendar-day',
-							},
-						},
-						name: _x(
-							'Day Number',
-							'Block variation name',
-							'gatherpress-calendar'
-						),
-					},
-				},
-			],
+			DAY_NUMBER,
 			[
 				'gatherpress/calendar-entries',
 				{
