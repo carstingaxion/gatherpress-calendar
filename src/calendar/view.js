@@ -40,49 +40,6 @@ function getRegionId( element ) {
 	);
 }
 
-// Track active modal elements to elevate ONLY the cell that owns the open modal.
-document.addEventListener( 'click', ( event ) => {
-	const trigger = event.target?.closest?.(
-		'.gatherpress-modal--trigger-open'
-	);
-	if ( trigger ) {
-		const entry = trigger.closest( '.gatherpress-calendar__entry' );
-		const day = trigger.closest( '.gatherpress-calendar__day' );
-
-		document
-			.querySelectorAll( '.is-modal-active' )
-			.forEach( ( el ) => el.classList.remove( 'is-modal-active' ) );
-		if ( entry ) {
-			entry.classList.add( 'is-modal-active' );
-		}
-		if ( day ) {
-			day.classList.add( 'is-modal-active' );
-		}
-
-		// Clear background hover/focus when opening modal.
-		const { state } = store( 'gatherpress/calendar' );
-		state.hoveredEventId = null;
-		state.focusedEventId = null;
-	}
-
-	const closeBtn = event.target?.closest?.(
-		'.gatherpress-modal--trigger-close'
-	);
-	if ( closeBtn ) {
-		document
-			.querySelectorAll( '.is-modal-active' )
-			.forEach( ( el ) => el.classList.remove( 'is-modal-active' ) );
-	}
-} );
-
-document.addEventListener( 'keydown', ( event ) => {
-	if ( 'Escape' === event.key ) {
-		document
-			.querySelectorAll( '.is-modal-active' )
-			.forEach( ( el ) => el.classList.remove( 'is-modal-active' ) );
-	}
-} );
-
 store( 'gatherpress/calendar', {
 	state: {
 		hoveredEventId: null,
@@ -93,10 +50,10 @@ store( 'gatherpress/calendar', {
 			if ( event?.target?.closest?.( '.wp-block-gatherpress-modal' ) ) {
 				return;
 			}
-			// Do not highlight background if a modal is currently open.
+			// Ask GatherPress / DOM if any modal is currently open
 			if (
 				document.querySelector(
-					'.is-modal-active, dialog[open], .wp-block-gatherpress-modal.is-open'
+					'.wp-block-gatherpress-modal.gatherpress--is-visible'
 				)
 			) {
 				return;
@@ -124,7 +81,7 @@ store( 'gatherpress/calendar', {
 			}
 			if (
 				document.querySelector(
-					'.is-modal-active, dialog[open], .wp-block-gatherpress-modal.is-open'
+					'.wp-block-gatherpress-modal.gatherpress--is-visible'
 				)
 			) {
 				return;
