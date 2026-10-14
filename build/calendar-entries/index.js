@@ -1,1 +1,505 @@
-(()=>{"use strict";var e={194(){const e=window.wp.blocks,t=JSON.parse('{"UU":"gatherpress/calendar-entries"}'),s=window.wp.blockEditor,o=window.wp.data,r=window.wp.element,n=window.ReactJSXRuntime,l=[],a=(0,r.memo)(function({blocks:e}){const t=(0,s.__experimentalUseBlockPreview)({blocks:e});return(0,n.jsx)("div",{...t,className:`gatherpress-calendar__entry-template ${t.className||""}`})}),i=(0,r.memo)(function({post:e,isFirst:t,innerBlocksProps:o,innerBlocks:l,parentAttributes:i,defaultPostType:p="post"}){let c;"object"==typeof e&&"number"==typeof e?.id?c=e.id:"number"==typeof e&&(c=e);const d="object"==typeof e&&e?.type?e.type:p,u=(0,r.useMemo)(()=>c?{postId:c,postType:d}:{postId:void 0,postType:void 0},[c,d]),m=(0,s.__experimentalUseColorProps)(i??{}),y=(0,s.__experimentalUseBorderProps)(i??{}),h=(0,s.__experimentalGetShadowClassesAndStyles)(i??{}),f=["gatherpress-calendar__entry",m.className,y.className].filter(Boolean).join(" "),k={...m.style,"--gatherpress-calendar-dot-color":m.style?.color,...y.style,...h.style},b=(0,s.useBlockProps)({className:f,style:k});return(0,n.jsx)(s.BlockContextProvider,{value:u,children:(0,n.jsx)("div",{...b,children:t?(0,n.jsx)("div",{...o}):(0,n.jsx)(a,{blocks:l})})})});(0,e.registerBlockType)(t.UU,{edit:function({attributes:e,clientId:t,context:r}){const a=r?.["gatherpress/dayPosts"]??l,p=r?.["gatherpress/isEmpty"]??!1,c=r?.postType||"post",d=e?.style?.spacing?.blockGap,u=(0,s.useBlockProps)({style:{gap:d?(0,s.__experimentalGetGapCSSValue)(d):void 0}}),m=(0,s.useInnerBlocksProps)({className:"gatherpress-calendar__entry-template"},{renderAppender:!1}),y=(0,o.useSelect)(e=>e(s.store).getBlock(t)?.innerBlocks??l,[t]);if(p)return null;const h=a.length>0?a:[{id:"placeholder"}];return(0,n.jsx)("div",{...u,children:h.map((t,s)=>(0,n.jsx)(i,{post:t,isFirst:0===s,innerBlocksProps:m,innerBlocks:y,parentAttributes:e,defaultPostType:c},t?.id??s))})},save:function(){return(0,n.jsx)(s.InnerBlocks.Content,{})}})}};const t={};function s(o){const r=t[o];if(void 0!==r)return r.exports;const n=t[o]={exports:{}};return e[o](n,n.exports,s),n.exports}s.m=e,(()=>{const e=[];s.O=(t,o,r)=>{if(!o){for(var n=0;n<e.length;n++){let[o,r]=e[n],a=!0;for(var l=0;l<o.length;l++)s.O.j(o[l])?o.splice(l--,1):a=!1;if(a){e.splice(n--,1);const s=r();void 0!==s&&(t=s)}}return t}e.push([o,r])}})(),s.o=(e,t)=>Object.hasOwn(e,t),(()=>{const e={427:0,595:0};s.O.j=t=>0===e[t];const t=(t,o)=>{let[r,n,l]=o;var a,i,p=0;if(r.some(t=>0!==e[t])){for(a in n)s.o(n,a)&&(s.m[a]=n[a]);if(l)var c=l(s)}for(t&&t(o);p<r.length;p++)i=r[p],s.o(e,i)&&e[i]&&e[i][0](),e[i]=0;return s.O(c)},o=globalThis.webpackChunkgatherpress_calendar||=[];o.forEach(t.bind(null,0)),o.push=t.bind(null,o.push.bind(o))})();let o=s.O(void 0,[595],()=>s(194));o=s.O(o)})();
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./src/calendar-entries/edit.js"
+/*!**************************************!*\
+  !*** ./src/calendar-entries/edit.js ***!
+  \**************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Edit)
+/* harmony export */ });
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/block-editor */ "@wordpress/block-editor");
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/data */ "@wordpress/data");
+/* harmony import */ var _wordpress_data__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_data__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @wordpress/element */ "@wordpress/element");
+/* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__);
+/**
+ * GatherPress Calendar Entries Block Editor Component
+ *
+ * @package
+ * @since 0.4.0
+ */
+
+
+
+
+
+const EMPTY_ARRAY = [];
+
+/**
+ * Filter out top-level event-date blocks outside modals on multi-day events.
+ *
+ * @param {Array} blocks Template inner blocks.
+ * @return {Array} Filtered blocks.
+ */
+function filterMultiDayBlocks(blocks = []) {
+  return blocks.filter(block => block.name !== 'gatherpress/event-date').map(block => {
+    if (block.name === 'gatherpress/modal-manager' && block.innerBlocks) {
+      return {
+        ...block,
+        innerBlocks: block.innerBlocks.filter(inner => inner.name !== 'gatherpress/event-date')
+      };
+    }
+    return block;
+  });
+}
+
+/**
+ * Renders preview copies for the 2nd, 3rd, etc. posts in the day cell.
+ */
+const EventPreview = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.memo)(function EventPreviewComponent({
+  blocks,
+  isMultiDay = false
+}) {
+  const previewBlocks = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useMemo)(() => {
+    return isMultiDay ? filterMultiDayBlocks(blocks) : blocks;
+  }, [blocks, isMultiDay]);
+  const previewProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.__experimentalUseBlockPreview)({
+    blocks: previewBlocks
+  });
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+    ...previewProps,
+    className: `gatherpress-calendar__entry-template ${previewProps.className || ''}`
+  });
+});
+
+/**
+ * Individual event item wrapper that supplies event context, span classes, and slot variables.
+ */
+const EventItem = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.memo)(function EventItemComponent({
+  post,
+  isFirst,
+  innerBlocksProps,
+  innerBlocks,
+  parentAttributes,
+  defaultPostType = 'post'
+}) {
+  // Safely resolve postId.
+  let postId;
+  if (typeof post === 'object' && typeof post?.id === 'number') {
+    postId = post.id;
+  } else if (typeof post === 'number') {
+    postId = post;
+  }
+  const postType = typeof post === 'object' && post?.type ? post.type : defaultPostType;
+  const isAllDay = Boolean(typeof post === 'object' && (post?.isAllDay || post?.meta?.gatherpress_is_all_day === true || post?.meta?.gatherpress_is_all_day === '1' || post?.meta?.gatherpress_is_all_day === 1 || post?.meta?.gatherpress_is_all_day === 'true'));
+  const totalDays = typeof post === 'object' ? post?.totalDays ?? 1 : 1;
+  const isMultiDay = totalDays > 1 || isAllDay;
+  const dayIndex = typeof post === 'object' ? post?.dayIndex ?? 1 : 1;
+  const slot = typeof post === 'object' ? post?.slot ?? 0 : 0;
+  const span = typeof post === 'object' ? post?.span ?? 'single' : 'single';
+  const isContinued = Boolean(typeof post === 'object' && post?.isContinued);
+  const isContinues = Boolean(typeof post === 'object' && post?.isContinues);
+  const contextValue = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_2__.useMemo)(() => {
+    // The placeholder item on an empty day has no event. Clear the post
+    // context, so blocks like core/post-title do not show the post that
+    // holds the calendar, but their own placeholder.
+    if (!postId) {
+      return {
+        postId: undefined,
+        postType: undefined
+      };
+    }
+    return {
+      postId,
+      postType,
+      'gatherpress/eventSpan': span,
+      'gatherpress/eventDayIndex': dayIndex,
+      'gatherpress/eventTotalDays': totalDays,
+      'gatherpress/isAllDay': isAllDay,
+      'gatherpress/eventSlot': slot
+    };
+  }, [postId, postType, span, dayIndex, totalDays, isAllDay, slot]);
+  const colorProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.__experimentalUseColorProps)(parentAttributes ?? {});
+  const borderProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.__experimentalUseBorderProps)(parentAttributes ?? {});
+  // const spacingProps = getSpacingClassesAndStyles( parentAttributes ?? {} );
+  const shadowProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.__experimentalGetShadowClassesAndStyles)(parentAttributes ?? {});
+  const rowSpan = typeof post === 'object' ? post?.rowSpan ?? 1 : 1;
+  const classNames = ['gatherpress-calendar__entry', postId ? `post-${postId}` : '', isAllDay ? 'is-all-day' : '', isMultiDay ? 'is-multi-day' : '', span ? `is-span-${span}` : '', isContinued ? 'is-span-continued' : '', isContinues ? 'is-span-continues' : '', rowSpan >= 2 ? 'has-multi-col-span' : '', colorProps.className, borderProps.className].filter(Boolean).join(' ');
+  const style = {
+    ...colorProps.style,
+    '--gatherpress-calendar-dot-color': colorProps.style?.color,
+    '--gatherpress-calendar-entry-slot': slot,
+    '--gatherpress-calendar-row-span': rowSpan,
+    ...borderProps.style,
+    // ...spacingProps.style,
+    ...shadowProps.style
+  };
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.BlockContextProvider, {
+    value: contextValue,
+    children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+      className: classNames,
+      style: style,
+      "data-slot": slot,
+      "data-span": span,
+      "data-day-index": dayIndex,
+      "data-total-days": totalDays,
+      "data-row-span": rowSpan,
+      children: isFirst ?
+      /*#__PURE__*/
+      // The primary, editable template container
+      (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+        ...innerBlocksProps
+      }) :
+      /*#__PURE__*/
+      // Cloned previews reflecting the same template for additional posts
+      (0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(EventPreview, {
+        blocks: innerBlocks,
+        isMultiDay: isMultiDay
+      })
+    })
+  });
+});
+function Edit({
+  attributes,
+  clientId,
+  context
+}) {
+  const dayPosts = context?.['gatherpress/dayPosts'] ?? EMPTY_ARRAY;
+  const isEmpty = context?.['gatherpress/isEmpty'] ?? false;
+  const defaultPostType = context?.postType || 'post';
+  const blockGap = attributes?.style?.spacing?.blockGap;
+  const blockProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.useBlockProps)({
+    className: 'wp-block-gatherpress-calendar-entries',
+    style: {
+      gap: blockGap ? (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.__experimentalGetGapCSSValue)(blockGap) : undefined
+    }
+  });
+  const innerBlocksProps = (0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.useInnerBlocksProps)({
+    className: 'gatherpress-calendar__entry-template'
+  }, {
+    renderAppender: false
+  });
+
+  // Retrieve template blocks so additional items can mirror them in preview.
+  const innerBlocks = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_1__.useSelect)(select => select(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.store).getBlock(clientId)?.innerBlocks ?? EMPTY_ARRAY, [clientId]);
+
+  // Skip rendering if the cell is an empty padding day
+  if (isEmpty) {
+    return null;
+  }
+
+  // Show at least one placeholder item so the block template is editable on empty days
+  const displayDots = dayPosts.length > 0 ? dayPosts : [{
+    id: 'placeholder'
+  }];
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)("div", {
+    ...blockProps,
+    children: displayDots.map((post, index) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_3__.jsx)(EventItem, {
+      post: post,
+      isFirst: index === 0,
+      innerBlocksProps: innerBlocksProps,
+      innerBlocks: innerBlocks,
+      parentAttributes: attributes,
+      defaultPostType: defaultPostType
+    }, post?.id ?? index))
+  });
+}
+
+/***/ },
+
+/***/ "./src/calendar-entries/index.js"
+/*!***************************************!*\
+  !*** ./src/calendar-entries/index.js ***!
+  \***************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/blocks */ "@wordpress/blocks");
+/* harmony import */ var _wordpress_blocks__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _block_json__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./block.json */ "./src/calendar-entries/block.json");
+/* harmony import */ var _edit__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./edit */ "./src/calendar-entries/edit.js");
+/* harmony import */ var _save__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./save */ "./src/calendar-entries/save.js");
+/* harmony import */ var _style_scss__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./style.scss */ "./src/calendar-entries/style.scss");
+/**
+ * GatherPress Calendar Entries Block Registration
+ *
+ * @package
+ * @since 0.4.0
+ */
+
+
+
+/**
+ * Internal dependencies
+ */
+
+
+
+
+(0,_wordpress_blocks__WEBPACK_IMPORTED_MODULE_0__.registerBlockType)(_block_json__WEBPACK_IMPORTED_MODULE_1__.name, {
+  edit: _edit__WEBPACK_IMPORTED_MODULE_2__["default"],
+  save: _save__WEBPACK_IMPORTED_MODULE_3__["default"]
+});
+
+/***/ },
+
+/***/ "./src/calendar-entries/save.js"
+/*!**************************************!*\
+  !*** ./src/calendar-entries/save.js ***!
+  \**************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ save)
+/* harmony export */ });
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/block-editor */ "@wordpress/block-editor");
+/* harmony import */ var _wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__);
+/**
+ * GatherPress Calendar Entries Block Save Component
+ *
+ * Server-side rendering injects context per calendar-entry (event, production, post, ...);
+ * this save component preserves the InnerBlocks template structure.
+ *
+ * @package
+ * @since 0.4.0
+ */
+
+
+function save() {
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_1__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_0__.InnerBlocks.Content, {});
+}
+
+/***/ },
+
+/***/ "./src/calendar-entries/style.scss"
+/*!*****************************************!*\
+  !*** ./src/calendar-entries/style.scss ***!
+  \*****************************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ },
+
+/***/ "react/jsx-runtime"
+/*!**********************************!*\
+  !*** external "ReactJSXRuntime" ***!
+  \**********************************/
+(module) {
+
+module.exports = window["ReactJSXRuntime"];
+
+/***/ },
+
+/***/ "@wordpress/block-editor"
+/*!*************************************!*\
+  !*** external ["wp","blockEditor"] ***!
+  \*************************************/
+(module) {
+
+module.exports = window["wp"]["blockEditor"];
+
+/***/ },
+
+/***/ "@wordpress/blocks"
+/*!********************************!*\
+  !*** external ["wp","blocks"] ***!
+  \********************************/
+(module) {
+
+module.exports = window["wp"]["blocks"];
+
+/***/ },
+
+/***/ "@wordpress/data"
+/*!******************************!*\
+  !*** external ["wp","data"] ***!
+  \******************************/
+(module) {
+
+module.exports = window["wp"]["data"];
+
+/***/ },
+
+/***/ "@wordpress/element"
+/*!*********************************!*\
+  !*** external ["wp","element"] ***!
+  \*********************************/
+(module) {
+
+module.exports = window["wp"]["element"];
+
+/***/ },
+
+/***/ "./src/calendar-entries/block.json"
+/*!*****************************************!*\
+  !*** ./src/calendar-entries/block.json ***!
+  \*****************************************/
+(module) {
+
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"gatherpress/calendar-entries","version":"0.1.0","title":"Calendar Entries","category":"gatherpress","icon":"list-view","description":"Lists a calendar day\'s events, one per event. Works like the Post Template block: its inner blocks are the template used to render each event - for now, that template is only used for the event\'s popover content.","ancestor":["gatherpress/calendar-day"],"usesContext":["gatherpress/dayDate","gatherpress/dayPosts","gatherpress/isEmpty","postType"],"attributes":{"layout":{"type":"object","default":{"type":"flex","orientation":"vertical","justifyContent":"right"}}},"supports":{"interactivity":{"clientNavigation":true},"html":false,"reusable":false,"layout":{"allowSwitching":true,"allowInheriting":false,"allowSizingOnChildren":false,"default":{"type":"flex","orientation":"vertical","justifyContent":"right"}},"spacing":{"margin":true,"padding":true,"blockGap":true,"__experimentalDefaultControls":{"blockGap":true,"margin":false,"padding":false}},"color":{"background":true,"text":true,"gradients":true,"__experimentalSkipSerialization":true},"__experimentalBorder":{"color":true,"radius":true,"width":true,"__experimentalSkipSerialization":true,"__experimentalSelector":".gatherpress-calendar__entry"},"shadow":{"__experimentalSkipSerialization":true},"listView":true,"contentRole":true},"selectors":{"border":".wp-block-gatherpress-calendar .gatherpress-calendar__entry","color":".wp-block-gatherpress-calendar .gatherpress-calendar__entry","shadow":".wp-block-gatherpress-calendar .gatherpress-calendar__entry"},"styles":[{"name":"default","label":"Classic","isDefault":true},{"name":"dots","label":"Colored Dots"}],"textdomain":"gatherpress-calendar","editorScript":"file:./index.js","style":"file:./style-index.css"}');
+
+/***/ }
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	const __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		const cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		const module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			const e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/chunk loaded */
+/******/ 	(() => {
+/******/ 		const deferred = [];
+/******/ 		__webpack_require__.O = (result, chunkIds, fn) => {
+/******/ 			if(chunkIds) {
+/******/ 				deferred.push([chunkIds, fn]);
+/******/ 				return;
+/******/ 			}
+/******/ 			for (var i = 0; i < deferred.length; i++) {
+/******/ 				let [chunkIds, fn] = deferred[i];
+/******/ 				let fulfilled = true;
+/******/ 				for (var j = 0; j < chunkIds.length; j++) {
+/******/ 					if (__webpack_require__.O.j(chunkIds[j])) {
+/******/ 						chunkIds.splice(j--, 1);
+/******/ 					} else {
+/******/ 						fulfilled = false;
+/******/ 					}
+/******/ 				}
+/******/ 				if(fulfilled) {
+/******/ 					deferred.splice(i--, 1)
+/******/ 					const r = fn();
+/******/ 					if (r !== undefined) result = r;
+/******/ 				}
+/******/ 			}
+/******/ 			return result;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	// getDefaultExport function for compatibility with non-harmony modules
+/******/ 	__webpack_require__.n = (module) => {
+/******/ 		const getter = module && module.__esModule ?
+/******/ 			() => (module['default']) :
+/******/ 			() => (module);
+/******/ 		__webpack_require__.d(getter, { a: getter });
+/******/ 		return getter;
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	// define getter/value functions for harmony exports
+/******/ 	__webpack_require__.d = (exports, definition) => {
+/******/ 		for(var key in definition) {
+/******/ 			if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 			}
+/******/ 		}
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	__webpack_require__.o = (obj, prop) => (Object.hasOwn(obj, prop));
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = (exports) => {
+/******/ 		Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/ 	
+/******/ 	/* webpack/runtime/jsonp chunk loading */
+/******/ 	(() => {
+/******/ 		// no baseURI
+/******/ 		
+/******/ 		// object to store loaded and loading chunks
+/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+/******/ 		const installedChunks = {
+/******/ 			"calendar-entries/index": 0,
+/******/ 			"calendar-entries/style-index": 0
+/******/ 		};
+/******/ 		
+/******/ 		// no chunk on demand loading
+/******/ 		
+/******/ 		// no prefetching
+/******/ 		
+/******/ 		// no preloaded
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 		
+/******/ 		__webpack_require__.O.j = (chunkId) => (installedChunks[chunkId] === 0);
+/******/ 		
+/******/ 		// install a JSONP callback for chunk loading
+/******/ 		const webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
+/******/ 			let [chunkIds, moreModules, runtime] = data;
+/******/ 			// add "moreModules" to the modules object,
+/******/ 			// then flag all "chunkIds" as loaded and fire callback
+/******/ 			var moduleId, chunkId, i = 0;
+/******/ 			if(chunkIds.some((id) => (installedChunks[id] !== 0))) {
+/******/ 				for(moduleId in moreModules) {
+/******/ 					if(__webpack_require__.o(moreModules, moduleId)) {
+/******/ 						__webpack_require__.m[moduleId] = moreModules[moduleId];
+/******/ 					}
+/******/ 				}
+/******/ 				if(runtime) var result = runtime(__webpack_require__);
+/******/ 			}
+/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
+/******/ 			for(;i < chunkIds.length; i++) {
+/******/ 				chunkId = chunkIds[i];
+/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 					installedChunks[chunkId][0]();
+/******/ 				}
+/******/ 				installedChunks[chunkId] = 0;
+/******/ 			}
+/******/ 			return __webpack_require__.O(result);
+/******/ 		}
+/******/ 		
+/******/ 		const chunkLoadingGlobal = globalThis["webpackChunkgatherpress_calendar"] ||= [];
+/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
+/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
+/******/ 	let __webpack_exports__ = __webpack_require__.O(undefined, ["calendar-entries/style-index"], () => (__webpack_require__("./src/calendar-entries/index.js")))
+/******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
+/******/ 	
+/******/ })()
+;
+//# sourceMappingURL=index.js.map

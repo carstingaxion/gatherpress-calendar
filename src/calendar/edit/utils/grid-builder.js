@@ -13,46 +13,178 @@ import { WEEKDAY_SLUGS, isWeekendDay, getDayNames } from './calendar-utils';
 import { isEventPostType } from '../../../utils/post-types';
 
 /**
- * Organizes posts by YYYY-MM-DD date string.
+ * Classifies the span position for a day within a multi-day event.
+ *
+ * @param {number} dayIndex  1-based day index.
+ * @param {number} totalDays Total days of the event.
+ * @return {string} 'single', 'start', 'middle', or 'end'.
+ */
+export function determineSpanType( dayIndex, totalDays ) {
+	if ( totalDays <= 1 ) {
+		return 'single';
+	}
+	if ( dayIndex === 1 ) {
+		return 'start';
+	}
+	if ( dayIndex === totalDays ) {
+		return 'end';
+	}
+	return 'middle';
+}
+
+/**
+ * Calculates start object, total days, and string dates for a post.
+ *
+ * @param {Object} post Post entity record.
+ * @return {Object|null} PostDateSpan descriptor object.
+ */
+export function resolvePostDateSpan( post ) {
+	const isEvent = isEventPostType( post.type );
+	const postDate = isEvent
+		? post.meta?.gatherpress_datetime_start
+		: post.date;
+
+	if ( ! postDate ) {
+		return null;
+	}
+
+	const isAllDay = Boolean(
+		post.meta?.gatherpress_is_all_day === true ||
+		post.meta?.gatherpress_is_all_day === '1' ||
+		post.meta?.gatherpress_is_all_day === 1 ||
+		post.meta?.gatherpress_is_all_day === 'true'
+	);
+
+	// When post supports gatherpress-event-date, postDate from meta is a string like:
+	// "2026-09-30 23:30:00" (an event starting at 11:30 PM in its local timezone).
+	// Here is why new Date( postDate ) causes the bug in the editor:
+	// new Date( "2026-09-30 23:30:00" ) creates a JavaScript Date object at 23:30 in the browser's timezone.
+	// dateI18n( DATE_FORMAT, ... ) converts that Date object into the WordPress site's timezone.
+	// If the site is just 1 hour ahead of the browser (or the event's local time), 23:30 becomes 00:30 on 2026-10-01.
+	// As a result, dateStr becomes "2026-10-01". The event gets placed into October 1st in the editor grid instead of September 30th!
+	//
+	// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
+	// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
+	const startDateStr =
+		isEvent && post.meta?.gatherpress_datetime_start
+			? post.meta.gatherpress_datetime_start.slice( 0, 10 )
+			: dateI18n( DATE_FORMAT, new Date( postDate ) );
+
+	let endDateStr = startDateStr;
+	if ( isEvent && post.meta?.gatherpress_datetime_end ) {
+		const rawEnd = post.meta.gatherpress_datetime_end.slice( 0, 10 );
+		if ( rawEnd >= startDateStr ) {
+			endDateStr = rawEnd;
+		}
+	}
+
+	const [ sY, sM, sD ] = startDateStr.split( '-' ).map( Number );
+	const [ eY, eM, eD ] = endDateStr.split( '-' ).map( Number );
+	const startObj = new Date( sY, sM - 1, sD, 12, 0, 0 );
+	const endObj = new Date( eY, eM - 1, eD, 12, 0, 0 );
+
+	const totalDays = Math.min(
+		366,
+		Math.max(
+			1,
+			Math.round( ( endObj - startObj ) / ( 1000 * 60 * 60 * 24 ) ) + 1
+		)
+	);
+
+	return { post, startObj, startDateStr, totalDays, isAllDay };
+}
+
+/**
+ * Finds the lowest 0-indexed vertical slot free across all dates of an event's span.
+ *
+ * @param {string[]} dates         Array of YYYY-MM-DD date strings.
+ * @param {Object}   occupiedSlots Map of date strings to Set of occupied slots.
+ * @return {number} Lowest available slot index.
+ */
+export function findAvailableSlot( dates, occupiedSlots ) {
+	let slot = 0;
+
+	while ( true ) {
+		const isFree = dates.every(
+			( date ) => ! occupiedSlots[ date ]?.has( slot )
+		);
+		if ( isFree ) {
+			return slot;
+		}
+		slot++;
+	}
+}
+
+/**
+ * Organizes posts by YYYY-MM-DD date string, spanning multi-day events across all active days.
  *
  * @param {Array} posts Raw post entities.
  * @return {Object} Posts grouped by date string.
  */
 export function groupPostsByDate( posts = [] ) {
 	const grouped = {};
-	if ( ! posts || ! posts.length ) {
+	if ( ! posts?.length ) {
 		return grouped;
 	}
 
-	posts.forEach( ( post ) => {
-		const isEvent = isEventPostType( post.type );
-		const postDate = isEvent
-			? post.meta?.gatherpress_datetime_start
-			: post.date;
+	const rawEvents = posts.map( resolvePostDateSpan ).filter( Boolean );
 
-		if ( ! postDate ) {
-			return;
+	// Multi-day and all-day events first (descending totalDays), then start date, then ID.
+	rawEvents.sort( ( a, b ) => {
+		const aPromoted = a.totalDays > 1 || a.isAllDay ? 1 : 0;
+		const bPromoted = b.totalDays > 1 || b.isAllDay ? 1 : 0;
+		if ( aPromoted !== bPromoted ) {
+			return bPromoted - aPromoted;
+		}
+		if ( b.totalDays !== a.totalDays ) {
+			return b.totalDays - a.totalDays;
+		}
+		if ( a.startDateStr !== b.startDateStr ) {
+			return a.startDateStr.localeCompare( b.startDateStr );
+		}
+		return ( a.post.id || 0 ) - ( b.post.id || 0 );
+	} );
+
+	const occupiedSlots = {};
+
+	rawEvents.forEach( ( { post, startObj, totalDays, isAllDay } ) => {
+		const eventDates = [];
+		for ( let i = 0; i < totalDays; i++ ) {
+			const current = new Date( startObj );
+			current.setDate( startObj.getDate() + i );
+			eventDates.push( formatDate( current ) );
 		}
 
-		// When post supports gatherpress-event-date, postDate from meta is a string like:
-		// "2026-09-30 23:30:00" (an event starting at 11:30 PM in its local timezone).
-		// Here is why new Date( postDate ) causes the bug in the editor:
-		// new Date( "2026-09-30 23:30:00" ) creates a JavaScript Date object at 23:30 in the browser's timezone.
-		// dateI18n( DATE_FORMAT, ... ) converts that Date object into the WordPress site's timezone.
-		// If the site is just 1 hour ahead of the browser (or the event's local time), 23:30 becomes 00:30 on 2026-10-01.
-		// As a result, dateStr becomes "2026-10-01". The event gets placed into October 1st in the editor grid instead of September 30th!
-		//
-		// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
-		// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
-		const dateStr =
-			isEvent && post.meta?.gatherpress_datetime_start
-				? post.meta.gatherpress_datetime_start.slice( 0, 10 )
-				: dateI18n( DATE_FORMAT, new Date( postDate ) );
+		const slot = findAvailableSlot( eventDates, occupiedSlots );
 
-		if ( ! grouped[ dateStr ] ) {
-			grouped[ dateStr ] = [];
-		}
-		grouped[ dateStr ].push( post );
+		eventDates.forEach( ( dateStr, i ) => {
+			if ( ! occupiedSlots[ dateStr ] ) {
+				occupiedSlots[ dateStr ] = new Set();
+			}
+			occupiedSlots[ dateStr ].add( slot );
+
+			const dayIndex = i + 1;
+			const span = determineSpanType( dayIndex, totalDays );
+
+			if ( ! grouped[ dateStr ] ) {
+				grouped[ dateStr ] = [];
+			}
+
+			grouped[ dateStr ].push( {
+				...post,
+				span,
+				dayIndex,
+				totalDays,
+				slot,
+				isAllDay,
+			} );
+		} );
+	} );
+
+	Object.keys( grouped ).forEach( ( dateStr ) => {
+		grouped[ dateStr ].sort(
+			( a, b ) => ( a.slot || 0 ) - ( b.slot || 0 )
+		);
 	} );
 
 	return grouped;

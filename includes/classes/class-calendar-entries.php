@@ -56,6 +56,20 @@ class Calendar_Entries {
 	private static string $current_post_type = '';
 
 	/**
+	 * Span data of the event whose entry renders now; empty between entries.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private static array $current_span_data = array();
+
+	/**
+	 * Current modal nesting depth to distinguish triggers from modal-content.
+	 *
+	 * @var int
+	 */
+	private static int $modal_depth = 0;
+
+	/**
 	 * Constructor.
 	 */
 	protected function __construct() {
@@ -117,9 +131,13 @@ class Calendar_Entries {
 		);
 
 		$items_html = '';
-		foreach ( $day_posts as $post_id ) {
-			if ( is_int( $post_id ) ) {
-				$items_html .= $this->render_event_item( $post_id, $block );
+		foreach ( $day_posts as $entry ) {
+			$post_id = is_array( $entry ) ? ( $entry['id'] ?? 0 ) : $entry;
+			/** @var array<string, mixed> $span_data */
+			$span_data = is_array( $entry ) ? $entry : array();
+
+			if ( is_int( $post_id ) && $post_id > 0 ) {
+				$items_html .= $this->render_entry( $post_id, $block, $span_data );
 			}
 		}
 
@@ -131,20 +149,65 @@ class Calendar_Entries {
 	}
 
 	/**
-	 * Render a single event entry with its innerBlocks content.
+	 * Render a single entry with its innerBlocks content.
 	 *
-	 * @param int      $post_id Post ID.
-	 * @param WP_Block $block   The Calendar Entries block instance.
+	 * @param int                  $post_id   Post ID.
+	 * @param WP_Block             $block     The Calendar Entries block instance.
+	 * @param array<string, mixed> $span_data Multi-day span descriptors.
 	 *
 	 * @return string Event HTML with innerBlocks rendered.
 	 */
-	private function render_event_item( int $post_id, WP_Block $block ): string {
+	private function render_entry( int $post_id, WP_Block $block, array $span_data = array() ): string {
 		$post = get_post( $post_id );
 		if ( ! $post instanceof WP_Post ) {
 			return '';
 		}
 
-		// A local copy, so an entry template that renders a calendar cannot overwrite it.
+		$inner_content = $this->render_entry_inner_content( $post, $block, $span_data );
+
+		/**
+		 * Type safety.
+		 *
+		 * @var array<string, mixed> $attributes
+		 */
+		$attributes   = isset( $block->parsed_block['attrs'] ) && is_array( $block->parsed_block['attrs'] ) ? $block->parsed_block['attrs'] : array();
+		$entry_styles = $this->get_entry_styles_and_classes( $attributes );
+
+		$row_span_raw  = $span_data['row_span'] ?? 1;
+		$row_span      = is_numeric( $row_span_raw ) ? (int) $row_span_raw : 1;
+		$extra_classes = $this->build_span_classes( $span_data, $row_span );
+		$classnames    = trim( $entry_styles['classnames'] . ' ' . implode( ' ', $extra_classes ) );
+		$entry_classes = implode( ' ', get_post_class( $classnames, $post_id ) );
+
+		$slot_raw        = $span_data['slot'] ?? null;
+		$slot_style      = is_numeric( $slot_raw ) ? sprintf( '--gatherpress-calendar-entry-slot: %d;', (int) $slot_raw ) : '';
+		$row_span_style  = sprintf( '--gatherpress-calendar-row-span: %d;', $row_span );
+		$combined_style  = trim( $entry_styles['inline_styles'] . ' ' . $slot_style . ' ' . $row_span_style );
+		$style_attribute = '' !== $combined_style ? sprintf( ' style="%s"', esc_attr( $combined_style ) ) : '';
+
+		$data_attributes = $this->build_entry_data_attributes( $span_data, $row_span );
+		$iapi_directives = $this->build_entry_iapi_directives( $post_id );
+
+		return sprintf(
+			'<div class="%1$s"%2$s%3$s%4$s>%5$s</div>',
+			esc_attr( $entry_classes ),
+			$style_attribute,
+			$data_attributes,
+			$iapi_directives,
+			$inner_content
+		);
+	}
+
+	/**
+	 * Render entry inner template while managing global post state.
+	 *
+	 * @param WP_Post              $post      Post object.
+	 * @param WP_Block             $block     Calendar Entries block instance.
+	 * @param array<string, mixed> $span_data Multi-day span descriptors.
+	 *
+	 * @return string Rendered inner content.
+	 */
+	private function render_entry_inner_content( WP_Post $post, WP_Block $block, array $span_data ): string {
 		$original_post = ( isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof WP_Post ) ? $GLOBALS['post'] : null;
 
 		if ( isset( $GLOBALS['post'] ) ) {
@@ -157,14 +220,6 @@ class Calendar_Entries {
 			$post_type = 'post';
 		}
 
-		/**
-		 * Type safety.
-		 *
-		 * @var array<string, mixed> $attributes
-		 */
-		$attributes   = isset( $block->parsed_block['attrs'] ) && is_array( $block->parsed_block['attrs'] ) ? $block->parsed_block['attrs'] : array();
-		$entry_styles = $this->get_entry_styles_and_classes( $attributes );
-
 		$inner_blocks_raw = isset( $block->parsed_block['innerBlocks'] ) && is_array( $block->parsed_block['innerBlocks'] ) ? $block->parsed_block['innerBlocks'] : array();
 		/**
 		 * Type safety.
@@ -172,24 +227,158 @@ class Calendar_Entries {
 		 * @var array<int, array<string, mixed>> $inner_blocks
 		 */
 		$inner_blocks  = $inner_blocks_raw;
-		$inner_content = $this->render_entry_template( $inner_blocks, $post_id, $post_type );
+		$inner_content = $this->render_entry_template( $inner_blocks, (int) $post->ID, $post_type, $span_data );
 
 		wp_reset_postdata();
 		if ( isset( $GLOBALS['post'] ) ) {
 			$GLOBALS['post'] = $original_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 		}
 
-		$style_attribute = '' !== $entry_styles['inline_styles'] ? sprintf( ' style="%s"', esc_attr( $entry_styles['inline_styles'] ) ) : '';
+		return $inner_content;
+	}
 
-		// The post ID class lets other plugins find the event of an entry, as they do for Query Loop items.
-		$entry_classes = implode( ' ', get_post_class( $entry_styles['classnames'], $post_id ) );
+	/**
+	 * Build CSS class list from span data.
+	 *
+	 * @param array<string, mixed> $span_data Multi-day span descriptors.
+	 * @param int                  $row_span  Row span count.
+	 *
+	 * @return list<string> Extra CSS classes.
+	 */
+	private function build_span_classes( array $span_data, int $row_span ): array {
+		$total_days_raw = $span_data['total_days'] ?? 1;
+		$total_days     = is_numeric( $total_days_raw ) ? (int) $total_days_raw : 1;
+		$is_multi_day   = ( $total_days > 1 ) || ! empty( $span_data['is_all_day'] );
+		$is_all_day     = ! empty( $span_data['is_all_day'] );
 
-		return sprintf(
-			'<div class="%1$s"%2$s>%3$s</div>',
-			esc_attr( $entry_classes ),
-			$style_attribute,
-			$inner_content
-		);
+		$classes = array();
+		if ( ! empty( $span_data['span'] ) && is_string( $span_data['span'] ) ) {
+			$classes[] = 'is-span-' . sanitize_html_class( $span_data['span'] );
+		}
+		if ( $is_all_day ) {
+			$classes[] = 'is-all-day';
+		}
+		if ( $is_multi_day ) {
+			$classes[] = 'is-multi-day';
+		}
+		if ( ! empty( $span_data['is_continued'] ) ) {
+			$classes[] = 'is-span-continued';
+		}
+		if ( ! empty( $span_data['is_continues'] ) ) {
+			$classes[] = 'is-span-continues';
+		}
+		if ( $row_span >= 2 ) {
+			$classes[] = 'has-multi-col-span';
+		}
+
+		return $classes;
+	}
+
+	/**
+	 * Build data-* attributes for entry markup.
+	 *
+	 * @param array<string, mixed> $span_data Multi-day span descriptors.
+	 * @param int                  $row_span  Row span count.
+	 *
+	 * @return string Data attributes string.
+	 */
+private function build_entry_data_attributes( array $span_data, int $row_span ): string {
+		$attrs = '';
+		if ( ! empty( $span_data['span'] ) && is_scalar( $span_data['span'] ) ) {
+			$attrs .= sprintf( ' data-span="%s"', esc_attr( (string) $span_data['span'] ) );
+		}
+		if ( isset( $span_data['day_index'] ) && is_numeric( $span_data['day_index'] ) ) {
+			$attrs .= sprintf( ' data-day-index="%d"', (int) $span_data['day_index'] );
+		}
+		if ( isset( $span_data['total_days'] ) && is_numeric( $span_data['total_days'] ) ) {
+			$attrs .= sprintf( ' data-total-days="%d"', (int) $span_data['total_days'] );
+		}
+		if ( isset( $span_data['slot'] ) && is_numeric( $span_data['slot'] ) ) {
+			$attrs .= sprintf( ' data-slot="%d"', (int) $span_data['slot'] );
+		}
+		$attrs .= sprintf( ' data-row-span="%d"', $row_span );
+
+		return $attrs;
+	}
+
+	/**
+	 * Build Interactivity API directives for synchronized hover/focus.
+	 *
+	 * @param int $post_id Post ID.
+	 *
+	 * @return string Directives string.
+	 */
+	private function build_entry_iapi_directives( int $post_id ): string {
+		$context_json = wp_json_encode( array( 'eventId' => $post_id ) );
+
+		$directives  = ' data-wp-interactive="gatherpress/calendar"';
+		$directives .= sprintf( ' data-wp-context=\'%s\'', is_string( $context_json ) ? esc_attr( $context_json ) : '{}' );
+		$directives .= ' data-wp-on--mouseenter="actions.hoverEvent"';
+		$directives .= ' data-wp-on--mouseleave="actions.unhoverEvent"';
+		$directives .= ' data-wp-on--focusin="actions.focusEvent"';
+		$directives .= ' data-wp-on--focusout="actions.unfocusEvent"';
+		$directives .= ' data-wp-class--is-js-hovered="callbacks.isEventHovered"';
+		$directives .= ' data-wp-class--is-js-focused="callbacks.isEventFocused"';
+
+		return $directives;
+	}
+
+	/**
+	 * Track when modal rendering begins.
+	 *
+	 * @param mixed                $pre_render   Pre-render value.
+	 * @param array<string, mixed> $parsed_block Block data.
+	 *
+	 * @return mixed
+	 */
+	public static function track_modal_depth_pre( $pre_render, array $parsed_block ) {
+		$name = $parsed_block['blockName'] ?? '';
+		if ( 'gatherpress/modal' === $name || 'gatherpress/modal-content' === $name ) {
+			++self::$modal_depth;
+		}
+
+		return $pre_render;
+	}
+
+	/**
+	 * Track when modal rendering ends.
+	 *
+	 * @param string               $block_content Rendered HTML.
+	 * @param array<string, mixed> $parsed_block  Block data.
+	 *
+	 * @return string
+	 */
+	public static function track_modal_depth_post( string $block_content, array $parsed_block ): string {
+		$name = $parsed_block['blockName'] ?? '';
+		if ( ( 'gatherpress/modal' === $name || 'gatherpress/modal-content' === $name ) && self::$modal_depth > 0 ) {
+			--self::$modal_depth;
+		}
+
+		return $block_content;
+	}
+
+	/**
+	 * Suppress event-date block outside modal-content on multi-day events.
+	 *
+	 * @param string $block_content Rendered block HTML.
+	 *
+	 * @return string
+	 */
+	public static function filter_multiday_event_date( string $block_content ): string {
+		// Inside modal-content: render the full date normally.
+		if ( self::$modal_depth > 0 ) {
+			return $block_content;
+		}
+
+		// Outside modal-content (inside trigger/ribbon): return empty string for multi-day and all-day events.
+		$total_days_raw = self::$current_span_data['total_days'] ?? 1;
+		$total_days     = is_numeric( $total_days_raw ) ? (int) $total_days_raw : 1;
+		$is_all_day     = ! empty( self::$current_span_data['is_all_day'] );
+		if ( $total_days > 1 || $is_all_day ) {
+			return '';
+		}
+
+		return $block_content;
 	}
 
 	/**
@@ -202,19 +391,28 @@ class Calendar_Entries {
 	 * @param array<int, array<string, mixed>> $inner_blocks Parsed blocks of the entry template.
 	 * @param int                              $post_id      Event post ID.
 	 * @param string                           $post_type    Event post type.
+	 * @param array<string, mixed>             $span_data    Multi-day span descriptors.
 	 *
 	 * @return string Rendered HTML.
 	 */
-	private function render_entry_template( array $inner_blocks, int $post_id, string $post_type ): string {
+	private function render_entry_template( array $inner_blocks, int $post_id, string $post_type, array $span_data = array() ): string {
 		// Keep the outer values, in case an entry template renders a calendar.
 		$previous_post_id   = self::$current_post_id;
 		$previous_post_type = self::$current_post_type;
+		$previous_span_data = self::$current_span_data;
 
 		self::$current_post_id   = $post_id;
 		self::$current_post_type = $post_type;
+		self::$current_span_data = $span_data;
+		self::$modal_depth       = 0;
 
 		add_filter( 'render_block_context', array( self::class, 'filter_entry_context' ), 1 );
 		add_filter( 'the_title', array( self::class, 'filter_empty_title' ), 10, 2 );
+
+		// Filter event-date on multi-day events.
+		add_filter( 'pre_render_block', array( self::class, 'track_modal_depth_pre' ), 10, 2 );
+		add_filter( 'render_block', array( self::class, 'track_modal_depth_post' ), 999, 2 );
+		add_filter( 'render_block_gatherpress/event-date', array( self::class, 'filter_multiday_event_date' ) );
 
 		// A template that already shows the title needs no hidden copy of it.
 		if ( ! self::template_shows_post_title( $inner_blocks ) ) {
@@ -235,17 +433,23 @@ class Calendar_Entries {
 		 * @param int                              $post_id      Event post ID.
 		 * @param string                           $post_type    Event post type.
 		 * @param array<int, array<string, mixed>> $inner_blocks Parsed blocks of the entry template.
+		 * @param array<string, mixed>             $span_data    Multi-day span descriptors.
 		 */
-		do_action( 'gatherpress_calendar_before_render_entry', $post_id, $post_type, $inner_blocks );
+		do_action( 'gatherpress_calendar_before_render_entry', $post_id, $post_type, $inner_blocks, $span_data );
 
 		$inner_content = $this->render_template( $inner_blocks );
 
 		remove_filter( 'render_block_gatherpress/event-date', array( self::class, 'filter_event_date_link' ), 10 );
+		remove_filter( 'render_block_gatherpress/event-date', array( self::class, 'filter_multiday_event_date' ), 10 );
+		remove_filter( 'render_block', array( self::class, 'track_modal_depth_post' ), 999 );
+		remove_filter( 'pre_render_block', array( self::class, 'track_modal_depth_pre' ), 10 );
 		remove_filter( 'the_title', array( self::class, 'filter_empty_title' ), 10 );
 		remove_filter( 'render_block_context', array( self::class, 'filter_entry_context' ), 1 );
 
 		self::$current_post_id   = $previous_post_id;
 		self::$current_post_type = $previous_post_type;
+		self::$current_span_data = $previous_span_data;
+		self::$modal_depth       = 0;
 
 		return $inner_content;
 	}
@@ -262,6 +466,17 @@ class Calendar_Entries {
 	public static function filter_entry_context( array $context ): array {
 		$context['postType'] = self::$current_post_type;
 		$context['postId']   = self::$current_post_id;
+
+		if ( ! empty( self::$current_span_data ) ) {
+			$context['gatherpress/eventSpan']      = self::$current_span_data['span'] ?? 'single';
+			$context['gatherpress/eventDayIndex']  = self::$current_span_data['day_index'] ?? 1;
+			$context['gatherpress/eventTotalDays'] = self::$current_span_data['total_days'] ?? 1;
+			$context['gatherpress/isAllDay']       = ! empty( self::$current_span_data['is_all_day'] );
+			if ( isset( self::$current_span_data['slot'] ) ) {
+				$context['gatherpress/eventSlot'] = self::$current_span_data['slot'];
+			}
+		}
+
 		return $context;
 	}
 

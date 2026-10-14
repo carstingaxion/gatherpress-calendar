@@ -17,11 +17,31 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	 */
 	box-sizing: border-box;
 	min-height: calc((100cqi - (#{$columns} - 1) * #{$gap}) / #{$columns});
-	display: flex;
-	align-items: center;
-	justify-content: stretch;
-	overflow: visible;
-	background: #fafafa;
+	height: 100%;
+	min-width: 0;
+
+	background: var(--gatherpress-calendar-day-bg);
+	color: var(--gatherpress-calendar-day-color);
+
+	/* ------------------------------------------------------------------------
+	   DEFAULT (CLASSIC) STYLE: Vertical flow, auto-growing, clean containment
+	   ------------------------------------------------------------------------ */
+	&:not(.is-style-ribbon) {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: flex-start;
+		padding: 0.35rem;
+		overflow: hidden;
+
+		.gatherpress-calendar__day-number {
+			align-self: flex-start;
+			margin: 0 0 0.25rem 0;
+			display: block;
+			line-height: 1.1;
+			font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+		}
+	}
 
 	/* 1. Inactive / Leading / Trailing Days */
 	&.is-empty {
@@ -29,30 +49,58 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 		pointer-events: none;
 	}
 
-	/* 2. Days with Posts (Non-invasive inset highlight) */
+	/* 2. Days with Posts: Tokenized inset border */
 	&.has-posts {
-		box-shadow: inset 0 0 0 1px var(--wp--preset--color--primary, rgba(0, 124, 186, 0.35));
+		box-shadow: inset 0 0 0 1px var(--gatherpress-calendar-day-has-posts-border);
 
 		.gatherpress-calendar__day-number {
 			font-weight: 700;
 		}
 	}
 
-	/* 3. Today's Date (Non-invasive outline + overlay tint) */
+	/* 3. Today's Date: Tokenized outline & color */
 	&.is-today {
-		outline: 2px solid var(--wp--preset--color--primary, #007cba);
+		outline: 2px solid var(--gatherpress-calendar-day-today-outline);
 		outline-offset: -2px;
 
 		.gatherpress-calendar__day-number {
-
-			/* #006ba1 on the #fafafa cell is 5.56:1; #007cba was 4.38:1. */
-			color: var(--wp--preset--color--primary, #006ba1);
+			color: var(--gatherpress-calendar-day-today-color);
 			font-weight: 800;
+		}
+	}
+
+	/* ------------------------------------------------------------------------
+	   RIBBON STYLE: Cascade root for multi-day slots
+	   ------------------------------------------------------------------------ */
+	&.is-style-ribbon {
+		display: flex !important;
+		flex-direction: column !important;
+		align-items: stretch !important;
+		justify-content: flex-start !important;
+		padding: 0 !important;
+		overflow: visible; /* Allows ribbon text to float across columns */
+
+		.gatherpress-calendar__day-number {
+			align-self: flex-start;
+			margin: 0.3rem 0.45rem 0.15rem;
+			display: block;
+			line-height: 1.1;
+		}
+
+		/* Convert entries into the 24px slot grid in ribbon mode */
+		.wp-block-gatherpress-calendar-entries {
+			width: 100% !important;
+			margin: 0 !important;
+			display: grid !important;
+			grid-auto-flow: row !important;
+			grid-auto-rows: min-content !important; /* Ribbons stay 24px, regular events take natural height */
+			row-gap: 3px !important;
+			align-content: start !important; /* Retains 24px slots while cell expands vertically */
 		}
 	}
 }
 
-/* Browsers without container units keep square cells the older way. */
+/* Browsers without container units */
 @supports not (min-height: 1cqi) {
 
 	.gatherpress-calendar__day {
@@ -64,19 +112,18 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 .wp-block-gatherpress-calendar.is-view-day,
 .gatherpress-calendar.is-view-day {
 
-	.gatherpress-calendar__day {
+	/* Classic / Default style days get generous padding and height */
+	.gatherpress-calendar__day:not(.is-style-ribbon) {
 		aspect-ratio: auto;
 		min-height: 140px;
 		align-items: flex-start;
 		padding: 1rem;
 	}
-}
 
-/* ==========================================================================
-   Day Content & Number
-   ========================================================================== */
-.gatherpress-calendar__day-number {
-	margin: 0.2em;
-	display: inline;
-	z-index: 1;
+	/* Ribbon style days maintain edge-to-edge padding to permit gap bridging */
+	.gatherpress-calendar__day.is-style-ribbon {
+		aspect-ratio: auto;
+		min-height: 140px;
+		padding: 0 !important;
+	}
 }

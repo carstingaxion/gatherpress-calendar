@@ -1,1 +1,168 @@
-.editor-styles-wrapper .gatherpress-calendar__day{cursor:pointer;transition:outline-color .15s ease-in-out}.editor-styles-wrapper .gatherpress-calendar__day>.block-editor-block-list__layout,.editor-styles-wrapper .gatherpress-calendar__day>.block-editor-block-preview__live-content{min-height:100%;min-width:100%}.editor-styles-wrapper .gatherpress-calendar__day:hover:not(:focus-within){outline:1px solid var(--wp-admin-theme-color,#007cba);outline-offset:-1px}.editor-styles-wrapper .gatherpress-calendar__day.is-inactive-empty-day .wp-block-gatherpress-calendar-entries{display:none}
+/*!*****************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[4].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[4].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[4].use[3]!./src/calendar-day/editor.scss ***!
+  \*****************************************************************************************************************************************************************************************************************************************************/
+/**
+ * GatherPress Calendar Day Block Editor-Specific Styles
+ *
+ * @package GatherPressCalendar
+ * @since 0.4.0
+ */
+.editor-styles-wrapper .gatherpress-calendar__day {
+  cursor: pointer;
+  transition: outline-color 0.15s ease-in-out;
+  /* Ensure Gutenberg layouts fill the day cell */
+}
+.editor-styles-wrapper .gatherpress-calendar__day > .block-editor-block-list__layout,
+.editor-styles-wrapper .gatherpress-calendar__day > .block-editor-block-preview__live-content {
+  min-height: 100%;
+  min-width: 100%;
+}
+.editor-styles-wrapper .gatherpress-calendar__day:hover:not(:focus-within) {
+  outline: 1px solid var(--wp-admin-theme-color, #007cba);
+  outline-offset: -1px;
+}
+.editor-styles-wrapper .gatherpress-calendar__day {
+  /* Active cell layout normalization in ribbon mode */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  padding: 0 !important;
+  /* Normalize Gutenberg's Day innerBlocks layout wrapper */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon > .block-editor-block-list__layout {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+  /* Strip Gutenberg block margins on children */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon > .block-editor-block-list__layout > .block-editor-block-list__block {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon > .block-editor-block-list__layout {
+  /* Keep Day Number at top-left with minimal margin */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon > .block-editor-block-list__layout > .block-editor-block-list__block:has(.gatherpress-calendar__day-number) {
+  width: auto !important;
+  align-self: flex-start !important;
+  flex: 0 0 auto !important;
+  margin: 0.3rem 0.45rem 0.15rem !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon > .block-editor-block-list__layout > .block-editor-block-list__block:has(.gatherpress-calendar__day-number) .gatherpress-calendar__day-number {
+  margin: 0 !important;
+  display: block;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon > .block-editor-block-list__layout {
+  /* Let Calendar Entries stretch and fill the remaining cell height */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon > .block-editor-block-list__layout > .block-editor-block-list__block:has(.wp-block-gatherpress-calendar-entries),
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon > .block-editor-block-list__layout > .wp-block-gatherpress-calendar-entries {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon {
+  /* Entries live-template normalization inside ribbon days */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries {
+  overflow: visible !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .block-editor-block-list__layout {
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  overflow: visible !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry .gatherpress-calendar__entry-template {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry {
+  /* Single-column entries are clamped within the cell */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not([data-row-span]), .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="1"], .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="0"], .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not(.has-multi-col-span) {
+  overflow: hidden !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not([data-row-span]) .gatherpress-calendar__entry-template, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="1"] .gatherpress-calendar__entry-template, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="0"] .gatherpress-calendar__entry-template, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not(.has-multi-col-span) .gatherpress-calendar__entry-template {
+  overflow: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not([data-row-span]) .gatherpress-calendar__entry-template > .block-editor-block-list__block, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="1"] .gatherpress-calendar__entry-template > .block-editor-block-list__block, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="0"] .gatherpress-calendar__entry-template > .block-editor-block-list__block, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not(.has-multi-col-span) .gatherpress-calendar__entry-template > .block-editor-block-list__block {
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not([data-row-span]) .gatherpress-calendar__entry-template .gatherpress-modal--trigger-open,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not([data-row-span]) .gatherpress-calendar__entry-template .wp-block-post-title,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not([data-row-span]) .gatherpress-calendar__entry-template .wp-block-post-title a, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="1"] .gatherpress-calendar__entry-template .gatherpress-modal--trigger-open,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="1"] .gatherpress-calendar__entry-template .wp-block-post-title,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="1"] .gatherpress-calendar__entry-template .wp-block-post-title a, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="0"] .gatherpress-calendar__entry-template .gatherpress-modal--trigger-open,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="0"] .gatherpress-calendar__entry-template .wp-block-post-title,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span="0"] .gatherpress-calendar__entry-template .wp-block-post-title a, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not(.has-multi-col-span) .gatherpress-calendar__entry-template .gatherpress-modal--trigger-open,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not(.has-multi-col-span) .gatherpress-calendar__entry-template .wp-block-post-title,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry:not(.has-multi-col-span) .gatherpress-calendar__entry-template .wp-block-post-title a {
+  max-width: 100% !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry {
+  /* Multi-column entries can span across sibling cells */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span]:not([data-row-span="1"]):not([data-row-span="0"]), .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.has-multi-col-span {
+  overflow: visible !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span]:not([data-row-span="1"]):not([data-row-span="0"]) .gatherpress-calendar__entry-template, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.has-multi-col-span .gatherpress-calendar__entry-template {
+  overflow: visible !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry[data-row-span]:not([data-row-span="1"]):not([data-row-span="0"]) .gatherpress-calendar__entry-template > .block-editor-block-list__block, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.has-multi-col-span .gatherpress-calendar__entry-template > .block-editor-block-list__block {
+  margin: 0 !important;
+  padding: 0 !important;
+  max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * var(--gatherpress-calendar-column-gap, 2px)) !important;
+  width: max-content !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-middle:focus-within .gatherpress-modal--trigger-open > *,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-middle:focus-within .wp-block-post-title,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-middle:focus-within .wp-block-post-title a, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-middle:has(.is-selected) .gatherpress-modal--trigger-open > *,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-middle:has(.is-selected) .wp-block-post-title,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-middle:has(.is-selected) .wp-block-post-title a, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-end:focus-within .gatherpress-modal--trigger-open > *,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-end:focus-within .wp-block-post-title,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-end:focus-within .wp-block-post-title a, .editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-end:has(.is-selected) .gatherpress-modal--trigger-open > *,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-end:has(.is-selected) .wp-block-post-title,
+.editor-styles-wrapper .gatherpress-calendar__day.is-style-ribbon .wp-block-gatherpress-calendar-entries .gatherpress-calendar__entry.is-span-end:has(.is-selected) .wp-block-post-title a {
+  opacity: 1 !important;
+}
+.editor-styles-wrapper .gatherpress-calendar__day {
+  /* Hide placeholder entries on empty days when the day is not being edited */
+}
+.editor-styles-wrapper .gatherpress-calendar__day.is-inactive-empty-day .wp-block-gatherpress-calendar-entries {
+  display: none;
+}
+
+/* Lock Layout UI in Inspector & Toolbar when Ribbon style is selected */
+body:has(.gatherpress-calendar__day.is-style-ribbon.is-selected) .block-editor-block-inspector .components-panel__body:has(.block-editor-hooks__layout-controls),
+body:has(.gatherpress-calendar__day.is-style-ribbon.is-selected) .block-editor-block-toolbar .components-toolbar-group:has([aria-label*=Justification]),
+body:has(.gatherpress-calendar__day.is-style-ribbon .is-selected) .block-editor-block-inspector .components-panel__body:has(.block-editor-hooks__layout-controls),
+body:has(.gatherpress-calendar__day.is-style-ribbon .is-selected) .block-editor-block-toolbar .components-toolbar-group:has([aria-label*=Justification]) {
+  display: none !important;
+}

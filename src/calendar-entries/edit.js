@@ -29,10 +29,43 @@ import { useMemo, memo } from '@wordpress/element';
 const EMPTY_ARRAY = [];
 
 /**
+ * Filter out top-level event-date blocks outside modals on multi-day events.
+ *
+ * @param {Array} blocks Template inner blocks.
+ * @return {Array} Filtered blocks.
+ */
+function filterMultiDayBlocks( blocks = [] ) {
+	return blocks
+		.filter( ( block ) => block.name !== 'gatherpress/event-date' )
+		.map( ( block ) => {
+			if (
+				block.name === 'gatherpress/modal-manager' &&
+				block.innerBlocks
+			) {
+				return {
+					...block,
+					innerBlocks: block.innerBlocks.filter(
+						( inner ) => inner.name !== 'gatherpress/event-date'
+					),
+				};
+			}
+			return block;
+		} );
+}
+
+/**
  * Renders preview copies for the 2nd, 3rd, etc. posts in the day cell.
  */
-const EventPreview = memo( function EventPreviewComponent( { blocks } ) {
-	const previewProps = useBlockPreview( { blocks } );
+const EventPreview = memo( function EventPreviewComponent( {
+	blocks,
+	isMultiDay = false,
+} ) {
+	const previewBlocks = useMemo( () => {
+		return isMultiDay ? filterMultiDayBlocks( blocks ) : blocks;
+	}, [ blocks, isMultiDay ] );
+
+	const previewProps = useBlockPreview( { blocks: previewBlocks } );
+
 	return (
 		<div
 			{ ...previewProps }
@@ -44,7 +77,7 @@ const EventPreview = memo( function EventPreviewComponent( { blocks } ) {
 } );
 
 /**
- * Individual event item wrapper that supplies postId and postType context.
+ * Individual event item wrapper that supplies event context, span classes, and slot variables.
  */
 const EventItem = memo( function EventItemComponent( {
 	post,
@@ -65,6 +98,27 @@ const EventItem = memo( function EventItemComponent( {
 	const postType =
 		typeof post === 'object' && post?.type ? post.type : defaultPostType;
 
+	const isAllDay = Boolean(
+		typeof post === 'object' &&
+		( post?.isAllDay ||
+			post?.meta?.gatherpress_is_all_day === true ||
+			post?.meta?.gatherpress_is_all_day === '1' ||
+			post?.meta?.gatherpress_is_all_day === 1 ||
+			post?.meta?.gatherpress_is_all_day === 'true' )
+	);
+	const totalDays = typeof post === 'object' ? ( post?.totalDays ?? 1 ) : 1;
+	const isMultiDay = totalDays > 1 || isAllDay;
+	const dayIndex = typeof post === 'object' ? ( post?.dayIndex ?? 1 ) : 1;
+	const slot = typeof post === 'object' ? ( post?.slot ?? 0 ) : 0;
+	const span =
+		typeof post === 'object' ? ( post?.span ?? 'single' ) : 'single';
+	const isContinued = Boolean(
+		typeof post === 'object' && post?.isContinued
+	);
+	const isContinues = Boolean(
+		typeof post === 'object' && post?.isContinues
+	);
+
 	const contextValue = useMemo( () => {
 		// The placeholder item on an empty day has no event. Clear the post
 		// context, so blocks like core/post-title do not show the post that
@@ -75,16 +129,30 @@ const EventItem = memo( function EventItemComponent( {
 		return {
 			postId,
 			postType,
+			'gatherpress/eventSpan': span,
+			'gatherpress/eventDayIndex': dayIndex,
+			'gatherpress/eventTotalDays': totalDays,
+			'gatherpress/isAllDay': isAllDay,
+			'gatherpress/eventSlot': slot,
 		};
-	}, [ postId, postType ] );
+	}, [ postId, postType, span, dayIndex, totalDays, isAllDay, slot ] );
 
 	const colorProps = useColorProps( parentAttributes ?? {} );
 	const borderProps = useBorderProps( parentAttributes ?? {} );
 	// const spacingProps = getSpacingClassesAndStyles( parentAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( parentAttributes ?? {} );
 
+	const rowSpan = typeof post === 'object' ? ( post?.rowSpan ?? 1 ) : 1;
+
 	const classNames = [
 		'gatherpress-calendar__entry',
+		postId ? `post-${ postId }` : '',
+		isAllDay ? 'is-all-day' : '',
+		isMultiDay ? 'is-multi-day' : '',
+		span ? `is-span-${ span }` : '',
+		isContinued ? 'is-span-continued' : '',
+		isContinues ? 'is-span-continues' : '',
+		rowSpan >= 2 ? 'has-multi-col-span' : '',
 		colorProps.className,
 		borderProps.className,
 	]
@@ -94,25 +162,33 @@ const EventItem = memo( function EventItemComponent( {
 	const style = {
 		...colorProps.style,
 		'--gatherpress-calendar-dot-color': colorProps.style?.color,
+		'--gatherpress-calendar-entry-slot': slot,
+		'--gatherpress-calendar-row-span': rowSpan,
 		...borderProps.style,
 		// ...spacingProps.style,
 		...shadowProps.style,
 	};
 
-	const entryProps = useBlockProps( {
-		className: classNames,
-		style,
-	} );
-
 	return (
 		<BlockContextProvider value={ contextValue }>
-			<div { ...entryProps }>
+			<div
+				className={ classNames }
+				style={ style }
+				data-slot={ slot }
+				data-span={ span }
+				data-day-index={ dayIndex }
+				data-total-days={ totalDays }
+				data-row-span={ rowSpan }
+			>
 				{ isFirst ? (
 					// The primary, editable template container
 					<div { ...innerBlocksProps } />
 				) : (
 					// Cloned previews reflecting the same template for additional posts
-					<EventPreview blocks={ innerBlocks } />
+					<EventPreview
+						blocks={ innerBlocks }
+						isMultiDay={ isMultiDay }
+					/>
 				) }
 			</div>
 		</BlockContextProvider>
@@ -126,6 +202,7 @@ export default function Edit( { attributes, clientId, context } ) {
 	const blockGap = attributes?.style?.spacing?.blockGap;
 
 	const blockProps = useBlockProps( {
+		className: 'wp-block-gatherpress-calendar-entries',
 		style: {
 			gap: blockGap ? getGapCSSValue( blockGap ) : undefined,
 		},
@@ -140,7 +217,7 @@ export default function Edit( { attributes, clientId, context } ) {
 		}
 	);
 
-	// Retrieve the template blocks so additional items can mirror them in preview
+	// Retrieve template blocks so additional items can mirror them in preview.
 	const innerBlocks = useSelect(
 		( select ) =>
 			select( blockEditorStore ).getBlock( clientId )?.innerBlocks ??
