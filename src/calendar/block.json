@@ -65,6 +65,10 @@
     "sourcePostType": {
       "type": "string",
       "default": ""
+    },
+    "enableTimeGrid": {
+      "type": "boolean",
+      "default": false
     }
   },
   "supports": {

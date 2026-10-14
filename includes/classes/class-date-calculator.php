@@ -812,4 +812,100 @@ class Date_Calculator {
 
 		return $max_units[ $view_type ] ?? 12;
 	}
+
+	/**
+	 * Retrieve time grid configuration respecting attributes and developer filters.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param array<string, mixed> $attributes Calendar block attributes.
+	 * @param array<string, mixed> $query      Query block context.
+	 *
+	 * @return array{
+	 *     enabled: bool,
+	 *     start_hour: int,
+	 *     end_hour: int,
+	 *     slot_hours: int,
+	 *     quarter_mins: int,
+	 *     total_quarters: int,
+	 *     slots: list<string>
+	 * } Time grid configuration.
+	 */
+	public static function get_time_grid_config( array $attributes, array $query ): array {
+		$view_type     = self::resolve_view_type( $attributes );
+		$is_valid_view = in_array( $view_type, array( 'day', 'week' ), true );
+		$order_by      = isset( $query['orderBy'] ) && is_string( $query['orderBy'] ) ? $query['orderBy'] : ( $query['orderby'] ?? '' );
+		$is_datetime   = 'datetime' === $order_by;
+		$user_enabled  = ! empty( $attributes['enableTimeGrid'] );
+
+		if ( ! $is_valid_view || ! $is_datetime || ! $user_enabled ) {
+			return array(
+				'enabled'        => false,
+				'start_hour'     => 8,
+				'end_hour'       => 20,
+				'slot_hours'     => 1,
+				'quarter_mins'   => 15,
+				'total_quarters' => 48,
+				'slots'          => array(),
+			);
+		}
+
+		$start_hour_raw = $attributes['dayStartHour'] ?? 8;
+		$end_hour_raw   = $attributes['dayEndHour'] ?? 20;
+
+		$start_hour = is_numeric( $start_hour_raw ) ? max( 0, min( 23, (int) $start_hour_raw ) ) : 8;
+		$end_hour   = is_numeric( $end_hour_raw ) ? max( $start_hour + 1, min( 24, (int) $end_hour_raw ) ) : 20;
+
+		/**
+		 * Filters the duration of each time slot in hours.
+		 *
+		 * Defaults to 1 (1 hour). Can be set to 2, 4, etc. via code.
+		 *
+		 * @since 0.9.0
+		 *
+		 * @param int $slot_hours Hours per slot.
+		 */
+		$slot_hours_filtered = apply_filters( 'gatherpress_calendar_time_slot_duration', 1 );
+		$slot_hours          = is_numeric( $slot_hours_filtered ) ? max( 1, (int) $slot_hours_filtered ) : 1;
+		$quarter_mins        = max( 1, (int) round( ( $slot_hours * 60 ) / 4 ) );
+
+		$total_minutes  = ( $end_hour - $start_hour ) * 60;
+		$total_quarters = (int) ceil( $total_minutes / $quarter_mins );
+
+		$slots = array();
+		for ( $h = $start_hour; $h < $end_hour; $h += $slot_hours ) {
+			$slots[] = sprintf( '%02d:00', $h );
+		}
+
+		return array(
+			'enabled'        => true,
+			'start_hour'     => $start_hour,
+			'end_hour'       => $end_hour,
+			'slot_hours'     => $slot_hours,
+			'quarter_mins'   => $quarter_mins,
+			'total_quarters' => $total_quarters,
+			'slots'          => $slots,
+		);
+	}
+
+	/**
+	 * Round minute timestamp offset to the nearest 1/4 slot duration.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param int $minutes      Minutes past midnight.
+	 * @param int $quarter_mins Minutes per quarter-slot.
+	 * @param bool $is_end      Whether rounding end time (ceils to prevent zero-length events).
+	 *
+	 * @return int Rounded minutes.
+	 */
+	public static function round_to_quarter_slot( int $minutes, int $quarter_mins, bool $is_end = false ): int {
+		if ( $quarter_mins <= 0 ) {
+			return $minutes;
+		}
+
+		return $is_end
+			? (int) ( ceil( $minutes / $quarter_mins ) * $quarter_mins )
+			: (int) ( floor( $minutes / $quarter_mins ) * $quarter_mins );
+	}
 }
