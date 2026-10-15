@@ -463,7 +463,7 @@ class Date_Calculator {
 	 * Resolves a date range from query block context, falling back to calculation.
 	 *
 	 * @param array<string, mixed> $query               The query array from context.
-	 * @param array<string, mixed> $fallback_attributes  Block attributes if context is incomplete.
+	 * @param array<string, mixed> $fallback_attributes Block attributes if context is incomplete.
 	 * @param int                  $page                Page number.
 	 * @param int                  $source_post_id      Optional source post ID.
 	 *
@@ -619,50 +619,64 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Format calendar heading based on view type and date range.
+	 * Formats heading for day or week view spans.
 	 *
-	 * @since 0.5.0
-	 *
-	 * @param string            $view_type  View type ('month', 'week', 'day').
 	 * @param DateTimeImmutable $start_date Start date.
 	 * @param DateTimeImmutable $end_date   End date.
+	 * @param string            $separator  Datetime separator.
 	 *
-	 * @return string Formatted heading.
+	 * @return string Formatted heading string.
 	 */
-	public static function format_heading( string $view_type, DateTimeImmutable $start_date, DateTimeImmutable $end_date ): string {
+	private static function format_day_or_week_heading( DateTimeImmutable $start_date, DateTimeImmutable $end_date, string $separator ): string {
 		$start = $start_date->getTimestamp();
 		$end   = $end_date->getTimestamp();
 
-		if ( 'day' === $view_type && $start_date->format( 'Y-m-d' ) === $end_date->format( 'Y-m-d' ) ) {
+		if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
 			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-			$day_heading = wp_date( _x( 'l, F j, Y', 'Calendar heading: single day', 'gatherpress-calendar' ), $start );
-			return is_string( $day_heading ) ? $day_heading : '';
+			$start_format = _x( 'M j, Y', 'Calendar heading: start of date range across years', 'gatherpress-calendar' );
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
+		} elseif ( $start_date->format( 'n' ) !== $end_date->format( 'n' ) ) {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$start_format = _x( 'M j', 'Calendar heading: start of date range across months', 'gatherpress-calendar' );
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
+		} else {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$start_format = _x( 'M j', 'Calendar heading: start of date range within a month', 'gatherpress-calendar' );
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$end_format = _x( 'j, Y', 'Calendar heading: end of date range within a month', 'gatherpress-calendar' );
 		}
 
-		$separator = self::get_datetime_separator();
+		return sprintf(
+			/* translators: %1$s: start date, %2$s: separator, %3$s: end date. */
+			_x( '%1$s %2$s %3$s', 'Calendar heading: date range', 'gatherpress-calendar' ),
+			wp_date( $start_format, $start ),
+			$separator,
+			wp_date( $end_format, $end )
+		);
+	}
 
-		if ( 'day' === $view_type || 'week' === $view_type ) {
-			if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$start_format = _x( 'M j, Y', 'Calendar heading: start of date range across years', 'gatherpress-calendar' );
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
-			} elseif ( $start_date->format( 'n' ) !== $end_date->format( 'n' ) ) {
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$start_format = _x( 'M j', 'Calendar heading: start of date range across months', 'gatherpress-calendar' );
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
-			} else {
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$start_format = _x( 'M j', 'Calendar heading: start of date range within a month', 'gatherpress-calendar' );
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$end_format = _x( 'j, Y', 'Calendar heading: end of date range within a month', 'gatherpress-calendar' );
-			}
-		} elseif ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
+	/**
+	 * Formats heading for month view spans.
+	 *
+	 * @param DateTimeImmutable $start_date Start date.
+	 * @param DateTimeImmutable $end_date   End date.
+	 * @param string            $separator  Datetime separator.
+	 *
+	 * @return string Formatted heading string.
+	 */
+	private static function format_month_heading( DateTimeImmutable $start_date, DateTimeImmutable $end_date, string $separator ): string {
+		$start = $start_date->getTimestamp();
+		$end   = $end_date->getTimestamp();
+
+		if ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
 			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
 			$month_heading = wp_date( _x( 'F Y', 'Calendar heading: single month', 'gatherpress-calendar' ), $start );
 			return is_string( $month_heading ) ? $month_heading : '';
-		} elseif ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
+		}
+
+		if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
 			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
 			$start_format = _x( 'M Y', 'Calendar heading: month range across years', 'gatherpress-calendar' );
 			$end_format   = $start_format;
@@ -680,6 +694,35 @@ class Date_Calculator {
 			$separator,
 			wp_date( $end_format, $end )
 		);
+	}
+
+	/**
+	 * Format calendar heading based on view type and date range.
+	 *
+	 * @since 0.5.0
+	 *
+	 * @param string            $view_type  View type ('month', 'week', 'day').
+	 * @param DateTimeImmutable $start_date Start date.
+	 * @param DateTimeImmutable $end_date   End date.
+	 *
+	 * @return string Formatted heading.
+	 */
+	public static function format_heading( string $view_type, DateTimeImmutable $start_date, DateTimeImmutable $end_date ): string {
+		$start = $start_date->getTimestamp();
+
+		if ( 'day' === $view_type && $start_date->format( 'Y-m-d' ) === $end_date->format( 'Y-m-d' ) ) {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$day_heading = wp_date( _x( 'l, F j, Y', 'Calendar heading: single day', 'gatherpress-calendar' ), $start );
+			return is_string( $day_heading ) ? $day_heading : '';
+		}
+
+		$separator = self::get_datetime_separator();
+
+		if ( 'day' === $view_type || 'week' === $view_type ) {
+			return self::format_day_or_week_heading( $start_date, $end_date, $separator );
+		}
+
+		return self::format_month_heading( $start_date, $end_date, $separator );
 	}
 
 	/**
@@ -916,7 +959,7 @@ class Date_Calculator {
 		 * @param int $slot_hours Hours per slot.
 		 */
 		$slot_hours_filtered = apply_filters( 'gatherpress_calendar_time_slot_duration', 1 );
-		$slot_hours          = is_numeric( $slot_hours_filtered ) ? max( 1, (int) $slot_hours_filtered ) : 1;
+		$slot_hours          = max( 1, (int) $slot_hours_filtered );
 		$quarter_mins        = max( 1, (int) round( ( $slot_hours * 60 ) / 4 ) );
 
 		$total_minutes  = ( $end_hour - $start_hour ) * 60;
