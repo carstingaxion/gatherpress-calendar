@@ -73,11 +73,11 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 	   RIBBON STYLE: Cascade root for multi-day slots
 	   ------------------------------------------------------------------------ */
 	&.is-style-ribbon {
-		display: flex !important;
-		flex-direction: column !important;
-		align-items: stretch !important;
-		justify-content: flex-start !important;
-		padding: 0 !important;
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: flex-start;
+		padding: 0;
 		overflow: visible; /* Allows ribbon text to float across columns */
 
 		.gatherpress-calendar__day-number {
@@ -89,13 +89,13 @@ $gap: var(--gatherpress-calendar-column-gap, 2px);
 
 		/* Convert entries into the 24px slot grid in ribbon mode */
 		.wp-block-gatherpress-calendar-entries {
-			width: 100% !important;
-			margin: 0 !important;
-			display: grid !important;
-			grid-auto-flow: row !important;
-			grid-auto-rows: min-content !important; /* Ribbons stay 24px, regular events take natural height */
-			row-gap: 3px !important;
-			align-content: start !important; /* Retains 24px slots while cell expands vertically */
+			width: 100%;
+			margin: 0;
+			display: grid;
+			grid-auto-flow: row;
+			grid-auto-rows: min-content; /* Ribbons stay 24px, regular events take natural height */
+			row-gap: 3px;
+			align-content: start; /* Retains 24px slots while cell expands vertically */
 		}
 	}
 }

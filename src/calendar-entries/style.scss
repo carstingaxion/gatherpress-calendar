@@ -559,7 +559,9 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 		--gatherpress-quarter-slot-height: calc(var(--gatherpress-calendar-slot-height, 48px) / 4);
 
 		display: grid;
+		align-content: normal;
 		grid-auto-flow: row;
+		grid-auto-rows: unset;
 		grid-template-rows:
 			repeat(var(--gatherpress-num-ribbon-slots, 0), 24px)
 			repeat(var(--gatherpress-total-quarter-slots, 48), var(--gatherpress-quarter-slot-height));
@@ -584,10 +586,9 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 			display: flex;
 			flex-direction: column;
 			justify-content: flex-start;
-			border-radius: 4px;
+			border-radius: var(--gatherpress-entry-track-radius, 4px);
 			padding: 2px 6px;
-			background: var(--gatherpress-slot-color);
-			color: #fff;
+			background: var(--gatherpress-ribbon-bg);
 			z-index: 1;
 			box-sizing: border-box;
 			overflow: hidden;
@@ -596,27 +597,10 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 			width: calc((100% / var(--gatherpress-overlap-total, 1)) - 2px);
 			margin-inline-start: calc((100% / var(--gatherpress-overlap-total, 1)) * var(--gatherpress-overlap-index, 0));
 
-			#{$start-time} {
-				font-size: 0.6875rem;
-				font-weight: 700;
-				line-height: 1.1;
-				color: rgba(255, 255, 255, 0.9);
-				display: block;
-			}
-
-			.wp-block-post-title a,
-			#{$trigger} {
-				color: #fff;
-				font-size: 0.75rem;
-				font-weight: 600;
-				line-height: 1.15;
-				text-decoration: none;
-			}
-
 			&:hover,
 			&:focus-within {
 				z-index: 10;
-				box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+				// box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 			}
 		}
 	}

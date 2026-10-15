@@ -115,17 +115,9 @@ class Calendar_Entries {
 			? $block->context['gatherpress/dayPosts']
 			: array();
 
-$grid_config  = $block->context['gatherpress/timeGridConfig'] ?? array();
+		$grid_config  = $block->context['gatherpress/timeGridConfig'] ?? array();
 		$is_time_grid = ! empty( $grid_config['enabled'] );
 		$day_number   = $block->context['gatherpress/dayNumber'] ?? 0;
-
-		// DEBUG LOG 3: Check whether entries container runs on this day
-		error_log( sprintf(
-			'[TimeGrid Debug] Day %s: posts_count=%d, is_time_grid=%s',
-			$day_number,
-			count( $day_posts ),
-			$is_time_grid ? 'YES' : 'NO'
-		) );		$is_time_grid = ! empty( $grid_config['enabled'] );
 
 		// Only return early if empty AND not in time-grid mode
 		if ( empty( $day_posts ) && ! $is_time_grid ) {

@@ -278,14 +278,17 @@ class Post_Organizer {
 		foreach ( $sorted_events as $event ) {
 			$is_multi_day = $event['total_days'] > 1 || ! empty( $event['is_all_day'] );
 
-			// In time-grid mode, single-day timed events skip ribbon slot allocation
+			// In time-grid mode, single-day timed events use timed tracks and ribbon slots.
 			if ( $is_time_grid && ! $is_multi_day ) {
 				$tracks = self::calculate_timed_event_tracks( $event['id'], $grid_config );
 				if ( null === $tracks ) {
-					continue; // Outside visible day hours
+					continue; // Outside visible day hours.
 				}
 
 				$date_str = $event['start_date'];
+				$slot     = self::find_available_slot( array( $date_str ), $occupied_slots );
+				$occupied_slots[ $date_str ][ $slot ] = true;
+
 				if ( ! isset( $posts_by_date[ $date_str ] ) ) {
 					$posts_by_date[ $date_str ] = array();
 				}
@@ -299,7 +302,7 @@ class Post_Organizer {
 					'is_timed'       => true,
 					'time_row_start' => $tracks['row_start'],
 					'time_row_end'   => $tracks['row_end'],
-					'slot'           => 0,
+					'slot'           => $slot,
 				);
 				continue;
 			}
@@ -448,6 +451,7 @@ class Post_Organizer {
 	 */
 	public static function calculate_timed_event_tracks( int $post_id, array $grid_config ): ?array {
 		$datetimes = Date_Calculator::get_post_event_datetimes( $post_id );
+
 		if ( null === $datetimes ) {
 			return null;
 		}
