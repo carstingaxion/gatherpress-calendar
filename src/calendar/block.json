@@ -25,7 +25,8 @@
   ],
   "providesContext": {
     "gatherpress/viewType": "viewType",
-    "gatherpress/showWeekends": "showWeekends"
+    "gatherpress/showWeekends": "showWeekends",
+    "gatherpress/enableTimeGrid": "enableTimeGrid"
   },
   "attributes": {
     "viewType": {
@@ -65,6 +66,10 @@
     "sourcePostType": {
       "type": "string",
       "default": ""
+    },
+    "enableTimeGrid": {
+      "type": "boolean",
+      "default": false
     }
   },
   "supports": {

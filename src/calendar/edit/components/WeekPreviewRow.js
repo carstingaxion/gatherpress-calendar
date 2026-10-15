@@ -18,13 +18,16 @@ import { DayPreviewCell } from './DayPreviewCell';
  *
  * @since 0.4.0
  *
- * @param {Object}   props                     - Component props.
- * @param {Array}    props.week                - This week's day data entries.
- * @param {number}   props.weekNumber          - ISO week number, 0 for none.
- * @param {Array}    props.dayInnerBlocks      - The real day template's inner blocks, for previews.
- * @param {Object}   props.weekBlockAttributes - The real calendar-week block's own attributes, for style parity.
- * @param {Object}   props.dayBlockAttributes  - The real calendar-day block's own attributes, for style parity.
- * @param {Function} props.onActivateDay       - Called with a day's date when that day is clicked.
+ * @param {Object}   props                     Component props.
+ * @param {Array}    props.week                This week's day data entries.
+ * @param {number}   props.weekNumber          ISO week number, 0 for none.
+ * @param {Array}    props.dayInnerBlocks      The real day template's inner blocks, for previews.
+ * @param {Object}   props.weekBlockAttributes The real calendar-week block's own attributes, for style parity.
+ * @param {Object}   props.dayBlockAttributes  The real calendar-day block's own attributes, for style parity.
+ * @param {Function} props.onActivateDay       Called with a day's date when that day is clicked.
+ * @param {number}   props.numRibbonSlots      Number of ribbon slots.
+ * @param {boolean}  props.isTimeGrid          Whether time grid is active.
+ * @param {Object}   props.timeGridConfig      Time grid configuration object.
  *
  * @return {Element} Week row preview element.
  */
@@ -35,21 +38,50 @@ function WeekPreviewRowComponent( {
 	weekBlockAttributes,
 	dayBlockAttributes,
 	onActivateDay,
+	numRibbonSlots = 0,
+	isTimeGrid = false,
+	timeGridConfig = {},
 } ) {
 	// Mirror the real calendar-week block's own color/spacing/shadow
 	// styling so every previewed week row looks like the live one.
 	const colorProps = useColorProps( weekBlockAttributes ?? {} );
 
-	const classNames = [ 'gatherpress-calendar__week', colorProps.className ]
+	const classNames = [
+		'gatherpress-calendar__week',
+		isTimeGrid ? 'has-time-grid' : '',
+		colorProps.className,
+	]
 		.filter( Boolean )
 		.join( ' ' );
 
 	const style = {
 		...colorProps.style,
+		'--gatherpress-num-ribbon-slots': numRibbonSlots,
 	};
 
 	return (
 		<tr className={ classNames } style={ style }>
+			{ /* Time Gutter column: first child inside <tr> */ }
+			{ isTimeGrid && (
+				<th
+					scope="row"
+					className="gatherpress-calendar__time-gutter"
+					aria-hidden="true"
+					style={ {
+						paddingTop: `calc(28px + ${ numRibbonSlots } * 24px)`,
+					} }
+				>
+					{ ( timeGridConfig.slots || [] ).map( ( slot ) => (
+						<div
+							key={ slot }
+							className="gatherpress-calendar__time-slot-label"
+						>
+							{ slot }
+						</div>
+					) ) }
+				</th>
+			) }
+
 			{ weekNumber > 0 && (
 				<th scope="row" className="gatherpress--screen-reader-text">
 					{ sprintf(
@@ -59,6 +91,7 @@ function WeekPreviewRowComponent( {
 					) }
 				</th>
 			) }
+
 			{ week.map( ( day, dayIndex ) => (
 				<DayPreviewCell
 					key={ day.date ?? `empty-${ dayIndex }` }
@@ -66,6 +99,9 @@ function WeekPreviewRowComponent( {
 					innerBlocks={ dayInnerBlocks }
 					dayBlockAttributes={ dayBlockAttributes }
 					onActivateDay={ onActivateDay }
+					numRibbonSlots={ numRibbonSlots }
+					isTimeGrid={ isTimeGrid }
+					timeGridConfig={ timeGridConfig }
 				/>
 			) ) }
 		</tr>

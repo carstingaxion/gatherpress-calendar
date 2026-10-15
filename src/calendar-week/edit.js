@@ -1,3 +1,10 @@
+/**
+ * GatherPress Calendar Week Block Editor Component
+ *
+ * @package
+ * @since 0.4.0
+ */
+
 import { useMemo, memo } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import { __, sprintf } from '@wordpress/i18n';
@@ -5,8 +12,10 @@ import {
 	BlockContextProvider,
 	useBlockProps,
 	useInnerBlocksProps,
+	InspectorControls,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
+import { PanelBody, RangeControl } from '@wordpress/components';
 import './editor.scss';
 
 import { DAY_TEMPLATE } from '../calendar/edit/constants';
@@ -26,13 +35,22 @@ const NOOP = () => {};
  * with their own date/day-number/posts context - mirroring what
  * Calendar_Week::render() does on the frontend.
  *
- * @param {Object} props          Component props.
- * @param {Object} props.context  Context provided by the Calendar block.
- * @param {string} props.clientId This week block's client ID.
+ * @param {Object}   props               Component props.
+ * @param {Object}   props.attributes    Block attributes.
+ * @param {Function} props.setAttributes Function to update block attributes.
+ * @param {Object}   props.context       Context provided by the Calendar block.
+ * @param {string}   props.clientId      This week block's client ID.
  *
  * @return {Element} Week row element.
  */
-export default memo( function Edit( { context, clientId } ) {
+export default memo( function Edit( {
+	attributes,
+	setAttributes,
+	context,
+	clientId,
+} ) {
+	const { dayStartHour = 8, dayEndHour = 20 } = attributes || {};
+
 	const rawWeekDays = context?.[ 'gatherpress/weekDays' ];
 	const weekDays = useMemo(
 		() => rawWeekDays ?? EMPTY_ARRAY,
@@ -42,6 +60,15 @@ export default memo( function Edit( { context, clientId } ) {
 	const weekNumber = context?.[ 'gatherpress/weekNumber' ] ?? 0;
 	const activeDate = context?.[ 'gatherpress/activeDate' ] ?? '';
 	const setActiveDate = context?.[ 'gatherpress/setActiveDate' ] ?? NOOP;
+	const viewType = context?.[ 'gatherpress/viewType' ] ?? 'month';
+
+	const isDatetimeOrdered =
+		( context?.query?.orderBy || context?.query?.orderby ) === 'datetime';
+	const isTimeGridActive = Boolean(
+		( 'day' === viewType || 'week' === viewType ) &&
+		isDatetimeOrdered &&
+		context?.[ 'gatherpress/enableTimeGrid' ]
+	);
 
 	// The real day template's inner blocks (Day Number, Post Title, Event
 	// Date, etc.) and the real day block's own attributes (for color/border
@@ -62,8 +89,41 @@ export default memo( function Edit( { context, clientId } ) {
 		)
 	);
 
+	// Generate hour slots for the Time Gutter column.
+	const timeSlots = useMemo( () => {
+		if ( ! isTimeGridActive ) {
+			return [];
+		}
+		const slots = [];
+		for ( let h = dayStartHour; h < dayEndHour; h += 1 ) {
+			slots.push( `${ String( h ).padStart( 2, '0' ) }:00` );
+		}
+		return slots;
+	}, [ isTimeGridActive, dayStartHour, dayEndHour ] );
+
+	// Calculate maximum ribbon slot index across all days in this week.
+	const numRibbonSlots = useMemo( () => {
+		if ( ! isTimeGridActive ) {
+			return 0;
+		}
+		let maxSlot = -1;
+		weekDays.forEach( ( day ) => {
+			( day.posts || [] ).forEach( ( p ) => {
+				if ( ! p.isTimed ) {
+					maxSlot = Math.max( maxSlot, Number( p.slot ) || 0 );
+				}
+			} );
+		} );
+		return maxSlot + 1;
+	}, [ isTimeGridActive, weekDays ] );
+
 	const blockProps = useBlockProps( {
-		className: 'gatherpress-calendar__week',
+		className: `gatherpress-calendar__week${
+			isTimeGridActive ? ' has-time-grid' : ''
+		}`,
+		style: {
+			'--gatherpress-num-ribbon-slots': numRibbonSlots,
+		},
 	} );
 
 	const { children, ...innerBlocksWrapperProps } = useInnerBlocksProps(
@@ -96,40 +156,126 @@ export default memo( function Edit( { context, clientId } ) {
 						'gatherpress/isToday': !! activeDay.isToday,
 						'gatherpress/weekday': activeDay.weekday ?? '',
 						'gatherpress/isWeekend': !! activeDay.isWeekend,
+						'gatherpress/numRibbonSlots': numRibbonSlots,
+						'gatherpress/dayStartHour': dayStartHour,
+						'gatherpress/dayEndHour': dayEndHour,
+						'gatherpress/enableTimeGrid': isTimeGridActive,
+						'gatherpress/viewType': viewType,
+						query: context?.query,
 					}
 				: {},
-		[ activeDay ]
+		[
+			activeDay,
+			numRibbonSlots,
+			dayStartHour,
+			dayEndHour,
+			isTimeGridActive,
+			viewType,
+			context?.query,
+		]
+	);
+
+	const timeGridConfig = useMemo(
+		() => ( {
+			enabled: isTimeGridActive,
+			slots: timeSlots,
+			startHour: dayStartHour,
+			endHour: dayEndHour,
+		} ),
+		[ isTimeGridActive, timeSlots, dayStartHour, dayEndHour ]
 	);
 
 	return (
-		<tr { ...innerBlocksWrapperProps }>
-			{ weekNumber > 0 && (
-				<th scope="row" className="gatherpress--screen-reader-text">
-					{ sprintf(
-						/* translators: %d: ISO 8601 week number. */
-						__( 'Week %d', 'gatherpress-calendar' ),
-						weekNumber
-					) }
-				</th>
-			) }
-			{ weekDays.map( ( day, dayIndex ) =>
-				dayIndex === activeDayIndex ? (
-					<BlockContextProvider
-						key={ day.date ?? `empty-${ dayIndex }` }
-						value={ activeDayContext }
+		<>
+			{ isTimeGridActive && (
+				<InspectorControls>
+					<PanelBody
+						title={ __( 'Timeline Hours', 'gatherpress-calendar' ) }
+						initialOpen={ true }
 					>
-						{ children }
-					</BlockContextProvider>
-				) : (
-					<DayPreviewCell
-						key={ day.date ?? `empty-${ dayIndex }` }
-						day={ day }
-						innerBlocks={ dayInnerBlocks }
-						dayBlockAttributes={ dayBlockAttributes }
-						onActivateDay={ setActiveDate }
-					/>
-				)
+						<RangeControl
+							label={ __(
+								'Day Starts At (Hour)',
+								'gatherpress-calendar'
+							) }
+							value={ dayStartHour }
+							onChange={ ( val ) =>
+								setAttributes( { dayStartHour: val } )
+							}
+							min={ 0 }
+							max={ Math.max( 0, dayEndHour - 1 ) }
+							step={ 1 }
+						/>
+						<RangeControl
+							label={ __(
+								'Day Ends At (Hour)',
+								'gatherpress-calendar'
+							) }
+							value={ dayEndHour }
+							onChange={ ( val ) =>
+								setAttributes( { dayEndHour: val } )
+							}
+							min={ Math.min( 24, dayStartHour + 1 ) }
+							max={ 24 }
+							step={ 1 }
+						/>
+					</PanelBody>
+				</InspectorControls>
 			) }
-		</tr>
+			<tr { ...innerBlocksWrapperProps }>
+				{ /* Time Gutter column: MUST be first child inside <tr> */ }
+				{ isTimeGridActive && (
+					<th
+						scope="row"
+						className="gatherpress-calendar__time-gutter"
+						aria-hidden="true"
+						style={ {
+							paddingTop: `calc(28px + ${ numRibbonSlots } * 24px)`,
+						} }
+					>
+						{ timeSlots.map( ( slot ) => (
+							<div
+								key={ slot }
+								className="gatherpress-calendar__time-slot-label"
+							>
+								{ slot }
+							</div>
+						) ) }
+					</th>
+				) }
+
+				{ weekNumber > 0 && (
+					<th scope="row" className="gatherpress--screen-reader-text">
+						{ sprintf(
+							/* translators: %d: ISO 8601 week number. */
+							__( 'Week %d', 'gatherpress-calendar' ),
+							weekNumber
+						) }
+					</th>
+				) }
+
+				{ weekDays.map( ( day, dayIndex ) =>
+					dayIndex === activeDayIndex ? (
+						<BlockContextProvider
+							key={ day.date ?? `empty-${ dayIndex }` }
+							value={ activeDayContext }
+						>
+							{ children }
+						</BlockContextProvider>
+					) : (
+						<DayPreviewCell
+							key={ day.date ?? `empty-${ dayIndex }` }
+							day={ day }
+							innerBlocks={ dayInnerBlocks }
+							dayBlockAttributes={ dayBlockAttributes }
+							onActivateDay={ setActiveDate }
+							numRibbonSlots={ numRibbonSlots }
+							isTimeGrid={ isTimeGridActive }
+							timeGridConfig={ timeGridConfig }
+						/>
+					)
+				) }
+			</tr>
+		</>
 	);
 } );

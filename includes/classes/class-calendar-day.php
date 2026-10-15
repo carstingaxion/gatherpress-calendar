@@ -143,11 +143,34 @@ class Calendar_Day {
 	}
 
 	/**
+	 * Check if any post entry is a multi-day or all-day event.
+	 *
+	 * @param array<mixed> $day_posts List of day post entries.
+	 *
+	 * @return bool True if at least one entry spans multiple days or is all day.
+	 */
+	private function has_multi_day_event( array $day_posts ): bool {
+		foreach ( $day_posts as $post_entry ) {
+			if ( ! is_array( $post_entry ) ) {
+				continue;
+			}
+
+			$total_days_raw = $post_entry['total_days'] ?? 1;
+			$total_days     = is_numeric( $total_days_raw ) ? (int) $total_days_raw : 1;
+			if ( $total_days > 1 || ! empty( $post_entry['is_all_day'] ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Resolve class names for a calendar day cell.
 	 *
 	 * @param array<mixed> $context Block context.
 	 *
-	 * @return list<string> Array of CSS classes.
+	 * @return string[] Array of CSS classes.
 	 */
 	private function get_day_cell_classes( array $context ): array {
 		$classes = array( 'gatherpress-calendar__day' );
@@ -156,8 +179,12 @@ class Calendar_Day {
 			$classes[] = 'is-empty';
 		}
 
-		if ( ! empty( $context['gatherpress/dayPosts'] ) ) {
+		if ( ! empty( $context['gatherpress/dayPosts'] ) && is_array( $context['gatherpress/dayPosts'] ) ) {
 			$classes[] = 'has-posts';
+
+			if ( $this->has_multi_day_event( $context['gatherpress/dayPosts'] ) ) {
+				$classes[] = 'has-multi-day-event';
+			}
 		}
 
 		[ $weekday, $is_weekend ] = $this->resolve_weekday_and_weekend( $context );
@@ -255,17 +282,6 @@ class Calendar_Day {
 	}
 
 	/**
-	 * Check if a block is a calendar entries block.
-	 *
-	 * @param array<string, mixed> $block Parsed block array.
-	 *
-	 * @return bool True if calendar entries block.
-	 */
-	private function is_entries_block( array $block ): bool {
-		return Calendar_Entries::BLOCK_NAME === ( $block['blockName'] ?? '' );
-	}
-
-	/**
 	 * Locate day number and entries inner blocks.
 	 *
 	 * @param array<mixed> $inner_blocks Parsed inner blocks.
@@ -295,7 +311,7 @@ class Calendar_Day {
 				$day_number_block = $inner_typed;
 			}
 
-			if ( null === $entries_block && $this->is_entries_block( $inner_typed ) ) {
+			if ( null === $entries_block && Calendar_Entries::BLOCK_NAME === ( $inner_typed['blockName'] ?? '' ) ) {
 				$entries_block = $inner_typed;
 			}
 		}

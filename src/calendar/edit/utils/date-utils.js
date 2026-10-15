@@ -153,6 +153,54 @@ export function calculatePostSpanUnits(
 }
 
 /**
+ * Calculates start, end, and raw week boundaries for week view.
+ *
+ * @param {Date}    targetDate   Base target date.
+ * @param {number}  unitCount    Number of weeks.
+ * @param {number}  startOfWeek  Start of week (0-6).
+ * @param {boolean} showWeekends Weekend visibility.
+ * @return {Object} { startDate, endDate, rawWeekStart }
+ */
+function calculateWeekViewBounds(
+	targetDate,
+	unitCount,
+	startOfWeek,
+	showWeekends
+) {
+	const currentDow = targetDate.getDay();
+	const diff = ( currentDow - startOfWeek + 7 ) % 7;
+	const rawWeekStart = new Date( targetDate );
+	rawWeekStart.setDate( targetDate.getDate() - diff );
+
+	const totalDays = unitCount * 7;
+	const visibleDays = [];
+	for ( let i = 0; i < totalDays; i++ ) {
+		const d = new Date( rawWeekStart );
+		d.setDate( rawWeekStart.getDate() + i );
+		if ( showWeekends || ! isWeekendDay( d.getDay() ) ) {
+			visibleDays.push( d );
+		}
+	}
+
+	if ( visibleDays.length > 0 ) {
+		return {
+			startDate: visibleDays[ 0 ],
+			endDate: visibleDays[ visibleDays.length - 1 ],
+			rawWeekStart,
+		};
+	}
+
+	const endDate = new Date( rawWeekStart );
+	endDate.setDate( rawWeekStart.getDate() + totalDays - 1 );
+
+	return {
+		startDate: rawWeekStart,
+		endDate,
+		rawWeekStart,
+	};
+}
+
+/**
  * Calculate range and boundaries for a given date selection.
  *
  * @param {Object} options     Options containing viewType, selectedDate, unitCount, dateModifier, etc.
@@ -172,29 +220,15 @@ export function calculateDateRange( options = {}, startOfWeek = 0 ) {
 	let rawWeekStart;
 
 	if ( 'week' === viewType ) {
-		const currentDow = targetDate.getDay();
-		const diff = ( currentDow - startOfWeek + 7 ) % 7;
-		rawWeekStart = new Date( targetDate );
-		rawWeekStart.setDate( targetDate.getDate() - diff );
-
-		const totalDays = unitCount * 7;
-		const visibleDays = [];
-		for ( let i = 0; i < totalDays; i++ ) {
-			const d = new Date( rawWeekStart );
-			d.setDate( rawWeekStart.getDate() + i );
-			if ( showWeekends || ! isWeekendDay( d.getDay() ) ) {
-				visibleDays.push( d );
-			}
-		}
-
-		if ( visibleDays.length > 0 ) {
-			startDate = visibleDays[ 0 ];
-			endDate = visibleDays[ visibleDays.length - 1 ];
-		} else {
-			startDate = rawWeekStart;
-			endDate = new Date( rawWeekStart );
-			endDate.setDate( rawWeekStart.getDate() + totalDays - 1 );
-		}
+		const bounds = calculateWeekViewBounds(
+			targetDate,
+			unitCount,
+			startOfWeek,
+			showWeekends
+		);
+		startDate = bounds.startDate;
+		endDate = bounds.endDate;
+		rawWeekStart = bounds.rawWeekStart;
 	} else if ( 'day' === viewType ) {
 		startDate = new Date( targetDate );
 		endDate = new Date( targetDate );
@@ -242,7 +276,153 @@ export function calculateDateQuery( options = {}, startOfWeek = 0 ) {
 }
 
 /**
- * Format calendar heading string (matches PHP Date_Calculator::format_heading).
+ * Formats day or week heading date spans.
+ *
+ * @param {Date}   start     Range start date at noon.
+ * @param {Date}   end       Range end date at noon.
+ * @param {string} separator Datetime separator.
+ * @return {string} Formatted heading.
+ */
+function formatDayOrWeekHeading( start, end, separator ) {
+	let startFormat;
+	let endFormat;
+
+	if ( start.getFullYear() !== end.getFullYear() ) {
+		startFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'M j, Y',
+			'Calendar heading: start of date range across years',
+			'gatherpress-calendar'
+		);
+		endFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'M j, Y',
+			'Calendar heading: end of date range',
+			'gatherpress-calendar'
+		);
+	} else if ( start.getMonth() !== end.getMonth() ) {
+		startFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'M j',
+			'Calendar heading: start of date range across months',
+			'gatherpress-calendar'
+		);
+		endFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'M j, Y',
+			'Calendar heading: end of date range',
+			'gatherpress-calendar'
+		);
+	} else {
+		startFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'M j',
+			'Calendar heading: start of date range within a month',
+			'gatherpress-calendar'
+		);
+		endFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'j, Y',
+			'Calendar heading: end of date range within a month',
+			'gatherpress-calendar'
+		);
+	}
+
+	return sprintf(
+		/* translators: %1$s: start date, %2$s: separator, %3$s: end date. */
+		_x(
+			'%1$s %2$s %3$s',
+			'Calendar heading: date range',
+			'gatherpress-calendar'
+		),
+		dateI18n( startFormat, start ),
+		separator,
+		dateI18n( endFormat, end )
+	);
+}
+
+/**
+ * Formats month heading date spans.
+ *
+ * @param {Date}   startDate Range start date object.
+ * @param {Date}   endDate   Range end date object.
+ * @param {string} separator Datetime separator.
+ * @return {string} Formatted heading.
+ */
+function formatMonthHeading( startDate, endDate, separator ) {
+	const start = new Date(
+		startDate.getFullYear(),
+		startDate.getMonth(),
+		15,
+		12,
+		0,
+		0
+	);
+	const end = new Date(
+		endDate.getFullYear(),
+		endDate.getMonth(),
+		15,
+		12,
+		0,
+		0
+	);
+
+	if (
+		start.getFullYear() === end.getFullYear() &&
+		start.getMonth() === end.getMonth()
+	) {
+		return dateI18n(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			_x(
+				'F Y',
+				'Calendar heading: single month',
+				'gatherpress-calendar'
+			),
+			start
+		);
+	}
+
+	let startFormat;
+	let endFormat;
+
+	if ( start.getFullYear() !== end.getFullYear() ) {
+		startFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'M Y',
+			'Calendar heading: month range across years',
+			'gatherpress-calendar'
+		);
+		endFormat = startFormat;
+	} else {
+		startFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'F',
+			'Calendar heading: start of month range within a year',
+			'gatherpress-calendar'
+		);
+		endFormat = _x(
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			'F Y',
+			'Calendar heading: end of month range within a year',
+			'gatherpress-calendar'
+		);
+	}
+
+	return sprintf(
+		/* translators: %1$s: start date, %2$s: separator, %3$s: end date. */
+		_x(
+			'%1$s %2$s %3$s',
+			'Calendar heading: date range',
+			'gatherpress-calendar'
+		),
+		dateI18n( startFormat, start ),
+		separator,
+		dateI18n( endFormat, end )
+	);
+}
+
+/**
+ * Format calendar heading based on view type and date range.
  *
  * @param {string} viewType  View type: 'month' | 'week' | 'day'.
  * @param {Date}   startDate Range start date object.
@@ -265,111 +445,13 @@ export function formatHeading( viewType, startDate, endDate ) {
 		);
 	}
 
-	let start = atNoon( startDate );
-	let end = atNoon( endDate );
-
-	const startYear = start.getFullYear();
-	const endYear = end.getFullYear();
-	const startMonth = start.getMonth();
-	const endMonth = end.getMonth();
-
-	let startFormat;
-	let endFormat;
-
-	if ( 'day' === viewType || 'week' === viewType ) {
-		if ( startYear !== endYear ) {
-			startFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'M j, Y',
-				'Calendar heading: start of date range across years',
-				'gatherpress-calendar'
-			);
-			endFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'M j, Y',
-				'Calendar heading: end of date range',
-				'gatherpress-calendar'
-			);
-		} else if ( startMonth !== endMonth ) {
-			startFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'M j',
-				'Calendar heading: start of date range across months',
-				'gatherpress-calendar'
-			);
-			endFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'M j, Y',
-				'Calendar heading: end of date range',
-				'gatherpress-calendar'
-			);
-		} else {
-			startFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'M j',
-				'Calendar heading: start of date range within a month',
-				'gatherpress-calendar'
-			);
-			endFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'j, Y',
-				'Calendar heading: end of date range within a month',
-				'gatherpress-calendar'
-			);
-		}
-	} else {
-		// Month view: format a mid-month date so browser-site timezone differences
-		// cannot shift the formatted month to an adjacent month.
-		start = new Date( startYear, startMonth, 15, 12, 0, 0 );
-		end = new Date( endYear, endMonth, 15, 12, 0, 0 );
-
-		if ( startYear === endYear && startMonth === endMonth ) {
-			return dateI18n(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				_x(
-					'F Y',
-					'Calendar heading: single month',
-					'gatherpress-calendar'
-				),
-				start
-			);
-		}
-
-		if ( startYear !== endYear ) {
-			startFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'M Y',
-				'Calendar heading: month range across years',
-				'gatherpress-calendar'
-			);
-			endFormat = startFormat;
-		} else {
-			startFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'F',
-				'Calendar heading: start of month range within a year',
-				'gatherpress-calendar'
-			);
-			endFormat = _x(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				'F Y',
-				'Calendar heading: end of month range within a year',
-				'gatherpress-calendar'
-			);
-		}
-	}
-
+	const start = atNoon( startDate );
+	const end = atNoon( endDate );
 	const separator = getDatetimeSeparator();
 
-	return sprintf(
-		/* translators: %1$s: start date, %2$s: separator, %3$s: end date. */
-		_x(
-			'%1$s %2$s %3$s',
-			'Calendar heading: date range',
-			'gatherpress-calendar'
-		),
-		dateI18n( startFormat, start ),
-		separator,
-		dateI18n( endFormat, end )
-	);
+	if ( 'day' === viewType || 'week' === viewType ) {
+		return formatDayOrWeekHeading( start, end, separator );
+	}
+
+	return formatMonthHeading( startDate, endDate, separator );
 }
