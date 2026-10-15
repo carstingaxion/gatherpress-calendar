@@ -65,6 +65,11 @@ export default memo( function Edit( {
 	const rawPosts = context?.[ 'gatherpress/dayPosts' ];
 	const posts = useMemo( () => rawPosts ?? EMPTY_ARRAY, [ rawPosts ] );
 
+	const isRibbon = Boolean(
+		attributes?.className?.includes( 'is-style-ribbon' )
+	);
+	const isRibbonOrTimeGrid = isRibbon || isTimeGridActive;
+
 	// block.json's own providesContext only re-exposes values stored in
 	// this block's *attributes*, which we never set (day number etc. are
 	// purely derived from context, not persisted). That means descendants
@@ -129,6 +134,7 @@ export default memo( function Edit( {
 		posts.length > 0 ? 'has-posts' : '',
 		isWeekend ? 'is-weekend' : '',
 		weekday ? `is-${ weekday }` : '',
+		isRibbonOrTimeGrid ? 'is-style-ribbon' : '',
 		isTimeGridActive ? 'has-time-grid' : '',
 		! isDayActive && posts.length === 0 ? 'is-inactive-empty-day' : '',
 	]

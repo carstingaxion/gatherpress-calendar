@@ -108,7 +108,7 @@ export default function Edit( {
 	const dayEndHour = weekBlockAttributes?.dayEndHour ?? 20;
 	const slotHeight = dayBlockAttributes?.slotHeight ?? 48;
 
-	// Verify if time grid is actively valid and enabled
+	// Verify if time grid is actively valid and enabled.
 	const isDatetimeOrdered =
 		( query?.orderBy || query?.orderby ) === 'datetime';
 	const isTimeGridActive =
@@ -313,10 +313,11 @@ export default function Edit( {
 			'gatherpress/month': dateRange.month,
 			'gatherpress/startDate': dateRange.startDate,
 			'gatherpress/endDate': dateRange.endDate,
-			'gatherpress/enableTimeGrid': enableTimeGrid,
+			'gatherpress/enableTimeGrid': isTimeGridActive,
+			'gatherpress/timeGridConfig': timeGridConfig,
 			query,
 		} ),
-		[ viewType, dateRange, enableTimeGrid, query ]
+		[ viewType, dateRange, isTimeGridActive, timeGridConfig, query ]
 	);
 
 	if ( ! query ) {

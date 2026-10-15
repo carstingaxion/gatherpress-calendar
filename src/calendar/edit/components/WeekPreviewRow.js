@@ -26,8 +26,9 @@ import { DayPreviewCell } from './DayPreviewCell';
  * @param {Object}   props.dayBlockAttributes  The real calendar-day block's own attributes, for style parity.
  * @param {Function} props.onActivateDay       Called with a day's date when that day is clicked.
  * @param {number}   props.numRibbonSlots      Number of ribbon slots.
- * @param {boolean}  props.isTimeGrid          Whether the time grid is enabled.
- * @param {Object}   props.timeGridConfig      Time grid configuration.
+ * @param {boolean}  props.isTimeGrid          Whether time grid is active.
+ * @param {Object}   props.timeGridConfig      Time grid configuration object.
+ *
  * @return {Element} Week row preview element.
  */
 function WeekPreviewRowComponent( {
@@ -67,7 +68,7 @@ function WeekPreviewRowComponent( {
 					className="gatherpress-calendar__time-gutter"
 					aria-hidden="true"
 					style={ {
-						paddingTop: `calc(${ numRibbonSlots } * 24px)`,
+						paddingTop: `calc(28px + ${ numRibbonSlots } * 24px)`,
 					} }
 				>
 					{ ( timeGridConfig.slots || [] ).map( ( slot ) => (
@@ -100,6 +101,7 @@ function WeekPreviewRowComponent( {
 					onActivateDay={ onActivateDay }
 					numRibbonSlots={ numRibbonSlots }
 					isTimeGrid={ isTimeGrid }
+					timeGridConfig={ timeGridConfig }
 				/>
 			) ) }
 		</tr>
