@@ -33,7 +33,6 @@ import { useCalendarSync } from './edit/hooks/useCalendarSync';
 import { useCalendarData } from './edit/hooks/useCalendarData';
 import { useCalendarDayTemplate } from './edit/hooks/useCalendarDayTemplate';
 import { useDateRangeSourceSync } from './edit/hooks/useDateRangeSourceSync';
-import { MonthPicker } from './edit/components/MonthPicker';
 import { DateControls } from './edit/components/DateControls';
 import { CalendarTable } from './edit/components/CalendarTable';
 
@@ -73,7 +72,6 @@ export default function Edit( {
 
 	const { query } = context;
 
-	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 	const [ activeDate, setActiveDate ] = useState( '' );
 
 	const startOfWeek = getStartOfWeek();
@@ -340,9 +338,11 @@ export default function Edit( {
 		);
 	}
 
+	// A picked date or month replaces the offset, which the controls hide
+	// while a date is set. The month picker shows the offset month, so the
+	// calendar stays on the month it showed. A reset also clears the offset.
 	const handleDateChange = ( value ) => {
-		setAttributes( { selectedDate: value } );
-		setShowMonthPicker( false );
+		setAttributes( { selectedDate: value, dateModifier: 0 } );
 	};
 
 	const handleModifierChange = ( value ) => {
@@ -374,50 +374,41 @@ export default function Edit( {
 				<PanelBody
 					title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }
 				>
-					{ showMonthPicker ? (
-						<MonthPicker
-							selectedMonth={ selectedDate }
-							onSelect={ handleDateChange }
-							onCancel={ () => setShowMonthPicker( false ) }
-						/>
-					) : (
-						<DateControls
-							clientId={ clientId }
-							context={ context }
-							viewType={ viewType }
-							onViewTypeChange={ ( val ) =>
-								setAttributes( { viewType: val } )
-							}
-							unitCount={ unitCount }
-							onUnitCountChange={ handleUnitCountChange }
-							selectedDate={
-								hasPostDates
-									? `${ dateRange.startDate } ${ separator } ${ dateRange.endDate }`
-									: selectedDate
-							}
-							dateModifier={ dateModifier }
-							onDateChange={ handleDateChange }
-							onModifierChange={ handleModifierChange }
-							onOpenPicker={ () => setShowMonthPicker( true ) }
-							dateRangeSource={ dateRangeSource }
-							onSourceChange={ ( val ) =>
-								setAttributes( { dateRangeSource: val } )
-							}
-							postId={ postId }
-							onPostIdChange={ ( val ) =>
-								setAttributes( { postId: val } )
-							}
-							sourcePostType={ sourcePostType }
-							onPostTypeChange={ handleSourcePostTypeChange }
-							postTitle={ sourcePostDates.postTitle }
-							hasPostDates={ hasPostDates }
-							hasCurrentSupport={ hasCurrentSupport }
-							enableTimeGrid={ enableTimeGrid }
-							onTimeGridChange={ ( val ) =>
-								setAttributes( { enableTimeGrid: val } )
-							}
-						/>
-					) }
+					<DateControls
+						clientId={ clientId }
+						context={ context }
+						viewType={ viewType }
+						onViewTypeChange={ ( val ) =>
+							setAttributes( { viewType: val } )
+						}
+						unitCount={ unitCount }
+						onUnitCountChange={ handleUnitCountChange }
+						selectedDate={
+							hasPostDates
+								? `${ dateRange.startDate } ${ separator } ${ dateRange.endDate }`
+								: selectedDate
+						}
+						dateModifier={ dateModifier }
+						onDateChange={ handleDateChange }
+						onModifierChange={ handleModifierChange }
+						dateRangeSource={ dateRangeSource }
+						onSourceChange={ ( val ) =>
+							setAttributes( { dateRangeSource: val } )
+						}
+						postId={ postId }
+						onPostIdChange={ ( val ) =>
+							setAttributes( { postId: val } )
+						}
+						sourcePostType={ sourcePostType }
+						onPostTypeChange={ handleSourcePostTypeChange }
+						postTitle={ sourcePostDates.postTitle }
+						hasPostDates={ hasPostDates }
+						hasCurrentSupport={ hasCurrentSupport }
+						enableTimeGrid={ enableTimeGrid }
+						onTimeGridChange={ ( val ) =>
+							setAttributes( { enableTimeGrid: val } )
+						}
+					/>
 
 					<ToggleControl
 						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
