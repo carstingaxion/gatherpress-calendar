@@ -58,8 +58,8 @@ export default memo( function Edit( {
 		( context?.query?.orderBy || context?.query?.orderby ) === 'datetime';
 	const isTimeGridActive = Boolean(
 		( 'day' === viewType || 'week' === viewType ) &&
-			isDatetimeOrdered &&
-			context?.[ 'gatherpress/enableTimeGrid' ]
+		isDatetimeOrdered &&
+		context?.[ 'gatherpress/enableTimeGrid' ]
 	);
 
 	const rawPosts = context?.[ 'gatherpress/dayPosts' ];

@@ -18,14 +18,16 @@ import { DayPreviewCell } from './DayPreviewCell';
  *
  * @since 0.4.0
  *
- * @param {Object}   props                     - Component props.
- * @param {Array}    props.week                - This week's day data entries.
- * @param {number}   props.weekNumber          - ISO week number, 0 for none.
- * @param {Array}    props.dayInnerBlocks      - The real day template's inner blocks, for previews.
- * @param {Object}   props.weekBlockAttributes - The real calendar-week block's own attributes, for style parity.
- * @param {Object}   props.dayBlockAttributes  - The real calendar-day block's own attributes, for style parity.
- * @param {Function} props.onActivateDay       - Called with a day's date when that day is clicked.
- *
+ * @param {Object}   props                     Component props.
+ * @param {Array}    props.week                This week's day data entries.
+ * @param {number}   props.weekNumber          ISO week number, 0 for none.
+ * @param {Array}    props.dayInnerBlocks      The real day template's inner blocks, for previews.
+ * @param {Object}   props.weekBlockAttributes The real calendar-week block's own attributes, for style parity.
+ * @param {Object}   props.dayBlockAttributes  The real calendar-day block's own attributes, for style parity.
+ * @param {Function} props.onActivateDay       Called with a day's date when that day is clicked.
+ * @param {number}   props.numRibbonSlots      Number of ribbon slots.
+ * @param {boolean}  props.isTimeGrid          Whether the time grid is enabled.
+ * @param {Object}   props.timeGridConfig      Time grid configuration.
  * @return {Element} Week row preview element.
  */
 function WeekPreviewRowComponent( {

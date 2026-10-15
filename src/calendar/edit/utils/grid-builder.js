@@ -180,6 +180,121 @@ export function findAvailableSlot( dates, occupiedSlots ) {
 }
 
 /**
+ * Allocates a single timed event into the time grid entries map.
+ *
+ * @param {Object} rawEvent   Event data.
+ * @param {Object} gridConfig Time grid config.
+ * @param {Object} grouped    Grouped date entries map.
+ * @return {void}
+ */
+function allocateTimedEvent( rawEvent, gridConfig, grouped ) {
+	const { post } = rawEvent;
+	const tracks = calculateTimedEventTracks( post, gridConfig );
+	if ( ! tracks ) {
+		return;
+	}
+
+	const dateStr = rawEvent.startDateStr;
+	if ( ! grouped[ dateStr ] ) {
+		grouped[ dateStr ] = [];
+	}
+
+	grouped[ dateStr ].push( {
+		...post,
+		span: 'single',
+		dayIndex: 1,
+		totalDays: 1,
+		isAllDay: false,
+		isTimed: true,
+		timeRowStart: tracks.timeRowStart,
+		timeRowEnd: tracks.timeRowEnd,
+		slot: 0,
+	} );
+}
+
+/**
+ * Allocates an all-day or multi-day ribbon event into the daily entries map.
+ *
+ * @param {Object} rawEvent      Event data.
+ * @param {Object} grouped       Grouped date entries map.
+ * @param {Object} occupiedSlots Map of occupied slots.
+ * @return {void}
+ */
+function allocateRibbonEvent( rawEvent, grouped, occupiedSlots ) {
+	const { post, startObj, totalDays, isAllDay } = rawEvent;
+
+	const eventDates = [];
+	for ( let i = 0; i < totalDays; i++ ) {
+		const current = new Date( startObj );
+		current.setDate( startObj.getDate() + i );
+		eventDates.push( formatDate( current ) );
+	}
+
+	const slot = findAvailableSlot( eventDates, occupiedSlots );
+
+	eventDates.forEach( ( dateStr, i ) => {
+		if ( ! occupiedSlots[ dateStr ] ) {
+			occupiedSlots[ dateStr ] = new Set();
+		}
+		occupiedSlots[ dateStr ].add( slot );
+
+		const dayIndex = i + 1;
+		const span = determineSpanType( dayIndex, totalDays );
+
+		if ( ! grouped[ dateStr ] ) {
+			grouped[ dateStr ] = [];
+		}
+
+		grouped[ dateStr ].push( {
+			...post,
+			span,
+			dayIndex,
+			totalDays,
+			slot,
+			isAllDay,
+			isTimed: false,
+		} );
+	} );
+}
+
+/**
+ * Resolves concurrent overlapping columns for timed events in a day's entries.
+ *
+ * @param {Array<Object>} dayEntries Entries for a single date.
+ * @return {void}
+ */
+function resolveDayOverlaps( dayEntries ) {
+	const timedIndices = [];
+	dayEntries.forEach( ( entry, idx ) => {
+		if ( entry.isTimed ) {
+			timedIndices.push( idx );
+		}
+	} );
+
+	timedIndices.forEach( ( currIdx ) => {
+		const curr = dayEntries[ currIdx ];
+		let overlaps = 0;
+		let overlapIdx = 0;
+
+		timedIndices.forEach( ( otherIdx ) => {
+			const other = dayEntries[ otherIdx ];
+			const isOverlapping =
+				curr.timeRowStart < other.timeRowEnd &&
+				curr.timeRowEnd > other.timeRowStart;
+			if ( isOverlapping ) {
+				overlaps++;
+				if ( otherIdx < currIdx ) {
+					overlapIdx++;
+				}
+			}
+		} );
+
+		dayEntries[ currIdx ].overlapTotal = Math.max( 1, overlaps );
+		dayEntries[ currIdx ].overlapIndex = overlapIdx;
+	} );
+}
+
+/**
  * Organizes posts by YYYY-MM-DD date string,
  * spanning multi-day events across all active days
  * and supporting time-grid coordinates.
@@ -217,104 +332,18 @@ export function groupPostsByDate( posts = [], gridConfig = {} ) {
 	const occupiedSlots = {};
 
 	rawEvents.forEach( ( rawEvent ) => {
-		const { post, startObj, totalDays, isAllDay } = rawEvent;
-		const isMultiDay = totalDays > 1 || isAllDay;
+		const isMultiDay = rawEvent.totalDays > 1 || rawEvent.isAllDay;
 
-		// In time-grid mode, single-day timed events enter timeline tracks
 		if ( isTimeGrid && ! isMultiDay ) {
-			const tracks = calculateTimedEventTracks( post, gridConfig );
-			if ( ! tracks ) {
-				return; // Outside visible day hours
-			}
-
-			const dateStr = rawEvent.startDateStr;
-			if ( ! grouped[ dateStr ] ) {
-				grouped[ dateStr ] = [];
-			}
-
-			grouped[ dateStr ].push( {
-				...post,
-				span: 'single',
-				dayIndex: 1,
-				totalDays: 1,
-				isAllDay: false,
-				isTimed: true,
-				timeRowStart: tracks.timeRowStart,
-				timeRowEnd: tracks.timeRowEnd,
-				slot: 0,
-			} );
-			return;
+			allocateTimedEvent( rawEvent, gridConfig, grouped );
+		} else {
+			allocateRibbonEvent( rawEvent, grouped, occupiedSlots );
 		}
-
-		// Standard Ribbon Slot Allocation for All-Day & Multi-Day events
-		const eventDates = [];
-		for ( let i = 0; i < totalDays; i++ ) {
-			const current = new Date( startObj );
-			current.setDate( startObj.getDate() + i );
-			eventDates.push( formatDate( current ) );
-		}
-
-		const slot = findAvailableSlot( eventDates, occupiedSlots );
-
-		eventDates.forEach( ( dateStr, i ) => {
-			if ( ! occupiedSlots[ dateStr ] ) {
-				occupiedSlots[ dateStr ] = new Set();
-			}
-			occupiedSlots[ dateStr ].add( slot );
-
-			const dayIndex = i + 1;
-			const span = determineSpanType( dayIndex, totalDays );
-
-			if ( ! grouped[ dateStr ] ) {
-				grouped[ dateStr ] = [];
-			}
-
-			grouped[ dateStr ].push( {
-				...post,
-				span,
-				dayIndex,
-				totalDays,
-				slot,
-				isAllDay,
-				isTimed: false,
-			} );
-		} );
 	} );
 
-	// Resolve concurrent overlapping columns for timed events in each day
 	if ( isTimeGrid ) {
 		Object.keys( grouped ).forEach( ( dateStr ) => {
-			const timedIndices = [];
-			grouped[ dateStr ].forEach( ( entry, idx ) => {
-				if ( entry.isTimed ) {
-					timedIndices.push( idx );
-				}
-			} );
-
-			timedIndices.forEach( ( currIdx ) => {
-				const curr = grouped[ dateStr ][ currIdx ];
-				let overlaps = 0;
-				let overlapIdx = 0;
-
-				timedIndices.forEach( ( otherIdx ) => {
-					const other = grouped[ dateStr ][ otherIdx ];
-					const isOverlapping =
-						curr.timeRowStart < other.timeRowEnd &&
-						curr.timeRowEnd > other.timeRowStart;
-					if ( isOverlapping ) {
-						overlaps++;
-						if ( otherIdx < currIdx ) {
-							overlapIdx++;
-						}
-					}
-				} );
-
-				grouped[ dateStr ][ currIdx ].overlapTotal = Math.max(
-					1,
-					overlaps
-				);
-				grouped[ dateStr ][ currIdx ].overlapIndex = overlapIdx;
-			} );
+			resolveDayOverlaps( grouped[ dateStr ] );
 		} );
 	}
 
@@ -528,6 +557,28 @@ export function getWeekNumber( week, startOfWeek = 0 ) {
 }
 
 /**
+ * Calculate maximum ribbon slot index across a week's days.
+ *
+ * @param {Array<Object>} weekDays   Array of day descriptors.
+ * @param {boolean}       isTimeGrid Whether time grid is enabled.
+ * @return {number} Number of ribbon slots.
+ */
+function getWeekNumRibbonSlots( weekDays, isTimeGrid ) {
+	if ( ! isTimeGrid ) {
+		return 0;
+	}
+	let maxSlot = -1;
+	weekDays.forEach( ( day ) => {
+		( day.posts || [] ).forEach( ( p ) => {
+			if ( ! p.isTimed ) {
+				maxSlot = Math.max( maxSlot, Number( p.slot ) || 0 );
+			}
+		} );
+	} );
+	return maxSlot + 1;
+}
+
+/**
  * Generate calendar structure for any viewType, calculating week-level ribbon slots.
  *
  * @param {Array<Object>} posts          Posts from the query.
@@ -550,21 +601,6 @@ export function generateCalendar(
 	const unitCount = Math.max( 1, dateRange.unitCount || 1 );
 	const isTimeGrid = Boolean( timeGridConfig?.enabled );
 
-	const getWeekNumRibbonSlots = ( weekDays ) => {
-		if ( ! isTimeGrid ) {
-			return 0;
-		}
-		let maxSlot = -1;
-		weekDays.forEach( ( day ) => {
-			( day.posts || [] ).forEach( ( p ) => {
-				if ( ! p.isTimed ) {
-					maxSlot = Math.max( maxSlot, Number( p.slot ) || 0 );
-				}
-			} );
-		} );
-		return maxSlot + 1;
-	};
-
 	if ( 'day' === viewType ) {
 		const startObj =
 			dateRange.startDateObj || new Date( dateRange.startDate );
@@ -575,11 +611,15 @@ export function generateCalendar(
 			dayNames.push( dateI18n( 'D', d ) );
 		}
 		const weeks = buildConsecutiveDays( startObj, unitCount, postsByDate );
+		const numRibbonSlots = getWeekNumRibbonSlots(
+			weeks[ 0 ] || [],
+			isTimeGrid
+		);
 		const units = [
 			{
 				dayNames,
 				weeks,
-				numRibbonSlots: getWeekNumRibbonSlots( weeks[ 0 ] || [] ),
+				numRibbonSlots,
 			},
 		];
 
@@ -589,7 +629,7 @@ export function generateCalendar(
 			units,
 			viewType,
 			unitCount,
-			numRibbonSlots: units[ 0 ].numRibbonSlots,
+			numRibbonSlots,
 		};
 	}
 
@@ -605,6 +645,10 @@ export function generateCalendar(
 			postsByDate,
 			showWeekends
 		);
+		const numRibbonSlots = getWeekNumRibbonSlots(
+			weeks[ 0 ] || [],
+			isTimeGrid
+		);
 		// Only several week rows need a week number to tell them apart.
 		const units = [
 			{
@@ -616,7 +660,7 @@ export function generateCalendar(
 								getWeekNumber( week, startOfWeek )
 							)
 						: undefined,
-				numRibbonSlots: getWeekNumRibbonSlots( weeks[ 0 ] || [] ),
+				numRibbonSlots,
 			},
 		];
 
@@ -626,7 +670,7 @@ export function generateCalendar(
 			units,
 			viewType,
 			unitCount,
-			numRibbonSlots: units[ 0 ].numRibbonSlots,
+			numRibbonSlots,
 		};
 	}
 

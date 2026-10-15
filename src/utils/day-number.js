@@ -58,6 +58,93 @@ export function getDayNumberJustifyContent( blocks ) {
 	return JUSTIFY_CONTENT_BY_TEXT_ALIGN[ textAlign ];
 }
 
+const JUSTIFY_MAP = {
+	left: {
+		className: 'is-content-justification-left',
+		css: 'flex-start',
+	},
+	center: {
+		className: 'is-content-justification-center',
+		css: 'center',
+	},
+	right: {
+		className: 'is-content-justification-right',
+		css: 'flex-end',
+	},
+	'space-between': {
+		className: 'is-content-justification-space-between',
+		css: 'space-between',
+	},
+};
+
+const ALIGN_MAP = {
+	top: {
+		className: 'is-vertically-aligned-top',
+		css: 'flex-start',
+	},
+	center: {
+		className: 'is-vertically-aligned-center',
+		css: 'center',
+	},
+	bottom: {
+		className: 'is-vertically-aligned-bottom',
+		css: 'flex-end',
+	},
+	stretch: {
+		className: 'is-vertically-aligned-stretch',
+		css: 'stretch',
+	},
+};
+
+/**
+ * Resolves flex layout properties and alignment styles.
+ *
+ * @param {Object} layout Block layout attribute.
+ * @return {Object} { classes: Array<string>, style: Object }
+ */
+function resolveFlexProps( layout ) {
+	const classes = [ 'is-layout-flex' ];
+	const style = { display: 'flex' };
+	const isVertical = layout.orientation === 'vertical';
+
+	if ( isVertical ) {
+		classes.push( 'is-vertical' );
+		style.flexDirection = 'column';
+	} else {
+		classes.push( 'is-horizontal' );
+		style.flexDirection = 'row';
+	}
+
+	if ( layout.flexWrap === 'nowrap' ) {
+		classes.push( 'is-nowrap' );
+		style.flexWrap = 'nowrap';
+	} else {
+		style.flexWrap = 'wrap';
+	}
+
+	if ( layout.justifyContent && JUSTIFY_MAP[ layout.justifyContent ] ) {
+		classes.push( JUSTIFY_MAP[ layout.justifyContent ].className );
+		const cssVal = JUSTIFY_MAP[ layout.justifyContent ].css;
+		if ( isVertical ) {
+			style.alignItems = cssVal === 'space-between' ? 'stretch' : cssVal;
+		} else {
+			style.justifyContent = cssVal;
+		}
+	}
+
+	if ( layout.verticalAlignment && ALIGN_MAP[ layout.verticalAlignment ] ) {
+		classes.push( ALIGN_MAP[ layout.verticalAlignment ].className );
+		const cssVal = ALIGN_MAP[ layout.verticalAlignment ].css;
+		if ( isVertical ) {
+			style.justifyContent = cssVal === 'stretch' ? 'flex-start' : cssVal;
+		} else {
+			style.alignItems = cssVal;
+		}
+	}
+
+	return { classes, style };
+}
+
 /**
  * Resolves Gutenberg layout attributes (flex, grid, orientation, justification, alignment)
  * into standard Core classes and inline styles for virtual previews.
@@ -66,117 +153,37 @@ export function getDayNumberJustifyContent( blocks ) {
  * @return {Object} { className: string, style: Object }
  */
 export function getLayoutProps( layout = {} ) {
-	const classes = [];
-	const style = {};
-
 	const type = layout?.type || 'default';
 
 	if ( type === 'flex' ) {
-		classes.push( 'is-layout-flex' );
-		style.display = 'flex';
-
-		const isVertical = layout.orientation === 'vertical';
-
-		// Orientation (Row vs Column)
-		if ( isVertical ) {
-			classes.push( 'is-vertical' );
-			style.flexDirection = 'column';
-		} else {
-			classes.push( 'is-horizontal' );
-			style.flexDirection = 'row';
-		}
-
-		// Flex Wrap
-		if ( layout.flexWrap === 'nowrap' ) {
-			classes.push( 'is-nowrap' );
-			style.flexWrap = 'nowrap';
-		} else {
-			style.flexWrap = 'wrap';
-		}
-
-		// Horizontal alignment (Justification)
-		const justifyMap = {
-			left: {
-				className: 'is-content-justification-left',
-				css: 'flex-start',
-			},
-			center: {
-				className: 'is-content-justification-center',
-				css: 'center',
-			},
-			right: {
-				className: 'is-content-justification-right',
-				css: 'flex-end',
-			},
-			'space-between': {
-				className: 'is-content-justification-space-between',
-				css: 'space-between',
-			},
+		const { classes, style } = resolveFlexProps( layout );
+		return {
+			className: classes.join( ' ' ),
+			style,
 		};
+	}
 
-		if ( layout.justifyContent && justifyMap[ layout.justifyContent ] ) {
-			classes.push( justifyMap[ layout.justifyContent ].className );
-			const cssVal = justifyMap[ layout.justifyContent ].css;
-
-			// In vertical flex, horizontal alignment belongs to the cross axis (alignItems)
-			if ( isVertical ) {
-				style.alignItems =
-					cssVal === 'space-between' ? 'stretch' : cssVal;
-			} else {
-				style.justifyContent = cssVal;
-			}
-		}
-
-		// Vertical alignment
-		const alignMap = {
-			top: {
-				className: 'is-vertically-aligned-top',
-				css: 'flex-start',
-			},
-			center: {
-				className: 'is-vertically-aligned-center',
-				css: 'center',
-			},
-			bottom: {
-				className: 'is-vertically-aligned-bottom',
-				css: 'flex-end',
-			},
-			stretch: {
-				className: 'is-vertically-aligned-stretch',
-				css: 'stretch',
-			},
-		};
-
-		if (
-			layout.verticalAlignment &&
-			alignMap[ layout.verticalAlignment ]
-		) {
-			classes.push( alignMap[ layout.verticalAlignment ].className );
-			const cssVal = alignMap[ layout.verticalAlignment ].css;
-
-			// In vertical flex, vertical alignment belongs to the main axis (justifyContent)
-			if ( isVertical ) {
-				style.justifyContent =
-					cssVal === 'stretch' ? 'flex-start' : cssVal;
-			} else {
-				style.alignItems = cssVal;
-			}
-		}
-	} else if ( type === 'grid' ) {
-		classes.push( 'is-layout-grid' );
-		style.display = 'grid';
+	if ( type === 'grid' ) {
+		const style = { display: 'grid' };
 		const columns = layout.columnFields || layout.columns;
 		if ( columns ) {
 			style.gridTemplateColumns = `repeat(${ columns }, minmax(0, 1fr))`;
 		}
-	} else if ( type === 'constrained' ) {
-		classes.push( 'is-layout-constrained' );
-	} else {
-		classes.push( 'is-layout-flow' );
+		return {
+			className: 'is-layout-grid',
+			style,
+		};
+	}
+
+	if ( type === 'constrained' ) {
+		return {
+			className: 'is-layout-constrained',
+			style: {},
+		};
 	}
 
 	return {
-		className: classes.join( ' ' ),
-		style,
+		className: 'is-layout-flow',
+		style: {},
 	};
 }
