@@ -24,6 +24,7 @@ import { CalendarWeek } from './CalendarWeek';
  * @param {Object}   props.weekBlockAttributes Attributes of week block.
  * @param {Object}   props.dayBlockAttributes  Attributes of day block.
  * @param {Object}   props.tbodyProps          Tbody element props.
+ * @param {Object}   props.timeGridConfig      Time grid configuration.
  *
  * @return {Element} Calendar table component.
  */
@@ -40,17 +41,19 @@ export function CalendarTable( {
 	weekBlockAttributes,
 	dayBlockAttributes,
 	tbodyProps,
+	timeGridConfig = {},
 } ) {
 	const units = calendar.units || [
 		{ dayNames: calendar.dayNames, weeks: calendar.weeks },
 	];
+	const isTimeGrid = Boolean( timeGridConfig?.enabled );
 
 	return (
 		<>
 			{ units.map( ( unit, unitIndex ) => (
 				<table
 					key={ unitIndex }
-					className="gatherpress-calendar__table"
+					className={ `gatherpress-calendar__table${ isTimeGrid ? ' has-time-grid' : '' }` }
 					style={ style }
 				>
 					{ captions[ unitIndex ] && (
@@ -67,6 +70,13 @@ export function CalendarTable( {
 						}
 					>
 						<tr>
+							{ isTimeGrid && (
+								<th
+									scope="col"
+									className="gatherpress-calendar__time-gutter-header"
+									aria-hidden="true"
+								/>
+							) }
 							{ unit.weekNumbers && (
 								<th
 									scope="col"
@@ -102,6 +112,12 @@ export function CalendarTable( {
 								dayInnerBlocks={ dayInnerBlocks }
 								weekBlockAttributes={ weekBlockAttributes }
 								dayBlockAttributes={ dayBlockAttributes }
+								timeGridConfig={ timeGridConfig }
+								numRibbonSlots={
+									unit.numRibbonSlots ??
+									calendar.numRibbonSlots ??
+									0
+								}
 							/>
 						) ) }
 					</tbody>

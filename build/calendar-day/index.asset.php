@@ -3,9 +3,10 @@
 		'react-jsx-runtime',
 		'wp-block-editor',
 		'wp-blocks',
+		'wp-components',
 		'wp-data',
 		'wp-element',
 		'wp-i18n'
 	),
-	'version' => 'dee25610ca075a1208e8'
+	'version' => '67dd4c0d447f67079f8c'
 );
