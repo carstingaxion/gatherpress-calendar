@@ -588,11 +588,9 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 			overflow: hidden;
 
 			// Horizontal concurrent overlap offsets
-			// width: calc((100% / var(--gatherpress-overlap-total, 1)) - 2px);
 			min-width: 100%;
 			width: calc(100% * var(--gatherpress-overlap-total, 1));
 			max-width: calc(100% * var(--gatherpress-overlap-total, 1));
-			// margin-inline-start: calc((100% / var(--gatherpress-overlap-total, 1)) * var(--gatherpress-overlap-index, 0));
 			margin-inline-start: calc((100% / var(--gatherpress-overlap-total, 1)) * var(--gatherpress-overlap-index, 0) * -1);
 
 			&:hover,
