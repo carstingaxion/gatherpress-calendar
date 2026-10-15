@@ -588,12 +588,16 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 			overflow: hidden;
 
 			// Horizontal concurrent overlap offsets
-			width: calc((100% / var(--gatherpress-overlap-total, 1)) - 2px);
-			margin-inline-start: calc((100% / var(--gatherpress-overlap-total, 1)) * var(--gatherpress-overlap-index, 0));
+			// width: calc((100% / var(--gatherpress-overlap-total, 1)) - 2px);
+			min-width: 100%;
+			width: calc(100% * var(--gatherpress-overlap-total, 1));
+			max-width: calc(100% * var(--gatherpress-overlap-total, 1));
+			// margin-inline-start: calc((100% / var(--gatherpress-overlap-total, 1)) * var(--gatherpress-overlap-index, 0));
+			margin-inline-start: calc((100% / var(--gatherpress-overlap-total, 1)) * var(--gatherpress-overlap-index, 0) * -1);
 
 			&:hover,
 			&:focus-within {
-				z-index: 10;
+				// z-index: 10;
 				// box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 			}
 		}
