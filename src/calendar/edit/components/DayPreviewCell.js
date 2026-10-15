@@ -139,11 +139,14 @@ function withResolvedDayContent( blocks, day, isRibbon ) {
  *
  * @since 0.4.0
  *
- * @param {Object}   props                    - Component props.
- * @param {Object}   props.day                - Day data (day, date, posts, isEmpty, isToday).
- * @param {Array}    props.innerBlocks        - The real calendar-day block's inner blocks to preview.
- * @param {Object}   props.dayBlockAttributes - The real calendar-day block's own attributes, for style parity.
- * @param {Function} props.onActivateDay      - Called with this day's date when the cell is clicked.
+ * @param {Object}   props                    Component props.
+ * @param {Object}   props.day                Day data (day, date, posts, isEmpty, isToday).
+ * @param {Array}    props.innerBlocks        The real calendar-day block's inner blocks to preview.
+ * @param {Object}   props.dayBlockAttributes The real calendar-day block's own attributes, for style parity.
+ * @param {Function} props.onActivateDay      Called with this day's date when the cell is clicked.
+ * @param {number}   props.numRibbonSlots     Number of ribbon slots.
+ * @param {boolean}  props.isTimeGrid         Whether time grid is active.
+ * @param {Object}   props.timeGridConfig     Time grid configuration object.
  *
  * @return {Element} Day cell preview element.
  */
@@ -152,6 +155,9 @@ function DayPreviewCellComponent( {
 	innerBlocks,
 	dayBlockAttributes,
 	onActivateDay,
+	numRibbonSlots = 0,
+	isTimeGrid = false,
+	timeGridConfig = {},
 } ) {
 	const onActivate = useCallback(
 		() => onActivateDay( day.date ),
@@ -165,14 +171,17 @@ function DayPreviewCellComponent( {
 			'gatherpress/dayPosts': day.posts ?? [],
 			'gatherpress/isEmpty': !! day.isEmpty,
 			'gatherpress/isToday': !! day.isToday,
+			'gatherpress/enableTimeGrid': isTimeGrid,
+			'gatherpress/timeGridConfig': timeGridConfig,
+			'gatherpress/numRibbonSlots': numRibbonSlots,
 		} ),
-		[ day ]
+		[ day, isTimeGrid, timeGridConfig, numRibbonSlots ]
 	);
 
-	// Directly check if gatherpress/calendar-day has the ribbon style
 	const isRibbon = Boolean(
 		dayBlockAttributes?.className?.includes( 'is-style-ribbon' )
 	);
+	const isRibbonOrTimeGrid = isRibbon || isTimeGrid;
 
 	const hasDayNumberBlock = useMemo(
 		() => ( innerBlocks ?? [] ).some( isDayNumberBindingBlock ),
@@ -180,8 +189,8 @@ function DayPreviewCellComponent( {
 	);
 
 	const resolvedBlocks = useMemo(
-		() => withResolvedDayContent( innerBlocks, day, isRibbon ),
-		[ innerBlocks, day, isRibbon ]
+		() => withResolvedDayContent( innerBlocks, day, isRibbonOrTimeGrid ),
+		[ innerBlocks, day, isRibbonOrTimeGrid ]
 	);
 
 	// Mirror the real calendar-day block's own color/border/spacing/shadow
@@ -192,12 +201,7 @@ function DayPreviewCellComponent( {
 	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
 	const layoutProps = getLayoutProps( dayBlockAttributes?.layout );
-	// console.group("getLayoutProps");
-	// console.log(dayBlockAttributes);
-	// console.log(colorProps.className);
-	// console.log(layoutProps.className);
-	// console.log(layoutProps.style);
-	// console.groupEnd();
+
 	const isPast = ! day.isEmpty && ! day.isToday && day.isPast;
 	const isFuture = ! day.isEmpty && ! day.isToday && day.isFuture;
 
@@ -213,7 +217,8 @@ function DayPreviewCellComponent( {
 			: '',
 		day.isWeekend ? 'is-weekend' : '',
 		day.weekday ? `is-${ day.weekday }` : '',
-		isRibbon ? 'is-style-ribbon' : '',
+		isRibbonOrTimeGrid ? 'is-style-ribbon' : '',
+		isTimeGrid ? 'has-time-grid' : '',
 		colorProps.className,
 		borderProps.className,
 	]
@@ -225,11 +230,10 @@ function DayPreviewCellComponent( {
 		...borderProps.style,
 		...spacingProps.style,
 		...shadowProps.style,
-		// ...layoutProps.style,
+		'--gatherpress-num-ribbon-slots': numRibbonSlots,
 	};
 
-	// Ribbon mode locks layout to column; Classic mode uses user/default layoutProps
-	const previewLayoutStyles = isRibbon
+	const previewLayoutStyles = isRibbonOrTimeGrid
 		? {
 				display: 'flex',
 				flexDirection: 'column',
@@ -248,7 +252,7 @@ function DayPreviewCellComponent( {
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
 		props: {
-			className: isRibbon
+			className: isRibbonOrTimeGrid
 				? 'gatherpress-calendar__day-preview'
 				: layoutProps.className || undefined,
 			style: previewLayoutStyles,

@@ -609,7 +609,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 	border: none;
 	display: flex;
 	flex-direction: column;
-	padding-top: calc(var(--gatherpress-num-ribbon-slots, 0) * 24px);
+	padding-top: calc(28px + var(--gatherpress-num-ribbon-slots, 0) * 24px);
 
 	.gatherpress-calendar__time-slot-label {
 		height: var(--gatherpress-calendar-slot-height, 48px);

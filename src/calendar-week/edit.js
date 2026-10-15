@@ -89,7 +89,7 @@ export default memo( function Edit( {
 		)
 	);
 
-	// Generate hour slots for the Time Gutter column
+	// Generate hour slots for the Time Gutter column.
 	const timeSlots = useMemo( () => {
 		if ( ! isTimeGridActive ) {
 			return [];
@@ -101,7 +101,7 @@ export default memo( function Edit( {
 		return slots;
 	}, [ isTimeGridActive, dayStartHour, dayEndHour ] );
 
-	// Calculate maximum ribbon slot index across all days in this week
+	// Calculate maximum ribbon slot index across all days in this week.
 	const numRibbonSlots = useMemo( () => {
 		if ( ! isTimeGridActive ) {
 			return 0;
@@ -175,6 +175,16 @@ export default memo( function Edit( {
 		]
 	);
 
+	const timeGridConfig = useMemo(
+		() => ( {
+			enabled: isTimeGridActive,
+			slots: timeSlots,
+			startHour: dayStartHour,
+			endHour: dayEndHour,
+		} ),
+		[ isTimeGridActive, timeSlots, dayStartHour, dayEndHour ]
+	);
+
 	return (
 		<>
 			{ isTimeGridActive && (
@@ -220,7 +230,7 @@ export default memo( function Edit( {
 						className="gatherpress-calendar__time-gutter"
 						aria-hidden="true"
 						style={ {
-							paddingTop: `calc(${ numRibbonSlots } * 24px)`,
+							paddingTop: `calc(28px + ${ numRibbonSlots } * 24px)`,
 						} }
 					>
 						{ timeSlots.map( ( slot ) => (
@@ -261,6 +271,7 @@ export default memo( function Edit( {
 							onActivateDay={ setActiveDate }
 							numRibbonSlots={ numRibbonSlots }
 							isTimeGrid={ isTimeGridActive }
+							timeGridConfig={ timeGridConfig }
 						/>
 					)
 				) }

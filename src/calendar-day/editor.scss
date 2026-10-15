@@ -23,13 +23,15 @@
 			outline-offset: -1px;
 		}
 
-		/* Active cell layout normalization in ribbon mode */
-		&.is-style-ribbon {
+		/* Active cell layout normalization in ribbon or time-grid mode */
+		&.is-style-ribbon,
+		&.has-time-grid {
 			display: flex !important;
 			flex-direction: column !important;
 			align-items: stretch !important;
 			justify-content: flex-start !important;
 			padding: 0 !important;
+			overflow: visible !important;
 
 			/* Normalize Gutenberg's Day innerBlocks layout wrapper */
 			> .block-editor-block-list__layout {
@@ -71,7 +73,7 @@
 				}
 			}
 
-			/* Entries live-template normalization inside ribbon days */
+			/* Entries live-template normalization inside ribbon/time-grid days */
 			.wp-block-gatherpress-calendar-entries {
 				overflow: visible !important;
 
@@ -141,6 +143,14 @@
 								width: max-content !important;
 								min-width: 0 !important;
 								overflow: hidden !important;
+
+								.gatherpress-modal--trigger-open,
+								.wp-block-post-title,
+								.wp-block-post-title a {
+									max-width: calc(var(--gatherpress-calendar-row-span, 1) * 100% + (var(--gatherpress-calendar-row-span, 1) - 1) * var(--gatherpress-calendar-column-gap, 2px)) !important;
+									width: max-content !important;
+									white-space: nowrap !important;
+								}
 							}
 						}
 					}
