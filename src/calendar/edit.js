@@ -404,10 +404,10 @@ export default function Edit( {
 						postTitle={ sourcePostDates.postTitle }
 						hasPostDates={ hasPostDates }
 						hasCurrentSupport={ hasCurrentSupport }
-            enableTimeGrid={ enableTimeGrid }
-            onTimeGridChange={ ( val ) =>
-              setAttributes( { enableTimeGrid: val } )
-            }
+						enableTimeGrid={ enableTimeGrid }
+						onTimeGridChange={ ( val ) =>
+							setAttributes( { enableTimeGrid: val } )
+						}
 					/>
 
 					<ToggleControl

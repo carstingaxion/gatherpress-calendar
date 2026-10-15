@@ -17,7 +17,7 @@ import {
 /* eslint-enable @wordpress/no-unsafe-wp-apis */
 import { useMemo } from '@wordpress/element';
 
-import { calculateTargetDate, formatHeading } from '../utils/date-utils';
+import { generateMonthOptions } from '../utils/calendar-utils';
 import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
 import { MonthPicker } from './MonthPicker';
 import { SourcePostControls } from './SourcePostControls';
@@ -156,6 +156,7 @@ export function DateControls( {
 	enableTimeGrid = false,
 	onTimeGridChange,
 } ) {
+	const monthOptions = useMemo( () => generateMonthOptions(), [] );
 	const offsetHelp = useDateOffsetHelp( dateModifier, viewType );
 	const maxUnits = MAX_UNITS[ viewType ] || 12;
 
@@ -233,6 +234,7 @@ export function DateControls( {
 		selectedDate,
 		postId,
 		viewType,
+		monthOptions,
 	] );
 
 	const unitLabel = useMemo( () => {
