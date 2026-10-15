@@ -69,6 +69,11 @@
 		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 
+	/* The gradient background is dark, so the message needs light text. */
+	.gatherpress-calendar__no-events {
+		color: #fff;
+	}
+
 	/* ======================================================================
 		BLOCK STYLE: Dots (style-variation of calendar-entries block)
 		====================================================================== */

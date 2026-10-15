@@ -30,6 +30,29 @@
 		}
 	}
 
+	/*
+	 * Months, weeks or days without events, faded by the block's
+	 * "unitsWithoutEventsOpacity" setting. Week rows use display: contents,
+	 * so a week is faded through its day cells.
+	 */
+	&.is-view-month > .gatherpress-calendar__table:not(.has-posts),
+	&.is-view-week .gatherpress-calendar__week:not(.has-posts) .gatherpress-calendar__day,
+	&.is-view-day .gatherpress-calendar__day:not(.has-posts) {
+		opacity: var(--gatherpress-calendar-units-without-events-opacity, 1);
+	}
+
+	/*
+	 * Shown when every unit was filtered out, because no unit in the range
+	 * has events (see HTML_Renderer). It takes focus after pagination, as
+	 * there is no table to focus.
+	 */
+	.gatherpress-calendar__no-events {
+		margin: 0;
+		padding: var(--wp--preset--spacing--40, 1.5rem);
+		text-align: center;
+		color: var(--wp--preset--color--contrast, #495057);
+	}
+
 	/* 7-column Calendar Grid */
 	.gatherpress-calendar__table {
 

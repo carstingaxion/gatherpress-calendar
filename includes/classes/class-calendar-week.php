@@ -89,7 +89,7 @@ class Calendar_Week {
 
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
-				'class'       => 'gatherpress-calendar__week',
+				'class'       => Calendar_Structure_Builder::has_posts( $week_days ) ? 'gatherpress-calendar__week has-posts' : 'gatherpress-calendar__week',
 				'data-wp-key' => $this->get_row_key( $block->context ),
 			)
 		);

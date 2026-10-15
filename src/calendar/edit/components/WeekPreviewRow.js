@@ -6,6 +6,7 @@ import {
 } from '@wordpress/block-editor';
 
 import { DayPreviewCell } from './DayPreviewCell';
+import { hasPosts } from '../utils/grid-builder';
 
 /**
  * WeekPreviewRow Component
@@ -40,7 +41,11 @@ function WeekPreviewRowComponent( {
 	// styling so every previewed week row looks like the live one.
 	const colorProps = useColorProps( weekBlockAttributes ?? {} );
 
-	const classNames = [ 'gatherpress-calendar__week', colorProps.className ]
+	const classNames = [
+		'gatherpress-calendar__week',
+		hasPosts( week ) ? 'has-posts' : '',
+		colorProps.className,
+	]
 		.filter( Boolean )
 		.join( ' ' );
 

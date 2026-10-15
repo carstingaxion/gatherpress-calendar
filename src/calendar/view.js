@@ -74,7 +74,8 @@ store( 'gatherpress/calendar', {
 		 * on browser back/forward, where no click is pending.
 		 *
 		 * Without a month heading, the first calendar table gets focus. Its
-		 * caption names the month.
+		 * caption names the month. Without a table, every unit was filtered
+		 * out, so the "No events found." message gets focus.
 		 */
 		focusAfterNavigation() {
 			const { ref } = getElement();
@@ -97,7 +98,8 @@ store( 'gatherpress/calendar', {
 
 			const target =
 				region.querySelector( '.gatherpress-calendar__heading' ) ??
-				ref.querySelector( 'table' );
+				ref.querySelector( 'table' ) ??
+				ref.querySelector( '.gatherpress-calendar__no-events' );
 			if ( ! target ) {
 				return;
 			}

@@ -11,6 +11,7 @@ import './editor.scss';
 
 import { DAY_TEMPLATE } from '../calendar/edit/constants';
 import { DayPreviewCell } from '../calendar/edit/components/DayPreviewCell';
+import { hasPosts } from '../calendar/edit/utils/grid-builder';
 import { useStableValue } from '../utils/use-stable-value';
 
 const EMPTY_ARRAY = [];
@@ -63,7 +64,9 @@ export default memo( function Edit( { context, clientId } ) {
 	);
 
 	const blockProps = useBlockProps( {
-		className: 'gatherpress-calendar__week',
+		className: hasPosts( weekDays )
+			? 'gatherpress-calendar__week has-posts'
+			: 'gatherpress-calendar__week',
 	} );
 
 	const { children, ...innerBlocksWrapperProps } = useInnerBlocksProps(
