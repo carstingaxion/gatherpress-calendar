@@ -12,8 +12,12 @@
   ],
   "usesContext": [
     "gatherpress/dayDate",
+    "gatherpress/dayNumber",
     "gatherpress/dayPosts",
     "gatherpress/isEmpty",
+    "gatherpress/enableTimeGrid",
+    "gatherpress/timeGridConfig",
+    "gatherpress/numRibbonSlots",
     "postType"
   ],
   "attributes": {

@@ -82,19 +82,36 @@ export function getPostsPerPage() {
 }
 
 /**
- * Computes table grid column count based on view type and weekend visibility.
+ * Computes table grid column count based on view type, weekend visibility, and time grid gutter.
  *
- * @param {string}  viewType     View type.
- * @param {boolean} showWeekends Whether weekends are shown.
- * @param {number}  unitCount    Number of units.
- * @return {number} Column count.
+ * @param {string}  viewType      View type ('month', 'week', 'day').
+ * @param {boolean} showWeekends  Whether weekends are shown.
+ * @param {number}  unitCount     Number of units to show.
+ * @param {boolean} hasTimeGutter Whether the time gutter column is active.
+ *
+ * @return {number} Total grid column count.
  */
-export function getColumnsCount( viewType, showWeekends, unitCount = 1 ) {
+export function getColumnsCount(
+	viewType = 'month',
+	showWeekends = true,
+	unitCount = 1,
+	hasTimeGutter = false
+) {
+	let columns = 7;
+
 	if ( 'day' === viewType ) {
-		return Math.max( 1, unitCount );
+		columns = Math.max( 1, Number( unitCount ) || 1 );
+	} else {
+		const workdayCount = 7 - getWeekendDays().length;
+		columns = showWeekends ? 7 : workdayCount;
 	}
-	const workdayCount = 7 - getWeekendDays().length;
-	return showWeekends ? 7 : workdayCount;
+
+	// Only Day and Week views can have a time gutter
+	if ( hasTimeGutter && ( 'day' === viewType || 'week' === viewType ) ) {
+		columns += 1;
+	}
+
+	return columns;
 }
 
 /**

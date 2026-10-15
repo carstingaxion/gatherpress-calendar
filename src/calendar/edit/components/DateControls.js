@@ -11,6 +11,7 @@ import {
 	Button,
 	SelectControl,
 	TextControl,
+	ToggleControl,
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 /* eslint-enable @wordpress/no-unsafe-wp-apis */
@@ -35,6 +36,76 @@ const MAX_UNITS = {
 };
 
 /**
+ * Resolves selection text for 'selected' source mode.
+ *
+ * @param {boolean} hasPostDates Whether post dates are available.
+ * @param {string}  selectedDate Selected date string.
+ * @param {string}  postTitle    Resolved post title.
+ * @param {number}  postId       Post ID.
+ * @return {string} Label text.
+ */
+function resolveSelectedSourceLabel(
+	hasPostDates,
+	selectedDate,
+	postTitle,
+	postId
+) {
+	if ( hasPostDates ) {
+		return postTitle ? `${ postTitle } (${ selectedDate })` : selectedDate;
+	}
+	if ( postId > 0 ) {
+		return __( 'Loading event dates…', 'gatherpress-calendar' );
+	}
+	return __( 'No source post selected.', 'gatherpress-calendar' );
+}
+
+/**
+ * Resolves selection text for 'context' source mode.
+ *
+ * @param {boolean} hasPostDates Whether post dates are available.
+ * @param {string}  selectedDate Selected date string.
+ * @param {string}  postTitle    Resolved post title.
+ * @return {string} Label text.
+ */
+function resolveContextSourceLabel( hasPostDates, selectedDate, postTitle ) {
+	if ( hasPostDates ) {
+		return postTitle ? `${ postTitle } (${ selectedDate })` : selectedDate;
+	}
+	return __(
+		'No event dates detected on the current post.',
+		'gatherpress-calendar'
+	);
+}
+
+/**
+ * Resolves selection text for 'default' source mode.
+ *
+ * @param {string}        selectedDate Selected date string.
+ * @param {string}        viewType     Calendar view type.
+ * @param {Array<Object>} monthOptions Available month options.
+ * @return {string} Label text.
+ */
+function resolveDefaultSourceLabel( selectedDate, viewType, monthOptions ) {
+	if ( selectedDate ) {
+		if ( 'month' === viewType ) {
+			const match = monthOptions.find(
+				( o ) => o.value === selectedDate
+			);
+			return match?.label || selectedDate;
+		}
+		return selectedDate;
+	}
+
+	if ( 'day' === viewType ) {
+		return __( 'Current Day', 'gatherpress-calendar' );
+	}
+	if ( 'week' === viewType ) {
+		return __( 'Current Week', 'gatherpress-calendar' );
+	}
+	return __( 'Current Month', 'gatherpress-calendar' );
+}
+
+/**
  * DateControls Component.
  *
  * @param {Object}   props                   Component props.
@@ -57,6 +128,8 @@ const MAX_UNITS = {
  * @param {string}   props.postTitle         Resolved post title.
  * @param {boolean}  props.hasPostDates      Whether post dates are actively driving the range.
  * @param {boolean}  props.hasCurrentSupport Whether context post type supports events.
+ * @param {boolean}  props.enableTimeGrid    Whether the time grid is enabled.
+ * @param {Function} props.onTimeGridChange  Callback when time grid toggle changes.
  *
  * @return {Element} Date controls component.
  */
@@ -80,12 +153,20 @@ export function DateControls( {
 	postTitle = '',
 	hasPostDates = false,
 	hasCurrentSupport = false,
+	enableTimeGrid = false,
+	onTimeGridChange,
 } ) {
 	const offsetHelp = useDateOffsetHelp( dateModifier, viewType );
 	const maxUnits = MAX_UNITS[ viewType ] || 12;
 
 	const isPostAnchored = isPostDateSource( dateRangeSource );
 	const isDefaultMode = ! isPostAnchored;
+
+	// Condition: Day or Week view AND Query Loop sorted by datetime
+	const isDatetimeOrdered =
+		( context?.query?.orderBy || context?.query?.orderby ) === 'datetime';
+	const supportsTimeGrid =
+		( 'day' === viewType || 'week' === viewType ) && isDatetimeOrdered;
 
 	const handleViewTypeChange = ( newViewType ) => {
 		const newMax = MAX_UNITS[ newViewType ] || 12;
@@ -126,48 +207,25 @@ export function DateControls( {
 
 	const selectionLabel = useMemo( () => {
 		if ( isSelectedDateSource( dateRangeSource ) ) {
-			if ( hasPostDates ) {
-				let label = selectedDate;
-				if ( postTitle ) {
-					label = `${ postTitle } (${ selectedDate })`;
-				}
-				return label;
-			}
-			if ( postId > 0 ) {
-				return __( 'Loading event dates…', 'gatherpress-calendar' );
-			}
-			return __( 'No source post selected.', 'gatherpress-calendar' );
-		}
-
-		if ( isContextDateSource( dateRangeSource ) ) {
-			if ( hasPostDates ) {
-				let label = selectedDate;
-				if ( postTitle ) {
-					label = `${ postTitle } (${ selectedDate })`;
-				}
-				return label;
-			}
-			return __(
-				'No event dates detected on the current post.',
-				'gatherpress-calendar'
+			return resolveSelectedSourceLabel(
+				hasPostDates,
+				selectedDate,
+				postTitle,
+				postId
 			);
 		}
-
-		if ( selectedDate ) {
-			if ( 'month' === viewType && /^\d{4}-\d{2}/.test( selectedDate ) ) {
-				const month = calculateTargetDate( { selectedDate } );
-				return formatHeading( 'month', month, month );
-			}
-			return selectedDate;
+		if ( isContextDateSource( dateRangeSource ) ) {
+			return resolveContextSourceLabel(
+				hasPostDates,
+				selectedDate,
+				postTitle
+			);
 		}
-
-		if ( 'day' === viewType ) {
-			return __( 'Current Day', 'gatherpress-calendar' );
-		}
-		if ( 'week' === viewType ) {
-			return __( 'Current Week', 'gatherpress-calendar' );
-		}
-		return __( 'Current Month', 'gatherpress-calendar' );
+		return resolveDefaultSourceLabel(
+			selectedDate,
+			viewType,
+			monthOptions
+		);
 	}, [
 		dateRangeSource,
 		hasPostDates,
@@ -337,6 +395,19 @@ export function DateControls( {
 						</>
 					) }
 				</>
+			) }
+
+			{ /* Global Time Grid Toggle (Guarded) */ }
+			{ supportsTimeGrid && (
+				<ToggleControl
+					label={ __( 'Show Time Grid', 'gatherpress-calendar' ) }
+					help={ __(
+						'Render timed events vertically along an hour timeline.',
+						'gatherpress-calendar'
+					) }
+					checked={ !! enableTimeGrid }
+					onChange={ onTimeGridChange }
+				/>
 			) }
 		</>
 	);

@@ -14,6 +14,7 @@
     "gatherpress/calendar-day"
   ],
   "usesContext": [
+    "query",
     "queryId",
     "gatherpress/year",
     "gatherpress/month",
@@ -22,15 +23,28 @@
     "gatherpress/weekNumber",
     "gatherpress/activeDate",
     "gatherpress/setActiveDate",
-    "gatherpress/showWeekends"
+    "gatherpress/showWeekends",
+    "gatherpress/viewType",
+    "gatherpress/enableTimeGrid",
+    "gatherpress/timeGridConfig"
   ],
   "providesContext": {
-    "gatherpress/weekIndex": "weekIndex"
+    "gatherpress/weekIndex": "weekIndex",
+    "gatherpress/dayStartHour": "dayStartHour",
+    "gatherpress/dayEndHour": "dayEndHour"
   },
   "attributes": {
     "weekIndex": {
       "type": "number",
       "default": 0
+    },
+    "dayStartHour": {
+      "type": "number",
+      "default": 8
+    },
+    "dayEndHour": {
+      "type": "number",
+      "default": 20
     }
   },
   "supports": {
