@@ -569,13 +569,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 		width: 100%;
 
 		// Pure CSS repeating gradient hour markers
-		background-image: repeating-linear-gradient(
-			to bottom,
-			transparent,
-			transparent calc(var(--gatherpress-calendar-slot-height, 48px) - 1px),
-			color-mix(in srgb, currentColor 8%, transparent) calc(var(--gatherpress-calendar-slot-height, 48px) - 1px),
-			color-mix(in srgb, currentColor 8%, transparent) var(--gatherpress-calendar-slot-height, 48px)
-		);
+		background-image: repeating-linear-gradient(to bottom, transparent, transparent calc(var(--gatherpress-calendar-slot-height, 48px) - 1px), color-mix(in srgb, currentcolor 8%, transparent) calc(var(--gatherpress-calendar-slot-height, 48px) - 1px), color-mix(in srgb, currentcolor 8%, transparent) var(--gatherpress-calendar-slot-height, 48px));
 		background-position: 0 calc(var(--gatherpress-num-ribbon-slots, 0) * 24px);
 
 		// Timed events dynamically fill their calculated space
@@ -622,7 +616,7 @@ $modal-open-state: ".wp-block-gatherpress-modal.gatherpress--is-visible";
 		box-sizing: border-box;
 		padding-inline-end: 8px;
 		font-size: 0.6875rem;
-		color: color-mix(in srgb, currentColor 60%, transparent);
+		color: color-mix(in srgb, currentcolor 60%, transparent);
 		text-align: end;
 		transform: translateY(-50%);
 	}

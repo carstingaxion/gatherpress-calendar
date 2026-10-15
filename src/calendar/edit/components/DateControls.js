@@ -35,6 +35,76 @@ const MAX_UNITS = {
 };
 
 /**
+ * Resolves selection text for 'selected' source mode.
+ *
+ * @param {boolean} hasPostDates Whether post dates are available.
+ * @param {string}  selectedDate Selected date string.
+ * @param {string}  postTitle    Resolved post title.
+ * @param {number}  postId       Post ID.
+ * @return {string} Label text.
+ */
+function resolveSelectedSourceLabel(
+	hasPostDates,
+	selectedDate,
+	postTitle,
+	postId
+) {
+	if ( hasPostDates ) {
+		return postTitle ? `${ postTitle } (${ selectedDate })` : selectedDate;
+	}
+	if ( postId > 0 ) {
+		return __( 'Loading event dates…', 'gatherpress-calendar' );
+	}
+	return __( 'No source post selected.', 'gatherpress-calendar' );
+}
+
+/**
+ * Resolves selection text for 'context' source mode.
+ *
+ * @param {boolean} hasPostDates Whether post dates are available.
+ * @param {string}  selectedDate Selected date string.
+ * @param {string}  postTitle    Resolved post title.
+ * @return {string} Label text.
+ */
+function resolveContextSourceLabel( hasPostDates, selectedDate, postTitle ) {
+	if ( hasPostDates ) {
+		return postTitle ? `${ postTitle } (${ selectedDate })` : selectedDate;
+	}
+	return __(
+		'No event dates detected on the current post.',
+		'gatherpress-calendar'
+	);
+}
+
+/**
+ * Resolves selection text for 'default' source mode.
+ *
+ * @param {string}        selectedDate Selected date string.
+ * @param {string}        viewType     Calendar view type.
+ * @param {Array<Object>} monthOptions Available month options.
+ * @return {string} Label text.
+ */
+function resolveDefaultSourceLabel( selectedDate, viewType, monthOptions ) {
+	if ( selectedDate ) {
+		if ( 'month' === viewType ) {
+			const match = monthOptions.find(
+				( o ) => o.value === selectedDate
+			);
+			return match?.label || selectedDate;
+		}
+		return selectedDate;
+	}
+
+	if ( 'day' === viewType ) {
+		return __( 'Current Day', 'gatherpress-calendar' );
+	}
+	if ( 'week' === viewType ) {
+		return __( 'Current Week', 'gatherpress-calendar' );
+	}
+	return __( 'Current Month', 'gatherpress-calendar' );
+}
+
+/**
  * DateControls Component.
  *
  * @param {Object}   props                   Component props.
@@ -139,50 +209,25 @@ export function DateControls( {
 
 	const selectionLabel = useMemo( () => {
 		if ( isSelectedDateSource( dateRangeSource ) ) {
-			if ( hasPostDates ) {
-				let label = selectedDate;
-				if ( postTitle ) {
-					label = `${ postTitle } (${ selectedDate })`;
-				}
-				return label;
-			}
-			if ( postId > 0 ) {
-				return __( 'Loading event dates…', 'gatherpress-calendar' );
-			}
-			return __( 'No source post selected.', 'gatherpress-calendar' );
-		}
-
-		if ( isContextDateSource( dateRangeSource ) ) {
-			if ( hasPostDates ) {
-				let label = selectedDate;
-				if ( postTitle ) {
-					label = `${ postTitle } (${ selectedDate })`;
-				}
-				return label;
-			}
-			return __(
-				'No event dates detected on the current post.',
-				'gatherpress-calendar'
+			return resolveSelectedSourceLabel(
+				hasPostDates,
+				selectedDate,
+				postTitle,
+				postId
 			);
 		}
-
-		if ( selectedDate ) {
-			if ( 'month' === viewType ) {
-				const match = monthOptions.find(
-					( o ) => o.value === selectedDate
-				);
-				return match?.label || selectedDate;
-			}
-			return selectedDate;
+		if ( isContextDateSource( dateRangeSource ) ) {
+			return resolveContextSourceLabel(
+				hasPostDates,
+				selectedDate,
+				postTitle
+			);
 		}
-
-		if ( 'day' === viewType ) {
-			return __( 'Current Day', 'gatherpress-calendar' );
-		}
-		if ( 'week' === viewType ) {
-			return __( 'Current Week', 'gatherpress-calendar' );
-		}
-		return __( 'Current Month', 'gatherpress-calendar' );
+		return resolveDefaultSourceLabel(
+			selectedDate,
+			viewType,
+			monthOptions
+		);
 	}, [
 		dateRangeSource,
 		hasPostDates,

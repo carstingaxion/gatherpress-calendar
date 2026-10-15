@@ -88,7 +88,8 @@
 			display: contents;
 		}
 
-		// When Time Grid is active: 52px for the time gutter column, remaining columns for days
+		// When Time Grid is active: 52px for the time gutter column,
+		// remaining columns for days.
 		&.has-time-grid {
 			grid-template-columns: 52px repeat(calc(var(--gatherpress-calendar-columns, 7) - 1), minmax(0, 1fr));
 		}
@@ -120,7 +121,7 @@
 				padding-inline-end: 8px;
 				font-size: 0.6875rem;
 				font-weight: 500;
-				color: color-mix(in srgb, currentColor 60%, transparent);
+				color: color-mix(in srgb, currentcolor 60%, transparent);
 				text-align: end;
 				transform: translateY(-50%);
 			}

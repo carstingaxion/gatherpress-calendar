@@ -100,11 +100,11 @@ const EventItem = memo( function EventItemComponent( {
 
 	const isAllDay = Boolean(
 		typeof post === 'object' &&
-			( post?.isAllDay ||
-				post?.meta?.gatherpress_is_all_day === true ||
-				post?.meta?.gatherpress_is_all_day === '1' ||
-				post?.meta?.gatherpress_is_all_day === 1 ||
-				post?.meta?.gatherpress_is_all_day === 'true' )
+		( post?.isAllDay ||
+			post?.meta?.gatherpress_is_all_day === true ||
+			post?.meta?.gatherpress_is_all_day === '1' ||
+			post?.meta?.gatherpress_is_all_day === 1 ||
+			post?.meta?.gatherpress_is_all_day === 'true' )
 	);
 	const totalDays = typeof post === 'object' ? ( post?.totalDays ?? 1 ) : 1;
 	const isMultiDay = totalDays > 1 || isAllDay;
