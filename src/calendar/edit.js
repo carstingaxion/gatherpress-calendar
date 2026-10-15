@@ -5,7 +5,7 @@
  * @since 0.1.0
  */
 
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import {
 	useBlockProps,
 	useInnerBlocksProps,
@@ -21,7 +21,10 @@ import {
 } from '@wordpress/components';
 import { useState, useMemo } from '@wordpress/element';
 
-import { CALENDAR_TEMPLATE } from './edit/constants';
+import {
+	CALENDAR_TEMPLATE,
+	UNITS_WITHOUT_EVENTS_MIN_OPACITY,
+} from './edit/constants';
 import {
 	calculateDateRange,
 	calculateDateQuery,
@@ -214,10 +217,11 @@ export default function Edit( {
 		style: {
 			'--gatherpress-calendar-units': calendar.unitCount,
 			// Not before posts load or without any events, as everything would fade.
+			// Clamped, so values saved before the floor was added stay readable.
 			...( calendar.hasPosts && unitsWithoutEventsOpacity < 100
 				? {
 						'--gatherpress-calendar-units-without-events-opacity': `${ Math.max(
-							0,
+							UNITS_WITHOUT_EVENTS_MIN_OPACITY,
 							unitsWithoutEventsOpacity
 						) }%`,
 					}
@@ -426,13 +430,17 @@ export default function Edit( {
 									unitsWithoutEventsOpacity: value ?? 100,
 								} )
 							}
-							min={ 0 }
+							min={ UNITS_WITHOUT_EVENTS_MIN_OPACITY }
 							max={ 100 }
 							allowReset
 							resetFallbackValue={ 100 }
-							help={ __(
-								'Lower values fade them out. 100 shows them like the others.',
-								'gatherpress-calendar'
+							help={ sprintf(
+								/* translators: %1$d: lowest opacity in percent. */
+								__(
+									'Lower values fade them out. Below %1$d the dates get hard to read, so %1$d is the lowest setting. 100 shows them like the others.',
+									'gatherpress-calendar'
+								),
+								UNITS_WITHOUT_EVENTS_MIN_OPACITY
 							) }
 						/>
 					) }

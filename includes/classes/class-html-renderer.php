@@ -25,6 +25,21 @@ use WP_Block;
 class HTML_Renderer {
 
 	/**
+	 * Lowest opacity of the units without events.
+	 *
+	 * The day numbers have to stay readable, so WCAG 1.4.3 asks for a contrast
+	 * of 4.5:1. At 30% the faded number is only 1.97:1 on the default colors
+	 * (#111 on #fafafa). Fading a cell into the page background crosses 4.5:1
+	 * at about 58%, so 60 is the lowest setting that passes with some headroom.
+	 *
+	 * Mirrors UNITS_WITHOUT_EVENTS_MIN_OPACITY in src/calendar/edit/constants.js.
+	 *
+	 * @since 0.9.0
+	 * @var int
+	 */
+	const MIN_UNITS_WITHOUT_EVENTS_OPACITY = 60;
+
+	/**
 	 * Surrounding parent block.
 	 *
 	 * @var WP_Block
@@ -60,6 +75,11 @@ class HTML_Renderer {
 			$classes[] = 'has-multiple-units';
 		}
 
+		// Without any posts, every unit would fade, so the fade is skipped here
+		// and in the editor. An empty unit list means every unit was filtered
+		// out, so the calendar shows a message instead of an empty block.
+		$has_posts = $this->units_have_posts( $calendar_data['units'] );
+
 		// A new key per date range makes client-side navigation mount a new
 		// wrapper, so its init callback runs once for each new month. The
 		// callback moves focus to the month heading (see src/calendar/view.js).
@@ -67,7 +87,7 @@ class HTML_Renderer {
 		$wrapper_attributes = get_block_wrapper_attributes(
 			array(
 				'class'                      => implode( ' ', $classes ),
-				'style'                      => $this->get_wrapper_style( $attributes, $unit_count ),
+				'style'                      => $this->get_wrapper_style( $attributes, $unit_count, $has_posts ),
 				'data-wp-interactive'        => 'gatherpress/calendar',
 				'data-wp-key'                => 'calendar-' . ( is_string( $start_date ) ? $start_date : '' ),
 				'data-wp-init'               => 'callbacks.focusAfterNavigation',
@@ -78,23 +98,20 @@ class HTML_Renderer {
 		// Only views with several week rows need to tell the rows apart.
 		$render_week_numbers = 'month' === $view_type || ( 'week' === $view_type && $unit_count > 1 );
 
-		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
-		$column_gap   = Style_Processor::get_block_column_gap_value( $attributes );
-		$table_styles = array(
-			sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
-		);
-		if ( '' !== $grid_gap ) {
-			$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
-		}
-		// Only the column gap: day cells use it in calc() to stay square.
-		if ( '' !== $column_gap ) {
-			$table_styles[] = sprintf( '--gatherpress-calendar-column-gap: %s', esc_attr( $column_gap ) );
-		}
-		$table_style = sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
+		$table_style = $this->get_table_style( $attributes, $columns_count );
 
 		ob_start();
 		?>
 		<div <?php echo $wrapper_attributes; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+			<?php if ( array() === $calendar_data['units'] ) { ?>
+				<?php
+				// Every unit was filtered out, because none had events. The visitor,
+				// also with a screen reader, would otherwise see an empty block and
+				// cannot tell a calm month from a broken calendar. Focus lands on this
+				// message (see src/calendar/view.js), as there is no table to focus.
+				?>
+				<p class="gatherpress-calendar__no-events"><?php echo esc_html__( 'No events found.', 'gatherpress-calendar' ); ?></p>
+			<?php } ?>
 			<?php
 			// Render each unit's table.
 			foreach ( $calendar_data['units'] as $unit ) {
@@ -134,19 +151,73 @@ class HTML_Renderer {
 	 *
 	 * @param array<string, mixed> $attributes Block attributes.
 	 * @param int                  $unit_count Number of rendered units.
+	 * @param bool                 $has_posts  Whether any rendered unit has posts.
 	 *
 	 * @return string Inline CSS declarations.
 	 */
-	private function get_wrapper_style( array $attributes, int $unit_count ): string {
+	private function get_wrapper_style( array $attributes, int $unit_count, bool $has_posts = true ): string {
 		$style = sprintf( '--gatherpress-calendar-units: %d;', $unit_count );
 
 		// Fades the months, weeks or days that have no posts (see is-default.scss).
+		// Without any posts every unit would fade, so the fade is skipped, as in
+		// the editor (src/calendar/edit.js).
+		if ( ! $has_posts ) {
+			return $style;
+		}
+
 		$opacity = isset( $attributes['unitsWithoutEventsOpacity'] ) && is_numeric( $attributes['unitsWithoutEventsOpacity'] ) ? (int) $attributes['unitsWithoutEventsOpacity'] : 100;
 		if ( $opacity < 100 ) {
-			$style .= sprintf( ' --gatherpress-calendar-units-without-events-opacity: %d%%;', max( 0, $opacity ) );
+			// Clamped, so values saved before the floor was added stay readable.
+			$style .= sprintf( ' --gatherpress-calendar-units-without-events-opacity: %d%%;', max( self::MIN_UNITS_WITHOUT_EVENTS_OPACITY, $opacity ) );
 		}
 
 		return $style;
+	}
+
+	/**
+	 * Whether any of the given units has posts.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param list<array{ caption: string, day_names: list<string>, weeks: list<list<array<string, mixed>>>}> $units Rendered units.
+	 *
+	 * @return bool Whether any unit has posts.
+	 */
+	private function units_have_posts( array $units ): bool {
+		foreach ( $units as $unit ) {
+			if ( Calendar_Structure_Builder::has_posts( array_merge( ...$unit['weeks'] ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Build the inline style attribute shared by the calendar tables.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param array<string, mixed> $attributes    Block attributes.
+	 * @param int                  $columns_count Number of columns in the views.
+	 *
+	 * @return string Style attribute, ready to print.
+	 */
+	private function get_table_style( array $attributes, int $columns_count ): string {
+		$grid_gap     = Style_Processor::get_block_gap_value( $attributes );
+		$column_gap   = Style_Processor::get_block_column_gap_value( $attributes );
+		$table_styles = array(
+			sprintf( '--gatherpress-calendar-columns: %d', $columns_count ),
+		);
+		if ( '' !== $grid_gap ) {
+			$table_styles[] = sprintf( 'gap: %s', esc_attr( $grid_gap ) );
+		}
+		// Only the column gap: day cells use it in calc() to stay square.
+		if ( '' !== $column_gap ) {
+			$table_styles[] = sprintf( '--gatherpress-calendar-column-gap: %s', esc_attr( $column_gap ) );
+		}
+
+		return sprintf( 'style="%s;"', esc_attr( implode( '; ', $table_styles ) ) );
 	}
 
 	/**

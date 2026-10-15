@@ -41,6 +41,18 @@
 		opacity: var(--gatherpress-calendar-units-without-events-opacity, 1);
 	}
 
+	/*
+	 * Shown when every unit was filtered out, because no unit in the range
+	 * has events (see HTML_Renderer). It takes focus after pagination, as
+	 * there is no table to focus.
+	 */
+	.gatherpress-calendar__no-events {
+		margin: 0;
+		padding: var(--wp--preset--spacing--40, 1.5rem);
+		text-align: center;
+		color: var(--wp--preset--color--contrast, #495057);
+	}
+
 	/* 7-column Calendar Grid */
 	.gatherpress-calendar__table {
 

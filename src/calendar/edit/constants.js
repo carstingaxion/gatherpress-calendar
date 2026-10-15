@@ -350,3 +350,18 @@ export const QUERY_VARIATION_INNER_BLOCKS = [
  * @since 0.1.0
  */
 export const DATE_FORMAT = 'Y-m-d';
+
+/**
+ * Lowest opacity of the units without events.
+ *
+ * The day numbers have to stay readable, so WCAG 1.4.3 asks for a contrast
+ * of 4.5:1. At 30% the faded number is only 1.97:1 on the default colors
+ * (#111 on #fafafa). Fading a cell into the page background crosses 4.5:1 at
+ * about 58%, so 60 is the lowest setting that passes with some headroom.
+ *
+ * Mirrors HTML_Renderer::MIN_UNITS_WITHOUT_EVENTS_OPACITY.
+ *
+ * @type {number}
+ * @since 0.9.0
+ */
+export const UNITS_WITHOUT_EVENTS_MIN_OPACITY = 60;
