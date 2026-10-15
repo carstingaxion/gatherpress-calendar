@@ -81,7 +81,15 @@ class Post_Organizer {
 			return array();
 		}
 
-		$post_ids = array_map( 'intval', $query->posts );
+		/**
+		 * Type safety.
+		 * 
+		 * This is for sure an array of post IDs,
+		 * because of 'fields' => 'ids' in the query args.
+		 *
+		 * @var list<int> $post_ids
+		 */
+		$post_ids = $query->posts;
 
 		// Batch-prime caches so subsequent get_post() and get_post_meta() calls are memory hits.
 		_prime_post_caches( $post_ids, true, true );
@@ -263,6 +271,170 @@ class Post_Organizer {
 	}
 
 	/**
+	 * Allocates a single-day timed event to the time grid.
+	 *
+	 * @param array{id: int, start_date: string}        $event          Event descriptor.
+	 * @param array<string, mixed>                      $grid_config    Time grid configuration.
+	 * @param array<string, array<int, bool>>           $occupied_slots Map of date strings to occupied slots.
+	 * @param array<string, list<array<string, mixed>>> $posts_by_date  Slotted entries grouped by date.
+	 *
+	 * @return void
+	 */
+	private static function allocate_timed_event_entry( array $event, array $grid_config, array &$occupied_slots, array &$posts_by_date ): void {
+		$tracks = self::calculate_timed_event_tracks( $event['id'], $grid_config );
+		if ( null === $tracks ) {
+			return; // Outside visible day hours.
+		}
+
+		$date_str                             = $event['start_date'];
+		$slot                                 = self::find_available_slot( array( $date_str ), $occupied_slots );
+		$occupied_slots[ $date_str ][ $slot ] = true;
+
+		if ( ! isset( $posts_by_date[ $date_str ] ) ) {
+			$posts_by_date[ $date_str ] = array();
+		}
+
+		$posts_by_date[ $date_str ][] = array(
+			'id'             => $event['id'],
+			'span'           => 'single',
+			'day_index'      => 1,
+			'total_days'     => 1,
+			'is_all_day'     => false,
+			'is_timed'       => true,
+			'time_row_start' => $tracks['row_start'],
+			'time_row_end'   => $tracks['row_end'],
+			'slot'           => $slot,
+		);
+	}
+
+	/**
+	 * Allocates ribbon slots for an all-day or multi-day event.
+	 *
+	 * @param array{id: int, start_obj: DateTimeImmutable, total_days: int, is_all_day: bool} $event          Event descriptor.
+	 * @param array<string, array<int, bool>>                                                 $occupied_slots Map of date strings to occupied slots.
+	 * @param array<string, list<array<string, mixed>>>                                       $posts_by_date  Slotted entries grouped by date.
+	 *
+	 * @return void
+	 */
+	private static function allocate_ribbon_event_entry( array $event, array &$occupied_slots, array &$posts_by_date ): void {
+		$event_dates = self::get_span_dates( $event['start_obj'], $event['total_days'] );
+		$slot        = self::find_available_slot( $event_dates, $occupied_slots );
+
+		foreach ( $event_dates as $i => $date_str ) {
+			$occupied_slots[ $date_str ][ $slot ] = true;
+
+			$day_index = $i + 1;
+			$span_type = self::determine_span_type( $day_index, $event['total_days'] );
+
+			if ( ! isset( $posts_by_date[ $date_str ] ) ) {
+				$posts_by_date[ $date_str ] = array();
+			}
+
+			$posts_by_date[ $date_str ][] = array(
+				'id'         => $event['id'],
+				'span'       => $span_type,
+				'day_index'  => $day_index,
+				'total_days' => $event['total_days'],
+				'is_all_day' => ! empty( $event['is_all_day'] ),
+				'is_timed'   => false,
+				'slot'       => $slot,
+			);
+		}
+	}
+
+	/**
+	 * Checks if two timed entries overlap in their time rows.
+	 *
+	 * @param array<string, mixed> $entry_a First entry.
+	 * @param array<string, mixed> $entry_b Second entry.
+	 *
+	 * @return bool True if overlapping.
+	 */
+	private static function are_timed_entries_overlapping( array $entry_a, array $entry_b ): bool {
+		return ( $entry_a['time_row_start'] < $entry_b['time_row_end'] ) && ( $entry_a['time_row_end'] > $entry_b['time_row_start'] );
+	}
+
+	/**
+	 * Extracts indices of all timed entries within a day.
+	 *
+	 * @param array<int, array<string, mixed>> $day_entries List of entries in a day.
+	 *
+	 * @return list<int> List of timed entry indices.
+	 */
+	private static function get_timed_entry_indices( array $day_entries ): array {
+		$indices = array();
+		foreach ( $day_entries as $idx => $entry ) {
+			if ( ! empty( $entry['is_timed'] ) ) {
+				$indices[] = $idx;
+			}
+		}
+		return $indices;
+	}
+
+	/**
+	 * Calculates overlap metrics for a specific timed entry against others in the day.
+	 *
+	 * @param int                              $curr_idx      Current entry index.
+	 * @param array<int, array<string, mixed>> $day_entries   Day entries list.
+	 * @param array<int>                       $timed_indices Indices of timed entries.
+	 *
+	 * @return array{overlap_total: int, overlap_index: int} Calculated metrics.
+	 */
+	private static function calculate_entry_overlap_metrics( int $curr_idx, array $day_entries, array $timed_indices ): array {
+		$curr        = $day_entries[ $curr_idx ];
+		$overlaps    = 0;
+		$overlap_idx = 0;
+
+		foreach ( $timed_indices as $other_idx ) {
+			$other = $day_entries[ $other_idx ];
+			if ( ! self::are_timed_entries_overlapping( $curr, $other ) ) {
+				continue;
+			}
+
+			++$overlaps;
+			if ( $other_idx < $curr_idx ) {
+				++$overlap_idx;
+			}
+		}
+
+		return array(
+			'overlap_total' => max( 1, $overlaps ),
+			'overlap_index' => $overlap_idx,
+		);
+	}
+
+	/**
+	 * Resolves concurrent overlapping columns for timed entries in a single day.
+	 *
+	 * @param array<int, array<string, mixed>> $day_entries Day entries list.
+	 *
+	 * @return void
+	 */
+	private static function resolve_day_timed_overlaps( array &$day_entries ): void {
+		$timed_indices = self::get_timed_entry_indices( $day_entries );
+
+		foreach ( $timed_indices as $curr_idx ) {
+			$metrics                                   = self::calculate_entry_overlap_metrics( $curr_idx, $day_entries, $timed_indices );
+			$day_entries[ $curr_idx ]['overlap_total'] = $metrics['overlap_total'];
+			$day_entries[ $curr_idx ]['overlap_index'] = $metrics['overlap_index'];
+		}
+	}
+
+	/**
+	 * Resolves concurrent overlapping columns for timed entries in each day.
+	 *
+	 * @param array<string, list<array<string, mixed>>> $posts_by_date Slotted entries grouped by date.
+	 *
+	 * @return void
+	 */
+	private static function resolve_concurrent_timed_overlaps( array &$posts_by_date ): void {
+		foreach ( $posts_by_date as &$day_entries ) {
+			self::resolve_day_timed_overlaps( $day_entries );
+		}
+		unset( $day_entries );
+	}
+
+	/**
 	 * Allocates slots and groups entries into the daily map.
 	 *
 	 * @param array<int, array{id: int, start_obj: DateTimeImmutable, start_date: string, total_days: int, is_all_day: bool}> $sorted_events Sorted event descriptors.
@@ -280,90 +452,16 @@ class Post_Organizer {
 
 			// In time-grid mode, single-day timed events use timed tracks and ribbon slots.
 			if ( $is_time_grid && ! $is_multi_day ) {
-				$tracks = self::calculate_timed_event_tracks( $event['id'], $grid_config );
-				if ( null === $tracks ) {
-					continue; // Outside visible day hours.
-				}
-
-				$date_str = $event['start_date'];
-				$slot     = self::find_available_slot( array( $date_str ), $occupied_slots );
-				$occupied_slots[ $date_str ][ $slot ] = true;
-
-				if ( ! isset( $posts_by_date[ $date_str ] ) ) {
-					$posts_by_date[ $date_str ] = array();
-				}
-
-				$posts_by_date[ $date_str ][] = array(
-					'id'             => $event['id'],
-					'span'           => 'single',
-					'day_index'      => 1,
-					'total_days'     => 1,
-					'is_all_day'     => false,
-					'is_timed'       => true,
-					'time_row_start' => $tracks['row_start'],
-					'time_row_end'   => $tracks['row_end'],
-					'slot'           => $slot,
-				);
+				self::allocate_timed_event_entry( $event, $grid_config, $occupied_slots, $posts_by_date );
 				continue;
 			}
 
-			// Standard Ribbon Slot Allocation for All-day / Multi-day events
-			$event_dates = self::get_span_dates( $event['start_obj'], $event['total_days'] );
-			$slot        = self::find_available_slot( $event_dates, $occupied_slots );
-
-			foreach ( $event_dates as $i => $date_str ) {
-				$occupied_slots[ $date_str ][ $slot ] = true;
-
-				$day_index = $i + 1;
-				$span_type = self::determine_span_type( $day_index, $event['total_days'] );
-
-				if ( ! isset( $posts_by_date[ $date_str ] ) ) {
-					$posts_by_date[ $date_str ] = array();
-				}
-
-				$posts_by_date[ $date_str ][] = array(
-					'id'         => $event['id'],
-					'span'       => $span_type,
-					'day_index'  => $day_index,
-					'total_days' => $event['total_days'],
-					'is_all_day' => ! empty( $event['is_all_day'] ),
-					'is_timed'   => false,
-					'slot'       => $slot,
-				);
-			}
+			// Standard Ribbon Slot Allocation for All-day / Multi-day events.
+			self::allocate_ribbon_event_entry( $event, $occupied_slots, $posts_by_date );
 		}
 
-		// Resolve concurrent overlapping columns for timed entries in each day
 		if ( $is_time_grid ) {
-			foreach ( $posts_by_date as &$day_entries ) {
-				$timed_indices = array();
-				foreach ( $day_entries as $idx => $entry ) {
-					if ( ! empty( $entry['is_timed'] ) ) {
-						$timed_indices[] = $idx;
-					}
-				}
-
-				foreach ( $timed_indices as $curr_idx ) {
-					$curr        = $day_entries[ $curr_idx ];
-					$overlaps    = 0;
-					$overlap_idx = 0;
-
-					foreach ( $timed_indices as $other_idx ) {
-						$other          = $day_entries[ $other_idx ];
-						$is_overlapping = ( $curr['time_row_start'] < $other['time_row_end'] ) && ( $curr['time_row_end'] > $other['time_row_start'] );
-						if ( $is_overlapping ) {
-							++$overlaps;
-							if ( $other_idx < $curr_idx ) {
-								++$overlap_idx;
-							}
-						}
-					}
-
-					$day_entries[ $curr_idx ]['overlap_total'] = max( 1, $overlaps );
-					$day_entries[ $curr_idx ]['overlap_index'] = $overlap_idx;
-				}
-			}
-			unset( $day_entries );
+			self::resolve_concurrent_timed_overlaps( $posts_by_date );
 		}
 
 		return $posts_by_date;
@@ -398,50 +496,6 @@ class Post_Organizer {
 	}
 
 	/**
-	 * Resolves event start and end time minutes past midnight for a given date.
-	 *
-	 * @since 0.9.0
-	 *
-	 * @param int    $post_id  Post ID.
-	 * @param string $date_str Date string (Y-m-d).
-	 *
-	 * @return array{start_min: int, end_min: int}|null Minutes past midnight or null.
-	 */
-	public static function get_event_minute_range( int $post_id, string $date_str ): ?array {
-		$post_type = get_post_type( $post_id );
-		if ( ! Query_Builder::is_event_post_type( $post_type ) ) {
-			return null;
-		}
-
-		$event     = new \GatherPress\Core\Event\Event( $post_id );
-		$datetimes = $event->get_datetime();
-		$start_raw = isset( $datetimes['datetime_start'] ) && is_string( $datetimes['datetime_start'] ) ? $datetimes['datetime_start'] : '';
-		$end_raw   = isset( $datetimes['datetime_end'] ) && is_string( $datetimes['datetime_end'] ) ? $datetimes['datetime_end'] : '';
-
-		if ( '' === $start_raw ) {
-			return null;
-		}
-
-		$start_ts = strtotime( $start_raw );
-		if ( false === $start_ts ) {
-			return null;
-		}
-
-		$end_ts = '' !== $end_raw ? strtotime( $end_raw ) : false;
-		if ( false === $end_ts || $end_ts <= $start_ts ) {
-			$end_ts = $start_ts + HOUR_IN_SECONDS;
-		}
-
-		$start_min = ( (int) gmdate( 'G', $start_ts ) * 60 ) + (int) gmdate( 'i', $start_ts );
-		$end_min   = ( (int) gmdate( 'G', $end_ts ) * 60 ) + (int) gmdate( 'i', $end_ts );
-
-		return array(
-			'start_min' => $start_min,
-			'end_min'   => max( $start_min + 15, $end_min ),
-		);
-	}
-
-	/**
 	 * Compute quarter-slot row tracks for a timed event within configured day boundaries.
 	 *
 	 * @param int                  $post_id     Post ID.
@@ -464,11 +518,11 @@ class Post_Organizer {
 		$day_end_min   = $end_hour * 60;
 
 		// Skip events ending before day starts or starting after day ends
-		// and clamp event to visible day window
+		// and clamp event to visible day window.
 		$clamped_start = max( $day_start_min, $datetimes['start_min'] );
 		$clamped_end   = min( $day_end_min, $datetimes['end_min'] );
 
-		// Round to 1/4 of slot duration
+		// Round to 1/4 of slot duration.
 		$rounded_start = Date_Calculator::round_to_quarter_slot( $clamped_start, $quarter_mins, false );
 		$rounded_end   = Date_Calculator::round_to_quarter_slot( $clamped_end, $quarter_mins, true );
 

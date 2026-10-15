@@ -92,13 +92,17 @@ class Calendar {
 		$page           = Query_Builder::get_requested_page( $block->context['queryId'] ?? null );
 		$source_post_id = Date_Calculator::resolve_source_post_id( $attributes, $block );
 
-		/** @var array<string, mixed> $query_typed */
+		/**
+		 * Type safety.
+		 *
+		 * @var array<string, mixed> $query_typed
+		 */
 		$query_typed = $query;
 		$date_range  = Date_Calculator::get_range_from_query( $query_typed, $attributes, $page, $source_post_id );
 
-		// Read colocated attributes from inner week block
-		$week_block = HTML_Renderer::get_inner_template_block( $block, Calendar_Week::BLOCK_NAME );
-		$week_attrs = $week_block['attrs'] ?? array();
+		// Read colocated attributes from inner week block.
+		$week_block           = HTML_Renderer::get_inner_template_block( $block, Calendar_Week::BLOCK_NAME );
+		$week_attrs           = $week_block['attrs'] ?? array();
 		$effective_attributes = array_merge(
 			$attributes,
 			array(
@@ -107,7 +111,7 @@ class Calendar {
 			)
 		);
 
-		// Resolve time grid configuration
+		// Resolve time grid configuration.
 		$grid_config = Date_Calculator::get_time_grid_config( $effective_attributes, $query_typed );
 
 		// Propagate context tree for child blocks.
@@ -118,9 +122,8 @@ class Calendar {
 		$block->context['gatherpress/endDate']        = $date_range['end_date'];
 		$block->context['gatherpress/showWeekends']   = Date_Calculator::show_weekends( $attributes );
 		$block->context['gatherpress/timeGridConfig'] = $grid_config;
-		// $block->context['gatherpress/enableTimeGrid'] = ! empty( $attributes['enableTimeGrid'] );
 
-		// Fetch and organize posts by date and time grid
+		// Fetch and organize posts by date and time grid.
 		$query_args    = Query_Builder::build_query_args( $block, $date_range );
 		$posts_by_date = Post_Organizer::organize_posts_by_date( $query_args, $grid_config );
 

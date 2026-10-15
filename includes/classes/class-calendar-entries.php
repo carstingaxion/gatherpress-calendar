@@ -115,11 +115,11 @@ class Calendar_Entries {
 			? $block->context['gatherpress/dayPosts']
 			: array();
 
-		$grid_config  = $block->context['gatherpress/timeGridConfig'] ?? array();
-		$is_time_grid = ! empty( $grid_config['enabled'] );
-		$day_number   = $block->context['gatherpress/dayNumber'] ?? 0;
+		$grid_config_raw = $block->context['gatherpress/timeGridConfig'] ?? null;
+		$grid_config     = is_array( $grid_config_raw ) ? $grid_config_raw : array();
+		$is_time_grid    = ! empty( $grid_config['enabled'] );
 
-		// Only return early if empty AND not in time-grid mode
+		// Only return early if empty AND not in time-grid mode.
 		if ( empty( $day_posts ) && ! $is_time_grid ) {
 			return '';
 		}
@@ -144,8 +144,12 @@ class Calendar_Entries {
 
 		$items_html = '';
 		foreach ( $day_posts as $entry ) {
-			$post_id   = is_array( $entry ) ? ( $entry['id'] ?? 0 ) : $entry;
-			/** @var array<string, mixed> $span_data */
+			$post_id = is_array( $entry ) ? ( $entry['id'] ?? 0 ) : $entry;
+			/**
+			 * Type safety.
+			 *
+			 * @var array<string, mixed> $span_data
+			 */
 			$span_data = is_array( $entry ) ? $entry : array();
 
 			if ( is_int( $post_id ) && $post_id > 0 ) {
@@ -158,6 +162,93 @@ class Calendar_Entries {
 			$wrapper_attributes, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			$items_html // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		);
+	}
+
+	/**
+	 * Extract block attributes from parsed block safely.
+	 *
+	 * @param WP_Block $block Block instance.
+	 *
+	 * @return array<string, mixed> Block attributes.
+	 */
+	private function get_block_attributes( WP_Block $block ): array {
+		if ( isset( $block->parsed_block['attrs'] ) && is_array( $block->parsed_block['attrs'] ) ) {
+
+			/**
+			 * Type safety.
+			 * 
+			 * This is for sure an array of string keys and mixed values,
+			 * because of WP block parser's output.
+			 *
+			 * @var array<string, mixed> $block_atts
+			 */
+			$block_atts = $block->parsed_block['attrs'];
+			return $block_atts;
+		}
+
+		return array();
+	}
+
+	/**
+	 * Resolves the row span count from span data.
+	 *
+	 * @param array<string, mixed> $span_data Multi-day span descriptors.
+	 *
+	 * @return int Row span integer.
+	 */
+	private function resolve_row_span( array $span_data ): int {
+		$row_span_raw = $span_data['row_span'] ?? 1;
+
+		return is_numeric( $row_span_raw ) ? (int) $row_span_raw : 1;
+	}
+
+	/**
+	 * Build CSS custom properties for timed event placement.
+	 *
+	 * @param array<string, mixed> $span_data Multi-day span descriptors.
+	 *
+	 * @return string CSS variable declarations string or empty string.
+	 */
+	private function build_timed_event_style( array $span_data ): string {
+		if ( empty( $span_data['is_timed'] ) || ! isset( $span_data['time_row_start'], $span_data['time_row_end'] ) ) {
+			return '';
+		}
+
+		$time_row_start = is_numeric( $span_data['time_row_start'] ) ? (int) $span_data['time_row_start'] : 0;
+		$time_row_end   = is_numeric( $span_data['time_row_end'] ) ? (int) $span_data['time_row_end'] : 0;
+		$overlap_total  = isset( $span_data['overlap_total'] ) && is_numeric( $span_data['overlap_total'] ) ? (int) $span_data['overlap_total'] : 1;
+		$overlap_index  = isset( $span_data['overlap_index'] ) && is_numeric( $span_data['overlap_index'] ) ? (int) $span_data['overlap_index'] : 0;
+
+		return sprintf(
+			'--gatherpress-event-time-row-start: %d; --gatherpress-event-time-row-end: %d; --gatherpress-overlap-total: %d; --gatherpress-overlap-index: %d;',
+			$time_row_start,
+			$time_row_end,
+			$overlap_total,
+			$overlap_index
+		);
+	}
+
+	/**
+	 * Build combined style attribute for an entry wrapper.
+	 *
+	 * @param string               $inline_styles Base inline styles from block attributes.
+	 * @param array<string, mixed> $span_data    Span data.
+	 * @param int                  $row_span     Row span count.
+	 * @param string               $timed_style  Timed event style string.
+	 *
+	 * @return string Style attribute HTML string (e.g. ' style="..."') or empty string.
+	 */
+	private function build_entry_style_attribute( string $inline_styles, array $span_data, int $row_span, string $timed_style ): string {
+		$slot_raw       = $span_data['slot'] ?? null;
+		$slot_style     = is_numeric( $slot_raw ) ? sprintf( '--gatherpress-calendar-entry-slot: %d;', (int) $slot_raw ) : '';
+		$row_span_style = sprintf( '--gatherpress-calendar-row-span: %d;', $row_span );
+		$combined_style = trim( $inline_styles . ' ' . $slot_style . ' ' . $row_span_style . ' ' . $timed_style );
+
+		if ( '' === $combined_style ) {
+			return '';
+		}
+
+		return sprintf( ' style="%s"', esc_attr( $combined_style ) );
 	}
 
 	/**
@@ -176,40 +267,21 @@ class Calendar_Entries {
 		}
 
 		$inner_content = $this->render_entry_inner_content( $post, $block, $span_data );
+		$attributes    = $this->get_block_attributes( $block );
+		$entry_styles  = $this->get_entry_styles_and_classes( $attributes );
 
-		/**
-		 * Type safety.
-		 *
-		 * @var array<string, mixed> $attributes
-		 */
-		$attributes   = isset( $block->parsed_block['attrs'] ) && is_array( $block->parsed_block['attrs'] ) ? $block->parsed_block['attrs'] : array();
-		$entry_styles = $this->get_entry_styles_and_classes( $attributes );
-
-		$row_span_raw  = $span_data['row_span'] ?? 1;
-		$row_span      = is_numeric( $row_span_raw ) ? (int) $row_span_raw : 1;
+		$row_span      = $this->resolve_row_span( $span_data );
 		$extra_classes = $this->build_span_classes( $span_data, $row_span );
 
-		$timed_style = '';
-		if ( ! empty( $span_data['is_timed'] ) && isset( $span_data['time_row_start'], $span_data['time_row_end'] ) ) {
+		$timed_style = $this->build_timed_event_style( $span_data );
+		if ( '' !== $timed_style ) {
 			$extra_classes[] = 'is-timed-event';
-			$timed_style     = sprintf(
-				'--gatherpress-event-time-row-start: %d; --gatherpress-event-time-row-end: %d; --gatherpress-overlap-total: %d; --gatherpress-overlap-index: %d;',
-				(int) $span_data['time_row_start'],
-				(int) $span_data['time_row_end'],
-				(int) ( $span_data['overlap_total'] ?? 1 ),
-				(int) ( $span_data['overlap_index'] ?? 0 )
-			);
 		}
 
 		$classnames    = trim( $entry_styles['classnames'] . ' ' . implode( ' ', $extra_classes ) );
 		$entry_classes = implode( ' ', get_post_class( $classnames, $post_id ) );
 
-		$slot_raw        = $span_data['slot'] ?? null;
-		$slot_style      = is_numeric( $slot_raw ) ? sprintf( '--gatherpress-calendar-entry-slot: %d;', (int) $slot_raw ) : '';
-		$row_span_style  = sprintf( '--gatherpress-calendar-row-span: %d;', $row_span );
-		$combined_style  = trim( $entry_styles['inline_styles'] . ' ' . $slot_style . ' ' . $row_span_style . ' ' . $timed_style );
-		$style_attribute = '' !== $combined_style ? sprintf( ' style="%s"', esc_attr( $combined_style ) ) : '';
-
+		$style_attribute = $this->build_entry_style_attribute( $entry_styles['inline_styles'], $span_data, $row_span, $timed_style );
 		$data_attributes = $this->build_entry_data_attributes( $span_data, $row_span );
 		$iapi_directives = $this->build_entry_iapi_directives( $post_id );
 
