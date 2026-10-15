@@ -25,6 +25,7 @@
     "gatherpress/isWeekend",
     "gatherpress/viewType",
     "gatherpress/enableTimeGrid",
+    "gatherpress/timeGridConfig",
     "gatherpress/dayStartHour",
     "gatherpress/dayEndHour",
     "gatherpress/numRibbonSlots"
