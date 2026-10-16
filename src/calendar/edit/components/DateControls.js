@@ -17,7 +17,7 @@ import {
 /* eslint-enable @wordpress/no-unsafe-wp-apis */
 import { useMemo } from '@wordpress/element';
 
-import { generateMonthOptions } from '../utils/calendar-utils';
+import { calculateTargetDate, formatHeading } from '../utils/date-utils';
 import { useDateOffsetHelp } from '../hooks/useDateOffsetHelp';
 import { MonthPicker } from './MonthPicker';
 import { SourcePostControls } from './SourcePostControls';
@@ -82,16 +82,13 @@ function resolveContextSourceLabel( hasPostDates, selectedDate, postTitle ) {
  *
  * @param {string}        selectedDate Selected date string.
  * @param {string}        viewType     Calendar view type.
- * @param {Array<Object>} monthOptions Available month options.
  * @return {string} Label text.
  */
-function resolveDefaultSourceLabel( selectedDate, viewType, monthOptions ) {
+function resolveDefaultSourceLabel( selectedDate, viewType ) {
 	if ( selectedDate ) {
-		if ( 'month' === viewType ) {
-			const match = monthOptions.find(
-				( o ) => o.value === selectedDate
-			);
-			return match?.label || selectedDate;
+		if ( 'month' === viewType && /^\d{4}-\d{2}/.test( selectedDate ) ) {
+				const month = calculateTargetDate( { selectedDate } );
+				return formatHeading( 'month', month, month );
 		}
 		return selectedDate;
 	}
@@ -156,7 +153,6 @@ export function DateControls( {
 	enableTimeGrid = false,
 	onTimeGridChange,
 } ) {
-	const monthOptions = useMemo( () => generateMonthOptions(), [] );
 	const offsetHelp = useDateOffsetHelp( dateModifier, viewType );
 	const maxUnits = MAX_UNITS[ viewType ] || 12;
 
@@ -224,8 +220,7 @@ export function DateControls( {
 		}
 		return resolveDefaultSourceLabel(
 			selectedDate,
-			viewType,
-			monthOptions
+			viewType
 		);
 	}, [
 		dateRangeSource,
@@ -234,7 +229,6 @@ export function DateControls( {
 		selectedDate,
 		postId,
 		viewType,
-		monthOptions,
 	] );
 
 	const unitLabel = useMemo( () => {
