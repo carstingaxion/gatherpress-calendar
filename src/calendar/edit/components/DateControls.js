@@ -80,15 +80,15 @@ function resolveContextSourceLabel( hasPostDates, selectedDate, postTitle ) {
 /**
  * Resolves selection text for 'default' source mode.
  *
- * @param {string}        selectedDate Selected date string.
- * @param {string}        viewType     Calendar view type.
+ * @param {string} selectedDate Selected date string.
+ * @param {string} viewType     Calendar view type.
  * @return {string} Label text.
  */
 function resolveDefaultSourceLabel( selectedDate, viewType ) {
 	if ( selectedDate ) {
 		if ( 'month' === viewType && /^\d{4}-\d{2}/.test( selectedDate ) ) {
-				const month = calculateTargetDate( { selectedDate } );
-				return formatHeading( 'month', month, month );
+			const month = calculateTargetDate( { selectedDate } );
+			return formatHeading( 'month', month, month );
 		}
 		return selectedDate;
 	}
@@ -218,10 +218,7 @@ export function DateControls( {
 				postTitle
 			);
 		}
-		return resolveDefaultSourceLabel(
-			selectedDate,
-			viewType
-		);
+		return resolveDefaultSourceLabel( selectedDate, viewType );
 	}, [
 		dateRangeSource,
 		hasPostDates,
