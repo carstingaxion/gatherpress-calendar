@@ -26,6 +26,7 @@ import { dateI18n } from '@wordpress/date';
 import {
 	isDayNumberBindingBlock,
 	getLayoutProps,
+	FALLBACK_BLOCK_GAP,
 } from '../../../utils/day-number';
 
 /**
@@ -200,8 +201,16 @@ function DayPreviewCellComponent( {
 	const borderProps = useBorderProps( dayBlockAttributes ?? {} );
 	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
-	const layoutProps = getLayoutProps( dayBlockAttributes?.layout );
-
+	const layoutProps = getLayoutProps(
+		dayBlockAttributes?.layout,
+		dayBlockAttributes?.style?.spacing?.blockGap
+	);
+	// console.group("getLayoutProps");
+	// console.log(dayBlockAttributes);
+	// console.log(colorProps.className);
+	// console.log(layoutProps.className);
+	// console.log(layoutProps.style);
+	// console.groupEnd();
 	const isPast = ! day.isEmpty && ! day.isToday && day.isPast;
 	const isFuture = ! day.isEmpty && ! day.isToday && day.isFuture;
 
@@ -244,8 +253,10 @@ function DayPreviewCellComponent( {
 			}
 		: {
 				...layoutProps.style,
+				// A split gap with one side set uses the root gap for the other.
 				gap: getGapCSSValue(
-					dayBlockAttributes?.style?.spacing?.blockGap
+					dayBlockAttributes?.style?.spacing?.blockGap,
+					FALLBACK_BLOCK_GAP
 				),
 			};
 
