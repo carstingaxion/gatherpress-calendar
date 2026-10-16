@@ -463,7 +463,7 @@ class Date_Calculator {
 	 * Resolves a date range from query block context, falling back to calculation.
 	 *
 	 * @param array<string, mixed> $query               The query array from context.
-	 * @param array<string, mixed> $fallback_attributes  Block attributes if context is incomplete.
+	 * @param array<string, mixed> $fallback_attributes Block attributes if context is incomplete.
 	 * @param int                  $page                Page number.
 	 * @param int                  $source_post_id      Optional source post ID.
 	 *
@@ -526,20 +526,25 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Compute the grid column count based on viewType and weekend visibility.
+	 * Compute the grid column count based on viewType, weekend visibility, and time grid gutter.
 	 *
-	 * @param string $view_type     View type ('month', 'week', 'day').
-	 * @param bool   $show_weekends Weekend visibility.
-	 * @param int    $unit_count    Number of units to show.
+	 * @param string $view_type       View type ('month', 'week', 'day').
+	 * @param bool   $show_weekends   Weekend visibility.
+	 * @param int    $unit_count      Number of units to show.
+	 * @param bool   $has_time_gutter Whether the time gutter column is active.
 	 *
 	 * @return int Grid column count.
 	 */
-	public static function get_columns_count( string $view_type, bool $show_weekends, int $unit_count = 1 ): int {
-		if ( 'day' === $view_type ) {
-			return max( 1, $unit_count );
+	public static function get_columns_count( string $view_type, bool $show_weekends, int $unit_count = 1, bool $has_time_gutter = false ): int {
+		$columns = 'day' === $view_type
+			? max( 1, $unit_count )
+			: ( $show_weekends ? 7 : ( 7 - count( self::get_weekend_days() ) ) );
+
+		if ( $has_time_gutter && ( 'day' === $view_type || 'week' === $view_type ) ) {
+			++$columns;
 		}
 
-		return $show_weekends ? 7 : ( 7 - count( self::get_weekend_days() ) );
+		return $columns;
 	}
 
 	/**
@@ -614,50 +619,64 @@ class Date_Calculator {
 	}
 
 	/**
-	 * Format calendar heading based on view type and date range.
+	 * Formats heading for day or week view spans.
 	 *
-	 * @since 0.5.0
-	 *
-	 * @param string            $view_type  View type ('month', 'week', 'day').
 	 * @param DateTimeImmutable $start_date Start date.
 	 * @param DateTimeImmutable $end_date   End date.
+	 * @param string            $separator  Datetime separator.
 	 *
-	 * @return string Formatted heading.
+	 * @return string Formatted heading string.
 	 */
-	public static function format_heading( string $view_type, DateTimeImmutable $start_date, DateTimeImmutable $end_date ): string {
+	private static function format_day_or_week_heading( DateTimeImmutable $start_date, DateTimeImmutable $end_date, string $separator ): string {
 		$start = $start_date->getTimestamp();
 		$end   = $end_date->getTimestamp();
 
-		if ( 'day' === $view_type && $start_date->format( 'Y-m-d' ) === $end_date->format( 'Y-m-d' ) ) {
+		if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
 			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-			$day_heading = wp_date( _x( 'l, F j, Y', 'Calendar heading: single day', 'gatherpress-calendar' ), $start );
-			return is_string( $day_heading ) ? $day_heading : '';
+			$start_format = _x( 'M j, Y', 'Calendar heading: start of date range across years', 'gatherpress-calendar' );
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
+		} elseif ( $start_date->format( 'n' ) !== $end_date->format( 'n' ) ) {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$start_format = _x( 'M j', 'Calendar heading: start of date range across months', 'gatherpress-calendar' );
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
+		} else {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$start_format = _x( 'M j', 'Calendar heading: start of date range within a month', 'gatherpress-calendar' );
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$end_format = _x( 'j, Y', 'Calendar heading: end of date range within a month', 'gatherpress-calendar' );
 		}
 
-		$separator = self::get_datetime_separator();
+		return sprintf(
+			/* translators: %1$s: start date, %2$s: separator, %3$s: end date. */
+			_x( '%1$s %2$s %3$s', 'Calendar heading: date range', 'gatherpress-calendar' ),
+			wp_date( $start_format, $start ),
+			$separator,
+			wp_date( $end_format, $end )
+		);
+	}
 
-		if ( 'day' === $view_type || 'week' === $view_type ) {
-			if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$start_format = _x( 'M j, Y', 'Calendar heading: start of date range across years', 'gatherpress-calendar' );
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
-			} elseif ( $start_date->format( 'n' ) !== $end_date->format( 'n' ) ) {
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$start_format = _x( 'M j', 'Calendar heading: start of date range across months', 'gatherpress-calendar' );
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$end_format = _x( 'M j, Y', 'Calendar heading: end of date range', 'gatherpress-calendar' );
-			} else {
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$start_format = _x( 'M j', 'Calendar heading: start of date range within a month', 'gatherpress-calendar' );
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				$end_format = _x( 'j, Y', 'Calendar heading: end of date range within a month', 'gatherpress-calendar' );
-			}
-		} elseif ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
+	/**
+	 * Formats heading for month view spans.
+	 *
+	 * @param DateTimeImmutable $start_date Start date.
+	 * @param DateTimeImmutable $end_date   End date.
+	 * @param string            $separator  Datetime separator.
+	 *
+	 * @return string Formatted heading string.
+	 */
+	private static function format_month_heading( DateTimeImmutable $start_date, DateTimeImmutable $end_date, string $separator ): string {
+		$start = $start_date->getTimestamp();
+		$end   = $end_date->getTimestamp();
+
+		if ( $start_date->format( 'Y-m' ) === $end_date->format( 'Y-m' ) ) {
 			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
 			$month_heading = wp_date( _x( 'F Y', 'Calendar heading: single month', 'gatherpress-calendar' ), $start );
 			return is_string( $month_heading ) ? $month_heading : '';
-		} elseif ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
+		}
+
+		if ( $start_date->format( 'Y' ) !== $end_date->format( 'Y' ) ) {
 			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
 			$start_format = _x( 'M Y', 'Calendar heading: month range across years', 'gatherpress-calendar' );
 			$end_format   = $start_format;
@@ -675,6 +694,35 @@ class Date_Calculator {
 			$separator,
 			wp_date( $end_format, $end )
 		);
+	}
+
+	/**
+	 * Format calendar heading based on view type and date range.
+	 *
+	 * @since 0.5.0
+	 *
+	 * @param string            $view_type  View type ('month', 'week', 'day').
+	 * @param DateTimeImmutable $start_date Start date.
+	 * @param DateTimeImmutable $end_date   End date.
+	 *
+	 * @return string Formatted heading.
+	 */
+	public static function format_heading( string $view_type, DateTimeImmutable $start_date, DateTimeImmutable $end_date ): string {
+		$start = $start_date->getTimestamp();
+
+		if ( 'day' === $view_type && $start_date->format( 'Y-m-d' ) === $end_date->format( 'Y-m-d' ) ) {
+			/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
+			$day_heading = wp_date( _x( 'l, F j, Y', 'Calendar heading: single day', 'gatherpress-calendar' ), $start );
+			return is_string( $day_heading ) ? $day_heading : '';
+		}
+
+		$separator = self::get_datetime_separator();
+
+		if ( 'day' === $view_type || 'week' === $view_type ) {
+			return self::format_day_or_week_heading( $start_date, $end_date, $separator );
+		}
+
+		return self::format_month_heading( $start_date, $end_date, $separator );
 	}
 
 	/**
@@ -811,5 +859,144 @@ class Date_Calculator {
 		);
 
 		return $max_units[ $view_type ] ?? 12;
+	}
+
+	/**
+	 * Retrieves start and end timestamps and times for an event post.
+	 *
+	 * @param int $post_id Post ID.
+	 *
+	 * @return array{start_date: string, end_date: string, start_min: int, end_min: int}|null Datetime data or null.
+	 */
+	public static function get_post_event_datetimes( int $post_id ): ?array {
+		if ( $post_id <= 0 ) {
+			return null;
+		}
+
+		$post_type = get_post_type( $post_id );
+		if ( ! is_string( $post_type ) || ! post_type_supports( $post_type, 'gatherpress-event-date' ) ) {
+			return null;
+		}
+
+		$event     = new \GatherPress\Core\Event\Event( $post_id );
+		$datetimes = $event->get_datetime();
+		$start_raw = isset( $datetimes['datetime_start'] ) && is_string( $datetimes['datetime_start'] ) ? $datetimes['datetime_start'] : '';
+		$end_raw   = isset( $datetimes['datetime_end'] ) && is_string( $datetimes['datetime_end'] ) ? $datetimes['datetime_end'] : '';
+
+		if ( '' === $start_raw ) {
+			return null;
+		}
+
+		$start_ts = strtotime( $start_raw );
+		if ( false === $start_ts ) {
+			return null;
+		}
+
+		$end_ts = '' !== $end_raw ? strtotime( $end_raw ) : false;
+		if ( false === $end_ts || $end_ts <= $start_ts ) {
+			$end_ts = $start_ts + HOUR_IN_SECONDS;
+		}
+
+		$start_min = ( (int) gmdate( 'G', $start_ts ) * 60 ) + (int) gmdate( 'i', $start_ts );
+		$end_min   = ( (int) gmdate( 'G', $end_ts ) * 60 ) + (int) gmdate( 'i', $end_ts );
+
+		return array(
+			'start_date' => substr( $start_raw, 0, 10 ),
+			'end_date'   => '' !== $end_raw ? substr( $end_raw, 0, 10 ) : substr( $start_raw, 0, 10 ),
+			'start_min'  => $start_min,
+			'end_min'    => max( $start_min + 15, $end_min ),
+		);
+	}
+
+	/**
+	 * Retrieve time grid configuration respecting attributes, query sorting, and filters.
+	 *
+	 * @param array<string, mixed> $attributes Calendar block attributes.
+	 * @param array<string, mixed> $query      Query block context.
+	 *
+	 * @return array{
+	 *     enabled: bool,
+	 *     start_hour: int,
+	 *     end_hour: int,
+	 *     slot_hours: int,
+	 *     quarter_mins: int,
+	 *     total_quarters: int,
+	 *     slots: list<string>
+	 * } Time grid configuration.
+	 */
+	public static function get_time_grid_config( array $attributes, array $query ): array {
+		$view_type     = self::resolve_view_type( $attributes );
+		$is_valid_view = in_array( $view_type, array( 'day', 'week' ), true );
+		$order_by      = isset( $query['orderBy'] ) && is_string( $query['orderBy'] ) ? $query['orderBy'] : ( $query['orderby'] ?? '' );
+		$is_datetime   = 'datetime' === $order_by;
+		$user_enabled  = ! empty( $attributes['enableTimeGrid'] );
+
+		if ( ! $is_valid_view || ! $is_datetime || ! $user_enabled ) {
+			return array(
+				'enabled'        => false,
+				'start_hour'     => 8,
+				'end_hour'       => 20,
+				'slot_hours'     => 1,
+				'quarter_mins'   => 15,
+				'total_quarters' => 48,
+				'slots'          => array(),
+			);
+		}
+
+		$start_hour_raw = $attributes['dayStartHour'] ?? 8;
+		$end_hour_raw   = $attributes['dayEndHour'] ?? 20;
+
+		$start_hour = is_numeric( $start_hour_raw ) ? max( 0, min( 23, (int) $start_hour_raw ) ) : 8;
+		$end_hour   = is_numeric( $end_hour_raw ) ? max( $start_hour + 1, min( 24, (int) $end_hour_raw ) ) : 20;
+
+		/**
+		 * Filters the duration of each time slot in hours.
+		 *
+		 * Defaults to 1 (1 hour). Can be set to 2, 4, etc. via code.
+		 *
+		 * @since 0.9.0
+		 *
+		 * @param int $slot_hours Hours per slot.
+		 */
+		$slot_hours_filtered = apply_filters( 'gatherpress_calendar_time_slot_duration', 1 );
+		$slot_hours          = max( 1, (int) $slot_hours_filtered );
+		$quarter_mins        = max( 1, (int) round( ( $slot_hours * 60 ) / 4 ) );
+
+		$total_minutes  = ( $end_hour - $start_hour ) * 60;
+		$total_quarters = (int) ceil( $total_minutes / $quarter_mins );
+
+		$slots = array();
+		for ( $h = $start_hour; $h < $end_hour; $h += $slot_hours ) {
+			$slots[] = sprintf( '%02d:00', $h );
+		}
+
+		return array(
+			'enabled'        => true,
+			'start_hour'     => $start_hour,
+			'end_hour'       => $end_hour,
+			'slot_hours'     => $slot_hours,
+			'quarter_mins'   => $quarter_mins,
+			'total_quarters' => $total_quarters,
+			'slots'          => $slots,
+		);
+	}
+
+	/**
+	 * Round minute timestamp offset to the nearest 1/4 slot duration.
+	 *
+	 * @param int  $minutes      Minutes past midnight.
+	 * @param int  $quarter_mins Minutes per quarter-slot.
+	 * @param bool $is_end       Whether rounding end time (ceils to prevent zero-length events).
+	 *
+	 * @return int Rounded minutes.
+	 */
+	public static function round_to_quarter_slot( int $minutes, int $quarter_mins, bool $is_end = false ): int {
+		if ( $quarter_mins <= 0 ) {
+			return $minutes;
+		}
+
+		return $is_end
+			? (int) ( ceil( $minutes / $quarter_mins ) * $quarter_mins )
+			: (int) ( floor( $minutes / $quarter_mins ) * $quarter_mins );
 	}
 }

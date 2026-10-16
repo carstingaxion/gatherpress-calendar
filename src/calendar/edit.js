@@ -33,7 +33,6 @@ import { useCalendarSync } from './edit/hooks/useCalendarSync';
 import { useCalendarData } from './edit/hooks/useCalendarData';
 import { useCalendarDayTemplate } from './edit/hooks/useCalendarDayTemplate';
 import { useDateRangeSourceSync } from './edit/hooks/useDateRangeSourceSync';
-import { MonthPicker } from './edit/components/MonthPicker';
 import { DateControls } from './edit/components/DateControls';
 import { CalendarTable } from './edit/components/CalendarTable';
 
@@ -68,11 +67,11 @@ export default function Edit( {
 		dateRangeSource = 'default',
 		postId = 0,
 		sourcePostType = '',
+		enableTimeGrid = false,
 	} = attributes;
 
 	const { query } = context;
 
-	const [ showMonthPicker, setShowMonthPicker ] = useState( false );
 	const [ activeDate, setActiveDate ] = useState( '' );
 
 	const startOfWeek = getStartOfWeek();
@@ -98,6 +97,60 @@ export default function Edit( {
 		viewType,
 		unitCount: effectiveUnitCount,
 	} );
+
+	// Retrieve the real week/day template blocks so previews can clone their
+	// actual inner content (Day Number, Post Title, Event Date, etc.) and
+	// mirror their own color/border styling (e.g. a custom background).
+	const { dayInnerBlocks, dayBlockAttributes, weekBlockAttributes } =
+		useCalendarDayTemplate( clientId );
+
+	const dayStartHour = weekBlockAttributes?.dayStartHour ?? 8;
+	const dayEndHour = weekBlockAttributes?.dayEndHour ?? 20;
+	const slotHeight = dayBlockAttributes?.slotHeight ?? 48;
+
+	// Verify if time grid is actively valid and enabled.
+	const isDatetimeOrdered =
+		( query?.orderBy || query?.orderby ) === 'datetime';
+	const isTimeGridActive =
+		( 'day' === viewType || 'week' === viewType ) &&
+		isDatetimeOrdered &&
+		Boolean( enableTimeGrid );
+
+	const timeGridConfig = useMemo( () => {
+		if ( ! isTimeGridActive ) {
+			return { enabled: false, slots: [] };
+		}
+
+		const start = Math.max(
+			0,
+			Math.min( 23, Number( dayStartHour ) || 8 )
+		);
+		const end = Math.max(
+			start + 1,
+			Math.min( 24, Number( dayEndHour ) || 20 )
+		);
+		const slotHours = 1;
+		const quarterMins = 15;
+		const totalQuarters = Math.ceil(
+			( ( end - start ) * 60 ) / quarterMins
+		);
+
+		const slots = [];
+		for ( let h = start; h < end; h += slotHours ) {
+			slots.push( `${ String( h ).padStart( 2, '0' ) }:00` );
+		}
+
+		return {
+			enabled: true,
+			startHour: start,
+			endHour: end,
+			slotHours,
+			quarterMins,
+			totalQuarters,
+			slots,
+			slotHeight,
+		};
+	}, [ isTimeGridActive, dayStartHour, dayEndHour, slotHeight ] );
 
 	const dateRange = useMemo(
 		() =>
@@ -147,8 +200,15 @@ export default function Edit( {
 	);
 
 	const calendar = useMemo(
-		() => generateCalendar( posts, startOfWeek, dateRange, showWeekends ),
-		[ posts, startOfWeek, dateRange, showWeekends ]
+		() =>
+			generateCalendar(
+				posts,
+				startOfWeek,
+				dateRange,
+				showWeekends,
+				timeGridConfig
+			),
+		[ posts, startOfWeek, dateRange, showWeekends, timeGridConfig ]
 	);
 
 	// Table captions, as on the front end: the name of each month grid, or
@@ -181,15 +241,10 @@ export default function Edit( {
 		return getDefaultActiveDate( calendar );
 	}, [ calendar, activeDate ] );
 
-	// Retrieve the real week/day template blocks so previews can clone their
-	// actual inner content (Day Number, Post Title, Event Date, etc.) and
-	// mirror their own color/border styling (e.g. a custom background).
-	const { dayInnerBlocks, dayBlockAttributes, weekBlockAttributes } =
-		useCalendarDayTemplate( clientId );
-
 	const blockClasses = [
 		`is-view-${ viewType }`,
 		dateRange.unitCount > 1 ? 'has-multiple-units' : '',
+		isTimeGridActive ? 'has-time-grid' : '',
 	]
 		.filter( Boolean )
 		.join( ' ' );
@@ -226,6 +281,13 @@ export default function Edit( {
 			: blockGap
 	);
 
+	const tableColumnsCount = getColumnsCount(
+		viewType,
+		showWeekends,
+		dateRange.unitCount,
+		isTimeGridActive
+	);
+
 	const tableStyle = {
 		gap: tableGap,
 		...( columnGap
@@ -234,11 +296,14 @@ export default function Edit( {
 						'0' === columnGap ? '0px' : columnGap,
 				}
 			: {} ),
-		'--gatherpress-calendar-columns': getColumnsCount(
-			viewType,
-			showWeekends,
-			dateRange.unitCount
-		),
+		'--gatherpress-calendar-columns': tableColumnsCount,
+		...( isTimeGridActive
+			? {
+					'--gatherpress-calendar-slot-height': `${ slotHeight }px`,
+					'--gatherpress-total-quarter-slots':
+						timeGridConfig.totalQuarters,
+				}
+			: {} ),
 	};
 
 	const weekContext = useMemo(
@@ -248,8 +313,11 @@ export default function Edit( {
 			'gatherpress/month': dateRange.month,
 			'gatherpress/startDate': dateRange.startDate,
 			'gatherpress/endDate': dateRange.endDate,
+			'gatherpress/enableTimeGrid': isTimeGridActive,
+			'gatherpress/timeGridConfig': timeGridConfig,
+			query,
 		} ),
-		[ viewType, dateRange ]
+		[ viewType, dateRange, isTimeGridActive, timeGridConfig, query ]
 	);
 
 	if ( ! query ) {
@@ -270,9 +338,11 @@ export default function Edit( {
 		);
 	}
 
+	// A picked date or month replaces the offset, which the controls hide
+	// while a date is set. The month picker shows the offset month, so the
+	// calendar stays on the month it showed. A reset also clears the offset.
 	const handleDateChange = ( value ) => {
-		setAttributes( { selectedDate: value } );
-		setShowMonthPicker( false );
+		setAttributes( { selectedDate: value, dateModifier: 0 } );
 	};
 
 	const handleModifierChange = ( value ) => {
@@ -304,46 +374,41 @@ export default function Edit( {
 				<PanelBody
 					title={ __( 'Calendar Settings', 'gatherpress-calendar' ) }
 				>
-					{ showMonthPicker ? (
-						<MonthPicker
-							selectedMonth={ selectedDate }
-							onSelect={ handleDateChange }
-							onCancel={ () => setShowMonthPicker( false ) }
-						/>
-					) : (
-						<DateControls
-							clientId={ clientId }
-							context={ context }
-							viewType={ viewType }
-							onViewTypeChange={ ( val ) =>
-								setAttributes( { viewType: val } )
-							}
-							unitCount={ unitCount }
-							onUnitCountChange={ handleUnitCountChange }
-							selectedDate={
-								hasPostDates
-									? `${ dateRange.startDate } ${ separator } ${ dateRange.endDate }`
-									: selectedDate
-							}
-							dateModifier={ dateModifier }
-							onDateChange={ handleDateChange }
-							onModifierChange={ handleModifierChange }
-							onOpenPicker={ () => setShowMonthPicker( true ) }
-							dateRangeSource={ dateRangeSource }
-							onSourceChange={ ( val ) =>
-								setAttributes( { dateRangeSource: val } )
-							}
-							postId={ postId }
-							onPostIdChange={ ( val ) =>
-								setAttributes( { postId: val } )
-							}
-							sourcePostType={ sourcePostType }
-							onPostTypeChange={ handleSourcePostTypeChange }
-							postTitle={ sourcePostDates.postTitle }
-							hasPostDates={ hasPostDates }
-							hasCurrentSupport={ hasCurrentSupport }
-						/>
-					) }
+					<DateControls
+						clientId={ clientId }
+						context={ context }
+						viewType={ viewType }
+						onViewTypeChange={ ( val ) =>
+							setAttributes( { viewType: val } )
+						}
+						unitCount={ unitCount }
+						onUnitCountChange={ handleUnitCountChange }
+						selectedDate={
+							hasPostDates
+								? `${ dateRange.startDate } ${ separator } ${ dateRange.endDate }`
+								: selectedDate
+						}
+						dateModifier={ dateModifier }
+						onDateChange={ handleDateChange }
+						onModifierChange={ handleModifierChange }
+						dateRangeSource={ dateRangeSource }
+						onSourceChange={ ( val ) =>
+							setAttributes( { dateRangeSource: val } )
+						}
+						postId={ postId }
+						onPostIdChange={ ( val ) =>
+							setAttributes( { postId: val } )
+						}
+						sourcePostType={ sourcePostType }
+						onPostTypeChange={ handleSourcePostTypeChange }
+						postTitle={ sourcePostDates.postTitle }
+						hasPostDates={ hasPostDates }
+						hasCurrentSupport={ hasCurrentSupport }
+						enableTimeGrid={ enableTimeGrid }
+						onTimeGridChange={ ( val ) =>
+							setAttributes( { enableTimeGrid: val } )
+						}
+					/>
 
 					<ToggleControl
 						label={ __( 'Show Weekdays', 'gatherpress-calendar' ) }
@@ -388,6 +453,7 @@ export default function Edit( {
 					weekBlockAttributes={ weekBlockAttributes }
 					dayBlockAttributes={ dayBlockAttributes }
 					tbodyProps={ tbodyProps }
+					timeGridConfig={ timeGridConfig }
 				/>
 			</div>
 		</>

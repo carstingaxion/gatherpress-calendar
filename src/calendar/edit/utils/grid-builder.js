@@ -13,46 +13,344 @@ import { WEEKDAY_SLUGS, isWeekendDay, getDayNames } from './calendar-utils';
 import { isEventPostType } from '../../../utils/post-types';
 
 /**
- * Organizes posts by YYYY-MM-DD date string.
+ * Classifies the span position for a day within a multi-day event.
  *
- * @param {Array} posts Raw post entities.
- * @return {Object} Posts grouped by date string.
+ * @param {number} dayIndex  1-based day index.
+ * @param {number} totalDays Total days of the event.
+ * @return {string} 'single', 'start', 'middle', or 'end'.
  */
-export function groupPostsByDate( posts = [] ) {
-	const grouped = {};
-	if ( ! posts || ! posts.length ) {
-		return grouped;
+export function determineSpanType( dayIndex, totalDays ) {
+	if ( totalDays <= 1 ) {
+		return 'single';
+	}
+	if ( dayIndex === 1 ) {
+		return 'start';
+	}
+	if ( dayIndex === totalDays ) {
+		return 'end';
+	}
+	return 'middle';
+}
+
+/**
+ * Calculates start object, total days, and string dates for a post.
+ *
+ * @param {Object} post Post entity record.
+ * @return {Object|null} PostDateSpan descriptor object.
+ */
+export function resolvePostDateSpan( post ) {
+	const isEvent = isEventPostType( post.type );
+	const postDate = isEvent
+		? post.meta?.gatherpress_datetime_start
+		: post.date;
+
+	if ( ! postDate ) {
+		return null;
 	}
 
-	posts.forEach( ( post ) => {
-		const isEvent = isEventPostType( post.type );
-		const postDate = isEvent
-			? post.meta?.gatherpress_datetime_start
-			: post.date;
+	const isAllDay = Boolean(
+		post.meta?.gatherpress_is_all_day === true ||
+		post.meta?.gatherpress_is_all_day === '1' ||
+		post.meta?.gatherpress_is_all_day === 1 ||
+		post.meta?.gatherpress_is_all_day === 'true'
+	);
 
-		if ( ! postDate ) {
-			return;
+	// When post supports gatherpress-event-date, postDate from meta is a string like:
+	// "2026-09-30 23:30:00" (an event starting at 11:30 PM in its local timezone).
+	// Here is why new Date( postDate ) causes the bug in the editor:
+	// new Date( "2026-09-30 23:30:00" ) creates a JavaScript Date object at 23:30 in the browser's timezone.
+	// dateI18n( DATE_FORMAT, ... ) converts that Date object into the WordPress site's timezone.
+	// If the site is just 1 hour ahead of the browser (or the event's local time), 23:30 becomes 00:30 on 2026-10-01.
+	// As a result, dateStr becomes "2026-10-01". The event gets placed into October 1st in the editor grid instead of September 30th!
+	//
+	// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
+	// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
+	const startDateStr =
+		isEvent && post.meta?.gatherpress_datetime_start
+			? post.meta.gatherpress_datetime_start.slice( 0, 10 )
+			: dateI18n( DATE_FORMAT, new Date( postDate ) );
+
+	let endDateStr = startDateStr;
+	if ( isEvent && post.meta?.gatherpress_datetime_end ) {
+		const rawEnd = post.meta.gatherpress_datetime_end.slice( 0, 10 );
+		if ( rawEnd >= startDateStr ) {
+			endDateStr = rawEnd;
 		}
+	}
 
-		// When post supports gatherpress-event-date, postDate from meta is a string like:
-		// "2026-09-30 23:30:00" (an event starting at 11:30 PM in its local timezone).
-		// Here is why new Date( postDate ) causes the bug in the editor:
-		// new Date( "2026-09-30 23:30:00" ) creates a JavaScript Date object at 23:30 in the browser's timezone.
-		// dateI18n( DATE_FORMAT, ... ) converts that Date object into the WordPress site's timezone.
-		// If the site is just 1 hour ahead of the browser (or the event's local time), 23:30 becomes 00:30 on 2026-10-01.
-		// As a result, dateStr becomes "2026-10-01". The event gets placed into October 1st in the editor grid instead of September 30th!
-		//
-		// We directly take the first 10 characters ("YYYY-MM-DD") from the event's local datetime string,
-		// preventing JavaScript's browser/site timezone conversion from pushing a late-night event into the wrong day.
-		const dateStr =
-			isEvent && post.meta?.gatherpress_datetime_start
-				? post.meta.gatherpress_datetime_start.slice( 0, 10 )
-				: dateI18n( DATE_FORMAT, new Date( postDate ) );
+	const [ sY, sM, sD ] = startDateStr.split( '-' ).map( Number );
+	const [ eY, eM, eD ] = endDateStr.split( '-' ).map( Number );
+	const startObj = new Date( sY, sM - 1, sD, 12, 0, 0 );
+	const endObj = new Date( eY, eM - 1, eD, 12, 0, 0 );
+
+	const totalDays = Math.min(
+		366,
+		Math.max(
+			1,
+			Math.round( ( endObj - startObj ) / ( 1000 * 60 * 60 * 24 ) ) + 1
+		)
+	);
+
+	return { post, startObj, startDateStr, totalDays, isAllDay };
+}
+
+/**
+ * Computes quarter-slot row tracks for a timed event within configured day boundaries.
+ *
+ * @param {Object} post       Post entity record.
+ * @param {Object} gridConfig Time grid configuration.
+ *
+ * @return {Object|null} { timeRowStart, timeRowEnd } or null if outside visible window.
+ */
+export function calculateTimedEventTracks( post, gridConfig ) {
+	if ( ! gridConfig?.enabled ) {
+		return null;
+	}
+
+	const isEvent = isEventPostType( post.type );
+	const startTimeStr = isEvent
+		? post.meta?.gatherpress_datetime_start
+		: post.date;
+	const endTimeStr = isEvent ? post.meta?.gatherpress_datetime_end : null;
+
+	if ( ! startTimeStr ) {
+		return null;
+	}
+
+	const startHour = Number( gridConfig.startHour ) || 8;
+	const endHour = Number( gridConfig.endHour ) || 20;
+	const quarterMins = Number( gridConfig.quarterMins ) || 15;
+
+	const startD = new Date( startTimeStr );
+	const endD = endTimeStr
+		? new Date( endTimeStr )
+		: new Date( startD.getTime() + 3600000 );
+
+	const startMin = startD.getHours() * 60 + startD.getMinutes();
+	const endMin = endD.getHours() * 60 + endD.getMinutes();
+
+	const dayStartMin = startHour * 60;
+	const dayEndMin = endHour * 60;
+
+	// Skip if entirely outside the visible day window
+	if ( endMin <= dayStartMin || startMin >= dayEndMin ) {
+		return null;
+	}
+
+	// Clamp to visible day boundaries
+	const clampedStart = Math.max( dayStartMin, startMin );
+	const clampedEnd = Math.min( dayEndMin, Math.max( startMin + 15, endMin ) );
+
+	// Round to 1/4 of slot duration
+	const roundedStart = Math.floor( clampedStart / quarterMins ) * quarterMins;
+	const roundedEnd = Math.ceil( clampedEnd / quarterMins ) * quarterMins;
+
+	const finalEnd =
+		roundedEnd <= roundedStart ? roundedStart + quarterMins : roundedEnd;
+
+	const startTrack =
+		Math.floor( ( roundedStart - dayStartMin ) / quarterMins ) + 1;
+	const endTrack = Math.floor( ( finalEnd - dayStartMin ) / quarterMins ) + 1;
+
+	return {
+		timeRowStart: startTrack,
+		timeRowEnd: Math.max( startTrack + 1, endTrack ),
+	};
+}
+
+/**
+ * Finds the lowest 0-indexed vertical slot free across all dates of an event's span.
+ *
+ * @param {string[]} dates         Array of YYYY-MM-DD date strings.
+ * @param {Object}   occupiedSlots Map of date strings to Set of occupied slots.
+ * @return {number} Lowest available slot index.
+ */
+export function findAvailableSlot( dates, occupiedSlots ) {
+	let slot = 0;
+
+	while ( true ) {
+		const isFree = dates.every(
+			( date ) => ! occupiedSlots[ date ]?.has( slot )
+		);
+		if ( isFree ) {
+			return slot;
+		}
+		slot++;
+	}
+}
+
+/**
+ * Allocates a single timed event into the time grid entries map.
+ *
+ * @param {Object} rawEvent   Event data.
+ * @param {Object} gridConfig Time grid config.
+ * @param {Object} grouped    Grouped date entries map.
+ * @return {void}
+ */
+function allocateTimedEvent( rawEvent, gridConfig, grouped ) {
+	const { post } = rawEvent;
+	const tracks = calculateTimedEventTracks( post, gridConfig );
+	if ( ! tracks ) {
+		return;
+	}
+
+	const dateStr = rawEvent.startDateStr;
+	if ( ! grouped[ dateStr ] ) {
+		grouped[ dateStr ] = [];
+	}
+
+	grouped[ dateStr ].push( {
+		...post,
+		span: 'single',
+		dayIndex: 1,
+		totalDays: 1,
+		isAllDay: false,
+		isTimed: true,
+		timeRowStart: tracks.timeRowStart,
+		timeRowEnd: tracks.timeRowEnd,
+		slot: 0,
+	} );
+}
+
+/**
+ * Allocates an all-day or multi-day ribbon event into the daily entries map.
+ *
+ * @param {Object} rawEvent      Event data.
+ * @param {Object} grouped       Grouped date entries map.
+ * @param {Object} occupiedSlots Map of occupied slots.
+ * @return {void}
+ */
+function allocateRibbonEvent( rawEvent, grouped, occupiedSlots ) {
+	const { post, startObj, totalDays, isAllDay } = rawEvent;
+
+	const eventDates = [];
+	for ( let i = 0; i < totalDays; i++ ) {
+		const current = new Date( startObj );
+		current.setDate( startObj.getDate() + i );
+		eventDates.push( formatDate( current ) );
+	}
+
+	const slot = findAvailableSlot( eventDates, occupiedSlots );
+
+	eventDates.forEach( ( dateStr, i ) => {
+		if ( ! occupiedSlots[ dateStr ] ) {
+			occupiedSlots[ dateStr ] = new Set();
+		}
+		occupiedSlots[ dateStr ].add( slot );
+
+		const dayIndex = i + 1;
+		const span = determineSpanType( dayIndex, totalDays );
 
 		if ( ! grouped[ dateStr ] ) {
 			grouped[ dateStr ] = [];
 		}
-		grouped[ dateStr ].push( post );
+
+		grouped[ dateStr ].push( {
+			...post,
+			span,
+			dayIndex,
+			totalDays,
+			slot,
+			isAllDay,
+			isTimed: false,
+		} );
+	} );
+}
+
+/**
+ * Resolves concurrent overlapping columns for timed events in a day's entries.
+ *
+ * @param {Array<Object>} dayEntries Entries for a single date.
+ * @return {void}
+ */
+function resolveDayOverlaps( dayEntries ) {
+	const timedIndices = [];
+	dayEntries.forEach( ( entry, idx ) => {
+		if ( entry.isTimed ) {
+			timedIndices.push( idx );
+		}
+	} );
+
+	timedIndices.forEach( ( currIdx ) => {
+		const curr = dayEntries[ currIdx ];
+		let overlaps = 0;
+		let overlapIdx = 0;
+
+		timedIndices.forEach( ( otherIdx ) => {
+			const other = dayEntries[ otherIdx ];
+			const isOverlapping =
+				curr.timeRowStart < other.timeRowEnd &&
+				curr.timeRowEnd > other.timeRowStart;
+			if ( isOverlapping ) {
+				overlaps++;
+				if ( otherIdx < currIdx ) {
+					overlapIdx++;
+				}
+			}
+		} );
+
+		dayEntries[ currIdx ].overlapTotal = Math.max( 1, overlaps );
+		dayEntries[ currIdx ].overlapIndex = overlapIdx;
+	} );
+}
+
+/**
+ * Organizes posts by YYYY-MM-DD date string,
+ * spanning multi-day events across all active days
+ * and supporting time-grid coordinates.
+ *
+ * @param {Array}  posts      Raw post entities.
+ * @param {Object} gridConfig Time grid configuration.
+ *
+ * @return {Object} Posts grouped by date string.
+ */
+export function groupPostsByDate( posts = [], gridConfig = {} ) {
+	const grouped = {};
+	if ( ! posts?.length ) {
+		return grouped;
+	}
+
+	const rawEvents = posts.map( resolvePostDateSpan ).filter( Boolean );
+	const isTimeGrid = Boolean( gridConfig?.enabled );
+
+	// Sort events: multi-day/all-day first, then start date, then ID
+	rawEvents.sort( ( a, b ) => {
+		const aPromoted = a.totalDays > 1 || a.isAllDay ? 1 : 0;
+		const bPromoted = b.totalDays > 1 || b.isAllDay ? 1 : 0;
+		if ( aPromoted !== bPromoted ) {
+			return bPromoted - aPromoted;
+		}
+		if ( a.totalDays !== b.totalDays ) {
+			return b.totalDays - a.totalDays;
+		}
+		if ( a.startDateStr !== b.startDateStr ) {
+			return a.startDateStr.localeCompare( b.startDateStr );
+		}
+		return ( a.post.id || 0 ) - ( b.post.id || 0 );
+	} );
+
+	const occupiedSlots = {};
+
+	rawEvents.forEach( ( rawEvent ) => {
+		const isMultiDay = rawEvent.totalDays > 1 || rawEvent.isAllDay;
+
+		if ( isTimeGrid && ! isMultiDay ) {
+			allocateTimedEvent( rawEvent, gridConfig, grouped );
+		} else {
+			allocateRibbonEvent( rawEvent, grouped, occupiedSlots );
+		}
+	} );
+
+	if ( isTimeGrid ) {
+		Object.keys( grouped ).forEach( ( dateStr ) => {
+			resolveDayOverlaps( grouped[ dateStr ] );
+		} );
+	}
+
+	Object.keys( grouped ).forEach( ( dateStr ) => {
+		grouped[ dateStr ].sort(
+			( a, b ) => ( a.slot || 0 ) - ( b.slot || 0 )
+		);
 	} );
 
 	return grouped;
@@ -259,12 +557,35 @@ export function getWeekNumber( week, startOfWeek = 0 ) {
 }
 
 /**
- * Generate calendar structure for any viewType.
+ * Calculate maximum ribbon slot index across a week's days.
  *
- * @param {Array<Object>} posts        Posts from the query.
- * @param {number}        startOfWeek  Start of week (0-6).
- * @param {Object}        dateRange    Resolved date range.
- * @param {boolean}       showWeekends Weekend visibility.
+ * @param {Array<Object>} weekDays   Array of day descriptors.
+ * @param {boolean}       isTimeGrid Whether time grid is enabled.
+ * @return {number} Number of ribbon slots.
+ */
+function getWeekNumRibbonSlots( weekDays, isTimeGrid ) {
+	if ( ! isTimeGrid ) {
+		return 0;
+	}
+	let maxSlot = -1;
+	weekDays.forEach( ( day ) => {
+		( day.posts || [] ).forEach( ( p ) => {
+			if ( ! p.isTimed ) {
+				maxSlot = Math.max( maxSlot, Number( p.slot ) || 0 );
+			}
+		} );
+	} );
+	return maxSlot + 1;
+}
+
+/**
+ * Generate calendar structure for any viewType, calculating week-level ribbon slots.
+ *
+ * @param {Array<Object>} posts          Posts from the query.
+ * @param {number}        startOfWeek    Start of week (0-6).
+ * @param {Object}        dateRange      Resolved date range.
+ * @param {boolean}       showWeekends   Weekend visibility.
+ * @param {Object}        timeGridConfig Time grid configuration.
  *
  * @return {Object} Calendar data structure.
  */
@@ -272,12 +593,13 @@ export function generateCalendar(
 	posts = [],
 	startOfWeek = 0,
 	dateRange,
-	showWeekends = true
+	showWeekends = true,
+	timeGridConfig = {}
 ) {
-	const postsByDate = groupPostsByDate( posts );
+	const postsByDate = groupPostsByDate( posts, timeGridConfig );
 	const viewType = dateRange.viewType || 'month';
 	const unitCount = Math.max( 1, dateRange.unitCount || 1 );
-	const units = [];
+	const isTimeGrid = Boolean( timeGridConfig?.enabled );
 
 	if ( 'day' === viewType ) {
 		const startObj =
@@ -289,9 +611,26 @@ export function generateCalendar(
 			dayNames.push( dateI18n( 'D', d ) );
 		}
 		const weeks = buildConsecutiveDays( startObj, unitCount, postsByDate );
-		units.push( { dayNames, weeks } );
+		const numRibbonSlots = getWeekNumRibbonSlots(
+			weeks[ 0 ] || [],
+			isTimeGrid
+		);
+		const units = [
+			{
+				dayNames,
+				weeks,
+				numRibbonSlots,
+			},
+		];
 
-		return { dayNames, weeks, units, viewType, unitCount };
+		return {
+			dayNames,
+			weeks,
+			units,
+			viewType,
+			unitCount,
+			numRibbonSlots,
+		};
 	}
 
 	if ( 'week' === viewType ) {
@@ -306,18 +645,39 @@ export function generateCalendar(
 			postsByDate,
 			showWeekends
 		);
+		const numRibbonSlots = getWeekNumRibbonSlots(
+			weeks[ 0 ] || [],
+			isTimeGrid
+		);
 		// Only several week rows need a week number to tell them apart.
-		const weekNumbers =
-			unitCount > 1
-				? weeks.map( ( week ) => getWeekNumber( week, startOfWeek ) )
-				: undefined;
-		units.push( { dayNames, weeks, weekNumbers } );
+		const units = [
+			{
+				dayNames,
+				weeks,
+				weekNumbers:
+					unitCount > 1
+						? weeks.map( ( week ) =>
+								getWeekNumber( week, startOfWeek )
+							)
+						: undefined,
+				numRibbonSlots,
+			},
+		];
 
-		return { dayNames, weeks, units, viewType, unitCount };
+		return {
+			dayNames,
+			weeks,
+			units,
+			viewType,
+			unitCount,
+			numRibbonSlots,
+		};
 	}
 
 	// Month view: construct unitCount distinct month objects
 	const startObj = dateRange.startDateObj || new Date( dateRange.startDate );
+	const units = [];
+
 	for ( let i = 0; i < unitCount; i++ ) {
 		const monthDate = new Date(
 			startObj.getFullYear(),
@@ -343,6 +703,7 @@ export function generateCalendar(
 			weekNumbers: mWeeks.map( ( week ) =>
 				getWeekNumber( week, startOfWeek )
 			),
+			numRibbonSlots: 0,
 		} );
 	}
 
@@ -352,6 +713,7 @@ export function generateCalendar(
 		units,
 		viewType,
 		unitCount,
+		numRibbonSlots: 0,
 	};
 }
 

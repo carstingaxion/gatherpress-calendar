@@ -8,6 +8,7 @@ import { __ } from '@wordpress/i18n';
  * Internal dependencies
  */
 import {
+	DAY_NUMBER,
 	ENTRY_MODAL_MANAGER_ATTRIBUTES,
 	ENTRY_START_TIME,
 	ENTRY_TITLE_TRIGGER,
@@ -112,24 +113,8 @@ function createCalendarFromTemplate( contentBlocks = [] ) {
 		[ modalManager ]
 	);
 
-	const dayNumber = createBlock( 'core/paragraph', {
-		metadata: {
-			bindings: {
-				content: {
-					source: 'gatherpress/calendar-day',
-				},
-			},
-			name: 'Day Number',
-		},
-		style: {
-			spacing: {
-				margin: { top: '0', bottom: '0', left: '0', right: '0' },
-			},
-		},
-		fontSize: 'small',
-		placeholder: 'DD',
-		content: 'DD',
-	} );
+	// Same paragraph as DAY_TEMPLATE, with the class that block styles use.
+	const dayNumber = createBlock( ...DAY_NUMBER );
 
 	const day = createBlock( 'gatherpress/calendar-day', {}, [
 		dayNumber,

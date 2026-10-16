@@ -13,6 +13,7 @@
   ],
   "usesContext": [
     "queryId",
+    "query",
     "gatherpress/year",
     "gatherpress/month",
     "gatherpress/dayDate",
@@ -21,8 +22,17 @@
     "gatherpress/isEmpty",
     "gatherpress/isToday",
     "gatherpress/weekday",
-    "gatherpress/isWeekend"
+    "gatherpress/isWeekend",
+    "gatherpress/viewType",
+    "gatherpress/enableTimeGrid",
+    "gatherpress/timeGridConfig",
+    "gatherpress/dayStartHour",
+    "gatherpress/dayEndHour",
+    "gatherpress/numRibbonSlots"
   ],
+  "providesContext": {
+    "gatherpress/slotHeight": "slotHeight"
+  },
   "attributes": {
     "date": {
       "type": "string",
@@ -39,6 +49,10 @@
     "isToday": {
       "type": "boolean",
       "default": false
+    },
+    "slotHeight": {
+      "type": "number",
+      "default": 48
     },
     "layout": {
       "type": "object",
@@ -94,6 +108,17 @@
       "__experimentalFontWeight": true
     }
   },
+  "styles": [
+    {
+      "name": "default",
+      "label": "Classic",
+      "isDefault": true
+    },
+    {
+      "name": "ribbon",
+      "label": "Ribbon"
+    }
+  ],
   "textdomain": "gatherpress-calendar",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",

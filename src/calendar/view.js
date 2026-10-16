@@ -11,7 +11,7 @@
  * @package
  */
 
-import { store, getElement } from '@wordpress/interactivity';
+import { store, getElement, getContext } from '@wordpress/interactivity';
 
 /**
  * Router region of the calendar whose pagination link was clicked last.
@@ -41,7 +41,63 @@ function getRegionId( element ) {
 }
 
 store( 'gatherpress/calendar', {
+	state: {
+		hoveredEventId: null,
+		focusedEventId: null,
+	},
 	actions: {
+		hoverEvent( event ) {
+			if ( event?.target?.closest?.( '.wp-block-gatherpress-modal' ) ) {
+				return;
+			}
+			// Ask GatherPress / DOM if any modal is currently open
+			if (
+				document.querySelector(
+					'.wp-block-gatherpress-modal.gatherpress--is-visible'
+				)
+			) {
+				return;
+			}
+			const context = getContext();
+			if ( context?.eventId ) {
+				const { state } = store( 'gatherpress/calendar' );
+				state.hoveredEventId = context.eventId;
+			}
+		},
+
+		unhoverEvent( event ) {
+			if (
+				event?.relatedTarget?.closest?.( '.wp-block-gatherpress-modal' )
+			) {
+				return;
+			}
+			const { state } = store( 'gatherpress/calendar' );
+			state.hoveredEventId = null;
+		},
+
+		focusEvent( event ) {
+			if ( event?.target?.closest?.( '.wp-block-gatherpress-modal' ) ) {
+				return;
+			}
+			if (
+				document.querySelector(
+					'.wp-block-gatherpress-modal.gatherpress--is-visible'
+				)
+			) {
+				return;
+			}
+			const context = getContext();
+			if ( context?.eventId ) {
+				const { state } = store( 'gatherpress/calendar' );
+				state.focusedEventId = context.eventId;
+			}
+		},
+
+		unfocusEvent() {
+			const { state } = store( 'gatherpress/calendar' );
+			state.focusedEventId = null;
+		},
+
 		/**
 		 * Remembers a click on a pagination link of this calendar's query.
 		 *
@@ -66,6 +122,22 @@ store( 'gatherpress/calendar', {
 		},
 	},
 	callbacks: {
+		isEventHovered() {
+			const context = getContext();
+			const { state } = store( 'gatherpress/calendar' );
+			return Boolean(
+				context?.eventId && state.hoveredEventId === context.eventId
+			);
+		},
+
+		isEventFocused() {
+			const context = getContext();
+			const { state } = store( 'gatherpress/calendar' );
+			return Boolean(
+				context?.eventId && state.focusedEventId === context.eventId
+			);
+		},
+
 		/**
 		 * Focuses the month heading after this calendar's own pagination.
 		 *
