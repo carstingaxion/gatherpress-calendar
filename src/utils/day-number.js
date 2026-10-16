@@ -218,7 +218,7 @@ export function getLayoutProps( layout = {}, blockGap = undefined ) {
 	}
 
 	return {
-		className: 'is-layout-flow',
-		style: {},
+		className: classes.join( ' ' ),
+		style,
 	};
 }
