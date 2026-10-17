@@ -1,3 +1,10 @@
+/**
+ * DayPreviewCell Component
+ *
+ * @package
+ * @since 0.4.0
+ */
+
 import { memo, useCallback, useMemo } from '@wordpress/element';
 import {
 	BlockContextProvider,
@@ -19,61 +26,99 @@ import { dateI18n } from '@wordpress/date';
 import {
 	isDayNumberBindingBlock,
 	getLayoutProps,
+	FALLBACK_BLOCK_GAP,
 } from '../../../utils/day-number';
 
 /**
- * Clones inner blocks, resolving the Day Number bound block's content to
- * this specific day's number directly. On days without posts, filters out
- * the entries template so fake placeholder times are not shown.
+ * Strips top-level event-date blocks from entries on multi-day/all-day spans.
  *
- * @param {Array}  blocks - Real inner blocks to preview.
- * @param {Object} day    - Day data (day, isEmpty, posts).
- *
- * @return {Array} Inner blocks with the Day Number block's value resolved.
+ * @param {Array} blocks Day template inner blocks.
+ * @return {Array} Sanitized blocks.
  */
-
-function withResolvedDayNumber( blocks, day ) {
-	const hasPosts = ( day.posts?.length ?? 0 ) > 0;
-
-	return ( blocks ?? [] )
-		.filter( ( block ) => {
-			// On days without posts, only keep the day number block.
-			if ( ! hasPosts ) {
-				return isDayNumberBindingBlock( block );
-			}
-			return true;
-		} )
-		.map( ( block ) => {
-			if ( ! isDayNumberBindingBlock( block ) ) {
-				return block;
-			}
-
-			const format =
-				block.attributes?.metadata?.bindings?.content?.args?.format ||
-				'';
-			let content = '';
-
-			if ( ! day.isEmpty ) {
-				if ( day.date && format !== '' ) {
-					const dateObj = new Date( `${ day.date }T12:00:00Z` );
-					content = dateI18n( format, dateObj, 'UTC' );
-				} else {
-					content = String( day.day ?? '' );
-				}
-			}
-
+function stripMultiDayEventDates( blocks = [] ) {
+	return ( blocks ?? [] ).map( ( block ) => {
+		if (
+			block.name === 'gatherpress/calendar-entries' &&
+			block.innerBlocks
+		) {
 			return {
 				...block,
-				attributes: {
-					...block.attributes,
-					content,
-					metadata: {
-						...block.attributes?.metadata,
-						bindings: undefined,
-					},
-				},
+				innerBlocks: block.innerBlocks.map( ( inner ) => {
+					if (
+						inner.name === 'gatherpress/modal-manager' &&
+						inner.innerBlocks
+					) {
+						return {
+							...inner,
+							innerBlocks: inner.innerBlocks.filter(
+								( b ) => b.name !== 'gatherpress/event-date'
+							),
+						};
+					}
+					return inner;
+				} ),
 			};
-		} );
+		}
+		return block;
+	} );
+}
+
+/**
+ * Clones inner blocks, resolving the Day Number bound block's content.
+ * Filters out entries on empty days and strips multi-day start times.
+ *
+ * @param {Array}   blocks   Real inner blocks to preview.
+ * @param {Object}  day      Day data (day, isEmpty, posts).
+ * @param {boolean} isRibbon Whether the day block is in ribbon style.
+ * @return {Array} Resolved blocks.
+ */
+function withResolvedDayContent( blocks, day, isRibbon ) {
+	const hasPosts = ( day.posts?.length ?? 0 ) > 0;
+	const hasMultiDay = day.posts?.some(
+		( p ) => ( p.totalDays ?? 1 ) > 1 || p.isAllDay
+	);
+
+	let processedBlocks = ( blocks ?? [] ).filter( ( block ) => {
+		if ( ! hasPosts ) {
+			return isDayNumberBindingBlock( block );
+		}
+		return true;
+	} );
+
+	if ( isRibbon && hasMultiDay ) {
+		processedBlocks = stripMultiDayEventDates( processedBlocks );
+	}
+
+	return processedBlocks.map( ( block ) => {
+		if ( ! isDayNumberBindingBlock( block ) ) {
+			return block;
+		}
+
+		const format =
+			block.attributes?.metadata?.bindings?.content?.args?.format || '';
+		let content = '';
+
+		if ( ! day.isEmpty ) {
+			if ( day.date && format !== '' ) {
+				const dateObj = new Date( `${ day.date }T12:00:00Z` );
+				content = dateI18n( format, dateObj, 'UTC' );
+			} else {
+				content = String( day.day ?? '' );
+			}
+		}
+
+		return {
+			...block,
+			attributes: {
+				...block.attributes,
+				content,
+				metadata: {
+					...block.attributes?.metadata,
+					bindings: undefined,
+				},
+			},
+		};
+	} );
 }
 
 /**
@@ -95,11 +140,14 @@ function withResolvedDayNumber( blocks, day ) {
  *
  * @since 0.4.0
  *
- * @param {Object}   props                    - Component props.
- * @param {Object}   props.day                - Day data (day, date, posts, isEmpty, isToday).
- * @param {Array}    props.innerBlocks        - The real calendar-day block's inner blocks to preview.
- * @param {Object}   props.dayBlockAttributes - The real calendar-day block's own attributes, for style parity.
- * @param {Function} props.onActivateDay      - Called with this day's date when the cell is clicked.
+ * @param {Object}   props                    Component props.
+ * @param {Object}   props.day                Day data (day, date, posts, isEmpty, isToday).
+ * @param {Array}    props.innerBlocks        The real calendar-day block's inner blocks to preview.
+ * @param {Object}   props.dayBlockAttributes The real calendar-day block's own attributes, for style parity.
+ * @param {Function} props.onActivateDay      Called with this day's date when the cell is clicked.
+ * @param {number}   props.numRibbonSlots     Number of ribbon slots.
+ * @param {boolean}  props.isTimeGrid         Whether time grid is active.
+ * @param {Object}   props.timeGridConfig     Time grid configuration object.
  *
  * @return {Element} Day cell preview element.
  */
@@ -108,11 +156,15 @@ function DayPreviewCellComponent( {
 	innerBlocks,
 	dayBlockAttributes,
 	onActivateDay,
+	numRibbonSlots = 0,
+	isTimeGrid = false,
+	timeGridConfig = {},
 } ) {
 	const onActivate = useCallback(
 		() => onActivateDay( day.date ),
 		[ onActivateDay, day.date ]
 	);
+
 	const dayContext = useMemo(
 		() => ( {
 			'gatherpress/dayDate': day.date ?? '',
@@ -120,9 +172,17 @@ function DayPreviewCellComponent( {
 			'gatherpress/dayPosts': day.posts ?? [],
 			'gatherpress/isEmpty': !! day.isEmpty,
 			'gatherpress/isToday': !! day.isToday,
+			'gatherpress/enableTimeGrid': isTimeGrid,
+			'gatherpress/timeGridConfig': timeGridConfig,
+			'gatherpress/numRibbonSlots': numRibbonSlots,
 		} ),
-		[ day ]
+		[ day, isTimeGrid, timeGridConfig, numRibbonSlots ]
 	);
+
+	const isRibbon = Boolean(
+		dayBlockAttributes?.className?.includes( 'is-style-ribbon' )
+	);
+	const isRibbonOrTimeGrid = isRibbon || isTimeGrid;
 
 	const hasDayNumberBlock = useMemo(
 		() => ( innerBlocks ?? [] ).some( isDayNumberBindingBlock ),
@@ -130,8 +190,8 @@ function DayPreviewCellComponent( {
 	);
 
 	const resolvedBlocks = useMemo(
-		() => withResolvedDayNumber( innerBlocks, day ),
-		[ innerBlocks, day ]
+		() => withResolvedDayContent( innerBlocks, day, isRibbonOrTimeGrid ),
+		[ innerBlocks, day, isRibbonOrTimeGrid ]
 	);
 
 	// Mirror the real calendar-day block's own color/border/spacing/shadow
@@ -141,7 +201,10 @@ function DayPreviewCellComponent( {
 	const borderProps = useBorderProps( dayBlockAttributes ?? {} );
 	const spacingProps = getSpacingClassesAndStyles( dayBlockAttributes ?? {} );
 	const shadowProps = getShadowClassesAndStyles( dayBlockAttributes ?? {} );
-	const layoutProps = getLayoutProps( dayBlockAttributes?.layout );
+	const layoutProps = getLayoutProps(
+		dayBlockAttributes?.layout,
+		dayBlockAttributes?.style?.spacing?.blockGap
+	);
 	// console.group("getLayoutProps");
 	// console.log(dayBlockAttributes);
 	// console.log(colorProps.className);
@@ -158,8 +221,13 @@ function DayPreviewCellComponent( {
 		isPast ? 'is-past' : '',
 		isFuture ? 'is-future' : '',
 		day.posts?.length > 0 ? 'has-posts' : '',
+		day.posts?.some( ( p ) => ( p.totalDays ?? 1 ) > 1 || p.isAllDay )
+			? 'has-multi-day-event'
+			: '',
 		day.isWeekend ? 'is-weekend' : '',
 		day.weekday ? `is-${ day.weekday }` : '',
+		isRibbonOrTimeGrid ? 'is-style-ribbon' : '',
+		isTimeGrid ? 'has-time-grid' : '',
 		colorProps.className,
 		borderProps.className,
 	]
@@ -171,21 +239,34 @@ function DayPreviewCellComponent( {
 		...borderProps.style,
 		...spacingProps.style,
 		...shadowProps.style,
-		// ...layoutProps.style,
+		'--gatherpress-num-ribbon-slots': numRibbonSlots,
 	};
+
+	const previewLayoutStyles = isRibbonOrTimeGrid
+		? {
+				display: 'flex',
+				flexDirection: 'column',
+				alignItems: 'stretch',
+				justifyContent: 'flex-start',
+				width: '100%',
+				minWidth: 0,
+			}
+		: {
+				...layoutProps.style,
+				// A split gap with one side set uses the root gap for the other.
+				gap: getGapCSSValue(
+					dayBlockAttributes?.style?.spacing?.blockGap,
+					FALLBACK_BLOCK_GAP
+				),
+			};
 
 	const blockPreviewProps = useBlockPreview( {
 		blocks: resolvedBlocks,
 		props: {
-			className: layoutProps.className
-				? layoutProps.className
-				: undefined,
-			style: {
-				...layoutProps.style,
-				gap: getGapCSSValue(
-					dayBlockAttributes?.style?.spacing?.blockGap
-				),
-			},
+			className: isRibbonOrTimeGrid
+				? 'gatherpress-calendar__day-preview'
+				: layoutProps.className || undefined,
+			style: previewLayoutStyles,
 		},
 	} );
 

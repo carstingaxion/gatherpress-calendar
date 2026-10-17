@@ -25,7 +25,8 @@
   ],
   "providesContext": {
     "gatherpress/viewType": "viewType",
-    "gatherpress/showWeekends": "showWeekends"
+    "gatherpress/showWeekends": "showWeekends",
+    "gatherpress/enableTimeGrid": "enableTimeGrid"
   },
   "attributes": {
     "viewType": {
@@ -57,6 +58,10 @@
       "type": "boolean",
       "default": true
     },
+    "showScheduled": {
+      "type": "boolean",
+      "default": false
+    },
     "dateRangeSource": {
       "type": "string",
       "enum": [
@@ -73,6 +78,10 @@
     "sourcePostType": {
       "type": "string",
       "default": ""
+    },
+    "enableTimeGrid": {
+      "type": "boolean",
+      "default": false
     }
   },
   "supports": {

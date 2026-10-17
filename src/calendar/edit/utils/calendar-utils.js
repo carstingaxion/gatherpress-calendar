@@ -7,7 +7,6 @@
 
 import { dateI18n, getSettings } from '@wordpress/date';
 import { select } from '@wordpress/data';
-import { _x } from '@wordpress/i18n';
 
 // Re-export decomposed helpers so existing imports remain backward-compatible:
 export * from './grid-builder';
@@ -83,19 +82,36 @@ export function getPostsPerPage() {
 }
 
 /**
- * Computes table grid column count based on view type and weekend visibility.
+ * Computes table grid column count based on view type, weekend visibility, and time grid gutter.
  *
- * @param {string}  viewType     View type.
- * @param {boolean} showWeekends Whether weekends are shown.
- * @param {number}  unitCount    Number of units.
- * @return {number} Column count.
+ * @param {string}  viewType      View type ('month', 'week', 'day').
+ * @param {boolean} showWeekends  Whether weekends are shown.
+ * @param {number}  unitCount     Number of units to show.
+ * @param {boolean} hasTimeGutter Whether the time gutter column is active.
+ *
+ * @return {number} Total grid column count.
  */
-export function getColumnsCount( viewType, showWeekends, unitCount = 1 ) {
+export function getColumnsCount(
+	viewType = 'month',
+	showWeekends = true,
+	unitCount = 1,
+	hasTimeGutter = false
+) {
+	let columns = 7;
+
 	if ( 'day' === viewType ) {
-		return Math.max( 1, unitCount );
+		columns = Math.max( 1, Number( unitCount ) || 1 );
+	} else {
+		const workdayCount = 7 - getWeekendDays().length;
+		columns = showWeekends ? 7 : workdayCount;
 	}
-	const workdayCount = 7 - getWeekendDays().length;
-	return showWeekends ? 7 : workdayCount;
+
+	// Only Day and Week views can have a time gutter
+	if ( hasTimeGutter && ( 'day' === viewType || 'week' === viewType ) ) {
+		columns += 1;
+	}
+
+	return columns;
 }
 
 /**
@@ -157,45 +173,24 @@ export function getDayNames( startOfWeek = 0, showWeekends = true ) {
 }
 
 /**
- * Generate month options for month picker.
- *
- * Creates an array of month options spanning from last year to next year,
- * providing users with a reasonable range of months to choose from without
- * overwhelming them with too many options.
+ * Generate the twelve month options for the month picker.
  *
  * @since 0.1.0
  *
  * @return {Array<Object>} Array of month options, each containing:
- *   - {string} value - Month value in format "YYYY-MM"
- *   - {string} label - Formatted month name and year (e.g., "January 2025")
- *
- * @example
- * const options = generateMonthOptions();
- * // Returns array like:
- * // [
- * //   { value: '2024-01', label: 'January 2024' },
- * //   { value: '2024-02', label: 'February 2024' },
- * //   ...
- * //   { value: '2026-12', label: 'December 2026' }
- * // ]
+ *   - {string} value - Month number in format "MM"
+ *   - {string} label - Localized month name (e.g., "January")
  */
 export function generateMonthOptions() {
 	const options = [];
-	const currentDate = new Date();
-	const currentYear = currentDate.getFullYear();
 
-	// Generate options for current year and next year.
-	for ( let year = currentYear - 1; year <= currentYear + 1; year++ ) {
-		for ( let month = 1; month <= 12; month++ ) {
-			const date = new Date( year, month - 1, 15, 12, 0, 0 );
-			const value = `${ year }-${ String( month ).padStart( 2, '0' ) }`;
-			const label = dateI18n(
-				/* translators: Date format, see https://www.php.net/manual/datetime.format.php */
-				_x( 'F Y', 'Month picker option', 'gatherpress-calendar' ),
-				date
-			);
-			options.push( { value, label } );
-		}
+	for ( let month = 1; month <= 12; month++ ) {
+		// The 15th at noon: a timezone offset cannot move it to another month.
+		const date = new Date( 2024, month - 1, 15, 12, 0, 0 );
+		options.push( {
+			value: String( month ).padStart( 2, '0' ),
+			label: dateI18n( 'F', date ),
+		} );
 	}
 
 	return options;

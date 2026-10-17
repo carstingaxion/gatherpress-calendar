@@ -1,21 +1,58 @@
 @use "visually-hidden" as *;
 
 /* ==========================================================================
-   Block Container
+   Block Container & Design Tokens
    ========================================================================== */
 .wp-block-gatherpress-calendar {
 
-	/* Default decent background that fills the grid lines. */
-	background: var(--wp--preset--color--base, #fff);
+	--gatherpress-calendar-column-gap: 2px;
+
+	// Surface & Table Header Tokens
+	--gatherpress-calendar-header-bg: color-mix(in srgb, currentcolor 6%, transparent);
+	--gatherpress-calendar-header-color: currentcolor;
+
+	// Day Cell Surface & State Tokens
+	--gatherpress-calendar-day-bg: color-mix(in srgb, currentcolor 3%, transparent);
+	--gatherpress-calendar-day-color: inherit;
+	--gatherpress-calendar-day-has-posts-border: color-mix(in srgb, currentcolor 25%, transparent);
+	--gatherpress-calendar-day-today-outline: currentcolor;
+	--gatherpress-calendar-day-today-color: currentcolor;
+
+	// Entry Typography & Interaction Tokens
+	--gatherpress-calendar-time-color: color-mix(in srgb, currentcolor 75%, transparent);
+	--gatherpress-calendar-title-color: currentcolor;
+	--gatherpress-calendar-focus-outline-color: currentcolor;
+
+	// --------------------------------------------------------------------------
+	// Slot Palette Tokens (Solid hues used for Dots)
+	// --------------------------------------------------------------------------
+	--gatherpress-calendar-slot-0-color: var(--wp--preset--color--primary, #007cba);
+	--gatherpress-calendar-slot-1-color: var(--wp--preset--color--secondary, #e65054);
+	--gatherpress-calendar-slot-2-color: var(--wp--preset--color--tertiary, #4ab866);
+	--gatherpress-calendar-slot-3-color: var(--wp--preset--color--vivid-purple, #9b51e0);
+	--gatherpress-calendar-slot-4-color: var(--wp--preset--color--vivid-cyan-blue, #0693e3);
+	--gatherpress-calendar-slot-5-color: var(--wp--preset--color--contrast, #666);
+
+	// --------------------------------------------------------------------------
+	// Ribbon Lightness & Surface Tokens
+	// --------------------------------------------------------------------------
+	--gatherpress-calendar-ribbon-color: currentcolor;
+	--gatherpress-calendar-ribbon-mix-target: #fff;
+	--gatherpress-calendar-ribbon-color-intensity: 22%;
+
+	--gatherpress-calendar-ribbon-slot-0-bg: color-mix(in srgb, var(--gatherpress-calendar-slot-0-color) var(--gatherpress-calendar-ribbon-color-intensity), var(--gatherpress-calendar-ribbon-mix-target));
+	--gatherpress-calendar-ribbon-slot-1-bg: color-mix(in srgb, var(--gatherpress-calendar-slot-1-color) var(--gatherpress-calendar-ribbon-color-intensity), var(--gatherpress-calendar-ribbon-mix-target));
+	--gatherpress-calendar-ribbon-slot-2-bg: color-mix(in srgb, var(--gatherpress-calendar-slot-2-color) var(--gatherpress-calendar-ribbon-color-intensity), var(--gatherpress-calendar-ribbon-mix-target));
+	--gatherpress-calendar-ribbon-slot-3-bg: color-mix(in srgb, var(--gatherpress-calendar-slot-3-color) var(--gatherpress-calendar-ribbon-color-intensity), var(--gatherpress-calendar-ribbon-mix-target));
+	--gatherpress-calendar-ribbon-slot-4-bg: color-mix(in srgb, var(--gatherpress-calendar-slot-4-color) var(--gatherpress-calendar-ribbon-color-intensity), var(--gatherpress-calendar-ribbon-mix-target));
+	--gatherpress-calendar-ribbon-slot-5-bg: color-mix(in srgb, var(--gatherpress-calendar-slot-5-color) 18%, var(--gatherpress-calendar-ribbon-mix-target));
+
+	/* Container Layout */
+	background: inherit;
+	color: inherit;
 	padding: 0;
 	margin-block: var(--wp--preset--spacing--50, 1rem);
-
-
-	/* ==========================================================================
-   Calendar Wrapper
-   ========================================================================== */
 	width: 100%;
-	// max-width: var(--wp--style--global--wide-size, 1200px);
 	margin-inline: auto;
 
 	&.has-multiple-units.is-view-month {
@@ -43,7 +80,6 @@
 
 		/* minmax(0, 1fr): content cannot make a column wider than its share. */
 		grid-template-columns: repeat(var(--gatherpress-calendar-columns, 7), minmax(0, 1fr));
-		--gatherpress-calendar-column-gap: 2px; /* Default thin grid line when no spacing is set */
 		gap: var(--gatherpress-calendar-column-gap);
 
 		thead,
@@ -52,10 +88,49 @@
 			display: contents;
 		}
 
+		// When Time Grid is active: 52px for the time gutter column,
+		// remaining columns for days.
+		&.has-time-grid {
+			grid-template-columns: 52px repeat(calc(var(--gatherpress-calendar-columns, 7) - 1), minmax(0, 1fr));
+		}
+
+		// Gutter header column in thead
+		th.gatherpress-calendar__time-gutter-header {
+			width: 52px;
+			min-width: 52px;
+			background: var(--gatherpress-calendar-header-bg);
+			border: none;
+			padding: 0;
+			aspect-ratio: auto;
+		}
+
+		// Gutter time labels column in tbody
+		th.gatherpress-calendar__time-gutter {
+			width: 52px;
+			min-width: 52px;
+			background: transparent;
+			border: none;
+			padding: 0;
+			aspect-ratio: auto;
+			display: flex;
+			flex-direction: column;
+
+			.gatherpress-calendar__time-slot-label {
+				height: var(--gatherpress-calendar-slot-height, 48px);
+				box-sizing: border-box;
+				padding-inline-end: 8px;
+				font-size: 0.6875rem;
+				font-weight: 500;
+				color: color-mix(in srgb, currentcolor 60%, transparent);
+				text-align: end;
+				transform: translateY(-50%);
+			}
+		}
+
 		/* Weekday Column Headers (Sun, Mon, Tue...) */
 		th {
-			background: var(--wp--preset--color--base-2, #f8f9fa);
-			color: var(--wp--preset--color--contrast, #495057);
+			background: var(--gatherpress-calendar-header-bg);
+			color: var(--gatherpress-calendar-header-color);
 			font-weight: 600;
 			text-align: center;
 			padding: clamp(0.5rem, 2vw, 0.75rem);
