@@ -17,6 +17,7 @@ use DateTimeZone;
 use GatherPress\Core\Event;
 use GatherPress\Core\Traits\Singleton;
 use WP_Block;
+use WP_Block_Type;
 use WP_Post;
 use WP_REST_Request;
 use WP_Query;
@@ -80,19 +81,21 @@ class Setup {
 	 */
 	public function block_init(): void {
 		// Standard registration (GatherPress core does this in a loop).
-		register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar' );
+		$block_types = array( register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar' ) );
 
 		if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' ) ) {
-			register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' );
+			$block_types[] = register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-week/' );
 		}
 
 		if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' ) ) {
-			register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' );
+			$block_types[] = register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-day/' );
 		}
 
 		if ( file_exists( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-entries/' ) ) {
-			register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-entries/' );
+			$block_types[] = register_block_type( GATHERPRESS_CALENDAR_CORE_PATH . '/build/calendar-entries/' );
 		}
+
+		$this->fix_rtl_style_suffix( $block_types );
 
 		register_block_bindings_source(
 			'gatherpress/calendar-day',
@@ -115,6 +118,36 @@ class Setup {
 				'uses_context'       => array( 'query', 'postId', 'postType' ),
 			)
 		);
+	}
+
+	/**
+	 * Makes RTL sites load the RTL stylesheets of the calendar blocks.
+	 *
+	 * On RTL sites core marks block styles with `rtl => replace`, but it also
+	 * sets the `.min` suffix when SCRIPT_DEBUG is off. Our files have no `.min`
+	 * in their name, so the printed `<link>` keeps the LTR file. An empty
+	 * suffix lets core swap `.css` for `-rtl.css` as expected.
+	 *
+	 * @see https://core.trac.wordpress.org/ticket/61625
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param array<int, WP_Block_Type|false> $block_types Registered block types.
+	 *
+	 * @return void
+	 */
+	private function fix_rtl_style_suffix( array $block_types ): void {
+		foreach ( $block_types as $block_type ) {
+			if ( ! $block_type instanceof WP_Block_Type ) {
+				continue;
+			}
+
+			foreach ( array_merge( $block_type->style_handles, $block_type->editor_style_handles ) as $handle ) {
+				if ( 'replace' === wp_styles()->get_data( $handle, 'rtl' ) ) {
+					wp_style_add_data( $handle, 'suffix', '' );
+				}
+			}
+		}
 	}
 
 	/**
