@@ -66,6 +66,7 @@ class Setup {
 		add_action( 'rest_api_init', array( $this, 'register_calendar_rest_hooks' ), 10 );
 		add_filter( 'block_editor_settings_all', array( $this, 'block_editor_settings_all' ) );
 		add_filter( 'render_block_data', array( $this, 'allow_core_pagination' ), 10, 3 );
+		add_filter( 'render_block_context', array( $this, 'sync_calendar_query_context' ), 5, 3 );
 		add_filter( 'render_block_context', array( $this, 'disable_query_pagination_numbers' ), 10, 2 );
 		add_filter( 'query_vars', array( $this, 'query_vars' ) );
 		add_filter( 'query_loop_block_query_vars', array( $this, 'query_loop_block_query_vars' ), 10, 2 );
@@ -448,6 +449,37 @@ class Setup {
 		remove_filter( 'the_posts', array( $this, 'gatherpress_force_pagination_max_pages' ), 10 );
 
 		return $posts;
+	}
+
+	/**
+	 * Pass the calendar query args from a nested core/query block down to its children.
+	 *
+	 * When a core/query block sits inside another block (like a Group), core builds
+	 * its child context from cached attributes, before `render_block_data` changes
+	 * them. So the children never get the calendar query args. The parent's
+	 * parsed_block already has them, so copy them into the child context here.
+	 *
+	 * @since 0.9.0
+	 *
+	 * @param array<string, mixed> $context      Default context.
+	 * @param array<string, mixed> $parsed_block The block being rendered.
+	 * @param WP_Block|null        $parent_block The parent block instance (if any).
+	 *
+	 * @return array<string, mixed> Updated block context.
+	 */
+	public function sync_calendar_query_context( array $context, array $parsed_block, ?WP_Block $parent_block = null ): array {
+		if ( ! $parent_block instanceof WP_Block || 'core/query' !== $parent_block->name ) {
+			return $context;
+		}
+
+		$attrs = $parent_block->parsed_block['attrs'] ?? null;
+		$query = is_array( $attrs ) ? ( $attrs['query'] ?? null ) : null;
+
+		if ( is_array( $query ) && isset( $query[ self::CALENDAR_QUERY_PARAM ] ) ) {
+			$context['query'] = $query;
+		}
+
+		return $context;
 	}
 
 	/**
